@@ -124,187 +124,14 @@ IServerGameEnts *servergameents = NULL; // for accessing the server game entitie
 IServerGameDLL *servergamedll = NULL;
 IServerTools *servertools = NULL;
 
-RCBotPluginMeta g_RCBotPluginMeta;
+AFKBot g_AFKBot;
 
-PLUGIN_EXPOSE(RCBotPluginMeta, g_RCBotPluginMeta);
+PLUGIN_EXPOSE(AFKBot, g_AFKBot);
 
-static ConVar rcbot2_ver_cvar(BOT_VER_CVAR, BOT_VER, FCVAR_REPLICATED, BOT_NAME_VER);
-
-
-int UTIL_ListAttributesOnEntity(edict_t *pEdict)
-{
-	CAttributeList *pAttributeList = CClassInterface::getAttributeList(pEdict);
-	int offset = CClassInterface::getOffset(GETPROP_TF2_ATTRIBUTELIST);
-	CBaseEntity *pEntity = servergameents->EdictToBaseEntity(pEdict);
-
-	if (!pAttributeList)
-		return 0;
-
-	int *pAttribList1 = (int*)((unsigned int)pAttributeList + 4);
-
-	int *pAttribList = (int*)((unsigned int)pEntity + offset + 4);
-
-	if ((unsigned int)pAttribList < 0x10000)
-		return 0;
-
-	int iNumAttribs = *(int*)((unsigned int)pAttributeList + 16);
-	short int iAttribIndices[16];
-
-	CBotGlobals::botMessage(NULL, 0, "There are %d attributes on %s entity", iNumAttribs, pEdict->GetClassName());
-
-	for (int i = 0; i < iNumAttribs; i++)	//THIS IS HOW YOU GET THE ATTRIBUTES ON AN ITEM!
-	{
-		iAttribIndices[i] = *(short int*)((unsigned int)pAttribList + (i * 16) + 4);
-
-		CBotGlobals::botMessage(NULL, 0, "%d) %d", i, iAttribIndices[i]);
-	}
-
-	return iNumAttribs;
-}
-
-CON_COMMAND(rcbot_printattribs, "print attributes")
-{
-	if (args.ArgC() > 1)
-	{
-		int slot = atoi(args.Arg(1));
-
-		edict_t *pEdict = INDEXENT(1);
-
-		if (slot >= 0)
-		{
-
-			CBaseEntity *pEntity = RCBotPluginMeta::TF2_getPlayerWeaponSlot(pEdict, slot);
-
-			if (pEntity)
-				pEdict = servergameents->BaseEntityToEdict(pEntity);
-		}
-
-		if (pEdict)
-			UTIL_ListAttributesOnEntity(pEdict);
-	}
-}
-
-CON_COMMAND(rcbot_setattrib, "set an attribute")
-{
-	if (args.ArgC() > 2)
-	{		
-		edict_t *pPlayer = CClients::getListenServerClient();
-
-		CBaseEntity *pEntity = RCBotPluginMeta::TF2_getPlayerWeaponSlot(pPlayer, TF2_SLOT_PRMRY);
-
-		if (pEntity != NULL)
-		{
-			edict_t *pEdict = servergameents->BaseEntityToEdict(pEntity);
-
-			if (pEdict && !pEdict->IsFree())
-			{			
-				const char *strAttrib = args.Arg(1);
-				float flVal = atof(args.Arg(2));
-				//void (edict_t *pEdict, const char *szName, float flVal)
-				if (TF2_setAttribute(pEdict, strAttrib, flVal))
-					CBotGlobals::botMessage(NULL, 0, "OK");
-				else
-					CBotGlobals::botMessage(NULL, 0, "FAIL");
-
-				RCBotPluginMeta::TF2_ClearAttributeCache(pPlayer);
-			}
-		}
-	}
-}
-
-CON_COMMAND(rcbotd, "access the bot commands on a server")
-{
-	eBotCommandResult iResult;
-
-	if (!engine->IsDedicatedServer() || !CBotGlobals::IsMapRunning())
-	{
-		CBotGlobals::botMessage(NULL, 0, "Error, no map running or not dedicated server");
-		return;
-	}
-
-	//iResult = CBotGlobals::m_pCommands->execute(NULL,engine->Cmd_Argv(1),engine->Cmd_Argv(2),engine->Cmd_Argv(3),engine->Cmd_Argv(4),engine->Cmd_Argv(5),engine->Cmd_Argv(6));
-	iResult = CBotGlobals::m_pCommands->execute(NULL, args.Arg(1), args.Arg(2), args.Arg(3), args.Arg(4), args.Arg(5), args.Arg(6));
-
-	if (iResult == COMMAND_ACCESSED)
-	{
-		// ok
-	}
-	else if (iResult == COMMAND_REQUIRE_ACCESS)
-	{
-		CBotGlobals::botMessage(NULL, 0, "You do not have access to this command");
-	}
-	else if (iResult == COMMAND_NOT_FOUND)
-	{
-		CBotGlobals::botMessage(NULL, 0, "bot command not found");
-	}
-	else if (iResult == COMMAND_ERROR)
-	{
-		CBotGlobals::botMessage(NULL, 0, "bot command returned an error");
-	}
-}
-
-/*
-bool RCBotPluginMeta :: ClearAttributeCache(edict_t *pedict)
-{
-	if (hSDKOnAttribValuesChanged == INVALID_HANDLE) return false;
-
-	if (pedict == NULL || pedict->IsFree() ) 
-		return false;
-
-	new offs = GetEntSendPropOffs(entity, "m_AttributeList", true);
-	if (offs <= 0) return false;
-	new Address:pAttribs = GetEntityAddress(entity);
-	if (pAttribs < Address_MinimumValid) return false;
-	pAttribs = Address:LoadFromAddress(pAttribs + Address:(offs + 24), NumberType_Int32);
-	if (pAttribs < Address_MinimumValid) return false;
-	SDKCall(hSDKOnAttribValuesChanged, pAttribs);
-	return true;
-}*/
+static ConVar afkbot_version(BOT_VER_CVAR, BOT_VER, FCVAR_REPLICATED, BOT_NAME_VER);
 
 
-void RCBotPluginMeta::TF2_equipWearable(edict_t *pPlayer, CBaseEntity *pWearable)
-{
-	CBaseEntity *pEnt = servergameents->EdictToBaseEntity(pPlayer);
-	unsigned int *mem = (unsigned int*)*(unsigned int*)pEnt;
-	int offset = rcbot_equipwearable_offset.GetInt();
-	*(unsigned int*)&TF2EquipWearable = mem[offset];
-	(*pEnt.*TF2EquipWearable)(pWearable);
-}
-/*			
-"CAttributeManager::OnAttributeValuesChanged"	//use instead of ClearCache/NotifyManagerOfAttributeValueChanges
-{
-	"windows"	"12"
-	"linux"		"13"
-	"mac"		"13"
-}
-*/
-bool RCBotPluginMeta::TF2_ClearAttributeCache(edict_t *pEdict)
-{
-	CAttributeList *pList = CClassInterface::getAttributeList(pEdict);
-
-	CAttributeManager *pManager = (CAttributeManager*)(((unsigned int)pList) + 24);
-
-	if (!pManager)
-		return false;
-
-	unsigned int *mem = (unsigned int*)*(unsigned int*)pManager;
-
-	if (!mem)
-		return false;
-
-	int offset = 12;
-	
-	*(unsigned int*)&OnAttributeValuesChanged = mem[offset];
-
-	if (!OnAttributeValuesChanged)
-		return false;
-
-	(*pManager.*OnAttributeValuesChanged)();
-
-	return true;
-}
-
-CBaseEntity *RCBotPluginMeta::TF2_getPlayerWeaponSlot(edict_t *pPlayer, int iSlot)
+CBaseEntity *AFKBot::TF2_getPlayerWeaponSlot(edict_t *pPlayer, int iSlot)
 {
 	CBaseEntity *pEnt = servergameents->EdictToBaseEntity(pPlayer);
 	unsigned int *mem = (unsigned int*)*(unsigned int*)pEnt;
@@ -313,17 +140,6 @@ CBaseEntity *RCBotPluginMeta::TF2_getPlayerWeaponSlot(edict_t *pPlayer, int iSlo
 	*(unsigned int*)&TF2PlayerWeaponSlot = mem[offset];
 
 	return (*pEnt.*TF2PlayerWeaponSlot)(iSlot);
-}
-
-void RCBotPluginMeta::TF2_removeWearable(edict_t *pPlayer, CBaseEntity *pWearable)
-{
-	CBaseEntity *pEnt = servergameents->EdictToBaseEntity(pPlayer);
-	unsigned int *mem = (unsigned int*)*(unsigned int*)pEnt;
-	int offset = rcbot_removewearable_offset.GetInt();
-
-	*(unsigned int*)&TF2RemoveWearable = mem[offset];
-
-	(*pEnt.*TF2RemoveWearable)(pWearable);
 }
 
 class CBotRecipientFilter : public IRecipientFilter
@@ -344,7 +160,7 @@ private:
 	int m_iPlayerSlot;
 };///////////////
 // hud message
-void RCBotPluginMeta::HudTextMessage(edict_t *pEntity, const char *szMessage)
+void AFKBot::HudTextMessage(edict_t *pEntity, const char *szMessage)
 {
 	int msgid = 0;
 	int imsgsize = 0;
@@ -388,7 +204,7 @@ void RCBotPluginMeta::HudTextMessage(edict_t *pEntity, const char *szMessage)
 	kv->deleteThis();*/
 }
 
-void RCBotPluginMeta::TF2_equipWeapon(edict_t *pPlayer, CBaseEntity *pWeapon)
+void AFKBot::TF2_equipWeapon(edict_t *pPlayer, CBaseEntity *pWeapon)
 {
 	CBaseEntity *pEnt = servergameents->EdictToBaseEntity(pPlayer);
 	unsigned int *mem = (unsigned int*)*(unsigned int*)pEnt;
@@ -399,7 +215,7 @@ void RCBotPluginMeta::TF2_equipWeapon(edict_t *pPlayer, CBaseEntity *pWeapon)
 	(*pEnt.*TF2WeaponEquip)(pWeapon);
 }
 
-void RCBotPluginMeta::TF2_removePlayerItem(edict_t *pPlayer, CBaseEntity *pItem)
+void AFKBot::TF2_removePlayerItem(edict_t *pPlayer, CBaseEntity *pItem)
 {
 	CBaseEntity *pEnt = servergameents->EdictToBaseEntity(pPlayer);
 	unsigned int *mem = (unsigned int*)*(unsigned int*)pEnt;
@@ -411,7 +227,7 @@ void RCBotPluginMeta::TF2_removePlayerItem(edict_t *pPlayer, CBaseEntity *pItem)
 }
 
 
-void RCBotPluginMeta::TF2_RemoveWeaponSlot(edict_t *pPlayer, int iSlot)
+void AFKBot::TF2_RemoveWeaponSlot(edict_t *pPlayer, int iSlot)
 {
 	CBaseEntity *pWeaponInSlot = TF2_getPlayerWeaponSlot(pPlayer, iSlot);
 	
@@ -443,7 +259,7 @@ void RCBotPluginMeta::TF2_RemoveWeaponSlot(edict_t *pPlayer, int iSlot)
 	}
 }
 
-void RCBotPluginMeta::giveRandomLoadout(edict_t *pPlayer, int iClass, int iSlot, void *pVTable, void *pVTable_Attributes)
+void AFKBot::giveRandomLoadout(edict_t *pPlayer, int iClass, int iSlot, void *pVTable, void *pVTable_Attributes)
 {
 	CTF2Loadout *p = CTeamFortress2Mod::findRandomWeaponLoadOutInSlot(iClass,iSlot);
 
@@ -453,11 +269,11 @@ void RCBotPluginMeta::giveRandomLoadout(edict_t *pPlayer, int iClass, int iSlot,
 	}
 }
 // TF2 Items
-bool RCBotPluginMeta::givePlayerLoadOut(edict_t *pPlayer, CTF2Loadout *pLoadout, int iSlot, void *pVTable, void *pVTable_Attributes)
+bool AFKBot::givePlayerLoadOut(edict_t *pPlayer, CTF2Loadout *pLoadout, int iSlot, void *pVTable, void *pVTable_Attributes)
 {
 	CBaseEntity *pEnt = servergameents->EdictToBaseEntity(pPlayer);
 	// first remove any thing from the slot
-	RCBotPluginMeta::TF2_RemoveWeaponSlot(pPlayer, iSlot);
+	AFKBot::TF2_RemoveWeaponSlot(pPlayer, iSlot);
 
 	CEconItemView hScriptCreatedItem;
 	memset(&hScriptCreatedItem, 0, sizeof(CEconItemView));
@@ -494,7 +310,7 @@ bool RCBotPluginMeta::givePlayerLoadOut(edict_t *pPlayer, CTF2Loadout *pLoadout,
 	return added != NULL;
 }
 
-void RCBotPluginMeta::Hook_PlayerRunCmd(CUserCmd *ucmd, IMoveHelper *moveHelper)
+void AFKBot::Hook_PlayerRunCmd(CUserCmd *ucmd, IMoveHelper *moveHelper)
 {
 	static CBot *pBot;
 
@@ -530,7 +346,7 @@ void RCBotPluginMeta::Hook_PlayerRunCmd(CUserCmd *ucmd, IMoveHelper *moveHelper)
 RETURN_META(MRES_IGNORED); 
 }
 
-CBaseEntity *RCBotPluginMeta::Hook_GiveNamedItem( const char *name, int subtype, CEconItemView *cscript, bool b )
+CBaseEntity *AFKBot::Hook_GiveNamedItem( const char *name, int subtype, CEconItemView *cscript, bool b )
 {
 	CBaseEntity *pPlayer = META_IFACEPTR(CBaseEntity);
 	edict_t *pEdict = servergameents->BaseEntityToEdict(pPlayer);
@@ -557,7 +373,7 @@ public:
 } s_BaseAccessor;
 
 // --- you're going to take over message begin
-bf_write *RCBotPluginMeta::Hook_MessageBegin(IRecipientFilter *filter, int msg_type)
+bf_write *AFKBot::Hook_MessageBegin(IRecipientFilter *filter, int msg_type)
 {
 	/*
 	bool bfound = false;
@@ -592,11 +408,11 @@ bf_write *RCBotPluginMeta::Hook_MessageBegin(IRecipientFilter *filter, int msg_t
 
 	if (current_msg)
 	{
-		SH_ADD_HOOK_MEMFUNC(bf_write, WriteString, current_msg, this, &RCBotPluginMeta::Hook_WriteString, true);
-		SH_ADD_HOOK_MEMFUNC(bf_write, WriteByte, current_msg, this, &RCBotPluginMeta::Hook_WriteByte, true);
-		SH_ADD_HOOK_MEMFUNC(bf_write, WriteChar, current_msg, this, &RCBotPluginMeta::Hook_WriteChar, true);
-		SH_ADD_HOOK_MEMFUNC(bf_write, WriteShort, current_msg, this, &RCBotPluginMeta::Hook_WriteShort, true);
-		SH_ADD_HOOK_MEMFUNC(bf_write, WriteFloat, current_msg, this, &RCBotPluginMeta::Hook_WriteFloat, true);
+		SH_ADD_HOOK_MEMFUNC(bf_write, WriteString, current_msg, this, &AFKBot::Hook_WriteString, true);
+		SH_ADD_HOOK_MEMFUNC(bf_write, WriteByte, current_msg, this, &AFKBot::Hook_WriteByte, true);
+		SH_ADD_HOOK_MEMFUNC(bf_write, WriteChar, current_msg, this, &AFKBot::Hook_WriteChar, true);
+		SH_ADD_HOOK_MEMFUNC(bf_write, WriteShort, current_msg, this, &AFKBot::Hook_WriteShort, true);
+		SH_ADD_HOOK_MEMFUNC(bf_write, WriteFloat, current_msg, this, &AFKBot::Hook_WriteFloat, true);
 	}
 
 	//
@@ -605,28 +421,28 @@ bf_write *RCBotPluginMeta::Hook_MessageBegin(IRecipientFilter *filter, int msg_t
 	RETURN_META_VALUE(MRES_IGNORED, NULL);
 }
 
-void RCBotPluginMeta::Hook_WriteChar(int val)
+void AFKBot::Hook_WriteChar(int val)
 {
 	/*char tocat[64];
 
 	sprintf(tocat, "\nWriteChar(%c)", (char)val);
 	strcat(current_msg_buffer, tocat);*/
 }
-void RCBotPluginMeta::Hook_WriteShort(int val)
+void AFKBot::Hook_WriteShort(int val)
 {
 	/*char tocat[64];
 
 	sprintf(tocat, "\nWriteShort(%d)", val);
 	strcat(current_msg_buffer, tocat);*/
 }
-void RCBotPluginMeta::Hook_WriteByte(int val)
+void AFKBot::Hook_WriteByte(int val)
 {
 	/*char tocat[64];
 
 	sprintf(tocat, "\nWriteByte(%d)", val);
 	strcat(current_msg_buffer, tocat);*/
 }
-void RCBotPluginMeta::Hook_WriteFloat(float val)
+void AFKBot::Hook_WriteFloat(float val)
 {
 	/*char tocat[64];
 
@@ -634,7 +450,7 @@ void RCBotPluginMeta::Hook_WriteFloat(float val)
 	strcat(current_msg_buffer, tocat);*/
 }
 
-bool RCBotPluginMeta::Hook_WriteString(const char *pStr)
+bool AFKBot::Hook_WriteString(const char *pStr)
 {
 	/*char *tocat = new char[strlen(pStr) + 16];
 	
@@ -646,7 +462,7 @@ bool RCBotPluginMeta::Hook_WriteString(const char *pStr)
 	RETURN_META_VALUE(MRES_IGNORED, false);
 }
 
-void RCBotPluginMeta::Hook_MessageEnd()
+void AFKBot::Hook_MessageEnd()
 {
 	// probe the current_msg m_pData
 	// deep copy the data because it might free itself later
@@ -654,11 +470,11 @@ void RCBotPluginMeta::Hook_MessageEnd()
 	//current_msg_buffer[BUF_SIZ - 1] = 0;
 	/*if (current_msg)
 	{
-		SH_REMOVE_HOOK_MEMFUNC(bf_write, WriteString, current_msg, this, &RCBotPluginMeta::Hook_WriteString, true);
-		SH_REMOVE_HOOK_MEMFUNC(bf_write, WriteByte, current_msg, this, &RCBotPluginMeta::Hook_WriteByte, true);
-		SH_REMOVE_HOOK_MEMFUNC(bf_write, WriteChar, current_msg, this, &RCBotPluginMeta::Hook_WriteChar, true);
-		SH_REMOVE_HOOK_MEMFUNC(bf_write, WriteShort, current_msg, this, &RCBotPluginMeta::Hook_WriteShort, true);
-		SH_REMOVE_HOOK_MEMFUNC(bf_write, WriteFloat, current_msg, this, &RCBotPluginMeta::Hook_WriteFloat, true);
+		SH_REMOVE_HOOK_MEMFUNC(bf_write, WriteString, current_msg, this, &AFKBot::Hook_WriteString, true);
+		SH_REMOVE_HOOK_MEMFUNC(bf_write, WriteByte, current_msg, this, &AFKBot::Hook_WriteByte, true);
+		SH_REMOVE_HOOK_MEMFUNC(bf_write, WriteChar, current_msg, this, &AFKBot::Hook_WriteChar, true);
+		SH_REMOVE_HOOK_MEMFUNC(bf_write, WriteShort, current_msg, this, &AFKBot::Hook_WriteShort, true);
+		SH_REMOVE_HOOK_MEMFUNC(bf_write, WriteFloat, current_msg, this, &AFKBot::Hook_WriteFloat, true);
 	}
 
 	current_msg_buffer[0] = 0;*/
@@ -666,7 +482,7 @@ void RCBotPluginMeta::Hook_MessageEnd()
 	RETURN_META(MRES_IGNORED);
 }
 
-bool RCBotPluginMeta::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool late)
+bool AFKBot::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool late)
 {
 	extern MTRand_int32 irand;
 
@@ -707,22 +523,22 @@ bool RCBotPluginMeta::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxle
 	}
 
 
-	/*SH_ADD_HOOK_MEMFUNC(IVEngineServer, UserMessageBegin, engine, this, &RCBotPluginMeta::Hook_MessageBegin, false);
-	SH_ADD_HOOK_MEMFUNC(IVEngineServer, MessageEnd, engine, this, &RCBotPluginMeta::Hook_MessageEnd, false);*/
+	/*SH_ADD_HOOK_MEMFUNC(IVEngineServer, UserMessageBegin, engine, this, &AFKBot::Hook_MessageBegin, false);
+	SH_ADD_HOOK_MEMFUNC(IVEngineServer, MessageEnd, engine, this, &AFKBot::Hook_MessageEnd, false);*/
 	
-	SH_ADD_HOOK_MEMFUNC(IServerGameDLL, LevelInit, server, this, &RCBotPluginMeta::Hook_LevelInit, true);
-	SH_ADD_HOOK_MEMFUNC(IServerGameDLL, ServerActivate, server, this, &RCBotPluginMeta::Hook_ServerActivate, true);
-	SH_ADD_HOOK_MEMFUNC(IServerGameDLL, GameFrame, server, this, &RCBotPluginMeta::Hook_GameFrame, true);
-	SH_ADD_HOOK_MEMFUNC(IServerGameDLL, LevelShutdown, server, this, &RCBotPluginMeta::Hook_LevelShutdown, false);
-	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientActive, gameclients, this, &RCBotPluginMeta::Hook_ClientActive, true);
-	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientDisconnect, gameclients, this, &RCBotPluginMeta::Hook_ClientDisconnect, true);
-	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientPutInServer, gameclients, this, &RCBotPluginMeta::Hook_ClientPutInServer, true);
-	SH_ADD_HOOK_MEMFUNC(IServerGameClients, SetCommandClient, gameclients, this, &RCBotPluginMeta::Hook_SetCommandClient, true);
-	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientSettingsChanged, gameclients, this, &RCBotPluginMeta::Hook_ClientSettingsChanged, false);
-	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientConnect, gameclients, this, &RCBotPluginMeta::Hook_ClientConnect, false);
-	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientCommand, gameclients, this, &RCBotPluginMeta::Hook_ClientCommand, false);
+	SH_ADD_HOOK_MEMFUNC(IServerGameDLL, LevelInit, server, this, &AFKBot::Hook_LevelInit, true);
+	SH_ADD_HOOK_MEMFUNC(IServerGameDLL, ServerActivate, server, this, &AFKBot::Hook_ServerActivate, true);
+	SH_ADD_HOOK_MEMFUNC(IServerGameDLL, GameFrame, server, this, &AFKBot::Hook_GameFrame, true);
+	SH_ADD_HOOK_MEMFUNC(IServerGameDLL, LevelShutdown, server, this, &AFKBot::Hook_LevelShutdown, false);
+	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientActive, gameclients, this, &AFKBot::Hook_ClientActive, true);
+	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientDisconnect, gameclients, this, &AFKBot::Hook_ClientDisconnect, true);
+	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientPutInServer, gameclients, this, &AFKBot::Hook_ClientPutInServer, true);
+	SH_ADD_HOOK_MEMFUNC(IServerGameClients, SetCommandClient, gameclients, this, &AFKBot::Hook_SetCommandClient, true);
+	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientSettingsChanged, gameclients, this, &AFKBot::Hook_ClientSettingsChanged, false);
+	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientConnect, gameclients, this, &AFKBot::Hook_ClientConnect, false);
+	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientCommand, gameclients, this, &AFKBot::Hook_ClientCommand, false);
 	//Hook FireEvent to our function
-	SH_ADD_HOOK_MEMFUNC(IGameEventManager2, FireEvent, gameevents, this, &RCBotPluginMeta::FireGameEvent, false);
+	SH_ADD_HOOK_MEMFUNC(IGameEventManager2, FireEvent, gameevents, this, &AFKBot::FireGameEvent, false);
 
 
 #if SOURCE_ENGINE >= SE_ORANGEBOX
@@ -754,48 +570,28 @@ bool RCBotPluginMeta::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxle
 
 #ifdef _WIN32
 
-	if (pKVL->getInt("givenameditem_win", &val))		
-		rcbot_givenameditem_offset.SetValue(val);
-	if (pKVL->getInt("equipwearable_win", &val))
-		rcbot_equipwearable_offset.SetValue(val);
 	if (pKVL->getInt("runplayermove_tf2_win", &val))
 		rcbot_runplayercmd_tf2.SetValue(val);
 	if (pKVL->getInt("runplayermove_dods_win", &val))
 		rcbot_runplayercmd_dods.SetValue(val);
 	if (pKVL->getInt("getweaponslot_win", &val))
 		rcbot_getweaponslot_offset.SetValue(val);
-	if (pKVL->getInt("removewearable_win", &val))
-		rcbot_removewearable_offset.SetValue(val);
-	if (pKVL->getInt("removeplayeritem_win", &val))
-		rcbot_rmplayeritem_offset.SetValue(val);
 	if (pKVL->getInt("weaponequip_win", &val))
 		rcbot_weaponequip_offset.SetValue(val);
 	if (pKVL->getInt("gamerules_win", &val))
 		rcbot_gamerules_offset.SetValue(val);
 #else
 
-	if (pKVL->getInt("givenameditem_linux", &val))
-		rcbot_givenameditem_offset.SetValue(val);
-	if (pKVL->getInt("equipwearable_linux", &val))
-		rcbot_equipwearable_offset.SetValue(val);
 	if (pKVL->getInt("runplayermove_tf2_linux", &val))
 		rcbot_runplayercmd_tf2.SetValue(val);
 	if (pKVL->getInt("runplayermove_dods_linux", &val))
 		rcbot_runplayercmd_dods.SetValue(val);
 	if (pKVL->getInt("getweaponslot_linux", &val))
 		rcbot_getweaponslot_offset.SetValue(val);
-	if (pKVL->getInt("removewearable_linux", &val))
-		rcbot_removewearable_offset.SetValue(val);
-	if (pKVL->getInt("removeplayeritem_linux", &val))
-		rcbot_rmplayeritem_offset.SetValue(val);
 	if (pKVL->getInt("weaponequip_linux", &val))
 		rcbot_weaponequip_offset.SetValue(val);
 #endif
 
-	g_pGetEconItemSchema = new CGetEconItemSchema(pKVL, gameServerFactory);
-	g_pSetRuntimeAttributeValue = new CSetRuntimeAttributeValue(pKVL, gameServerFactory);
-	g_pGetAttributeDefinitionByName = new CGetAttributeDefinitionByName(pKVL, gameServerFactory);
-	g_pAttribList_GetAttributeByID = new CAttributeList_GetAttributeByID(pKVL, gameServerFactory);
 	g_pGameRules_Obj = new CGameRulesObject(pKVL, gameServerFactory);
 	g_pGameRules_Create_Obj = new CCreateGameRulesObject(pKVL, gameServerFactory);
 
@@ -816,8 +612,6 @@ bool RCBotPluginMeta::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxle
 		else if (pMod->getModId() == MOD_DOD)
 			SH_MANUALHOOK_RECONFIGURE(MHook_PlayerRunCmd, rcbot_runplayercmd_dods.GetInt(), 0, 0);
 	}
-	if (pMod->getModId() == MOD_TF2) 
-		SH_MANUALHOOK_RECONFIGURE(MHook_GiveNamedItem,rcbot_givenameditem_offset.GetInt(),0,0);
 
 	ENGINE_CALL(LogPrint)("All hooks started!\n");
 
@@ -874,7 +668,7 @@ bool RCBotPluginMeta::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxle
 }
 
 
-bool RCBotPluginMeta::FireGameEvent(IGameEvent * pevent, bool bDontBroadcast)
+bool AFKBot::FireGameEvent(IGameEvent * pevent, bool bDontBroadcast)
 {
 	static char szKey[128];
 	static char szValue[128];
@@ -884,19 +678,19 @@ bool RCBotPluginMeta::FireGameEvent(IGameEvent * pevent, bool bDontBroadcast)
 RETURN_META_VALUE(MRES_IGNORED, true);
 }
 
-bool RCBotPluginMeta::Unload(char *error, size_t maxlen)
+bool AFKBot::Unload(char *error, size_t maxlen)
 {
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameDLL, LevelInit, server, this, &RCBotPluginMeta::Hook_LevelInit, true);
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameDLL, ServerActivate, server, this, &RCBotPluginMeta::Hook_ServerActivate, true);
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameDLL, GameFrame, server, this, &RCBotPluginMeta::Hook_GameFrame, true);
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameDLL, LevelShutdown, server, this, &RCBotPluginMeta::Hook_LevelShutdown, false);
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientActive, gameclients, this, &RCBotPluginMeta::Hook_ClientActive, true);
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientDisconnect, gameclients, this, &RCBotPluginMeta::Hook_ClientDisconnect, true);
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientPutInServer, gameclients, this, &RCBotPluginMeta::Hook_ClientPutInServer, true);
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, SetCommandClient, gameclients, this, &RCBotPluginMeta::Hook_SetCommandClient, true);
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientSettingsChanged, gameclients, this, &RCBotPluginMeta::Hook_ClientSettingsChanged, false);
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientConnect, gameclients, this, &RCBotPluginMeta::Hook_ClientConnect, false);
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientCommand, gameclients, this, &RCBotPluginMeta::Hook_ClientCommand, false);
+	SH_REMOVE_HOOK_MEMFUNC(IServerGameDLL, LevelInit, server, this, &AFKBot::Hook_LevelInit, true);
+	SH_REMOVE_HOOK_MEMFUNC(IServerGameDLL, ServerActivate, server, this, &AFKBot::Hook_ServerActivate, true);
+	SH_REMOVE_HOOK_MEMFUNC(IServerGameDLL, GameFrame, server, this, &AFKBot::Hook_GameFrame, true);
+	SH_REMOVE_HOOK_MEMFUNC(IServerGameDLL, LevelShutdown, server, this, &AFKBot::Hook_LevelShutdown, false);
+	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientActive, gameclients, this, &AFKBot::Hook_ClientActive, true);
+	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientDisconnect, gameclients, this, &AFKBot::Hook_ClientDisconnect, true);
+	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientPutInServer, gameclients, this, &AFKBot::Hook_ClientPutInServer, true);
+	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, SetCommandClient, gameclients, this, &AFKBot::Hook_SetCommandClient, true);
+	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientSettingsChanged, gameclients, this, &AFKBot::Hook_ClientSettingsChanged, false);
+	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientConnect, gameclients, this, &AFKBot::Hook_ClientConnect, false);
+	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientCommand, gameclients, this, &AFKBot::Hook_ClientCommand, false);
 	
 	//SH_REMOVE_MANUALHOOK(MHook_PlayerRunCmd, player_vtable, SH_STATIC(Hook_Function2), false);
 
@@ -942,12 +736,12 @@ bool RCBotPluginMeta::Unload(char *error, size_t maxlen)
 	return true;
 }
 
-void RCBotPluginMeta::OnVSPListening(IServerPluginCallbacks *iface)
+void AFKBot::OnVSPListening(IServerPluginCallbacks *iface)
 {
 	vsp_callbacks = iface;
 }
 
-void RCBotPluginMeta::Hook_ServerActivate(edict_t *pEdictList, int edictCount, int clientMax)
+void AFKBot::Hook_ServerActivate(edict_t *pEdictList, int edictCount, int clientMax)
 {
 	META_LOG(g_PLAPI, "ServerActivate() called: edictCount = %d, clientMax = %d", edictCount, clientMax);
 
@@ -956,14 +750,14 @@ void RCBotPluginMeta::Hook_ServerActivate(edict_t *pEdictList, int edictCount, i
 	CBotGlobals::setClientMax(clientMax);
 }
 
-void RCBotPluginMeta::AllPluginsLoaded()
+void AFKBot::AllPluginsLoaded()
 {
 	/* This is where we'd do stuff that relies on the mod or other plugins 
 	 * being initialized (for example, cvars added and events registered).
 	 */
 }
 
-void RCBotPluginMeta::Hook_ClientActive(edict_t *pEntity, bool bLoadGame)
+void AFKBot::Hook_ClientActive(edict_t *pEntity, bool bLoadGame)
 {
 	META_LOG(g_PLAPI, "Hook_ClientActive(%d, %d)", IndexOfEdict(pEntity), bLoadGame);
 
@@ -971,9 +765,9 @@ void RCBotPluginMeta::Hook_ClientActive(edict_t *pEntity, bool bLoadGame)
 }
 
 #if SOURCE_ENGINE >= SE_ORANGEBOX
-void RCBotPluginMeta::Hook_ClientCommand(edict_t *pEntity, const CCommand &args)
+void AFKBot::Hook_ClientCommand(edict_t *pEntity, const CCommand &args)
 #else
-void RCBotPluginMeta::Hook_ClientCommand(edict_t *pEntity)
+void AFKBot::Hook_ClientCommand(edict_t *pEntity)
 #endif
 {
 	static CBotMod *pMod = NULL;
@@ -1041,16 +835,12 @@ void RCBotPluginMeta::Hook_ClientCommand(edict_t *pEntity)
 	RETURN_META(MRES_IGNORED); 
 }
 
-void RCBotPluginMeta::Hook_ClientSettingsChanged(edict_t *pEdict)
+void AFKBot::Hook_ClientSettingsChanged(edict_t *pEdict)
 {
 
 }
 
-bool RCBotPluginMeta::Hook_ClientConnect(edict_t *pEntity,
-									const char *pszName,
-									const char *pszAddress,
-									char *reject,
-									int maxrejectlen)
+bool AFKBot::Hook_ClientConnect(edict_t *pEntity, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen)
 {
 	META_LOG(g_PLAPI, "Hook_ClientConnect(%d, \"%s\", \"%s\")", IndexOfEdict(pEntity), pszName, pszAddress);
 
@@ -1059,7 +849,7 @@ bool RCBotPluginMeta::Hook_ClientConnect(edict_t *pEntity,
 	return true;
 }
 
-void RCBotPluginMeta::Hook_ClientPutInServer(edict_t *pEntity, char const *playername)
+void AFKBot::Hook_ClientPutInServer(edict_t *pEntity, char const *playername)
 {
 	CBaseEntity *pEnt = servergameents->EdictToBaseEntity(pEntity);
 	bool is_Rcbot = false;
@@ -1090,13 +880,11 @@ void RCBotPluginMeta::Hook_ClientPutInServer(edict_t *pEntity, char const *playe
 	if ( pEnt )
 	{
 		if (CBots::controlBots())
-			SH_ADD_MANUALHOOK_MEMFUNC(MHook_PlayerRunCmd, pEnt, this, &RCBotPluginMeta::Hook_PlayerRunCmd, false);
-		if ( pMod->getModId() == MOD_TF2 )
-			SH_ADD_MANUALHOOK_MEMFUNC(MHook_GiveNamedItem, pEnt, this, &RCBotPluginMeta::Hook_GiveNamedItem, false);
+			SH_ADD_MANUALHOOK_MEMFUNC(MHook_PlayerRunCmd, pEnt, this, &AFKBot::Hook_PlayerRunCmd, false);
 	}
 }
 
-void RCBotPluginMeta::Hook_ClientDisconnect(edict_t *pEntity)
+void AFKBot::Hook_ClientDisconnect(edict_t *pEntity)
 {
 	CBaseEntity *pEnt = servergameents->EdictToBaseEntity(pEntity);
 
@@ -1105,9 +893,7 @@ void RCBotPluginMeta::Hook_ClientDisconnect(edict_t *pEntity)
 		CBotMod *pMod = CBotGlobals::getCurrentMod();
 
 		if (CBots::controlBots())
-			SH_REMOVE_MANUALHOOK_MEMFUNC(MHook_PlayerRunCmd, pEnt, this, &RCBotPluginMeta::Hook_PlayerRunCmd, false);
-		if (pMod->getModId() == MOD_TF2)		
-			SH_REMOVE_MANUALHOOK_MEMFUNC(MHook_GiveNamedItem, pEnt, this, &RCBotPluginMeta::Hook_GiveNamedItem, false); 
+			SH_REMOVE_MANUALHOOK_MEMFUNC(MHook_PlayerRunCmd, pEnt, this, &AFKBot::Hook_PlayerRunCmd, false);
 	}
 
 	CClients::clientDisconnected(pEntity);
@@ -1115,7 +901,7 @@ void RCBotPluginMeta::Hook_ClientDisconnect(edict_t *pEntity)
 	META_LOG(g_PLAPI, "Hook_ClientDisconnect(%d)", IndexOfEdict(pEntity));
 }
 
-void RCBotPluginMeta::Hook_GameFrame(bool simulating)
+void AFKBot::Hook_GameFrame(bool simulating)
 {
 	/**
 	 * simulating:
@@ -1155,12 +941,7 @@ void RCBotPluginMeta::Hook_GameFrame(bool simulating)
 	}
 }
 
-bool RCBotPluginMeta::Hook_LevelInit(const char *pMapName,
-								char const *pMapEntities,
-								char const *pOldLevel,
-								char const *pLandmarkName,
-								bool loadGame,
-								bool background)
+bool AFKBot::Hook_LevelInit(const char *pMapName, char const *pMapEntities, char const *pOldLevel, char const *pLandmarkName, bool loadGame, bool background)
 {
 	META_LOG(g_PLAPI, "Hook_LevelInit(%s)", pMapName);
 
@@ -1215,7 +996,7 @@ bool RCBotPluginMeta::Hook_LevelInit(const char *pMapName,
 	return true;
 }
 
-void RCBotPluginMeta::Hook_LevelShutdown()
+void AFKBot::Hook_LevelShutdown()
 {
 	META_LOG(g_PLAPI, "Hook_LevelShutdown()");
 
@@ -1229,57 +1010,57 @@ void RCBotPluginMeta::Hook_LevelShutdown()
 	CBotEvents::freeMemory();
 }
 
-void RCBotPluginMeta::Hook_SetCommandClient(int index)
+void AFKBot::Hook_SetCommandClient(int index)
 {
 	META_LOG(g_PLAPI, "Hook_SetCommandClient(%d)", index);
 }
 
-bool RCBotPluginMeta::Pause(char *error, size_t maxlen)
+bool AFKBot::Pause(char *error, size_t maxlen)
 {
 	return true;
 }
 
-bool RCBotPluginMeta::Unpause(char *error, size_t maxlen)
+bool AFKBot::Unpause(char *error, size_t maxlen)
 {
 	return true;
 }
 
-const char *RCBotPluginMeta::GetLicense()
+const char *AFKBot::GetLicense()
 {
 	return "GPL General Public License";
 }
 
-const char *RCBotPluginMeta::GetVersion()
+const char *AFKBot::GetVersion()
 {
 	return "1.0.0.0";
 }
 
-const char *RCBotPluginMeta::GetDate()
+const char *AFKBot::GetDate()
 {
 	return __DATE__;
 }
 
-const char *RCBotPluginMeta::GetLogTag()
+const char *AFKBot::GetLogTag()
 {
-	return "RCBOT2";
+	return "AFKBOT";
 }
 
-const char *RCBotPluginMeta::GetAuthor()
+const char *AFKBot::GetAuthor()
 {
-	return "Cheeseh";
+	return "Deathreus";
 }
 
-const char *RCBotPluginMeta::GetDescription()
+const char *AFKBot::GetDescription()
 {
-	return "Bot for HL2DM TF2 and DOD:S";
+	return "Allows a player to have a bot take control of them";
 }
 
-const char *RCBotPluginMeta::GetName()
+const char *AFKBot::GetName()
 {
-	return "RCBot2";
+	return "AFK Bot";
 }
 
-const char *RCBotPluginMeta::GetURL()
+const char *AFKBot::GetURL()
 {
-	return "http://rcbot.bots-united.com/";
+	return "http://www.sourcemm.net/";
 }

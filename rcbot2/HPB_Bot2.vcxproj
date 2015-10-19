@@ -21,7 +21,7 @@
     <SccAuxPath>Svn</SccAuxPath>
     <SccLocalPath>Svn</SccLocalPath>
     <SccProvider>SubversionScc</SccProvider>
-    <ProjectName>RCBot2Meta</ProjectName>
+    <ProjectName>AFKBot</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_NonHomeFolder|Win32'" Label="Configuration">
@@ -117,7 +117,7 @@ copy $(TargetPath) "C:\Program Files (x86)\Steam\SteamApps\common\Day of Defeat 
     <Link>
       <AdditionalDependencies>
       </AdditionalDependencies>
-      <OutputFile>.\Debug/rcbot2meta.dll</OutputFile>
+      <OutputFile>.\Debug/afkbot.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>..\..\lib\public;..\..\lib\common;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
@@ -191,7 +191,7 @@ copy "$(ProjectDir)\update.txt" "C:\Program Files (x86)\Steam\steamapps\paul.mur
     <Link>
       <AdditionalDependencies>
       </AdditionalDependencies>
-      <OutputFile>.\Release/rcbot2meta.dll</OutputFile>
+      <OutputFile>.\Release/afkbot.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>..\..\lib\public;..\..\lib\common;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>LIBC;LIBCD;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -392,10 +392,6 @@ copy "$(ProjectDir)\update.txt" "C:\Program Files (x86)\Steam\steamapps\paul.mur
     <ClInclude Include="..\..\public\mathlib\vector.h" />
     <ClInclude Include="..\..\public\vstdlib\vstdlib.h" />
     <ClInclude Include="bot_plugin_meta.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="tf2weaponsgive.txt" />
-    <Text Include="update.txt" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\lib\public\mathlib.lib" />

@@ -59,7 +59,7 @@ class CTF2Loadout;
 #define snprintf _snprintf
 #endif
 
-class RCBotPluginMeta : public ISmmPlugin, public IMetamodListener
+class AFKBot : public ISmmPlugin, public IMetamodListener
 {
 public:
 	bool Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool late);
@@ -129,14 +129,11 @@ public:
 	const char *GetDate();
 	const char *GetLogTag();
 
-	static bool UTIL_TF2EquipHat(edict_t *pEdict, CTF2Loadout *pHat, void *vTable, void *vTableAttributes);
-	static CTF2Loadout *UTIL_TF2EquipRandomHat(edict_t *pEdict, void *vTable, void *vTableAttributes);
-
 private:
 	int m_iClientCommandIndex;
 };
 
-extern RCBotPluginMeta g_RCBotPluginMeta;
+extern AFKBot g_RCBotPluginMeta;
 
 PLUGIN_GLOBALVARS();
 
