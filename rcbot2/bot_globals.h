@@ -38,6 +38,10 @@
 #include "bot_const.h" // for Mod id
 #include "bot_commands.h" // for main rcbot command
 
+#ifdef _WIN32
+#include <ctype.h>
+#endif
+
 #define MAX_MAP_STRING_LEN 64
 #define MAX_PATH_LEN 512
 #define MAX_ENTITIES 2048
@@ -48,6 +52,7 @@ public:
 	CBotGlobals ();
 
 	static void init ();
+	static bool initModFolder ();
 
 	static bool gameStart ();	
 
@@ -208,6 +213,18 @@ public:
 
 	static void readRCBotFolder();
 	
+	static bool dirExists(const char *path);
+
+	static bool str_is_empty(const char *s) {
+		while (*s != '\0') {
+			if (!isspace(*s))
+				return false;
+			s++;
+		}
+
+		return true;
+	}
+
 private:
 	static eModId m_iCurrentMod;
 	static CBotMod *m_pCurrentMod;

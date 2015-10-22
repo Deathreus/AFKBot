@@ -93,10 +93,10 @@ void CBotProfiles :: deleteProfiles ()
 // reads integers between 0 and 100 and converts to between 0.0 and 1.0
 #define READ_PROFILE_FLOAT(kvname,varname) { float fval; if ( !pKVL->getFloat(##kvname##,&fval) ) { read.varname = m_pDefaultProfile->varname; } else { read.varname = fval * 0.01f; } }
 #else
-#define READ_PROFILE_STRING(kvname,varname) if ( !pKVL->getString(#kvname,&read.varname) ) { read.varname = m_pDefaultProfile->varname; }
-#define READ_PROFILE_INT(kvname,varname) if ( !pKVL->getInt(#kvname,&read.varname) ) { read.varname = m_pDefaultProfile->varname; }
+#define READ_PROFILE_STRING(kvname,varname) if ( !pKVL->getString(kvname,&read.varname) ) { read.varname = m_pDefaultProfile->varname; }
+#define READ_PROFILE_INT(kvname,varname) if ( !pKVL->getInt(kvname,&read.varname) ) { read.varname = m_pDefaultProfile->varname; }
 // reads integers between 0 and 100 and converts to between 0.0 and 1.0
-#define READ_PROFILE_FLOAT(kvname,varname) { float fval; if ( !pKVL->getFloat(#kvname,&fval) ) { read.varname = m_pDefaultProfile->varname; } else { read.varname = fval * 0.01f; } }
+#define READ_PROFILE_FLOAT(kvname,varname) { float fval; if ( !pKVL->getFloat(kvname,&fval) ) { read.varname = m_pDefaultProfile->varname; } else { read.varname = fval * 0.01f; } }
 #endif
 // find profiles and setup list
 void CBotProfiles :: setupProfiles ()
@@ -147,7 +147,7 @@ void CBotProfiles :: setupProfiles ()
 			READ_PROFILE_STRING("name",m_szName);
 			READ_PROFILE_INT("visionticks",m_iVisionTicks);
 			READ_PROFILE_INT("pathticks",m_iPathTicks);
-			READ_PROFILE_INT("visionticksclients",m_iVisionTicksClients);
+			READ_PROFILE_INT("visionticks_clients",m_iVisionTicksClients);
 			READ_PROFILE_INT("sensitivity",m_iSensitivity);
 			READ_PROFILE_FLOAT("aim_skill",m_fAimSkill);
 			READ_PROFILE_FLOAT("braveness",m_fBraveness);

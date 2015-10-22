@@ -69,7 +69,7 @@ size_t CSignatureFunction :: decodeHexString(unsigned char *buffer, size_t maxle
 			s_byte[1] = hexstr[i + 3];
 			s_byte[2] = '\0';
 			// Read it as an integer 
-			sscanf_s(s_byte, "%x", &r_byte);
+			sscanf(s_byte, "%x", &r_byte);
 			// Save the value 
 			buffer[written - 1] = r_byte;
 			// Adjust index 

@@ -105,11 +105,17 @@ void CBotConfigFile :: load ()
 		if ( line[0] == '#' )
 			continue;
 
-		//len = strlen(line);
+		size_t len = strlen(line);
 
-		//if ( line[len-1] == '\n' || ( line[len-1] == '\r' ))
-		//	line[--len] = 0;
+		if (line[len-1] == '\n') {
+			line[--len] = '\0';
+		}
 
+		if (line[len-1] == '\r') {
+			line[--len] = '\0';
+		}
+
+		CBotGlobals::botMessage(NULL, 0, line);
 		m_Commands.push_back(CStrings::getString(line));
 	}
 
@@ -119,14 +125,33 @@ void CBotConfigFile :: load ()
 
 void CBotConfigFile :: doNextCommand ()
 {
+	char cmd[64] = {0};
+
 	if ( (m_fNextCommandTime < engine->Time()) && (m_iCmd < m_Commands.size()) )
 	{
-		engine->ServerCommand(m_Commands[m_iCmd]);
+		snprintf(cmd, sizeof(cmd), "%s\n", m_Commands[m_iCmd]);
+		engine->ServerCommand(cmd);
 
 		CBotGlobals::botMessage(NULL,0,"Bot Command '%s' executed",m_Commands[m_iCmd]);
 		m_iCmd ++;
 		m_fNextCommandTime = engine->Time() + 0.1f;
 	}
+}
+
+void CBotConfigFile :: executeCommands ()
+{
+	char cmd[64] = {0};
+
+	while ( (m_iCmd < m_Commands.size()) )
+	{
+		snprintf(cmd, sizeof(cmd), "%s\n", m_Commands[m_iCmd]);
+		engine->ServerCommand(cmd);
+
+		CBotGlobals::botMessage(NULL,0,"Bot Command '%s' executed",m_Commands[m_iCmd]);
+		m_iCmd ++;
+	}
+
+	engine->ServerExecute();
 }
 
 void CRCBotTF2UtilFile :: init()

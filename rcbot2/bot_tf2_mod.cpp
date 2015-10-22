@@ -457,7 +457,9 @@ void CTeamFortress2Mod :: setupLoadOutWeapons ()
 								m_pLoadoutWeapons[islot][i - 1].push_back(added);
 						}
 
-						CBotGlobals::botMessage(NULL, 0, "FOUND hat : %s", loadout->GetString("name"));
+						if (!CBotGlobals::str_is_empty(loadout->GetString("name"))) {
+							CBotGlobals::botMessage(NULL, 0, "FOUND hat : %s", loadout->GetString("name"));
+						}
 					}
 				}
 
@@ -499,7 +501,9 @@ void CTeamFortress2Mod :: setupLoadOutWeapons ()
 						continue;
 					}*/
 
-					CBotGlobals::botMessage(NULL, 0, "FOUND loadout : %s", loadout->GetString("name"));
+					if (!CBotGlobals::str_is_empty(loadout->GetString("name"))) {
+						CBotGlobals::botMessage(NULL, 0, "FOUND loadout : %s", loadout->GetString("name"));
+					}
 
 					//attributes
 					added = new CTF2Loadout(classname,iindex,iquality,iminlevel,imaxlevel);
@@ -1648,18 +1652,60 @@ void CTeamFortress2Mod::updatePointMaster()
 
 		if ( pMaster )
 		{
+#ifdef _WIN32
 			extern ConVar rcbot_const_point_master_offset;
-
 			extern IServerGameEnts *servergameents;
 
 			CBaseEntity *pMasterEntity = servergameents->EdictToBaseEntity(pMaster);
-			unsigned long full_size = sizeof(pMasterEntity);
 
+			unsigned long full_size = sizeof(pMasterEntity);
 			unsigned long mempoint = ((unsigned long)pMasterEntity) + rcbot_const_point_master_offset.GetInt();
 
 			m_PointMaster = (CTeamControlPointMaster*)mempoint;
-
 			m_PointMasterResource = pMaster;
+#else
+			extern ConVar rcbot_const_point_master_offset;
+			CBaseEntity *pent = pMaster->GetUnknown()->GetBaseEntity();
+			unsigned long mempoint = ((unsigned long)pent)+rcbot_const_point_master_offset.GetInt();
+
+			m_PointMaster = (CTeamControlPointMaster*)mempoint;
+			m_PointMasterResource = pMaster;
+#endif
+
+			extern ConVar rcbot_const_round_offset;
+
+			int idx = m_PointMaster->m_iCurrentRoundIndex;
+			int size = m_PointMaster->m_ControlPointRounds.Size();
+
+			if (idx >= 0 && size >= 0 && idx < 100 && size < 100) {
+				int infoCount = 0;
+
+				for (int r = 0; r < m_PointMaster->m_ControlPointRounds.Size(); ++r) {
+					CBaseEntity *pent = m_PointMaster->m_ControlPointRounds[r];
+					CTeamControlPointRound* pointRound = (CTeamControlPointRound*)((unsigned long)pent + (unsigned long)rcbot_const_round_offset.GetInt());
+
+					CBotGlobals::botMessage(NULL, 0, "Control Points for Round %d", r);
+
+					for (int i = 0; i < pointRound->m_ControlPoints.Count(); ++i) {
+						CBaseHandle* handle = &pointRound->m_ControlPoints.Element(i);
+
+						if (handle->IsValid()) {
+							edict_t* edict = INDEXENT(handle->GetEntryIndex());
+
+							if (!edict->IsFree()) {
+								infoCount++;
+								CBotGlobals::botMessage(NULL, 0, "%d, %d, %d, %s", r, i, handle->GetSerialNumber(), edict->GetClassName());
+							}
+						}
+					}
+				}
+
+				if (infoCount == 0) {
+					CBotGlobals::botMessage(NULL, 0, "If you are playing cp_* maps, and you get this message, something might be wrong with your mstr_offset!");
+				}
+			} else {
+				CBotGlobals::botMessage(NULL, 0, "If you are playing cp_* maps, and you get this message, something might be wrong with your mstr_offset!");
+			}
 		}
 	}
 

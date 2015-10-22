@@ -36,7 +36,7 @@
 #ifndef __linux__
 #define BOT_WELCOME_MESSAGE "Welcome to RCBot by Cheeseh"
 #else
-#define BOT_WELCOME_MESSAGE "Welcome to RCBot by Cheeseh. Linux/MacOSx compiled by Ted"
+#define BOT_WELCOME_MESSAGE "Welcome to RCBot by Cheeseh for Linux/MacOSx"
 #endif
 
 #define BOT_DEFAULT_FOV 75.0f
@@ -69,6 +69,7 @@
 #define BOT_DEBUG_LOOK			11 
 #define BOT_DEBUG_HUD			12 
 #define BOT_DEBUG_AIM			13 
+#define BOT_DEBUG_CHAT			14
 
 // from sourcemod
 enum RoundState 
@@ -192,9 +193,9 @@ typedef enum
 #define BUILDNUM "365"*/
 #define BOT_NAME "RCBot"
 #ifdef __linux__
-#define BOT_VER "TF2/HL2DM/DOD:S 0.98 META linux 470 (BUILD " __DATE__ "-" __TIME__ ")" //bir3yk
+#define BOT_VER "TF2/HL2DM/DOD:S 1.00 META Linux 473 (BUILD " __DATE__ "-" __TIME__ ")" //bir3yk
 #else
-#define BOT_VER "TF2/HL2DM/DOD:S 0.98 META win32 470 (BUILD " ## __DATE__ ## "-" ## __TIME__ ## ")"
+#define BOT_VER "TF2/HL2DM/DOD:S 1.00 META Win32 473 (BUILD " ## __DATE__ ## "-" ## __TIME__ ## ")"
 #endif
 #define BOT_NAME_VER "RCbot version"
 #define BOT_VER_CVAR "rcbot_ver"

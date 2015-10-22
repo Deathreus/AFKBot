@@ -53,6 +53,8 @@
 #include "bitbuf.h"
 #include "in_buttons.h"
 #include "ndebugoverlay.h"
+#include "tier0/threadtools.h" // for critical sections
+#include "vstdlib/vstdlib.h"
 #include "vstdlib/random.h" // for random functions
 #include "iservernetworkable.h" // may come in handy
 #ifdef __linux__
@@ -94,6 +96,9 @@
 
 #define DEG_TO_RAD(x) (x)*0.0174533
 #define RAD_TO_DEG(x) (x)*57.29578
+
+// for critical sections
+CThreadMutex g_MutexAddBot;
 
 //extern void HookPlayerRunCommand ( edict_t *edict );
 
@@ -328,6 +333,16 @@ bool CBot :: createBotFromEdict(edict_t *pEdict, CBotProfile *pProfile)
 	/////////////////////////////
 
 	m_pProfile = pProfile;
+
+	CBotGlobals::botMessage(NULL, 0, "===================================");
+	CBotGlobals::botMessage(NULL, 0, "Creating Bot: %s", m_pProfile->m_szName);
+	CBotGlobals::botMessage(NULL, 0, "AimSkill: %f", m_pProfile->m_fAimSkill);
+	CBotGlobals::botMessage(NULL, 0, "Braveness: %f", m_pProfile->m_fBraveness);
+	CBotGlobals::botMessage(NULL, 0, "PathTicks: %d", m_pProfile->m_iPathTicks);
+	CBotGlobals::botMessage(NULL, 0, "Sensitivity: %d", m_pProfile->m_iSensitivity);
+	CBotGlobals::botMessage(NULL, 0, "VisionTicks: %d", m_pProfile->m_iVisionTicks);
+	CBotGlobals::botMessage(NULL, 0, "VisionTicksClients: %d", m_pProfile->m_iVisionTicksClients);
+	CBotGlobals::botMessage(NULL, 0, "===================================");
 
 	engine->SetFakeClientConVarValue(pEdict,"cl_team","default");
 	engine->SetFakeClientConVarValue(pEdict,"cl_defaultweapon","pistol");
@@ -2636,8 +2651,14 @@ void CBot :: getLookAtVector ()
 			}
 			else if ( m_pNavigator->hasNextPoint() && m_pButtons->holdingButton(IN_SPEED) )
 			{
-				m_pNavigator->getNextRoutePoint(&vLook);
-				setLookAt(vLook);
+				if (m_pNavigator->getNextRoutePoint(&vLook)) {
+					setLookAt(vLook);
+				} else {
+					vLook = m_pNavigator->getPreviousPoint();
+					setLookAt(vLook);
+
+					CClients::clientDebugMsg(BOT_DEBUG_AIM,"no valid route point",this);
+				}
 			}
 			else if ( (m_pLastEnemy.get()!=NULL) && ((m_fLastSeeEnemy + 5.0f) > engine->Time()) )
 				setLookAt(m_vLastSeeEnemy);
@@ -2854,6 +2875,10 @@ void CBot :: doLook ()
 		CBotCmd cmd = m_pPlayerInfo->GetLastUserCommand();
 
 		m_vViewAngles = cmd.viewangles;
+
+		if (m_vViewAngles.x == 0.0f && m_vViewAngles.y == 0.0f) {
+			CClients::clientDebugMsg(BOT_DEBUG_AIM, "view angle invalid", this);
+		}
 
 		changeAngles(fSensitivity,&requiredAngles.x,&m_vViewAngles.x,NULL);
 		changeAngles(fSensitivity,&requiredAngles.y,&m_vViewAngles.y,NULL);
@@ -3125,12 +3150,11 @@ bool CBots :: createBot (const char *szClass, const char *szTeam, const char *sz
 	if ( CBots::controlBots() )
 	{
 		extern ConVar bot_sv_cheats_auto;
+
 		char cmd[128];
+		memset(cmd, 0, sizeof(cmd));
 
 		extern ConCommandBase *puppet_bot_cmd;
-		//bool bChangedFlags = false;
-		//int nPrevFlags = 0;
-		//extern ConVar bot_cmd_nocheats;
 
 		// Attempt to make puppet bot command cheat free
 		if ( puppet_bot_cmd != NULL )
@@ -3144,18 +3168,14 @@ bool CBots :: createBot (const char *szClass, const char *szTeam, const char *sz
 			}
 		}
 
-		//if ( pBotProfile->getTeam() >= 1 )
-		// fix : dedicated server  - The_Shadow
-
 		extern ConVar *sv_cheats;
 	
-		const char *pparg[1];
-
-		pparg[0] = cmd;
+		// const char *pparg[1];
+		// pparg[0] = cmd;
 
 		sprintf(cmd,"%s -name \"%s\"\n",BOT_ADD_PUPPET_COMMAND,szOVName);
 
-		CCommand *com = new CCommand(1,pparg);
+		// CCommand *com = new CCommand(1,pparg);
 
 		int *m_nFlags = (int*)((unsigned long)sv_cheats + BOT_CONVAR_FLAGS_OFFSET); // 20 is offset to flags
 
@@ -3166,57 +3186,18 @@ bool CBots :: createBot (const char *szClass, const char *szTeam, const char *sz
 			sv_cheats->SetValue(1);
 
 		m_bControlNext = true;
-		((ConCommand*)puppet_bot_cmd)->Dispatch(*com);
+
+		engine->ServerCommand(cmd);
+		engine->ServerExecute();
+
+		// ((ConCommand*)puppet_bot_cmd)->Dispatch(*com);
 
 		if ( pMod->needCheatsHack() )
 			sv_cheats->SetValue(0);
 
 		*m_nFlags |= FCVAR_NOTIFY;
 
-		///sv_cheats->
-
-		delete com;
-/*
-		if ( szTeam && *szTeam )
-		{
-			strcat(cmd," -team ");
-			strcat(cmd,szTeam);
-		}
-
-		if ( szClass && *szClass )
-		{
-			strcat(cmd," -class ");
-			strcat(cmd,szClass);
-		}*/
-
-		//strcat(cmd,"\n");
-
-		// control next bot that joins server
-		
-
-		/*
-		if ( CClients::get(0)->getPlayer() && !engine->IsDedicatedServer()) // The_Shadow
-		{
-			if ( bot_sv_cheats_auto.GetBool() )
-				engine->ClientCommand(CClients::get(0)->getPlayer(),"sv_cheats 1\n");
-
-			engine->ClientCommand(CClients::get(0)->getPlayer(),cmd);
-
-			if ( bot_sv_cheats_auto.GetBool() )
-				engine->ClientCommand(CClients::get(0)->getPlayer(),"sv_cheats 0\n");
-
-		}
-		else
-		{
-			if ( bot_sv_cheats_auto.GetBool() )
-				engine->ServerCommand("sv_cheats 1\n");
-
-			engine->ServerCommand(cmd); // Might not work
-
-			if ( bot_sv_cheats_auto.GetBool() )
-				engine->ServerCommand("sv_cheats 0\n");
-
-		}*/
+		// delete com;
 
 		return true;
 	}
@@ -3229,7 +3210,6 @@ bool CBots :: createBot (const char *szClass, const char *szTeam, const char *sz
 
 		return ( m_Bots[slotOfEdict(pEdict)]->createBotFromEdict(pEdict,pBotProfile) );
 	}
-
 }
 
 void CBots :: botFunction ( IBotFunction *function )
@@ -3417,16 +3397,21 @@ void CBots :: botThink ()
 
 	if ( (m_flAddKickBotTime < engine->Time()) && (needToAddBot () || (m_AddBotQueue.size()>0)) )
 	{
-		if ( m_AddBotQueue.size() > 0 )
-		{
+		// lock the critical section
+		g_MutexAddBot.Lock();
+
+		if ( m_AddBotQueue.size() > 0 ) {
 			CAddbot newbot = m_AddBotQueue.front();
 			m_AddBotQueue.pop();
 
 			CBotGlobals::botMessage(NULL,0,"adding bot %s %s %s",CHECK_STRING(newbot.m_szClass),CHECK_STRING(newbot.m_szTeam),CHECK_STRING(newbot.m_szBotName));
 			createBot(newbot.m_szClass,newbot.m_szTeam,newbot.m_szBotName);
-		}
-		else
+		} else {
 			createBot(NULL,NULL,NULL);
+		}
+
+		// unlock the critical section
+		g_MutexAddBot.Unlock();
 	}
 	else if ( needToKickBot () )
 	{
@@ -3442,7 +3427,16 @@ void CBots :: botThink ()
 
 bool CBots :: addBot ( const char *szClass, const char *szTeam, const char *szName )
 {
-	if ( ((unsigned int)CBotGlobals::numClients() + m_AddBotQueue.size()) < (unsigned int)gpGlobals->maxClients )
+	// lock the critical section
+	g_MutexAddBot.Lock();
+
+	int numClients = CBotGlobals::numClients();
+	int botQueueSize = m_AddBotQueue.size();
+	int maxClients = gpGlobals->maxClients;
+
+	bool successful = false;
+
+	if ( (numClients + botQueueSize) < maxClients )
 	{
 		CAddbot newbot;
 
@@ -3451,17 +3445,13 @@ bool CBots :: addBot ( const char *szClass, const char *szTeam, const char *szNa
 		newbot.m_szBotName = CStrings::getString(szName);
 
 		m_AddBotQueue.push(newbot);
-
-		/*if ( m_iMaxBots == -1 )
-			m_iMaxBots = CBotGlobals::numClients()+1;
-		else 
-			m_iMaxBots ++;
-
-		CBotGlobals::botMessage(NULL,0,"max bots changed to %d",m_iMaxBots);*/
-		return true;
+		successful = true;
 	}
 
-	return false;
+	// unlock the critical section
+	g_MutexAddBot.Unlock();
+
+	return successful;
 }
 
 CBot *CBots :: getBotPointer ( edict_t *pEdict )
