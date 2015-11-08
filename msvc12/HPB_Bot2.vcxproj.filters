@@ -9,6 +9,12 @@
       <UniqueIdentifier>{16586188-ff32-4199-a515-f5a8fb020e68}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl</Extensions>
     </Filter>
+    <Filter Include="SourceMod">
+      <UniqueIdentifier>{b4fcce30-fb3d-4c83-a095-90e1b40b96d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\SourceMod">
+      <UniqueIdentifier>{31f751d9-8994-45aa-8015-0d6db661e5fa}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\rcbot2\bot_plugin_meta.cpp">
@@ -145,6 +151,12 @@
     </ClCompile>
     <ClCompile Include="..\rcbot2\bot_zombie.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extension.cpp">
+      <Filter>SourceMod</Filter>
+    </ClCompile>
+    <ClCompile Include="..\sdk\smsdk_ext.cpp">
+      <Filter>SourceMod</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -300,6 +312,18 @@
     </ClInclude>
     <ClInclude Include="..\rcbot2\bot_zombie.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\sdk\smsdk_config.h">
+      <Filter>Header Files\SourceMod</Filter>
+    </ClInclude>
+    <ClInclude Include="..\sdk\smsdk_ext.h">
+      <Filter>Header Files\SourceMod</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extension.h">
+      <Filter>Header Files\SourceMod</Filter>
+    </ClInclude>
+    <ClInclude Include="..\version.h">
+      <Filter>Header Files\SourceMod</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

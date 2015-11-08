@@ -1,7 +1,7 @@
 /*
  * ================================================================================
- * TF2 Items Extension
- * Copyright (C) 2009-2010 AzuiSleet, Asher Baker (asherkin).  All rights reserved.
+ * AFK Bot Extension
+ * Copyright (C) 2015 Chris Moore (Deathreus).  All rights reserved.
  * ================================================================================
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -20,38 +20,33 @@
 /*
  *	Attributions & Thanks:
  *	=====================
- *	AzuiSleet				-	Reversed CEconItemView and released it publicly.
- *	VoiDeD					-	Helped with fixing attribute removal after the July 10, 2013 update. Most game support updates since.
- *	Damizean				-	Fixed padding for CEconItemView in Linux. Wrote the SourcePawn Interface and the SourceMod item manager.
- *	Voogru					-	Inspiring the creation of this. Helped with fixing and improving the CEconItemView class used after the 119 update.
- *	Drunken_F00l			-	Inspiring the creation of this.
+ *	Cheeseh	-	Built the bot code that all of this runs on
+ *	-	Made the NavMesh parsing code to convert the bot from waypointing
  */
 
 /*
  *	Debugging options:
  *	==================
  */
-//#define TF2ITEMS_DEBUG_HOOKING
-//#define TF2ITEMS_DEBUG_HOOKING_GNI
-//#define TF2ITEMS_DEBUG_ITEMS
+//#define AFKBOT_DEBUG_HOOKING
+//#define AFKBOT_DEBUG_HOOKING_GNI
 
 #define NO_FORCE_QUALITY
 
 #include "extension.h"
 
-TF2Items g_TF2Items;
+AFKBot g_AFKBot;
 
-SMEXT_LINK(&g_TF2Items);
+SMEXT_LINK(&g_AFKBot);
 
 SH_DECL_HOOK2_void(IServerGameClients, ClientPutInServer, SH_NOATTRIB, 0, edict_t *, char const *);
-SH_DECL_MANUALHOOK4(MHook_GiveNamedItem, 0, 0, 0, CBaseEntity *, char const *, int, CEconItemView *, bool);
 
 ICvar *icvar = NULL;
 IServerGameClients *gameclients = NULL;
 IServerGameEnts *gameents = NULL;
 
-ConVar TF2ItemsVersion("tf2items_version", SMEXT_CONF_VERSION, FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY, "TF2 Items Version");
-ConVar HookTFBot("tf2items_bothook", "1", FCVAR_NONE, "Hook intelligent TF2 bots.");
+ConVar AFKBotVersion("afkbot_version", SMEXT_CONF_VERSION, FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY, "AFK Bot Version");
+ConVar HookTFBot("afkbot_bothook", "0", FCVAR_NONE, "Hook intelligent TF2 bots.");
 
 IGameConfig *g_pGameConf = NULL;
 
@@ -61,8 +56,8 @@ int GiveNamedItem_player_Hook_Post = 0;
 int GiveNamedItem_bot_Hook_Post = 0;
 int ClientPutInServer_Hook = 0;
 
-IForward *g_pForwardGiveItem = NULL;
-IForward *g_pForwardGiveItem_Post = NULL;
+IForward *g_pForwardOnAFK = NULL;
+IForward *g_pForwardOnExitAFK = NULL;
 
 void *g_pVTable;
 void *g_pVTable_Attributes;
@@ -72,269 +67,16 @@ TScriptedItemOverrideTypeHandler g_ScriptedItemOverrideHandler;
 
 sp_nativeinfo_t g_ExtensionNatives[] =
 {
-	{ "TF2Items_GiveNamedItem",		TF2Items_GiveNamedItem },
-	{ "TF2Items_CreateItem",		TF2Items_CreateItem },
-	{ "TF2Items_SetFlags",			TF2Items_SetFlags },
-	{ "TF2Items_GetFlags",			TF2Items_GetFlags },
-	{ "TF2Items_SetClassname",		TF2Items_SetClassname },
-	{ "TF2Items_GetClassname",		TF2Items_GetClassname },
-	{ "TF2Items_SetItemIndex",		TF2Items_SetItemIndex },
-	{ "TF2Items_GetItemIndex",		TF2Items_GetItemIndex },
-	{ "TF2Items_SetQuality",		TF2Items_SetQuality },
-	{ "TF2Items_GetQuality",		TF2Items_GetQuality },
-	{ "TF2Items_SetLevel",			TF2Items_SetLevel },
-	{ "TF2Items_GetLevel",			TF2Items_GetLevel },
-	{ "TF2Items_SetNumAttributes",	TF2Items_SetNumAttributes },
-	{ "TF2Items_GetNumAttributes",	TF2Items_GetNumAttributes },
-	{ "TF2Items_SetAttribute",		TF2Items_SetAttribute },
-	{ "TF2Items_GetAttributeId",	TF2Items_GetAttributeId },
-	{ "TF2Items_GetAttributeValue",	TF2Items_GetAttributeValue },
-	{ NULL,							NULL }
+	{ "AFKBot_SetAFK",	AFKBot_SetAFK },
+	{ "AFKBot_GetAFK",	AFKBot_GetAFK },
+	{ NULL,						 NULL }
 };
-
-CBaseEntity *Hook_GiveNamedItem(char const *szClassname, int iSubType, CEconItemView *cscript, bool b)
-{
-	#if defined TF2ITEMS_DEBUG_HOOKING || defined TF2ITEMS_DEBUG_HOOKING_GNI
-		 g_pSM->LogMessage(myself, "GiveNamedItem called.");
-	#endif // TF2ITEMS_DEBUG_HOOKING
-
-	#ifdef TF2ITEMS_DEBUG_ITEMS
-		 g_pSM->LogMessage(myself, "---------------------------------------");
-		 g_pSM->LogMessage(myself, ">>> Start of GiveNamedItem call.");
-	#endif
-
-	CBasePlayer *player = META_IFACEPTR(CBasePlayer);
-
-	if (cscript == NULL || szClassname == NULL)
-	{
-#if defined TF2ITEMS_DEBUG_HOOKING_GNI
-		g_pSM->LogMessage(myself, "(cscript == NULL || szClassname == NULL), RETURN_META_VALUE(MRES_IGNORED, NULL);");
-#endif // TF2ITEMS_DEBUG_HOOKING_GNI
-
-		RETURN_META_VALUE(MRES_IGNORED, NULL);
-	}
-
-	// Retrieve client index.
-	edict_t *playerEdict = gameents->BaseEntityToEdict((CBaseEntity *)player);
-	IGamePlayer * pPlayer = playerhelpers->GetGamePlayer(playerEdict);
-	int client = gamehelpers->IndexOfEdict(playerEdict);
-
-	if (g_pVTable == NULL)
-	{
-		g_pVTable = cscript->m_pVTable;
-		g_pVTable_Attributes = cscript->m_AttributeList.m_pVTable;
-	}
-
-#ifdef TF2ITEMS_DEBUG_ITEMS
-
-	/*char *roflmelon = new char[32];
-	sprintf(roflmelon, "debug_item_%d_%d.txt", cscript->m_iAccountID, cscript->m_iItemDefinitionIndex);
-	FILE *fp = fopen(roflmelon, "wb");
-	fwrite(cscript, sizeof(CEconItemView), 1, fp);
-	fclose(fp);*/
-	
-	g_pSM->LogMessage(myself, "---------------------------------------");
-	g_pSM->LogMessage(myself, ">>> Client = %s", pPlayer->GetName());
-	g_pSM->LogMessage(myself, ">>> szClassname = %s", szClassname);
-	g_pSM->LogMessage(myself, ">>> iSubType = %d", iSubType);
-	g_pSM->LogMessage(myself, ">>> b = %s", b?"true":"false");
-	g_pSM->LogMessage(myself, "---------------------------------------");
-	g_pSM->LogMessage(myself, ">>> m_iItemDefinitionIndex = %u", cscript->m_iItemDefinitionIndex);
-	g_pSM->LogMessage(myself, ">>> m_iEntityQuality = %u", cscript->m_iEntityQuality);
-	g_pSM->LogMessage(myself, ">>> m_iEntityLevel = %u", cscript->m_iEntityLevel);
-	g_pSM->LogMessage(myself, ">>> m_iItemID = %lu", cscript->m_iItemID);
-	g_pSM->LogMessage(myself, ">>> m_iItemIDHigh = %u", cscript->m_iItemIDHigh);
-	g_pSM->LogMessage(myself, ">>> m_iItemIDLow = %u", cscript->m_iItemIDLow);
-	g_pSM->LogMessage(myself, ">>> m_iAccountID = %u", cscript->m_iAccountID);
-	g_pSM->LogMessage(myself, ">>> m_iPosition = %u", cscript->m_iInventoryPosition);
-	g_pSM->LogMessage(myself, ">>> m_bInitialized = %s", cscript->m_bInitialized?"true":"false");
-	g_pSM->LogMessage(myself, "---------------------------------------");
-	for (int i = 0; i < ((cscript->m_AttributeList.m_Attributes.Count() > 16)?0:cscript->m_AttributeList.m_Attributes.Count()); i++)
-	{
-		g_pSM->LogMessage(myself, ">>> m_iAttributeDefinitionIndex = %u", cscript->m_AttributeList.m_Attributes.Element(i).m_iAttributeDefinitionIndex);
-		g_pSM->LogMessage(myself, ">>> m_flValue = %f", cscript->m_AttributeList.m_Attributes.Element(i).m_flValue);
-		g_pSM->LogMessage(myself, "---------------------------------------");
-	}
-	g_pSM->LogMessage(myself, ">>> Size of CEconItemView = %d", sizeof(CEconItemView));
-	g_pSM->LogMessage(myself, ">>> Size of CEconItemAttribute = %d", sizeof(CEconItemAttribute));
-	g_pSM->LogMessage(myself, ">>> No. of Attributes = %d", cscript->m_AttributeList.m_Attributes.Count());
-	g_pSM->LogMessage(myself, "---------------------------------------");
-#endif
-
-	// Summon forward
-	cell_t cellResults = 0;
-	cell_t cellOverrideHandle = 0;
-	g_pForwardGiveItem->PushCell(client);
-	g_pForwardGiveItem->PushString(szClassname);
-	g_pForwardGiveItem->PushCell(cscript->m_iItemDefinitionIndex);
-	g_pForwardGiveItem->PushCellByRef(&cellOverrideHandle);
-	g_pForwardGiveItem->Execute(&cellResults);
-
-	// Determine what to do
-	switch(cellResults) {
-		case Pl_Continue:
-			{
-				RETURN_META_VALUE(MRES_IGNORED, NULL);
-			}
-		case Pl_Changed:
-			{
-				TScriptedItemOverride *pScriptedItemOverride = GetScriptedItemOverrideFromHandle(cellOverrideHandle);
-				if (pScriptedItemOverride == NULL) {
-					RETURN_META_VALUE(MRES_IGNORED, NULL);
-				}
-
-				// Execute the new attributes set and we're done!
-				char *finalitem = (char *)szClassname;
-
-				CEconItemView newitem;
-				CSCICopy(cscript, &newitem);
-
-				// Override based on the flags passed to this object.
-				if (pScriptedItemOverride->m_bFlags & OVERRIDE_CLASSNAME)
-				{
-					finalitem = pScriptedItemOverride->m_strWeaponClassname;
-				}
-
-				if (pScriptedItemOverride->m_bFlags & OVERRIDE_ITEM_DEF)
-				{
-					newitem.m_iItemDefinitionIndex = pScriptedItemOverride->m_iItemDefinitionIndex;
-				}
-
-				if (pScriptedItemOverride->m_bFlags & OVERRIDE_ITEM_LEVEL)
-				{
-					newitem.m_iEntityLevel = pScriptedItemOverride->m_iEntityLevel;
-				}
-
-				if (pScriptedItemOverride->m_bFlags & OVERRIDE_ITEM_QUALITY)
-				{
-					newitem.m_iEntityQuality = pScriptedItemOverride->m_iEntityQuality;
-				}
-
-				if (pScriptedItemOverride->m_bFlags & OVERRIDE_ATTRIBUTES)
-				{
-#ifndef NO_FORCE_QUALITY
-					// Even if we don't want to override the item quality, do if it's set to 0.
-					if (newitem.m_iEntityQuality == 0 && !(pScriptedItemOverride->m_bFlags & OVERRIDE_ITEM_QUALITY) && pScriptedItemOverride->m_iCount > 0) newitem.m_iEntityQuality = 6;
-#endif
-
-					if (!(pScriptedItemOverride->m_bFlags & PRESERVE_ATTRIBUTES))
-					{
-						newitem.m_bDoNotIterateStaticAttributes = true;
-					}
-
-					newitem.m_AttributeList.m_Attributes.RemoveAll();
-					newitem.m_AttributeList.m_Attributes.AddMultipleToTail(pScriptedItemOverride->m_iCount, pScriptedItemOverride->m_Attributes);
-				}
-
-				if (cscript->m_iEntityQuality == 0)
-				{
-					newitem.m_iEntityQuality = 0;
-				}
-
-				RETURN_META_VALUE_MNEWPARAMS(MRES_HANDLED, NULL, MHook_GiveNamedItem, (finalitem, iSubType, &newitem, ((pScriptedItemOverride->m_bFlags & FORCE_GENERATION) == FORCE_GENERATION)));
-			}
-		case Pl_Handled:
-		case Pl_Stop:
-			{
-				RETURN_META_VALUE(MRES_SUPERCEDE, NULL);
-			}
-	}
-	
-	RETURN_META_VALUE(MRES_IGNORED, NULL);
-}
-
-CBaseEntity *Hook_GiveNamedItem_Post(char const *szClassname, int iSubType, CEconItemView *cscript, bool b)
-{
-	CBaseEntity *player = META_IFACEPTR(CBaseEntity);
-
-	CBaseEntity *pItemEntiy;
-	if (META_RESULT_STATUS >= MRES_OVERRIDE)
-	{
-		pItemEntiy = META_RESULT_OVERRIDE_RET(CBaseEntity *);
-	} else {
-		pItemEntiy = META_RESULT_ORIG_RET(CBaseEntity *);
-	}
-
-	if (!player || !szClassname || !cscript || !pItemEntiy)
-		RETURN_META_VALUE(MRES_IGNORED, pItemEntiy);
-	
-	int client = gamehelpers->EntityToBCompatRef(player);
-	int iEntityIndex = gamehelpers->EntityToBCompatRef(pItemEntiy);
-
-	g_pForwardGiveItem_Post->PushCell(client);
-	g_pForwardGiveItem_Post->PushString(szClassname);
-	g_pForwardGiveItem_Post->PushCell(cscript->m_iItemDefinitionIndex);
-	g_pForwardGiveItem_Post->PushCell(cscript->m_iEntityLevel);
-	g_pForwardGiveItem_Post->PushCell(cscript->m_iEntityQuality);
-	g_pForwardGiveItem_Post->PushCell(iEntityIndex);
-	g_pForwardGiveItem_Post->Execute(NULL);
-	
-	RETURN_META_VALUE(MRES_IGNORED, pItemEntiy);
-}
-
-void CSCICopy(CEconItemView *olditem, CEconItemView *newitem)
-{
-	memset(newitem, 0, sizeof(CEconItemView));
-	
-	//#define copymember(a) newitem->a = olditem->a
-	#define copymember(a) memcpy(&newitem->a, &olditem->a, sizeof(newitem->a));
-
-	copymember(m_pVTable);
-
-	copymember(m_iItemDefinitionIndex);
-	
-	copymember(m_iEntityQuality);
-	copymember(m_iEntityLevel);
-
-	copymember(m_iItemID);
-	copymember(m_iItemIDHigh);
-	copymember(m_iItemIDLow);
-	copymember(m_iAccountID);
-	copymember(m_iInventoryPosition);
-
-	copymember(m_ItemHandle);
-
-	copymember(m_bColorInit);
-	copymember(m_unHalloweenRGB);
-	copymember(m_unHalloweenAltRGB);
-	copymember(m_unRGB);
-	copymember(m_unAltRGB);
-
-	copymember(m_pWeaponSkinBase);
-	copymember(m_pWeaponSkinBaseCompositor);
-
-	copymember(m_Unk1);
-	copymember(m_Unk2);
-	copymember(m_Unk3);
-
-	copymember(m_iTeamNumber);
-
-	copymember(m_bInitialized);
-
-	// copy ctor so the CUtlVector is copied correctly
-	newitem->m_AttributeList = olditem->m_AttributeList;
-	newitem->m_NetworkedDynamicAttributesForDemos = olditem->m_NetworkedDynamicAttributesForDemos;
-	
-	copymember(m_bDoNotIterateStaticAttributes);
-	
-	/*
-	META_CONPRINTF("Copying attributes...\n");
-	int nCount = olditem->m_Attributes.Count();
-	META_CONPRINTF("Count: %d\n", nCount);
-	newitem->m_Attributes.SetSize( nCount );
-	for ( int i = 0; i < nCount; i++ )
-	{
-		META_CONPRINTF("Copying %d...\n", i+1);
-		newitem->m_Attributes[ i ] = olditem->m_Attributes[ i ];
-	}
-	*/
-}
 
 void Hook_ClientPutInServer(edict_t *pEntity, char const *playername)
 {
-#ifdef TF2ITEMS_DEBUG_HOOKING
+#ifdef AFKBOT_DEBUG_HOOKING
 	 g_pSM->LogMessage(myself, "ClientPutInServer called.");
-#endif // TF2ITEMS_DEBUG_HOOKING
+#endif // AFKBOT_DEBUG_HOOKING
 
 	if(pEntity->m_pNetworkable)
 	{
@@ -346,7 +88,7 @@ void Hook_ClientPutInServer(edict_t *pEntity, char const *playername)
 
 		CBasePlayer *player = (CBasePlayer *)baseentity;
 
-#ifdef TF2ITEMS_DEBUG_HOOKING
+#ifdef AFKBOT_DEBUG_HOOKING
 		g_pSM->LogMessage(myself, "---------------------------------------");
 		g_pSM->LogMessage(myself, ">>> Start of ClientPutInServer call.");
 		g_pSM->LogMessage(myself, "---------------------------------------");
@@ -360,55 +102,55 @@ void Hook_ClientPutInServer(edict_t *pEntity, char const *playername)
 			if(GiveNamedItem_bot_Hook == 0)
 			{
 				GiveNamedItem_bot_Hook = SH_ADD_MANUALVPHOOK(MHook_GiveNamedItem, player, SH_STATIC(Hook_GiveNamedItem), false);
-#ifdef TF2ITEMS_DEBUG_HOOKING
+#ifdef AFKBOT_DEBUG_HOOKING
 				g_pSM->LogMessage(myself, "GiveNamedItem hooked (bot).");
-#endif // TF2ITEMS_DEBUG_HOOKING
+#endif // AFKBOT_DEBUG_HOOKING
 			}
 
 			if(GiveNamedItem_bot_Hook_Post == 0)
 			{
 				GiveNamedItem_bot_Hook_Post = SH_ADD_MANUALVPHOOK(MHook_GiveNamedItem, player, SH_STATIC(Hook_GiveNamedItem_Post), true);
-#ifdef TF2ITEMS_DEBUG_HOOKING
+#ifdef AFKBOT_DEBUG_HOOKING
 				g_pSM->LogMessage(myself, "GiveNamedItem hooked (bot) (post).");
-#endif // TF2ITEMS_DEBUG_HOOKING
+#endif // AFKBOT_DEBUG_HOOKING
 			}
 		} else {
 			if(GiveNamedItem_player_Hook == 0)
 			{
 				GiveNamedItem_player_Hook = SH_ADD_MANUALVPHOOK(MHook_GiveNamedItem, player, SH_STATIC(Hook_GiveNamedItem), false);
-#ifdef TF2ITEMS_DEBUG_HOOKING
+#ifdef AFKBOT_DEBUG_HOOKING
 				g_pSM->LogMessage(myself, "GiveNamedItem hooked (player).");
-#endif // TF2ITEMS_DEBUG_HOOKING
+#endif // AFKBOT_DEBUG_HOOKING
 			}
 
 			if(GiveNamedItem_player_Hook_Post == 0)
 			{
 				GiveNamedItem_player_Hook_Post = SH_ADD_MANUALVPHOOK(MHook_GiveNamedItem, player, SH_STATIC(Hook_GiveNamedItem_Post), true);
-#ifdef TF2ITEMS_DEBUG_HOOKING
+#ifdef AFKBOT_DEBUG_HOOKING
 				g_pSM->LogMessage(myself, "GiveNamedItem hooked (player).");
-#endif // TF2ITEMS_DEBUG_HOOKING
+#endif // AFKBOT_DEBUG_HOOKING
 			}
 
 			if (!HookTFBot.GetBool() && ClientPutInServer_Hook != 0) {
 				SH_REMOVE_HOOK_ID(ClientPutInServer_Hook);
 				ClientPutInServer_Hook = 0;
-#ifdef TF2ITEMS_DEBUG_HOOKING
+#ifdef AFKBOT_DEBUG_HOOKING
 				g_pSM->LogMessage(myself, "ClientPutInServer unhooked.");
-#endif // TF2ITEMS_DEBUG_HOOKING
+#endif // AFKBOT_DEBUG_HOOKING
 			}
 		}
 
-		if (ClientPutInServer_Hook != 0 && GiveNamedItem_player_Hook != 0 && GiveNamedItem_bot_Hook != 0) {
+		if (ClientPutInServer_Hook != 0y) {
 			SH_REMOVE_HOOK_ID(ClientPutInServer_Hook);
 			ClientPutInServer_Hook = 0;
-#ifdef TF2ITEMS_DEBUG_HOOKING
+#ifdef AFKBOT_DEBUG_HOOKING
 			g_pSM->LogMessage(myself, "ClientPutInServer unhooked.");
-#endif // TF2ITEMS_DEBUG_HOOKING
+#endif // AFKBOT_DEBUG_HOOKING
 		}
 	}
 }
 
-bool TF2Items::SDK_OnLoad(char *error, size_t maxlen, bool late) {
+bool AFKBot::SDK_OnLoad(char *error, size_t maxlen, bool late) {
 
 	char conf_error[255] = "";
 	if (!gameconfs->LoadGameConfigFile("tf2.items", &g_pGameConf, conf_error, sizeof(conf_error)))
@@ -434,9 +176,9 @@ bool TF2Items::SDK_OnLoad(char *error, size_t maxlen, bool late) {
 	// check for this and try to hook them instead of waiting for the next player. -- Damizean
 	if (late)
 	{
-#ifdef TF2ITEMS_DEBUG_HOOKING
+#ifdef AFKBOT_DEBUG_HOOKING
 		g_pSM->LogMessage(myself, "Is a late load, attempting to hook GiveNamedItem.");
-#endif // TF2ITEMS_DEBUG_HOOKING
+#endif // AFKBOT_DEBUG_HOOKING
 
 		int iMaxClients = playerhelpers->GetMaxClients();
 		for (int iClient = 1; iClient <= iMaxClients; iClient++)
@@ -466,9 +208,9 @@ bool TF2Items::SDK_OnLoad(char *error, size_t maxlen, bool late) {
 			
 			if (GiveNamedItem_player_Hook != 0)
 			{
-#ifdef TF2ITEMS_DEBUG_HOOKING
+#ifdef AFKBOT_DEBUG_HOOKING
 				g_pSM->LogMessage(myself, "GiveNamedItem hooked.");
-#endif // TF2ITEMS_DEBUG_HOOKING
+#endif // AFKBOT_DEBUG_HOOKING
 				break;
 			}
 		}
@@ -476,32 +218,32 @@ bool TF2Items::SDK_OnLoad(char *error, size_t maxlen, bool late) {
 
 	if (GiveNamedItem_player_Hook == 0)
 	{
-#ifdef TF2ITEMS_DEBUG_HOOKING
+#ifdef AFKBOT_DEBUG_HOOKING
 		g_pSM->LogMessage(myself, "Is a NOT late load or no players found, attempting to hook ClientPutInServer.");
-#endif // TF2ITEMS_DEBUG_HOOKING
+#endif // AFKBOT_DEBUG_HOOKING
 
 		ClientPutInServer_Hook = SH_ADD_HOOK_STATICFUNC(IServerGameClients, ClientPutInServer, gameclients, Hook_ClientPutInServer, true);
 
-#ifdef TF2ITEMS_DEBUG_HOOKING
+#ifdef AFKBOT_DEBUG_HOOKING
 		g_pSM->LogMessage(myself, "ClientPutInServer hooked.");
-#endif // TF2ITEMS_DEBUG_HOOKING
+#endif // AFKBOT_DEBUG_HOOKING
 	}
 
 	// Register natives for Pawn
 	sharesys->AddNatives(myself, g_ExtensionNatives);
-	sharesys->RegisterLibrary(myself, "TF2Items");
+	sharesys->RegisterLibrary(myself, "AFKBot");
 
 	// Create handles
-	g_ScriptedItemOverrideHandleType = g_pHandleSys->CreateType("TF2ItemType", &g_ScriptedItemOverrideHandler, 0, NULL, NULL, myself->GetIdentity(), NULL);
+	
 
 	// Create forwards
-	g_pForwardGiveItem = g_pForwards->CreateForward("TF2Items_OnGiveNamedItem", ET_Hook, 4, NULL, Param_Cell, Param_String, Param_Cell, Param_CellByRef);
-	g_pForwardGiveItem_Post = g_pForwards->CreateForward("TF2Items_OnGiveNamedItem_Post", ET_Ignore, 6, NULL, Param_Cell, Param_String, Param_Cell, Param_Cell, Param_Cell, Param_Cell);
+	g_pForwardOnAFK = g_pForwards->CreateForward("AFKBot_OnAFK", ET_Hook, 2, NULL, Param_Cell, Param_Cell);
+	g_pForwardOnExitAFK = g_pForwards->CreateForward("AFKBot_OnExitAFK", ET_Ignore, 2, NULL, Param_Cell, Param_Cell);
 
 	return true;
 }
 
-bool TF2Items::SDK_OnMetamodLoad(ISmmAPI *ismm, char *error, size_t maxlen, bool late)
+bool AFKBot::SDK_OnMetamodLoad(ISmmAPI *ismm, char *error, size_t maxlen, bool late)
 {
 
 	GET_V_IFACE_ANY(GetServerFactory, gameclients, IServerGameClients, INTERFACEVERSION_SERVERGAMECLIENTS);
@@ -515,11 +257,11 @@ bool TF2Items::SDK_OnMetamodLoad(ISmmAPI *ismm, char *error, size_t maxlen, bool
 	return true;
 }
 
-void TF2Items::SDK_OnUnload()
+void AFKBot::SDK_OnUnload()
 {
-#ifdef TF2ITEMS_DEBUG_HOOKING
+#ifdef AFKBOT_DEBUG_HOOKING
 	g_pSM->LogMessage(myself, "SDK_OnUnload called.");
-#endif // TF2ITEMS_DEBUG_HOOKING
+#endif // AFKBOT_DEBUG_HOOKING
 
 	gameconfs->CloseGameConfigFile(g_pGameConf);
 
@@ -529,74 +271,64 @@ void TF2Items::SDK_OnUnload()
 	g_pForwards->ReleaseForward(g_pForwardGiveItem_Post);
 }
 
-bool TF2Items::SDK_OnMetamodUnload(char *error, size_t maxlen)
+bool AFKBot::SDK_OnMetamodUnload(char *error, size_t maxlen)
 {
-#ifdef TF2ITEMS_DEBUG_HOOKING
+#ifdef AFKBOT_DEBUG_HOOKING
 	g_pSM->LogMessage(myself, "SDK_OnMetamodUnload called.");
-#endif // TF2ITEMS_DEBUG_HOOKING
+#endif // AFKBOT_DEBUG_HOOKING
 
 	if (ClientPutInServer_Hook != 0)
 	{
 		SH_REMOVE_HOOK_ID(ClientPutInServer_Hook);
 		ClientPutInServer_Hook = 0;
 
-#ifdef TF2ITEMS_DEBUG_HOOKING
+#ifdef AFKBOT_DEBUG_HOOKING
 		g_pSM->LogMessage(myself, "ClientPutInServer unhooked.");
-#endif // TF2ITEMS_DEBUG_HOOKING
+#endif // AFKBOT_DEBUG_HOOKING
 	}
-#ifdef TF2ITEMS_DEBUG_HOOKING
+#ifdef AFKBOT_DEBUG_HOOKING
 	else {
 		g_pSM->LogMessage(myself, "ClientPutInServer did not need to be unhooked.");
 	}
-#endif // TF2ITEMS_DEBUG_HOOKING
+#endif // AFKBOT_DEBUG_HOOKING
 
 	if (GiveNamedItem_player_Hook != 0)
 	{
 		SH_REMOVE_HOOK_ID(GiveNamedItem_player_Hook);
 		GiveNamedItem_player_Hook = 0;
 
-#ifdef TF2ITEMS_DEBUG_HOOKING
+#ifdef AFKBOT_DEBUG_HOOKING
 		g_pSM->LogMessage(myself, "GiveNamedItem unhooked.");
-#endif // TF2ITEMS_DEBUG_HOOKING
+#endif // AFKBOT_DEBUG_HOOKING
 	}
-#ifdef TF2ITEMS_DEBUG_HOOKING
+#ifdef AFKBOT_DEBUG_HOOKING
 	else {
 		g_pSM->LogMessage(myself, "GiveNamedItem did not need to be unhooked.");
 	}
-#endif // TF2ITEMS_DEBUG_HOOKING
+#endif // AFKBOT_DEBUG_HOOKING
 
 	if (GiveNamedItem_player_Hook_Post != 0)
 	{
 		SH_REMOVE_HOOK_ID(GiveNamedItem_player_Hook_Post);
 		GiveNamedItem_player_Hook_Post = 0;
 
-#ifdef TF2ITEMS_DEBUG_HOOKING
+#ifdef AFKBOT_DEBUG_HOOKING
 		g_pSM->LogMessage(myself, "GiveNamedItem (post) unhooked.");
-#endif // TF2ITEMS_DEBUG_HOOKING
+#endif // AFKBOT_DEBUG_HOOKING
 	}
-#ifdef TF2ITEMS_DEBUG_HOOKING
+#ifdef AFKBOT_DEBUG_HOOKING
 	else {
 		g_pSM->LogMessage(myself, "GiveNamedItem (post) did not need to be unhooked.");
 	}
-#endif // TF2ITEMS_DEBUG_HOOKING
+#endif // AFKBOT_DEBUG_HOOKING
 
 	return true;
 }
 
-bool TF2Items::RegisterConCommandBase(ConCommandBase *pCommand)
+bool AFKBot::RegisterConCommandBase(ConCommandBase *pCommand)
 {
 	META_REGCVAR(pCommand);
 	return true;
-}
-
-void TScriptedItemOverrideTypeHandler::OnHandleDestroy(HandleType_t type, void *object)
-{
-	TScriptedItemOverride *pScriptedItemOverride = (TScriptedItemOverride*) object;
-
-	if (pScriptedItemOverride != NULL)
-	{
-		delete(pScriptedItemOverride);
-	}
 }
 
 static cell_t TF2Items_GiveNamedItem(IPluginContext *pContext, const cell_t *params)
@@ -678,94 +410,7 @@ static cell_t TF2Items_GiveNamedItem(IPluginContext *pContext, const cell_t *par
 	return entIndex;
 }
 
-static cell_t TF2Items_CreateItem(IPluginContext *pContext, const cell_t *params)
-{
-	TScriptedItemOverride *pScriptedItemOverride = new TScriptedItemOverride;
-	memset(pScriptedItemOverride, 0, sizeof(TScriptedItemOverride));
-
-	pScriptedItemOverride->m_bFlags = params[1];
-
-	HandleError hndlError;
-	Handle_t retHandle = g_pHandleSys->CreateHandle(g_ScriptedItemOverrideHandleType, pScriptedItemOverride, pContext->GetIdentity(), myself->GetIdentity(), &hndlError);
-
-	if (!retHandle)
-	{
-		return pContext->ThrowNativeError("TF2ItemType handle not created (error %d)", hndlError);
-	} else {
-		return retHandle;
-	}
-}
-
-static cell_t TF2Items_SetFlags(IPluginContext *pContext, const cell_t *params)
-{
-	TScriptedItemOverride *pScriptedItemOverride = GetScriptedItemOverrideFromHandle(params[1], pContext);
-
-	if (pScriptedItemOverride != NULL)
-	{
-		pScriptedItemOverride->m_bFlags = params[2];
-	}
-
-	return 1;
-}
-
-static cell_t TF2Items_GetFlags(IPluginContext *pContext, const cell_t *params)
-{
-	TScriptedItemOverride *pScriptedItemOverride = GetScriptedItemOverrideFromHandle(params[1], pContext);
-
-	if (pScriptedItemOverride != NULL)
-	{
-		return pScriptedItemOverride->m_bFlags;
-	}
-
-	return 0;
-}
-
-static cell_t TF2Items_SetClassname(IPluginContext *pContext, const cell_t *params)
-{
-	TScriptedItemOverride *pScriptedItemOverride = GetScriptedItemOverrideFromHandle(params[1], pContext);
-
-	if (pScriptedItemOverride != NULL)
-	{
-		char *strSource; pContext->LocalToString(params[2], &strSource);
-		snprintf(pScriptedItemOverride->m_strWeaponClassname, 256, "%s", strSource);
-	}
-
-	return 1;
-}
-
-static cell_t TF2Items_GetClassname(IPluginContext *pContext, const cell_t *params)
-{
-	TScriptedItemOverride *pScriptedItemOverride = GetScriptedItemOverrideFromHandle(params[1], pContext);
-
-	if (pScriptedItemOverride != NULL)
-	{
-		char *strSource = pScriptedItemOverride->m_strWeaponClassname;
-
-		char *strDestiny;
-		pContext->LocalToString(params[2], &strDestiny);
-
-		int iSourceSize = strlen(strSource);
-		int iDestinySize = params[3];
-
-		// Perform bounds checking
-		if (iSourceSize >= iDestinySize)
-		{
-			iSourceSize = iDestinySize-1;
-		} else {
-			iSourceSize = iDestinySize;
-		}
-	 
-		// Copy
-		memmove(strDestiny, strSource, iSourceSize);
-		strDestiny[iSourceSize] = '\0';
-
-		return iSourceSize;
-	}
-
-	return 0;
-}
-
-static cell_t TF2Items_SetItemIndex(IPluginContext *pContext, const cell_t *params)
+static cell_t AFKBot_SetAFK(IPluginContext *pContext, const cell_t *params)
 {
 	TScriptedItemOverride *pScriptedItemOverride = GetScriptedItemOverrideFromHandle(params[1], pContext);
 
@@ -777,7 +422,7 @@ static cell_t TF2Items_SetItemIndex(IPluginContext *pContext, const cell_t *para
 	return 1;
 }
 
-static cell_t TF2Items_GetItemIndex(IPluginContext *pContext, const cell_t *params)
+static cell_t AFKBot_GetAFK(IPluginContext *pContext, const cell_t *params)
 {
 	TScriptedItemOverride *pScriptedItemOverride = GetScriptedItemOverrideFromHandle(params[1], pContext);
 
@@ -787,152 +432,6 @@ static cell_t TF2Items_GetItemIndex(IPluginContext *pContext, const cell_t *para
 	}
 
 	return -1;
-}
-
-static cell_t TF2Items_SetQuality(IPluginContext *pContext, const cell_t *params)
-{
-	TScriptedItemOverride *pScriptedItemOverride = GetScriptedItemOverrideFromHandle(params[1], pContext);
-
-	if (pScriptedItemOverride != NULL)
-	{
-		if (params[2] < -1)
-		{
-			return pContext->ThrowNativeError("Quality out of bounds: %i [-1 ...]", params[2]);
-		}
-
-		pScriptedItemOverride->m_iEntityQuality = params[2];
-	}
-
-	return 1;
-}
-
-static cell_t TF2Items_GetQuality(IPluginContext *pContext, const cell_t *params)
-{
-	TScriptedItemOverride *pScriptedItemOverride = GetScriptedItemOverrideFromHandle(params[1], pContext);
-
-	if (pScriptedItemOverride != NULL)
-	{
-		return pScriptedItemOverride->m_iEntityQuality;
-	}
-
-	return 0;
-}
-
-static cell_t TF2Items_SetLevel(IPluginContext *pContext, const cell_t *params)
-{
-	TScriptedItemOverride *pScriptedItemOverride = GetScriptedItemOverrideFromHandle(params[1], pContext);
-
-	if (pScriptedItemOverride != NULL)
-	{
-		if (params[2] < 0)
-		{
-			return pContext->ThrowNativeError("Level out of bounds: %i [0 ...]", params[2]);
-		}
-
-		pScriptedItemOverride->m_iEntityLevel = params[2];
-	}
-
-	return 1;
-}
-
-static cell_t TF2Items_GetLevel(IPluginContext *pContext, const cell_t *params)
-{
-	TScriptedItemOverride *pScriptedItemOverride = GetScriptedItemOverrideFromHandle(params[1], pContext);
-
-	if (pScriptedItemOverride != NULL)
-	{
-		return pScriptedItemOverride->m_iEntityLevel;
-	}
-
-	return 0;
-}
-
-static cell_t TF2Items_SetNumAttributes(IPluginContext *pContext, const cell_t *params)
-{
-	TScriptedItemOverride *pScriptedItemOverride = GetScriptedItemOverrideFromHandle(params[1], pContext);
-
-	if (pScriptedItemOverride != NULL)
-	{
-		if (params[2] < 0 || params[2] > 15)
-		{
-			return pContext->ThrowNativeError("Attributes size out of bounds: %i [0 ... 15]", params[2]);
-		}
-
-		pScriptedItemOverride->m_iCount = params[2];
-	}
-
-	return 1;
-}
-
-static cell_t TF2Items_GetNumAttributes(IPluginContext *pContext, const cell_t *params)
-{
-	TScriptedItemOverride *pScriptedItemOverride = GetScriptedItemOverrideFromHandle(params[1], pContext);
-
-	if (pScriptedItemOverride != NULL)
-	{
-		return pScriptedItemOverride->m_iCount;
-	}
-
-	return -1;
-}
-
-static cell_t TF2Items_SetAttribute(IPluginContext *pContext, const cell_t *params)
-{
-	TScriptedItemOverride *pScriptedItemOverride = GetScriptedItemOverrideFromHandle(params[1], pContext);
-
-	if (pScriptedItemOverride != NULL)
-	{
-		if (params[2] < 0 || params[2] > 15)
-		{
-			return pContext->ThrowNativeError("Attribute index out of bounds: %i [0 ... 15]", params[2]);
-		}
-		
-		if (params[3] == 0)
-		{
-			return pContext->ThrowNativeError("Cowardly refusing to add invalid attribute index \"0\" to an item.");
-		}
-
-		pScriptedItemOverride->m_Attributes[params[2]].m_iAttributeDefinitionIndex = params[3];
-		pScriptedItemOverride->m_Attributes[params[2]].m_flValue = sp_ctof(params[4]);
-
-		return 1;
-	}
-
-	return 0;
-}
-
-static cell_t TF2Items_GetAttributeId(IPluginContext *pContext, const cell_t *params)
-{
-	TScriptedItemOverride *pScriptedItemOverride = GetScriptedItemOverrideFromHandle(params[1], pContext);
-
-	if (pScriptedItemOverride != NULL)
-	{
-		if (params[2] < 0 || params[2] > 15)
-		{
-			return pContext->ThrowNativeError("Attribute index out of bounds: %i [0 ... 15]", params[2]);
-		}
-
-		return pScriptedItemOverride->m_Attributes[params[2]].m_iAttributeDefinitionIndex;
-	}
-
-	return -1;
-}
-
-static cell_t TF2Items_GetAttributeValue(IPluginContext *pContext, const cell_t *params)
-{
-	TScriptedItemOverride *pScriptedItemOverride = GetScriptedItemOverrideFromHandle(params[1], pContext);
-
-	if (pScriptedItemOverride != NULL)
-	{
-		if (params[2] < 0 || params[2] > 15)
-		{
-			return pContext->ThrowNativeError("Attribute index out of bounds: %i [0 ... 15]", params[2]);
-		}
-
-		return sp_ftoc(pScriptedItemOverride->m_Attributes[params[2]].m_flValue);
-	}
-
-	return sp_ftoc(0.0f);
 }
 
 CBaseEntity *GetCBaseEntityFromIndex(int p_iEntity, bool p_bOnlyPlayers)
@@ -978,31 +477,4 @@ int GetIndexFromCBaseEntity(CBaseEntity *p_hEntity)
 	}
 
 	return gamehelpers->IndexOfEdict(edtEdict);
-}
-
-TScriptedItemOverride *GetScriptedItemOverrideFromHandle(cell_t cellHandle, IPluginContext *pContext)
-{
-	Handle_t hndlScriptedItemOverride = static_cast<Handle_t>(cellHandle);
-	HandleError hndlError;
-	HandleSecurity hndlSec;
- 
-	// Build our security descriptor
-	hndlSec.pOwner = NULL;
-	hndlSec.pIdentity = myself->GetIdentity();
- 
-	// Attempt to read the given handle as our type, using our security info.
-	TScriptedItemOverride * pScriptedItemOverride;
-	if ((hndlError = g_pHandleSys->ReadHandle(hndlScriptedItemOverride, g_ScriptedItemOverrideHandleType, &hndlSec, (void **)&pScriptedItemOverride)) != HandleError_None)
-	{
-		if (pContext == NULL)
-		{
-			g_pSM->LogError(myself, "Invalid TF2ItemType handle %x (error %d)", hndlScriptedItemOverride, hndlError);
-		} else {
-			pContext->ThrowNativeError("Invalid TF2ItemType handle %x (error %d)", hndlScriptedItemOverride, hndlError);
-		}
-
-		return NULL;
-	}
-
-	return pScriptedItemOverride;
 }

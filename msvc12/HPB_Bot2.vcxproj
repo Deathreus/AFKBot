@@ -261,6 +261,7 @@ copy "$(ProjectDir)\update.txt" "C:\Program Files (x86)\Steam\steamapps\paul.mur
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\extension.cpp" />
     <ClCompile Include="..\rcbot2\bot.cpp" />
     <ClCompile Include="..\rcbot2\bot_accessclient.cpp" />
     <ClCompile Include="..\rcbot2\bot_buttons.cpp" />
@@ -306,8 +307,10 @@ copy "$(ProjectDir)\update.txt" "C:\Program Files (x86)\Steam\steamapps\paul.mur
     <ClCompile Include="..\rcbot2\bot_sigscan.cpp" />
     <ClCompile Include="..\rcbot2\bot_cvars.cpp" />
     <ClCompile Include="..\rcbot2\bot_plugin_meta.cpp" />
+    <ClCompile Include="..\sdk\smsdk_ext.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\extension.h" />
     <ClInclude Include="..\rcbot2\bot.h" />
     <ClInclude Include="..\rcbot2\bot_accessclient.h" />
     <ClInclude Include="..\rcbot2\bot_belief.h" />
@@ -359,6 +362,9 @@ copy "$(ProjectDir)\update.txt" "C:\Program Files (x86)\Steam\steamapps\paul.mur
     <ClInclude Include="..\rcbot2\bot_wpt_dist.h" />
     <ClInclude Include="..\rcbot2\bot_zombie.h" />
     <ClInclude Include="..\rcbot2\bot_plugin_meta.h" />
+    <ClInclude Include="..\sdk\smsdk_config.h" />
+    <ClInclude Include="..\sdk\smsdk_ext.h" />
+    <ClInclude Include="..\version.h" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\lib\public\mathlib.lib" />

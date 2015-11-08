@@ -13,14 +13,14 @@
 
 #ifndef SM_GENERATED_BUILD
 #undef BINARY_NAME
-#define BINARY_NAME "tf2items.ext.2.ep2v.dll\0"
+#define BINARY_NAME "afkbot.ext.2.ep2v.dll\0"
 #endif
 
 #define SM_BUILD_TAG		"-manual"
 #define SM_BUILD_UNIQUEID	"[MANUAL BUILD]"
-#define SM_VERSION			"1.6.2"
+#define SM_VERSION			"1.0.0"
 #define SM_FULL_VERSION		SM_VERSION SM_BUILD_TAG
-#define SM_FILE_VERSION		1,6,2,0
+#define SM_FILE_VERSION		1,0,0,0
 
 #endif
 
