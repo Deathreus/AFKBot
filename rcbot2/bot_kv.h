@@ -6,10 +6,10 @@
 #include <vector>
 using namespace std;
 
-class CRCBotKeyValue
+class CAFKBotKeyValue
 {
 public:
-	CRCBotKeyValue(const char *szKey, char *szValue);
+	CAFKBotKeyValue(const char *szKey, char *szValue);
 
 	char *getKey ()
 	{
@@ -26,16 +26,16 @@ private:
 	char m_szValue[RCBOT_MAX_KV_LEN];
 };
 
-class CRCBotKeyValueList
+class CAFKBotKeyValueList
 {
 public:
-	~CRCBotKeyValueList();
+	~CAFKBotKeyValueList();
 
 	void parseFile ( FILE *fp );
 
 	//unsigned int size ();
 
-	//CRCBotKeyValue *getKV ( unsigned int iIndex );
+	//CAFKBotKeyValue *getKV ( unsigned int iIndex );
 
 	bool getInt ( const char *key, int *val );
 
@@ -45,9 +45,9 @@ public:
 
 private:
 
-	CRCBotKeyValue *getKV ( const char *key );
+	CAFKBotKeyValue *getKV ( const char *key );
 
-	vector <CRCBotKeyValue*> m_KVs;
+	vector <CAFKBotKeyValue*> m_KVs;
 };
 
 #endif

@@ -54,6 +54,7 @@
 class CUserCmd;
 class IMoveHelper;
 class CEconItemView;
+class CBasePlayer;
 class CTF2Loadout;
 
 #if defined WIN32 && !defined snprintf
@@ -84,7 +85,6 @@ public: //hooks
 	//Called for a game event.  Same definition as server plugins???
 	bool FireGameEvent( IGameEvent *pevent, bool bDontBroadcast );
 	void Hook_PlayerRunCmd(CUserCmd *ucmd, IMoveHelper *moveHelper);
-	CBaseEntity *Hook_GiveNamedItem(const char *name, int subtype, CEconItemView *cscript, bool b);
 	bool Hook_ClientConnect(edict_t *pEntity, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen);
 	bf_write *Hook_MessageBegin(IRecipientFilter *filter, int msg_type);
 	void Hook_MessageEnd();
@@ -96,14 +96,7 @@ public: //hooks
 	bool Hook_WriteString(const char *pStr);
 
 	static CBaseEntity *TF2_getPlayerWeaponSlot(edict_t *pPlayer, int iSlot);
-	static void TF2_removeWearable(edict_t *pPlayer, CBaseEntity *pWearable);
-	static void TF2_removePlayerItem(edict_t *pPlayer, CBaseEntity *pItem);
-	static void TF2_RemoveWeaponSlot(edict_t *pPlayer, int iSlot);
 	static void TF2_equipWeapon(edict_t *pPlayer, CBaseEntity *pWeapon);
-	static bool givePlayerLoadOut(edict_t *pPlayer, CTF2Loadout *pLoadout, int iSlot, void *pVTable, void *pVTable_Attributes);
-	static void giveRandomLoadout(edict_t *pPlayer, int iClass, int iSlot, void *pVTable, void *pVTable_Attributes);
-	static void TF2_equipWearable(edict_t *pPlayer, CBaseEntity *pWearable);
-	static bool TF2_ClearAttributeCache(edict_t *pEdict);
 
 	static void HudTextMessage(edict_t *pEntity, const char *szMessage);
 	static void BroadcastTextMessage(const char *szMessage);
@@ -125,17 +118,8 @@ public:
 	const char *GetDate();
 	const char *GetLogTag();
 
-	static bool UTIL_TF2EquipHat(edict_t *pEdict, CTF2Loadout *pHat, void *vTable, void *vTableAttributes);
-	static CTF2Loadout *UTIL_TF2EquipRandomHat(edict_t *pEdict, void *vTable, void *vTableAttributes);
-
 private:
 	int m_iClientCommandIndex;
-
-	// Bot Quota
-	float m_fBotQuotaTimer;
-	int m_iTargetBots[MAX_PLAYERS];
-
-	void BotQuotaCheck( void );
 };
 
 extern AFKBot g_AFKBot;

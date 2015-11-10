@@ -21,15 +21,8 @@
  *	Attributions & Thanks:
  *	=====================
  *	Cheeseh	-	Built the bot code that all of this runs on
- *	-	Made the NavMesh parsing code to convert the bot from waypointing
+ *	pimpinjuice -	Made the NavMesh parsing code to convert the bot from waypointing
  */
-
-/*
- *	Debugging options:
- *	==================
- */
-//#define AFKBOT_DEBUG_HOOKING
-//#define AFKBOT_DEBUG_HOOKING_GNI
 
 #define NO_FORCE_QUALITY
 
@@ -59,12 +52,6 @@ int ClientPutInServer_Hook = 0;
 IForward *g_pForwardOnAFK = NULL;
 IForward *g_pForwardOnExitAFK = NULL;
 
-void *g_pVTable;
-void *g_pVTable_Attributes;
-
-HandleType_t g_ScriptedItemOverrideHandleType = 0;
-TScriptedItemOverrideTypeHandler g_ScriptedItemOverrideHandler;
-
 sp_nativeinfo_t g_ExtensionNatives[] =
 {
 	{ "AFKBot_SetAFK",	AFKBot_SetAFK },
@@ -74,10 +61,6 @@ sp_nativeinfo_t g_ExtensionNatives[] =
 
 void Hook_ClientPutInServer(edict_t *pEntity, char const *playername)
 {
-#ifdef AFKBOT_DEBUG_HOOKING
-	 g_pSM->LogMessage(myself, "ClientPutInServer called.");
-#endif // AFKBOT_DEBUG_HOOKING
-
 	if(pEntity->m_pNetworkable)
 	{
 		CBaseEntity *baseentity = pEntity->m_pNetworkable->GetBaseEntity();
@@ -88,64 +71,37 @@ void Hook_ClientPutInServer(edict_t *pEntity, char const *playername)
 
 		CBasePlayer *player = (CBasePlayer *)baseentity;
 
-#ifdef AFKBOT_DEBUG_HOOKING
-		g_pSM->LogMessage(myself, "---------------------------------------");
-		g_pSM->LogMessage(myself, ">>> Start of ClientPutInServer call.");
-		g_pSM->LogMessage(myself, "---------------------------------------");
-		g_pSM->LogMessage(myself, ">>> Client = %s", playername);
-		g_pSM->LogMessage(myself, ">>> ClassName = %s", pEntity->GetClassName());
-		g_pSM->LogMessage(myself, "---------------------------------------");
-#endif
-
 		if (HookTFBot.GetBool() && strcmp(pEntity->GetClassName(), "tf_bot") == 0)
 		{
 			if(GiveNamedItem_bot_Hook == 0)
 			{
 				GiveNamedItem_bot_Hook = SH_ADD_MANUALVPHOOK(MHook_GiveNamedItem, player, SH_STATIC(Hook_GiveNamedItem), false);
-#ifdef AFKBOT_DEBUG_HOOKING
-				g_pSM->LogMessage(myself, "GiveNamedItem hooked (bot).");
-#endif // AFKBOT_DEBUG_HOOKING
 			}
 
 			if(GiveNamedItem_bot_Hook_Post == 0)
 			{
 				GiveNamedItem_bot_Hook_Post = SH_ADD_MANUALVPHOOK(MHook_GiveNamedItem, player, SH_STATIC(Hook_GiveNamedItem_Post), true);
-#ifdef AFKBOT_DEBUG_HOOKING
-				g_pSM->LogMessage(myself, "GiveNamedItem hooked (bot) (post).");
-#endif // AFKBOT_DEBUG_HOOKING
 			}
 		} else {
 			if(GiveNamedItem_player_Hook == 0)
 			{
 				GiveNamedItem_player_Hook = SH_ADD_MANUALVPHOOK(MHook_GiveNamedItem, player, SH_STATIC(Hook_GiveNamedItem), false);
-#ifdef AFKBOT_DEBUG_HOOKING
-				g_pSM->LogMessage(myself, "GiveNamedItem hooked (player).");
-#endif // AFKBOT_DEBUG_HOOKING
 			}
 
 			if(GiveNamedItem_player_Hook_Post == 0)
 			{
 				GiveNamedItem_player_Hook_Post = SH_ADD_MANUALVPHOOK(MHook_GiveNamedItem, player, SH_STATIC(Hook_GiveNamedItem_Post), true);
-#ifdef AFKBOT_DEBUG_HOOKING
-				g_pSM->LogMessage(myself, "GiveNamedItem hooked (player).");
-#endif // AFKBOT_DEBUG_HOOKING
 			}
 
 			if (!HookTFBot.GetBool() && ClientPutInServer_Hook != 0) {
 				SH_REMOVE_HOOK_ID(ClientPutInServer_Hook);
 				ClientPutInServer_Hook = 0;
-#ifdef AFKBOT_DEBUG_HOOKING
-				g_pSM->LogMessage(myself, "ClientPutInServer unhooked.");
-#endif // AFKBOT_DEBUG_HOOKING
 			}
 		}
 
-		if (ClientPutInServer_Hook != 0y) {
+		if (ClientPutInServer_Hook != 0) {
 			SH_REMOVE_HOOK_ID(ClientPutInServer_Hook);
 			ClientPutInServer_Hook = 0;
-#ifdef AFKBOT_DEBUG_HOOKING
-			g_pSM->LogMessage(myself, "ClientPutInServer unhooked.");
-#endif // AFKBOT_DEBUG_HOOKING
 		}
 	}
 }
@@ -153,11 +109,11 @@ void Hook_ClientPutInServer(edict_t *pEntity, char const *playername)
 bool AFKBot::SDK_OnLoad(char *error, size_t maxlen, bool late) {
 
 	char conf_error[255] = "";
-	if (!gameconfs->LoadGameConfigFile("tf2.items", &g_pGameConf, conf_error, sizeof(conf_error)))
+	if (!gameconfs->LoadGameConfigFile("tf2.afk", &g_pGameConf, conf_error, sizeof(conf_error)))
 	{
 		if (conf_error[0])
 		{
-			snprintf(error, maxlen, "Could not read tf2.items.txt: %s\n", conf_error);
+			snprintf(error, maxlen, "Could not read tf2.afk.txt: %s\n", conf_error);
 		}
 		return false;
 	}
@@ -176,10 +132,6 @@ bool AFKBot::SDK_OnLoad(char *error, size_t maxlen, bool late) {
 	// check for this and try to hook them instead of waiting for the next player. -- Damizean
 	if (late)
 	{
-#ifdef AFKBOT_DEBUG_HOOKING
-		g_pSM->LogMessage(myself, "Is a late load, attempting to hook GiveNamedItem.");
-#endif // AFKBOT_DEBUG_HOOKING
-
 		int iMaxClients = playerhelpers->GetMaxClients();
 		for (int iClient = 1; iClient <= iMaxClients; iClient++)
 		{
@@ -208,9 +160,6 @@ bool AFKBot::SDK_OnLoad(char *error, size_t maxlen, bool late) {
 			
 			if (GiveNamedItem_player_Hook != 0)
 			{
-#ifdef AFKBOT_DEBUG_HOOKING
-				g_pSM->LogMessage(myself, "GiveNamedItem hooked.");
-#endif // AFKBOT_DEBUG_HOOKING
 				break;
 			}
 		}
@@ -218,15 +167,7 @@ bool AFKBot::SDK_OnLoad(char *error, size_t maxlen, bool late) {
 
 	if (GiveNamedItem_player_Hook == 0)
 	{
-#ifdef AFKBOT_DEBUG_HOOKING
-		g_pSM->LogMessage(myself, "Is a NOT late load or no players found, attempting to hook ClientPutInServer.");
-#endif // AFKBOT_DEBUG_HOOKING
-
 		ClientPutInServer_Hook = SH_ADD_HOOK_STATICFUNC(IServerGameClients, ClientPutInServer, gameclients, Hook_ClientPutInServer, true);
-
-#ifdef AFKBOT_DEBUG_HOOKING
-		g_pSM->LogMessage(myself, "ClientPutInServer hooked.");
-#endif // AFKBOT_DEBUG_HOOKING
 	}
 
 	// Register natives for Pawn
@@ -259,10 +200,6 @@ bool AFKBot::SDK_OnMetamodLoad(ISmmAPI *ismm, char *error, size_t maxlen, bool l
 
 void AFKBot::SDK_OnUnload()
 {
-#ifdef AFKBOT_DEBUG_HOOKING
-	g_pSM->LogMessage(myself, "SDK_OnUnload called.");
-#endif // AFKBOT_DEBUG_HOOKING
-
 	gameconfs->CloseGameConfigFile(g_pGameConf);
 
 	g_pHandleSys->RemoveType(g_ScriptedItemOverrideHandleType, myself->GetIdentity());
@@ -273,54 +210,23 @@ void AFKBot::SDK_OnUnload()
 
 bool AFKBot::SDK_OnMetamodUnload(char *error, size_t maxlen)
 {
-#ifdef AFKBOT_DEBUG_HOOKING
-	g_pSM->LogMessage(myself, "SDK_OnMetamodUnload called.");
-#endif // AFKBOT_DEBUG_HOOKING
-
 	if (ClientPutInServer_Hook != 0)
 	{
 		SH_REMOVE_HOOK_ID(ClientPutInServer_Hook);
 		ClientPutInServer_Hook = 0;
-
-#ifdef AFKBOT_DEBUG_HOOKING
-		g_pSM->LogMessage(myself, "ClientPutInServer unhooked.");
-#endif // AFKBOT_DEBUG_HOOKING
 	}
-#ifdef AFKBOT_DEBUG_HOOKING
-	else {
-		g_pSM->LogMessage(myself, "ClientPutInServer did not need to be unhooked.");
-	}
-#endif // AFKBOT_DEBUG_HOOKING
 
 	if (GiveNamedItem_player_Hook != 0)
 	{
 		SH_REMOVE_HOOK_ID(GiveNamedItem_player_Hook);
 		GiveNamedItem_player_Hook = 0;
-
-#ifdef AFKBOT_DEBUG_HOOKING
-		g_pSM->LogMessage(myself, "GiveNamedItem unhooked.");
-#endif // AFKBOT_DEBUG_HOOKING
 	}
-#ifdef AFKBOT_DEBUG_HOOKING
-	else {
-		g_pSM->LogMessage(myself, "GiveNamedItem did not need to be unhooked.");
-	}
-#endif // AFKBOT_DEBUG_HOOKING
 
 	if (GiveNamedItem_player_Hook_Post != 0)
 	{
 		SH_REMOVE_HOOK_ID(GiveNamedItem_player_Hook_Post);
 		GiveNamedItem_player_Hook_Post = 0;
-
-#ifdef AFKBOT_DEBUG_HOOKING
-		g_pSM->LogMessage(myself, "GiveNamedItem (post) unhooked.");
-#endif // AFKBOT_DEBUG_HOOKING
 	}
-#ifdef AFKBOT_DEBUG_HOOKING
-	else {
-		g_pSM->LogMessage(myself, "GiveNamedItem (post) did not need to be unhooked.");
-	}
-#endif // AFKBOT_DEBUG_HOOKING
 
 	return true;
 }

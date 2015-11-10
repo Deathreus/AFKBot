@@ -433,22 +433,22 @@ public:
 
 	inline Vector getOrigin ()
 	{
-		return m_pController->GetLocalOrigin();
+		return m_pPlayerInfo->GetAbsOrigin();
 	}
 	// linux fix 2
 	inline float distanceFrom(Vector vOrigin)
 	{
-		return (vOrigin - m_pController->GetLocalOrigin()).Length();
+		return (vOrigin - m_pPlayerInfo->GetAbsOrigin()).Length();
 	}
 	inline float distanceFrom(edict_t *pEntity)
 	{
-		return (pEntity->GetCollideable()->GetCollisionOrigin() - m_pController->GetLocalOrigin()).Length();
+		return (pEntity->GetCollideable()->GetCollisionOrigin() - m_pPlayerInfo->GetAbsOrigin()).Length();
 		//return distanceFrom(CBotGlobals::entityOrigin(pEntity));
 	}
 
 	inline float distanceFrom2D(edict_t *pEntity)
 	{
-		return (pEntity->GetCollideable()->GetCollisionOrigin() - m_pController->GetLocalOrigin()).Length2D();
+		return (pEntity->GetCollideable()->GetCollisionOrigin() - m_pPlayerInfo->GetAbsOrigin()).Length2D();
 		//return distanceFrom(CBotGlobals::entityOrigin(pEntity));
 	}
 
@@ -828,7 +828,7 @@ public:
 
 	inline float getTouchDistance () { return m_fWaypointTouchDistance; }
 
-	inline CBotCmd *getUserCMD () { return &cmd; }
+	inline CUserCmd *getUserCMD () { return &cmd; }
 
 	void forceGotoWaypoint ( int wpt );
 
@@ -893,11 +893,6 @@ public:
 	inline bool isListeningToPlayer ( edict_t *pPlayer ) 
 	{
 		return (m_PlayerListeningTo.get() == pPlayer);
-	}
-
-	inline IBotController *getController () const 
-	{
-		return m_pController;
 	}
 
 	void updateUtilTime ( int util );
@@ -1026,8 +1021,7 @@ protected:
 	CBotWeapons *m_pWeapons;
 	////////////////////////////////////
 	IPlayerInfo *m_pPlayerInfo; //-- sensors
-	IBotController *m_pController; //-- actuators
-	CBotCmd cmd; // actuator command
+	CUserCmd cmd; // actuator command
 	////////////////////////////////////
 	MyEHandle m_pEnemy; // current enemy
 	MyEHandle m_pOldEnemy;
@@ -1135,21 +1129,6 @@ protected:
 	bool m_bWantToInvestigateSound;
 };
 
-class CAddbot
-{
-
-public:
-
-	CAddbot ()
-	{
-		memset(this,sizeof(CAddbot),0);
-	};
-
-	const char *m_szClass;
-	const char *m_szTeam;
-	const char *m_szBotName;
-};
-
 class CBots
 {
 public:
@@ -1210,6 +1189,9 @@ public:
 
 	static bool addBot ( const char *szClass, const char *szTeam, const char *szName );
 
+	static void makeBot ( edict_t *pPlayer );
+	static void makeNotBot( edict_t *pPlayer );
+
 	static CBot *get ( int iIndex ) { return m_Bots[iIndex]; }
 	static CBot *get ( edict_t *pPlayer ) { return m_Bots[slotOfEdict(pPlayer)]; }
 
@@ -1224,16 +1206,12 @@ private:
 	//
 	static bool m_bControlBotsOnly;
 	static bool m_bControlNext;
-	static CBotProfile *m_pNextProfile;
-	static char m_szNextName[64];
 	// End - workaround
 
 	// add or kick bot time
 	static float m_flAddKickBotTime;
 
 	static queue<edict_t*> m_ControlQueue;
-
-	static queue<CAddbot> m_AddBotQueue;
 
 };
 

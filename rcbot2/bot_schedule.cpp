@@ -475,7 +475,7 @@ CBotPickupSchedUse::CBotPickupSchedUse( edict_t *pEdict )
 {
 	addTask(new CFindPathTask(pEdict));	
 	addTask(new CMoveToTask(pEdict));
-	addTask(new CBotHL2DMUseButton(pEdict));
+	//addTask(new CBotHL2DMUseButton(pEdict));
 }
 
 void CBotPickupSchedUse :: init ()
@@ -558,8 +558,8 @@ CGotoHideSpotSched :: CGotoHideSpotSched ( CBot *pBot, edict_t *pEdict, bool bIs
 	pBot->setCoverFrom(pEdict);
 	addTask(new CFindGoodHideSpot(pEdict));
 	addTask(pHideGoalPoint);
-	if ( bIsGrenade )
-		addTask(new CDODWaitForGrenadeTask(pEdict));
+	//if ( bIsGrenade )
+		//addTask(new CDODWaitForGrenadeTask(pEdict));
 
 	// don't need to hide if the player we're hiding from died while we're running away
 	pHideGoalPoint->failIfTaskEdictDead();
@@ -737,7 +737,7 @@ void CBotTF2ShootLastEnemyPos::init()
 CDeployMachineGunSched :: CDeployMachineGunSched ( CBotWeapon *pWeapon, CWaypoint *pWaypoint, Vector vEnemy )
 {
 	addTask(new CFindPathTask(CWaypoints::getWaypointIndex(pWaypoint),LOOK_LAST_ENEMY));
-	addTask(new CBotDODSnipe(pWeapon,pWaypoint->getOrigin(),pWaypoint->getAimYaw(),true,vEnemy.z,pWaypoint->getFlags()));
+	//addTask(new CBotDODSnipe(pWeapon,pWaypoint->getOrigin(),pWaypoint->getAimYaw(),true,vEnemy.z,pWaypoint->getFlags()));
 }
 //////////////////////////////////////////////////
 CBotDefendPointSched ::	CBotDefendPointSched ( Vector vPoint, int iRadius, int iArea )

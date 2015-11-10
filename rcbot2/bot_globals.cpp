@@ -196,7 +196,7 @@ void CBotGlobals::readRCBotFolder()
 {
 	KeyValues *mainkv = new KeyValues("Metamod Plugin");
 
-	if (mainkv->LoadFromFile(filesystem, "addons/metamod/rcbot2.vdf", "MOD")) {
+	if (mainkv->LoadFromFile(filesystem, "addons/metamod/afkbot.vdf", "MOD")) {
 		char folder[256] = "\0";
 		const char *szRCBotFolder = mainkv->GetString("rcbot2path");
 
@@ -204,7 +204,7 @@ void CBotGlobals::readRCBotFolder()
 			CBotGlobals::botMessage(NULL, 0, "RCBot Folder -> trying %s", szRCBotFolder);
 
 			if (!dirExists(szRCBotFolder)) {
-				snprintf(folder, sizeof(folder), "%s/%s", CBotGlobals::modFolder(), szRCBotFolder);
+				snprintf(folder, sizeof(folder), "%s/addons/sourcemod/configs/afkbot", CBotGlobals::modFolder());
 
 				szRCBotFolder = CStrings::getString(folder);
 				CBotGlobals::botMessage(NULL, 0, "RCBot Folder -> trying %s", szRCBotFolder);
@@ -1034,39 +1034,7 @@ FILE *CBotGlobals :: openFile ( char *szFile, char *szMode )
 void CBotGlobals :: buildFileName ( char *szOutput, const char *szFile, const char *szFolder, const char *szExtension, bool bModDependent )
 {
 	if (m_szRCBotFolder == NULL)
-	{
-#ifdef HOMEFOLDER
-		char home[512];
-#endif
-		szOutput[0] = 0;
-
-#if defined(HOMEFOLDER) && defined(__linux)
-		char *lhome = getenv ("HOME");
-
-		if (lhome != NULL) 
-		{
-			strncpy(home,lhome,511);
-			home[511] = 0; 
-		}
-		else
-			strcpy(home,".");
-#endif
-
-#if defined(HOMEFOLDER) && defined(WIN32)
-		ExpandEnvironmentStringsA("%userprofile%", home, 511);
-#endif
-
-#ifdef HOMEFOLDER
-		strcat(szOutput, home);
-		addDirectoryDelimiter(szOutput);
-#endif
-
-		/*#ifndef HOMEFOLDER
-			strcat(szOutput,"..");
-			#endif HOMEFOLDER*/
-
 		strcat(szOutput, BOT_FOLDER);
-	}
 	else
 		strcpy(szOutput, m_szRCBotFolder);
 

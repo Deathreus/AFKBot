@@ -56,7 +56,7 @@ void CToolTip::send(edict_t *pPlayer)
 {
 	//CRCBotPlugin::HudTextMessage(pPlayer,m_pszMessage);
 
-	RCBotPluginMeta::HudTextMessage(pPlayer, m_pszMessage);
+	AFKBot::HudTextMessage(pPlayer, m_pszMessage);
 
 	if ( m_pszSound )
 		engine->ClientCommand(pPlayer,"play %s",m_pszSound);
@@ -342,18 +342,6 @@ void CClient :: think ()
 		m_vVelocity = (getOrigin()-m_vLastPos);
 		m_fSpeed = m_vVelocity.Length();
 		m_vLastPos = getOrigin();
-
-		if ( (m_fUpdatePos > 0) && (m_fSpeed > 0) )
-		{
-			if ( !m_bSentWelcomeMessage )
-			{
-				m_bSentWelcomeMessage = true;
-
-				giveMessage(CStrings::getString(BOT_WELCOME_MESSAGE));
-
-				giveMessage(CStrings::getString(CWaypoints::getWelcomeMessage()),5.0f);
-			}
-		}
 
 		m_fUpdatePos = engine->Time() + 1.0f;
 	}
@@ -1004,9 +992,6 @@ void CClient :: clientActive ()
 	{
 		// store steam id
 		m_szSteamID = (char*)playerinfo->GetNetworkIDString();
-	
-		// check my access levels
-		CAccessClients::checkClientAccess(this);
 	}
 }
 // this player joins with pPlayer edict
@@ -1052,11 +1037,6 @@ void CClient :: clientDisconnected ()
 		UnhookGiveNamedItem();
 		*/
 	init();
-}
-
-int CClient :: accessLevel ()
-{
-	return m_iAccessLevel;
 }
 
 bool CClient :: isUsed ()
@@ -1196,7 +1176,7 @@ void CClients :: clientDebugMsg ( int iLev, const char *szMsg, CBot *pBot )
 		if (pClient->isDebugOn(BOT_DEBUG_CHAT)) {
 			char logmsg[128] = {0};
 			snprintf(logmsg, sizeof(logmsg),"[DEBUG %s] %s",g_szDebugTags[iLev],szMsg);
-			RCBotPluginMeta::HudTextMessage(pClient->getPlayer(), logmsg);
+			AFKBot::HudTextMessage(pClient->getPlayer(), logmsg);
 		}
 
 		CBotGlobals::botMessage(pClient->getPlayer(),0,"[DEBUG %s] %s",g_szDebugTags[iLev],szMsg);

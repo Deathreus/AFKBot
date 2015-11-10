@@ -36,15 +36,15 @@
 #include "bot_const.h"
 #include "bot_strings.h"
 #include "bot_fortress.h"
-#include "bot_dod_bot.h"
+//#include "bot_dod_bot.h"
 #include "bot_waypoint.h"
 #include "bot_tf2_points.h"
 
 #define MAX_CAP_POINTS 32
 
-#define DOD_MAPTYPE_UNKNOWN 0 
-#define DOD_MAPTYPE_FLAG 1
-#define DOD_MAPTYPE_BOMB 2
+//#define DOD_MAPTYPE_UNKNOWN 0 
+//#define DOD_MAPTYPE_FLAG 1
+//#define DOD_MAPTYPE_BOMB 2
 
 #define BOT_ADD_METHOD_DEFAULT 0
 #define BOT_ADD_METHOD_PUPPET 1
@@ -190,7 +190,7 @@ private:
 	edict_t *m_pEdict;
 	int m_iId;
 };
-*/
+
 #define MAX_DOD_FLAGS 8
 
 class CDODFlags
@@ -601,7 +601,7 @@ public:
 
 	//to do for snipers and machine gunners
 	/*static unsigned short int getNumberOfClassOnTeam ( int iClass );
-	static unsigned short int getNumberOfPlayersOnTeam ( int iClass );*/
+	static unsigned short int getNumberOfPlayersOnTeam ( int iClass );
 
 protected:
 
@@ -750,7 +750,7 @@ public:
 	//void mapInit ();
 
 	//void entitySpawn ( edict_t *pEntity );
-};
+}; */
 
 #define NEWENUM typedef enum {
 
@@ -819,31 +819,15 @@ class CTF2Loadout
 public:
 	CTF2Loadout ( const char *pszClassname, int iIndex, int iQuality, int iMinLevel, int iMaxLevel );
 
-	//const char *getScript ( CEconItemView *script );
-	//CEconItemView *getScript ( CEconItemView *other );
-	void getScript ( CEconItemView *cscript );
-
-	void addAttribute ( int id, float fval );
-
-	unsigned int copyAttributesIntoArray ( CEconItemAttribute *pArray, void *pVTable = NULL );
-	//void addAttribute ( CAttribute *attrib );
-
-	//void applyAttributes ( edict_t *pEdict );
-	void applyAttributes ( CEconItemView *cscript );
-	void applyAttributes  ( CBaseEntity *pEnt );
-
 	void freeMemory ();
 
 	int m_iIndex;
-//	int m_iSlot;
+	int m_iSlot;
 	int m_iQuality;
 	bool m_bCanBeUsedInMedieval;
 	int m_iMinLevel;
 	int m_iMaxLevel;
 	const char *m_pszClassname;
-	//vector<CAttribute*> m_Attributes;
-	vector<CEconItemAttribute*> m_Attributes;
-	//CEconItemView m_ItemView;
 };
 
 class CTeamFortress2Mod : public CBotMod
@@ -1366,7 +1350,7 @@ public:
 private:
 
 };
-
+/*
 class CHalfLifeDeathmatchMod : public CBotMod
 {
 public:

@@ -78,8 +78,7 @@ SH_DECL_HOOK2_void(IServerGameClients, ClientCommand, SH_NOATTRIB, 0, edict_t *,
 SH_DECL_HOOK1_void(IServerGameClients, ClientCommand, SH_NOATTRIB, 0, edict_t *);
 #endif
 
-SH_DECL_MANUALHOOK2_void(MHook_PlayerRunCmd, 0, 0, 0, CUserCmd*, IMoveHelper*); 
-SH_DECL_MANUALHOOK4(MHook_GiveNamedItem, 0, 0, 0,CBaseEntity*, const char *,int,CEconItemView*,bool); 
+SH_DECL_MANUALHOOK2_void(MHook_PlayerRunCmd, 0, 0, 0, CUserCmd*, IMoveHelper*);  
 
 /*
 SH_DECL_HOOK1_void(bf_write, WriteChar, SH_NOATTRIB, 0, int);
@@ -97,11 +96,7 @@ bf_write *current_msg = NULL;
 char current_msg_buffer[BUF_SIZ];
 */
 
-CBaseEntity* (CBaseEntity::*TF2EquipWearable)(CBaseEntity*) = 0x0;
 CBaseEntity* (CBaseEntity::*TF2PlayerWeaponSlot)(int) = 0x0;
-void (CAttributeManager::*OnAttributeValuesChanged)(void) = 0x0;
-void (CBaseEntity::*TF2RemoveWearable)(CBaseEntity*) = 0x0;
-void (CBaseEntity::*TF2RemovePlayerItem)(CBaseEntity*) = 0x0;
 void (CBaseEntity::*TF2WeaponEquip)(CBaseEntity*) = 0x0;
 
 IServerGameDLL *server = NULL;
@@ -117,192 +112,18 @@ IServerPluginHelpers *helpers = NULL;  // special 3rd party plugin helpers from 
 IServerGameClients* gameclients = NULL;
 IEngineTrace *enginetrace = NULL;
 IEffects *g_pEffects = NULL;
-IBotManager *g_pBotManager = NULL;
 CGlobalVars *gpGlobals = NULL;
 IVDebugOverlay *debugoverlay = NULL;
 IServerGameEnts *servergameents = NULL; // for accessing the server game entities
 IServerGameDLL *servergamedll = NULL;
 IServerTools *servertools = NULL;
 
+
 AFKBot g_AFKBot;
 
 PLUGIN_EXPOSE(AFKBot, g_AFKBot);
 
-static ConVar rcbot2_ver_cvar(BOT_VER_CVAR, BOT_VER, FCVAR_REPLICATED, BOT_NAME_VER);
-
-
-int UTIL_ListAttributesOnEntity(edict_t *pEdict)
-{
-	CAttributeList *pAttributeList = CClassInterface::getAttributeList(pEdict);
-	int offset = CClassInterface::getOffset(GETPROP_TF2_ATTRIBUTELIST);
-	CBaseEntity *pEntity = servergameents->EdictToBaseEntity(pEdict);
-
-	if (!pAttributeList)
-		return 0;
-
-	int *pAttribList1 = (int*)((unsigned int)pAttributeList + 4);
-
-	int *pAttribList = (int*)((unsigned int)pEntity + offset + 4);
-
-	if ((unsigned int)pAttribList < 0x10000)
-		return 0;
-
-	int iNumAttribs = *(int*)((unsigned int)pAttributeList + 16);
-	short int iAttribIndices[16];
-
-	CBotGlobals::botMessage(NULL, 0, "There are %d attributes on %s entity", iNumAttribs, pEdict->GetClassName());
-
-	for (int i = 0; i < iNumAttribs; i++)	//THIS IS HOW YOU GET THE ATTRIBUTES ON AN ITEM!
-	{
-		iAttribIndices[i] = *(short int*)((unsigned int)pAttribList + (i * 16) + 4);
-
-		CBotGlobals::botMessage(NULL, 0, "%d) %d", i, iAttribIndices[i]);
-	}
-
-	return iNumAttribs;
-}
-
-CON_COMMAND(rcbot_printattribs, "print attributes")
-{
-	if (args.ArgC() > 1)
-	{
-		int slot = atoi(args.Arg(1));
-
-		edict_t *pEdict = INDEXENT(1);
-
-		if (slot >= 0)
-		{
-
-			CBaseEntity *pEntity = AFKBot::TF2_getPlayerWeaponSlot(pEdict, slot);
-
-			if (pEntity)
-				pEdict = servergameents->BaseEntityToEdict(pEntity);
-		}
-
-		if (pEdict)
-			UTIL_ListAttributesOnEntity(pEdict);
-	}
-}
-
-CON_COMMAND(rcbot_setattrib, "set an attribute")
-{
-	if (args.ArgC() > 2)
-	{		
-		edict_t *pPlayer = CClients::getListenServerClient();
-
-		CBaseEntity *pEntity = AFKBot::TF2_getPlayerWeaponSlot(pPlayer, TF2_SLOT_PRMRY);
-
-		if (pEntity != NULL)
-		{
-			edict_t *pEdict = servergameents->BaseEntityToEdict(pEntity);
-
-			if (pEdict && !pEdict->IsFree())
-			{			
-				const char *strAttrib = args.Arg(1);
-				float flVal = atof(args.Arg(2));
-				//void (edict_t *pEdict, const char *szName, float flVal)
-				if (TF2_setAttribute(pEdict, strAttrib, flVal))
-					CBotGlobals::botMessage(NULL, 0, "OK");
-				else
-					CBotGlobals::botMessage(NULL, 0, "FAIL");
-
-				AFKBot::TF2_ClearAttributeCache(pPlayer);
-			}
-		}
-	}
-}
-
-CON_COMMAND(rcbotd, "access the bot commands on a server")
-{
-	eBotCommandResult iResult;
-
-	if (!engine->IsDedicatedServer() || !CBotGlobals::IsMapRunning())
-	{
-		CBotGlobals::botMessage(NULL, 0, "Error, no map running or not dedicated server");
-		return;
-	}
-
-	//iResult = CBotGlobals::m_pCommands->execute(NULL,engine->Cmd_Argv(1),engine->Cmd_Argv(2),engine->Cmd_Argv(3),engine->Cmd_Argv(4),engine->Cmd_Argv(5),engine->Cmd_Argv(6));
-	iResult = CBotGlobals::m_pCommands->execute(NULL, args.Arg(1), args.Arg(2), args.Arg(3), args.Arg(4), args.Arg(5), args.Arg(6));
-
-	if (iResult == COMMAND_ACCESSED)
-	{
-		// ok
-	}
-	else if (iResult == COMMAND_REQUIRE_ACCESS)
-	{
-		CBotGlobals::botMessage(NULL, 0, "You do not have access to this command");
-	}
-	else if (iResult == COMMAND_NOT_FOUND)
-	{
-		CBotGlobals::botMessage(NULL, 0, "bot command not found");
-	}
-	else if (iResult == COMMAND_ERROR)
-	{
-		CBotGlobals::botMessage(NULL, 0, "bot command returned an error");
-	}
-}
-
-/*
-bool AFKBot :: ClearAttributeCache(edict_t *pedict)
-{
-	if (hSDKOnAttribValuesChanged == INVALID_HANDLE) return false;
-
-	if (pedict == NULL || pedict->IsFree() ) 
-		return false;
-
-	new offs = GetEntSendPropOffs(entity, "m_AttributeList", true);
-	if (offs <= 0) return false;
-	new Address:pAttribs = GetEntityAddress(entity);
-	if (pAttribs < Address_MinimumValid) return false;
-	pAttribs = Address:LoadFromAddress(pAttribs + Address:(offs + 24), NumberType_Int32);
-	if (pAttribs < Address_MinimumValid) return false;
-	SDKCall(hSDKOnAttribValuesChanged, pAttribs);
-	return true;
-}*/
-
-
-void AFKBot::TF2_equipWearable(edict_t *pPlayer, CBaseEntity *pWearable)
-{
-	CBaseEntity *pEnt = servergameents->EdictToBaseEntity(pPlayer);
-	unsigned int *mem = (unsigned int*)*(unsigned int*)pEnt;
-	int offset = rcbot_equipwearable_offset.GetInt();
-	*(unsigned int*)&TF2EquipWearable = mem[offset];
-	(*pEnt.*TF2EquipWearable)(pWearable);
-}
-/*			
-"CAttributeManager::OnAttributeValuesChanged"	//use instead of ClearCache/NotifyManagerOfAttributeValueChanges
-{
-	"windows"	"12"
-	"linux"		"13"
-	"mac"		"13"
-}
-*/
-bool AFKBot::TF2_ClearAttributeCache(edict_t *pEdict)
-{
-	CAttributeList *pList = CClassInterface::getAttributeList(pEdict);
-
-	CAttributeManager *pManager = (CAttributeManager*)(((unsigned int)pList) + 24);
-
-	if (!pManager)
-		return false;
-
-	unsigned int *mem = (unsigned int*)*(unsigned int*)pManager;
-
-	if (!mem)
-		return false;
-
-	int offset = 12;
-	
-	*(unsigned int*)&OnAttributeValuesChanged = mem[offset];
-
-	if (!OnAttributeValuesChanged)
-		return false;
-
-	(*pManager.*OnAttributeValuesChanged)();
-
-	return true;
-}
+static ConVar afkbot_ver_cvar(BOT_VER_CVAR, BOT_VER, FCVAR_REPLICATED, BOT_NAME_VER);
 
 CBaseEntity *AFKBot::TF2_getPlayerWeaponSlot(edict_t *pPlayer, int iSlot)
 {
@@ -313,17 +134,6 @@ CBaseEntity *AFKBot::TF2_getPlayerWeaponSlot(edict_t *pPlayer, int iSlot)
 	*(unsigned int*)&TF2PlayerWeaponSlot = mem[offset];
 
 	return (*pEnt.*TF2PlayerWeaponSlot)(iSlot);
-}
-
-void AFKBot::TF2_removeWearable(edict_t *pPlayer, CBaseEntity *pWearable)
-{
-	CBaseEntity *pEnt = servergameents->EdictToBaseEntity(pPlayer);
-	unsigned int *mem = (unsigned int*)*(unsigned int*)pEnt;
-	int offset = rcbot_removewearable_offset.GetInt();
-
-	*(unsigned int*)&TF2RemoveWearable = mem[offset];
-
-	(*pEnt.*TF2RemoveWearable)(pWearable);
 }
 
 class CBotRecipientFilter : public IRecipientFilter
@@ -481,114 +291,19 @@ void AFKBot::TF2_equipWeapon(edict_t *pPlayer, CBaseEntity *pWeapon)
 	(*pEnt.*TF2WeaponEquip)(pWeapon);
 }
 
-void AFKBot::TF2_removePlayerItem(edict_t *pPlayer, CBaseEntity *pItem)
-{
-	CBaseEntity *pEnt = servergameents->EdictToBaseEntity(pPlayer);
-	unsigned int *mem = (unsigned int*)*(unsigned int*)pEnt;
-	int offset = rcbot_rmplayeritem_offset.GetInt();
-
-	*(unsigned int*)&TF2RemovePlayerItem = mem[offset];
-
-	(*pEnt.*TF2RemovePlayerItem)(pItem);
-}
-
-
-void AFKBot::TF2_RemoveWeaponSlot(edict_t *pPlayer, int iSlot)
-{
-	CBaseEntity *pWeaponInSlot = TF2_getPlayerWeaponSlot(pPlayer, iSlot);
-	
-	if (pWeaponInSlot)
-	{
-		// bug #6206
-		// papering over a valve bug where a weapon's extra wearables aren't properly removed from the weapon's owner
-		edict_t *extraWearable = CClassInterface::getExtraWearable(pPlayer);
-
-		if (extraWearable != NULL)
-		{
-			CBaseEntity *pEnt = servergameents->EdictToBaseEntity(extraWearable);
-			TF2_removeWearable(pPlayer, pEnt);
-		}
-
-		extraWearable = CClassInterface::getExtraWearableViewModel(pPlayer);
-
-		if (extraWearable != NULL)
-		{
-			CBaseEntity *pEnt = servergameents->EdictToBaseEntity(extraWearable);
-			TF2_removeWearable(pPlayer, pEnt);
-		}
-
-		TF2_removePlayerItem(pPlayer, pWeaponInSlot);
-
-		edict_t *pWeaponInSlotEdict = servergameents->BaseEntityToEdict(pWeaponInSlot);
-		//AcceptEntityInput(weaponIndex, "Kill");
-		engine->RemoveEdict(pWeaponInSlotEdict);
-	}
-}
-
-void AFKBot::giveRandomLoadout(edict_t *pPlayer, int iClass, int iSlot, void *pVTable, void *pVTable_Attributes)
-{
-	CTF2Loadout *p = CTeamFortress2Mod::findRandomWeaponLoadOutInSlot(iClass,iSlot);
-
-	if (p)
-	{
-		givePlayerLoadOut(pPlayer, p, iSlot, pVTable, pVTable_Attributes);
-	}
-}
-// TF2 Items
-bool AFKBot::givePlayerLoadOut(edict_t *pPlayer, CTF2Loadout *pLoadout, int iSlot, void *pVTable, void *pVTable_Attributes)
-{
-	CBaseEntity *pEnt = servergameents->EdictToBaseEntity(pPlayer);
-	// first remove any thing from the slot
-	AFKBot::TF2_RemoveWeaponSlot(pPlayer, iSlot);
-
-	CEconItemView hScriptCreatedItem;
-	memset(&hScriptCreatedItem, 0, sizeof(CEconItemView));
-
-	hScriptCreatedItem.m_pVTable = pVTable;
-	hScriptCreatedItem.m_AttributeList.m_pVTable = pVTable_Attributes;
-	hScriptCreatedItem.m_NetworkedDynamicAttributesForDemos.m_pVTable = pVTable_Attributes;
-
-	const char *strWeaponClassname = pLoadout->m_pszClassname;
-	hScriptCreatedItem.m_iItemDefinitionIndex = pLoadout->m_iIndex;
-	hScriptCreatedItem.m_iEntityLevel = randomInt(pLoadout->m_iMinLevel,pLoadout->m_iMaxLevel);
-	hScriptCreatedItem.m_iEntityQuality = pLoadout->m_iQuality;
-	CEconItemAttribute attribs[16];
-	int iSize = pLoadout->copyAttributesIntoArray(attribs, pVTable);
-	hScriptCreatedItem.m_AttributeList.m_Attributes.CopyArray(attribs, iSize);// pLoadout->m_Attributes, pLoadout->m_Attributes.size());
-	hScriptCreatedItem.m_bInitialized = true;
-	hScriptCreatedItem.m_bDoNotIterateStaticAttributes = true;
-	
-	if (hScriptCreatedItem.m_iEntityQuality == 0 && iSize > 0)
-	{
-		hScriptCreatedItem.m_iEntityQuality = 6;
-	}
-
-	CBaseEntity *added = SH_MCALL(pEnt, MHook_GiveNamedItem)(strWeaponClassname, 0, &hScriptCreatedItem, rcbot_force_generation.GetBool());
-
-	if (added)
-	{
-		if ( (iSlot == TF2_SLOT_MELEE) || (iSlot == TF2_SLOT_PRMRY) || (iSlot == TF2_SLOT_SCNDR) )
-			TF2_equipWeapon(pPlayer, added);
-		else
-			TF2_equipWearable(pPlayer, added);
-	}
-
-	return added != NULL;
-}
-
 void AFKBot::Hook_PlayerRunCmd(CUserCmd *ucmd, IMoveHelper *moveHelper)
 {
 	static CBot *pBot;
 
-	CBaseEntity *pPlayer = META_IFACEPTR(CBaseEntity);
+	CBaseEntity *pEnt = META_IFACEPTR(CBaseEntity);
 
-	edict_t *pEdict = servergameents->BaseEntityToEdict(pPlayer);
+	edict_t *pEdict = servergameents->BaseEntityToEdict(pEnt);
 
 	pBot = CBots::getBotPointer(pEdict);
 	
 	if ( pBot )
 	{
-		static CBotCmd *cmd;
+		static CUserCmd *cmd;
 		
 		cmd = pBot->getUserCMD();
 
@@ -604,7 +319,11 @@ void AFKBot::Hook_PlayerRunCmd(CUserCmd *ucmd, IMoveHelper *moveHelper)
 		ucmd->tick_count = cmd->tick_count;
 		ucmd->command_number = cmd->command_number;
 
+		servertools->SnapPlayerToPosition(NULL, cmd->viewangles, NULL);
+
 		g_pLastBot = (CBotTF2*)pBot;
+
+		RETURN_META(MRES_OVERRIDE);
 	}
 
 //g_pSM->LogMessage(NULL, "H %i %i %f %f %f %f %i", ucmd->command_number, ucmd->tick_count, ucmd->viewangles.x, ucmd->viewangles.y, ucmd->viewangles.z, ucmd->forwardmove, ucmd->buttons); 
@@ -612,19 +331,6 @@ void AFKBot::Hook_PlayerRunCmd(CUserCmd *ucmd, IMoveHelper *moveHelper)
 RETURN_META(MRES_IGNORED); 
 }
 
-CBaseEntity *AFKBot::Hook_GiveNamedItem( const char *name, int subtype, CEconItemView *cscript, bool b )
-{
-	CBaseEntity *pPlayer = META_IFACEPTR(CBaseEntity);
-	edict_t *pEdict = servergameents->BaseEntityToEdict(pPlayer);
-	CBot *pBot = NULL;
-
-	if (rcbot_customloadouts.GetBool() && ((pBot = CBots::getBotPointer(pEdict)) != NULL) && cscript)
-	{
-		((CBotTF2*)pBot)->PostGiveNamedItem(cscript);
-	}
-	
-	RETURN_META_VALUE(MRES_IGNORED, NULL); 
-}
 /** 
  * Something like this is needed to register cvars/CON_COMMANDs.
  */
@@ -768,7 +474,6 @@ bool AFKBot::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool l
 	GET_V_IFACE_ANY(GetServerFactory, playerinfomanager, IPlayerInfoManager, INTERFACEVERSION_PLAYERINFOMANAGER);
 
 	GET_V_IFACE_ANY(GetServerFactory, g_pEffects, IEffects, IEFFECTS_INTERFACE_VERSION);
-	GET_V_IFACE_ANY(GetServerFactory, g_pBotManager, IBotManager, INTERFACEVERSION_PLAYERBOTMANAGER);
 	GET_V_IFACE_ANY(GetServerFactory, servertools, IServerTools, VSERVERTOOLS_INTERFACE_VERSION);
 
 #ifndef __linux__
@@ -825,7 +530,7 @@ bool AFKBot::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool l
 
 	FILE *fp = fopen(filename, "r");
 
-	CRCBotKeyValueList *pKVL = new CRCBotKeyValueList();
+	CAFKBotKeyValueList *pKVL = new CAFKBotKeyValueList();
 
 	if (fp)
 		pKVL->parseFile(fp);
@@ -836,20 +541,12 @@ bool AFKBot::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool l
 
 #ifdef _WIN32
 
-	if (pKVL->getInt("givenameditem_win", &val))		
-		rcbot_givenameditem_offset.SetValue(val);
-	if (pKVL->getInt("equipwearable_win", &val))
-		rcbot_equipwearable_offset.SetValue(val);
 	if (pKVL->getInt("runplayermove_tf2_win", &val))
 		rcbot_runplayercmd_tf2.SetValue(val);
 	if (pKVL->getInt("runplayermove_dods_win", &val))
 		rcbot_runplayercmd_dods.SetValue(val);
 	if (pKVL->getInt("getweaponslot_win", &val))
 		rcbot_getweaponslot_offset.SetValue(val);
-	if (pKVL->getInt("removewearable_win", &val))
-		rcbot_removewearable_offset.SetValue(val);
-	if (pKVL->getInt("removeplayeritem_win", &val))
-		rcbot_rmplayeritem_offset.SetValue(val);
 	if (pKVL->getInt("weaponequip_win", &val))
 		rcbot_weaponequip_offset.SetValue(val);
 	if (pKVL->getInt("gamerules_win", &val))
@@ -860,20 +557,12 @@ bool AFKBot::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool l
 	}
 #else
 
-	if (pKVL->getInt("givenameditem_linux", &val))
-		rcbot_givenameditem_offset.SetValue(val);
-	if (pKVL->getInt("equipwearable_linux", &val))
-		rcbot_equipwearable_offset.SetValue(val);
 	if (pKVL->getInt("runplayermove_tf2_linux", &val))
 		rcbot_runplayercmd_tf2.SetValue(val);
 	if (pKVL->getInt("runplayermove_dods_linux", &val))
 		rcbot_runplayercmd_dods.SetValue(val);
 	if (pKVL->getInt("getweaponslot_linux", &val))
 		rcbot_getweaponslot_offset.SetValue(val);
-	if (pKVL->getInt("removewearable_linux", &val))
-		rcbot_removewearable_offset.SetValue(val);
-	if (pKVL->getInt("removeplayeritem_linux", &val))
-		rcbot_rmplayeritem_offset.SetValue(val);
 	if (pKVL->getInt("weaponequip_linux", &val))
 		rcbot_weaponequip_offset.SetValue(val);
 	if (pKVL->getInt("mstr_offset_linux", &val)) {
@@ -882,10 +571,6 @@ bool AFKBot::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool l
 	}
 #endif
 
-	g_pGetEconItemSchema = new CGetEconItemSchema(pKVL, gameServerFactory);
-	g_pSetRuntimeAttributeValue = new CSetRuntimeAttributeValue(pKVL, gameServerFactory);
-	g_pGetAttributeDefinitionByName = new CGetAttributeDefinitionByName(pKVL, gameServerFactory);
-	g_pAttribList_GetAttributeByID = new CAttributeList_GetAttributeByID(pKVL, gameServerFactory);
 	g_pGameRules_Obj = new CGameRulesObject(pKVL, gameServerFactory);
 	g_pGameRules_Create_Obj = new CCreateGameRulesObject(pKVL, gameServerFactory);
 
@@ -899,15 +584,10 @@ bool AFKBot::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool l
 
 	CBotMod *pMod = CBotGlobals::getCurrentMod();
 
-	if (CBots::controlBots())
-	{
-		if (pMod->getModId() == MOD_TF2)
-			SH_MANUALHOOK_RECONFIGURE(MHook_PlayerRunCmd, rcbot_runplayercmd_tf2.GetInt(), 0, 0);
-		else if (pMod->getModId() == MOD_DOD)
-			SH_MANUALHOOK_RECONFIGURE(MHook_PlayerRunCmd, rcbot_runplayercmd_dods.GetInt(), 0, 0);
-	}
-	if (pMod->getModId() == MOD_TF2) 
-		SH_MANUALHOOK_RECONFIGURE(MHook_GiveNamedItem,rcbot_givenameditem_offset.GetInt(),0,0);
+	if (pMod->getModId() == MOD_TF2)
+		SH_MANUALHOOK_RECONFIGURE(MHook_PlayerRunCmd, rcbot_runplayercmd_tf2.GetInt(), 0, 0);
+	else if (pMod->getModId() == MOD_DOD)
+		SH_MANUALHOOK_RECONFIGURE(MHook_PlayerRunCmd, rcbot_runplayercmd_dods.GetInt(), 0, 0);
 
 	ENGINE_CALL(LogPrint)("All hooks started!\n");
 
@@ -927,7 +607,7 @@ bool AFKBot::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool l
 	const char *rcbot2path;
 	CBotGlobals::botMessage(NULL, 0, "Reading rcbot2 path from VDF...");
 	
-	mainkv->LoadFromFile(filesystem, "addons/metamod/rcbot2.vdf", "MOD");
+	mainkv->LoadFromFile(filesystem, "addons/metamod/afkbot.vdf", "MOD");
 	
 	mainkv = mainkv->FindKey("Metamod Plugin");
 
@@ -957,51 +637,6 @@ bool AFKBot::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool l
 	CClassInterface::init();
 
 	RCBOT2_Cvar_setup(g_pCVar);
-
-	// Bot Quota Settings
-	char bq_line[128];
-
-	int bot_count = 0;
-	int human_count = 0;
-
-	for (int i = 0; i < MAX_PLAYERS; ++i) {
-		m_iTargetBots[i] = 0;
-	}
-
-	CBotGlobals::buildFileName(filename, "bot_quota", BOT_CONFIG_FOLDER, "ini");
-	fp = fopen(filename, "r");
-
-	memset(bq_line, 0, sizeof(bq_line));
-
-	if (fp != NULL) {
-		while (fgets(bq_line, sizeof(bq_line), fp) != NULL) {
-			if (bq_line[0] == '#')
-				continue;
-
-			for (int i = 0; i < sizeof(bq_line); ++i) {
-				if (bq_line[i] == '\0')
-					break;
-
-				if (!isdigit(bq_line[i]))
-					bq_line[i] = ' ';
-			}
-
-			if (sscanf(bq_line, "%d %d", &human_count, &bot_count) == 2) {
-				if (human_count < 0 || human_count > 32) {
-					CBotGlobals::botMessage(NULL, 0, "Bot Quota - Invalid Human Count %d", human_count);
-					continue;
-				}
-
-				if (bot_count < 0 || bot_count > 32) {
-					CBotGlobals::botMessage(NULL, 0, "Bot Quota - Invalid Bot Count %d", bot_count);
-					continue;
-				}
-
-				m_iTargetBots[human_count] = bot_count;
-				CBotGlobals::botMessage(NULL, 0, "Bot Quota - Humans: %d, Bots: %d", human_count, bot_count);
-			}
-		}
-	}
 
 	if (fp) {
 		fclose(fp);
@@ -1045,7 +680,7 @@ bool AFKBot::Unload(char *error, size_t maxlen)
 	CStrings::freeAllMemory();
 	CBotGlobals::freeMemory();
 	CBotMods::freeMemory();
-	CAccessClients::freeMemory();
+	//CAccessClients::freeMemory();
 	CBotEvents::freeMemory();
 	CWaypoints::freeMemory();
 	CWaypointTypes::freeMemory();
@@ -1088,7 +723,7 @@ void AFKBot::Hook_ServerActivate(edict_t *pEdictList, int edictCount, int client
 {
 	META_LOG(g_PLAPI, "ServerActivate() called: edictCount = %d, clientMax = %d", edictCount, clientMax);
 
-	CAccessClients::load();
+	//CAccessClients::load();
 
 	CBotGlobals::setClientMax(clientMax);
 }
@@ -1130,8 +765,7 @@ void AFKBot::Hook_ClientCommand(edict_t *pEntity)
 
 	// is bot command?
 	if ( CBotGlobals::m_pCommands->isCommand(pcmd) )
-	{		
-		//eBotCommandResult iResult = CBotGlobals::m_pCommands->execute(pClient,engine->Cmd_Argv(1),engine->Cmd_Argv(2),engine->Cmd_Argv(3),engine->Cmd_Argv(4),engine->Cmd_Argv(5),engine->Cmd_Argv(6));
+	{
 		eBotCommandResult iResult = CBotGlobals::m_pCommands->execute(pClient,args.Arg(1),args.Arg(2),args.Arg(3),args.Arg(4),args.Arg(5),args.Arg(6));
 
 		if ( iResult == COMMAND_ACCESSED )
@@ -1199,11 +833,10 @@ bool AFKBot::Hook_ClientConnect(edict_t *pEntity,
 void AFKBot::Hook_ClientPutInServer(edict_t *pEntity, char const *playername)
 {
 	CBaseEntity *pEnt = servergameents->EdictToBaseEntity(pEntity);
-	bool is_Rcbot = false;
 
 	CClient *pClient = CClients::clientConnected(pEntity);
 
-	if ( CBots::controlBots() )
+	/*if ( CBots::controlBots() )
 		is_Rcbot = CBots::handlePlayerJoin(pEntity,playername);
 	
 	if ( !is_Rcbot && pClient )
@@ -1218,7 +851,7 @@ void AFKBot::Hook_ClientPutInServer(edict_t *pEntity, char const *playername)
 				pClient->resetMenuCommands();
 			}
 		}
-	}
+	}*/
 
 	CBotMod *pMod = CBotGlobals::getCurrentMod();
 
@@ -1226,10 +859,8 @@ void AFKBot::Hook_ClientPutInServer(edict_t *pEntity, char const *playername)
 
 	if ( pEnt )
 	{
-		if (CBots::controlBots())
-			SH_ADD_MANUALHOOK_MEMFUNC(MHook_PlayerRunCmd, pEnt, this, &AFKBot::Hook_PlayerRunCmd, false);
-		if ( pMod->getModId() == MOD_TF2 )
-			SH_ADD_MANUALHOOK_MEMFUNC(MHook_GiveNamedItem, pEnt, this, &AFKBot::Hook_GiveNamedItem, false);
+		//if (CBots::controlBots())
+		SH_ADD_MANUALHOOK_MEMFUNC(MHook_PlayerRunCmd, pEnt, this, &AFKBot::Hook_PlayerRunCmd, false);
 	}
 }
 
@@ -1241,10 +872,8 @@ void AFKBot::Hook_ClientDisconnect(edict_t *pEntity)
 	{
 		CBotMod *pMod = CBotGlobals::getCurrentMod();
 
-		if (CBots::controlBots())
-			SH_REMOVE_MANUALHOOK_MEMFUNC(MHook_PlayerRunCmd, pEnt, this, &AFKBot::Hook_PlayerRunCmd, false);
-		if (pMod->getModId() == MOD_TF2)		
-			SH_REMOVE_MANUALHOOK_MEMFUNC(MHook_GiveNamedItem, pEnt, this, &AFKBot::Hook_GiveNamedItem, false); 
+		//if (CBots::controlBots())
+		SH_REMOVE_MANUALHOOK_MEMFUNC(MHook_PlayerRunCmd, pEnt, this, &AFKBot::Hook_PlayerRunCmd, false);
 	}
 
 	CClients::clientDisconnected(pEntity);
@@ -1268,7 +897,6 @@ void AFKBot::Hook_GameFrame(bool simulating)
 		CBots::botThink();
 		//if ( !CBots::controlBots() )
 			//gameclients->PostClientMessagesSent();
-		CBots::handleAutomaticControl();
 		CClients::clientThink();
 
 		if ( CWaypoints::getVisiblity()->needToWorkVisibility() )
@@ -1289,96 +917,6 @@ void AFKBot::Hook_GameFrame(bool simulating)
 		currentmod = CBotGlobals::getCurrentMod();
 
 		currentmod->modFrame();
-
-		// Bot Quota
-		if (rcbot_bot_quota_interval.GetInt() > 0) {
-			BotQuotaCheck();
-		}
-	}
-}
-
-void AFKBot::BotQuotaCheck() {
-	if (rcbot_bot_quota_interval.GetInt() < 0) {
-		return;
-	}
-
-	if (m_fBotQuotaTimer < 1.0f) {
-		m_fBotQuotaTimer = engine->Time() + 10.0f; // Sleep 10 seconds
-	}
-
-	if (m_fBotQuotaTimer < engine->Time() - rcbot_bot_quota_interval.GetInt()) {
-		m_fBotQuotaTimer = engine->Time();
-
-		// Target Bot Count
-		int bot_target = 0;
-		int bot_diff = 0;
-
-		// Change Notification
-		bool notify = false;
-
-		// Current Bot Count
-		int bot_count = 0;
-		int human_count = 0;
-
-		// Count Players
-		for (int i = 0; i < MAX_PLAYERS; ++i) {
-			CClient* client = CClients::get(i);
-			CBot* bot = CBots::get(i);
-
-			if (bot != NULL && bot->getEdict() != NULL && bot->inUse()) {
-				IPlayerInfo *p = playerinfomanager->GetPlayerInfo(bot->getEdict());
-
-				if (p->IsConnected() && p->IsFakeClient()) {
-					bot_count++;
-				}
-			}
-
-			if (client != NULL && client->getPlayer() != NULL && client->isUsed()) {
-				IPlayerInfo *p = playerinfomanager->GetPlayerInfo(client->getPlayer());
-
-				if (p->IsConnected() && !p->IsFakeClient()) {
-					human_count++;
-				}
-			}
-		}
-
-		if (human_count >= MAX_PLAYERS) {
-			human_count = 0;
-		}
-
-		// Get Bot Quota
-		bot_target = m_iTargetBots[human_count];
-
-		// Change Bot Quota
-		if (bot_target < bot_count) {
-			bot_diff = bot_count - bot_target;
-
-			for (int i = 0; i < bot_diff; ++i) {
-				CBots::kickRandomBot();
-			}
-
-			notify = true;
-		} else if (bot_target > bot_count) {
-			bot_diff = bot_target - bot_count;
-
-			for (int i = 0; i < bot_diff; ++i) {
-				CBots::addBot("", "", "");
-				break; // Bug-Fix, only add one bot at a time
-			}
-
-			notify = true;
-		}
-
-		if (notify) {
-			char chatmsg[128];
-			snprintf(chatmsg, sizeof(chatmsg), "[Bot Quota] Humans: %d, Bots: %d", human_count, bot_target);
-
-			CBotGlobals::botMessage(NULL, 0, "=======================================");
-			CBotGlobals::botMessage(NULL, 0, chatmsg);
-			CBotGlobals::botMessage(NULL, 0, "=======================================");
-
-			// AFKBot::BroadcastTextMessage(chatmsg);
-		}
 	}
 }
 
@@ -1473,12 +1011,12 @@ bool AFKBot::Unpause(char *error, size_t maxlen)
 
 const char *AFKBot::GetLicense()
 {
-	return "GPL General Public License";
+	return "GPL General Public License v3";
 }
 
 const char *AFKBot::GetVersion()
 {
-	return "1.00 (r473)";
+	return "1.0.0";
 }
 
 const char *AFKBot::GetDate()
@@ -1488,25 +1026,25 @@ const char *AFKBot::GetDate()
 
 const char *AFKBot::GetLogTag()
 {
-	return "RCBOT2";
+	return "AFKBOT";
 }
 
 const char *AFKBot::GetAuthor()
 {
-	return "Cheeseh, Nightc0re";
+	return "Deathreus, Cheeseh, Nightc0re";
 }
 
 const char *AFKBot::GetDescription()
 {
-	return "Bot for HL2DM TF2 and DOD:S";
+	return "AFK player bot for most source games";
 }
 
 const char *AFKBot::GetName()
 {
-	return "RCBot2";
+	return "AFK Bot";
 }
 
 const char *AFKBot::GetURL()
 {
-	return "http://rcbot.bots-united.com/";
+	return "";
 }

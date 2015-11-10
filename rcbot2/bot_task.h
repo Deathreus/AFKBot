@@ -393,7 +393,7 @@ private:
 };
 
 
-class CBotGravGunPickup : public CBotTask
+/*class CBotGravGunPickup : public CBotTask
 {
 public:
 	CBotGravGunPickup ( edict_t *pWeapon, edict_t *pProp )
@@ -461,7 +461,7 @@ public:
 private:
 	MyEHandle m_pButton;
 	float m_fTime;
-};
+};*/
 
 class CBotTF2MedicHeal : public CBotTask
 {
@@ -749,8 +749,7 @@ private:
 };
 
 
-
-class CBotDODSnipe : public CBotTask
+/*class CBotDODSnipe : public CBotTask
 {
 public:
 	CBotDODSnipe ( CBotWeapon *pWeaponToUse, Vector vOrigin, float fYaw, bool bUseZ = false, float z = 0, int iWaypointType = 0 );
@@ -792,7 +791,7 @@ private:
 	bool m_bUseZ;
 	float m_z; // z = ground level
 	int m_iWaypointType;
-};
+};*/
 
 class CBotTF2SpyDisguise : public CBotTask
 {
@@ -832,7 +831,7 @@ private:
 };
 
 
-class CDODDropAmmoTask : public CBotTask
+/*class CDODDropAmmoTask : public CBotTask
 {
 public:
 	CDODDropAmmoTask ( edict_t *pPlayer )
@@ -916,7 +915,7 @@ private:
 	int m_iFlagID;
 	float m_fRadius;
 	bool m_bProne;
-};
+};*/
 
 
 class CBotTF2AttackPoint : public CBotTask
@@ -1144,7 +1143,7 @@ private:
 	bool m_bFind;
 };
 
-class CThrowGrenadeTask : public CBotTask
+/*class CThrowGrenadeTask : public CBotTask
 {
 public:
 	CThrowGrenadeTask ( CBotWeapon *pWeapon, int ammo, Vector vLoc );
@@ -1157,7 +1156,7 @@ private:
 	float m_fTime;
 	float m_fHoldAttackTime;
 	int m_iAmmo;
-};
+};*/
 
 class CAttackEntityTask : public CBotTask
 {
@@ -1171,7 +1170,7 @@ private:
 };
 
 ////////////////////
-class CAutoBuy : public CBotTask
+/*class CAutoBuy : public CBotTask
 {
 public:
 	void init ();
@@ -1181,7 +1180,7 @@ public:
 private:
 	float m_fTime;
 	bool m_bTimeset;
-};
+};*/
 //////////////////////
 class CTF2_TauntTask : public CBotTask
 {

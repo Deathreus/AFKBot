@@ -33,12 +33,6 @@
 
 #include "shareddefs.h"
 
-#ifndef __linux__
-#define BOT_WELCOME_MESSAGE "Welcome to RCBot by Cheeseh"
-#else
-#define BOT_WELCOME_MESSAGE "Welcome to RCBot by Cheeseh for Linux/MacOSx"
-#endif
-
 #define BOT_DEFAULT_FOV 75.0f
 
 #define __to_lower(a) (((a)>='A')&&((a)<='Z'))?('a'+((a)-'A')):(a)
@@ -48,8 +42,6 @@
 
 //#define RANDOM_INT(min,max) (min + round(((float)rand()/RAND_MAX)*(float)(max-min)))
 //#define RANDOM_FLOAT(min,max) (min + ((float)rand()/RAND_MAX)*(float)(max-min))
-
-#define DEFAULT_BOT_NAME "RCBot"
 
 #define BOT_CONVAR_FLAGS_OFFSET 20
 
@@ -122,15 +114,14 @@ extern const char *g_szLookTaskToString[LOOK_MAX];
 
 #define BOT_CONFIG_FOLDER "config"
 #define BOT_MOD_FILE "bot_mods"
-#define BOT_ACCESS_CLIENT_FILE "accessclients"
-#define BOT_PROFILE_FOLDER "profiles"
 #define BOT_WAYPOINT_FOLDER "waypoints"
 #define BOT_CONFIG_EXTENSION "ini"
 
 #define BOT_WAYPOINT_EXTENSION "rcw" // extension for waypoint files
 #define BOT_WAYPOINT_FILE_TYPE "RCBot2\0" // for waypoint file header
 
-#define BOT_TAG "[RCBot] " // for printing messages
+#define BOT_TAG "[AFKBot] " // for printing messages
+
 /*
 // Engine player info, no game related infos here
 // If you change this, change the two byteswap defintions: 
@@ -187,19 +178,16 @@ typedef enum
 
 #undef ENTINDEX
 #define ENTINDEX(pEdict) engine->IndexOfEdict(pEdict)
-/*
-#define BUILDNAME "TF2/HL2DM/DOD:S"
-#define BUILDVER "BETA"
-#define BUILDNUM "365"*/
-#define BOT_NAME "RCBot"
+
+#define BOT_NAME "AFKBot"
 #ifdef __linux__
 #define BOT_VER "TF2/HL2DM/DOD:S 1.00 META Linux 473 (BUILD " __DATE__ "-" __TIME__ ")" //bir3yk
 #else
 #define BOT_VER "TF2/HL2DM/DOD:S 1.00 META Win32 473 (BUILD " ## __DATE__ ## "-" ## __TIME__ ## ")"
 #endif
-#define BOT_NAME_VER "RCbot version"
-#define BOT_VER_CVAR "rcbot_ver"
-#define BOT_FOLDER "rcbot2"
+#define BOT_NAME_VER "AFKBot version"
+#define BOT_VER_CVAR "afkbot_ver"
+#define BOT_FOLDER "afkbot"
 
 typedef enum
 {
@@ -209,36 +197,36 @@ typedef enum
 }eBotFuncState;
 
 //////////////////////////////////
-#define CONDITION_ENEMY_OBSCURED		1 // bit 0 - bot lost sight of enemy and can't see clearly
-#define CONDITION_NO_WEAPON				2 // bit 1 - bot doesn't have a weapon
-#define CONDITION_OUT_OF_AMMO			4 // bit 2 - bot has no ammo
-#define CONDITION_SEE_CUR_ENEMY			8 // bit 3 - bot can see current enemy
-#define CONDITION_ENEMY_DEAD			16 // bit 4 - bot s enemy is dead
-#define CONDITION_SEE_WAYPOINT			32 // bit 5 - bot can see the current waypoint
-#define CONDITION_NEED_AMMO				64 // bit 6 - bot needs ammo (low)
-#define CONDITION_NEED_HEALTH			128 // bit 7 - bot needs health
-#define CONDITION_SEE_LOOK_VECTOR		256 // bit 8 - bot can see his 'look' vector
-#define CONDITION_POINT_CAPTURED		512 // bit 9 a point has been captured recently
-#define CONDITION_PUSH					1024 // bit 10 - bots are more likely to attack and stop sniping etc
-#define CONDITION_LIFT					2048 // bit 11 - bot is on a lift
-#define CONDITION_SEE_HEAL				4096 // bit 12 - medic bot (tf2) can see his player he wants to heal
-#define CONDITION_SEE_PLAYERTOHELP		4096 // same thing as heal for other mods
-#define CONDITION_SEE_LAST_ENEMY_POS	8192 // bit 13 - bots can see the last place they saw an enemy
-#define CONDITION_CHANGED				16384 // bit 14 - bots want to change their course of action
-#define CONDITION_COVERT				32768 // bit 15 - bots are more sensitive to enemies and more likely to take alternate paths
-#define CONDITION_RUN					65536 // bit 16 - bots have to run e.g. there is a grenade nearby
-#define CONDITION_GREN					131072 // bit 17 - bots will be more likely to throw a grenade
-#define CONDITION_NEED_BOMB				262144 // bit 18 - bot needs a bomb for dod:s bomb maps
-#define CONDITION_SEE_ENEMY_HEAD		524288 // bit 19 - bot can aim for a headshot
-#define CONDITION_PRONE					1048576 // bit 20 - bot needs to go prone (lie down)
-#define CONDITION_PARANOID				2097152 // bit 21 - bot is paranoid of spies or unknown enemy
-#define CONDITION_SEE_SQUAD_LEADER		4194304 // bit 22 - bot can see his leader
-#define CONDITION_SQUAD_LEADER_DEAD		8388608 // bit 23 - bots leader is dead
-#define CONDITION_SQUAD_LEADER_INRANGE	16777216 // bit 24 - bots leader is in range
-#define CONDITION_SQUAD_IDLE			33554432 // bit 25 - bots squad isn't doing anything fun
-#define CONDITION_DEFENSIVE				67108864 // bit 26 - bot leader told me to defend
-#define CONDITION_BUILDING_SAPPED		134217728 // bit 27 - one of engineers buildings sapped
-#define CONDITION_SEE_ENEMY_GROUND		268435456 // bit 28 - can see enemy ground so aim for it if i have explosive
+#define CONDITION_ENEMY_OBSCURED		1			// bit 0 - bot lost sight of enemy and can't see clearly
+#define CONDITION_NO_WEAPON				2			// bit 1 - bot doesn't have a weapon
+#define CONDITION_OUT_OF_AMMO			4			// bit 2 - bot has no ammo
+#define CONDITION_SEE_CUR_ENEMY			8			// bit 3 - bot can see current enemy
+#define CONDITION_ENEMY_DEAD			16			// bit 4 - bot s enemy is dead
+#define CONDITION_SEE_WAYPOINT			32			// bit 5 - bot can see the current waypoint
+#define CONDITION_NEED_AMMO				64			// bit 6 - bot needs ammo (low)
+#define CONDITION_NEED_HEALTH			128			// bit 7 - bot needs health
+#define CONDITION_SEE_LOOK_VECTOR		256			// bit 8 - bot can see his 'look' vector
+#define CONDITION_POINT_CAPTURED		512			// bit 9 a point has been captured recently
+#define CONDITION_PUSH					1024		// bit 10 - bots are more likely to attack and stop sniping etc
+#define CONDITION_LIFT					2048		// bit 11 - bot is on a lift
+#define CONDITION_SEE_HEAL				4096		// bit 12 - medic bot (tf2) can see his player he wants to heal
+#define CONDITION_SEE_PLAYERTOHELP		4096		// same thing as heal for other mods
+#define CONDITION_SEE_LAST_ENEMY_POS	8192		// bit 13 - bots can see the last place they saw an enemy
+#define CONDITION_CHANGED				16384		// bit 14 - bots want to change their course of action
+#define CONDITION_COVERT				32768		// bit 15 - bots are more sensitive to enemies and more likely to take alternate paths
+#define CONDITION_RUN					65536		// bit 16 - bots have to run e.g. there is a grenade nearby
+#define CONDITION_GREN					131072		// bit 17 - bots will be more likely to throw a grenade
+#define CONDITION_NEED_BOMB				262144		// bit 18 - bot needs a bomb for dod:s bomb maps
+#define CONDITION_SEE_ENEMY_HEAD		524288		// bit 19 - bot can aim for a headshot
+#define CONDITION_PRONE					1048576		// bit 20 - bot needs to go prone (lie down)
+#define CONDITION_PARANOID				2097152		// bit 21 - bot is paranoid of spies or unknown enemy
+#define CONDITION_SEE_SQUAD_LEADER		4194304		// bit 22 - bot can see his leader
+#define CONDITION_SQUAD_LEADER_DEAD		8388608		// bit 23 - bots leader is dead
+#define CONDITION_SQUAD_LEADER_INRANGE	16777216	// bit 24 - bots leader is in range
+#define CONDITION_SQUAD_IDLE			33554432	// bit 25 - bots squad isn't doing anything fun
+#define CONDITION_DEFENSIVE				67108864	// bit 26 - bot leader told me to defend
+#define CONDITION_BUILDING_SAPPED		134217728	// bit 27 - one of engineers buildings sapped
+#define CONDITION_SEE_ENEMY_GROUND		268435456	// bit 28 - can see enemy ground so aim for it if i have explosive
 #define CONDITION_MAX					CONDITION_SEE_ENEMY_GROUND
 #define CONDITION_MAX_BITS				28
 

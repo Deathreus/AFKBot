@@ -76,121 +76,133 @@ class CBotUtility;
 /*
 enum TFCond
 {
-	TFCond_Slowed = 0,
-	TFCond_Zoomed,
-	TFCond_Disguising,
-	TFCond_Disguised,
-	TFCond_Cloaked,
-	TFCond_Ubercharged,
-	TFCond_TeleportedGlow,
-	TFCond_Taunting,
-	TFCond_UberchargeFading,
-	TFCond_Unknown1, //9
-	TFCond_CloakFlicker = 9,
-	TFCond_Teleporting,
-	TFCond_Kritzkrieged,
-	TFCond_Unknown2, //12
-	TFCond_TmpDamageBonus = 12,
-	TFCond_DeadRingered,
-	TFCond_Bonked,
-	TFCond_Dazed,
-	TFCond_Buffed,
-	TFCond_Charging,
-	TFCond_DemoBuff,
-	TFCond_CritCola,
-	TFCond_InHealRadius,
-	TFCond_Healing,
-	TFCond_OnFire,
-	TFCond_Overhealed,
-	TFCond_Jarated,
-	TFCond_Bleeding,
-	TFCond_DefenseBuffed,
-	TFCond_Milked,
-	TFCond_MegaHeal,
-	TFCond_RegenBuffed,
-	TFCond_MarkedForDeath,
-	TFCond_NoHealingDamageBuff,
-	TFCond_SpeedBuffAlly, // 32
-	TFCond_HalloweenCritCandy,
-	TFCond_CritCanteen,
-	TFCond_CritDemoCharge,
-	TFCond_CritHype,
-	TFCond_CritOnFirstBlood,
-	TFCond_CritOnWin,
-	TFCond_CritOnFlagCapture,
-	TFCond_CritOnKill,
-	TFCond_RestrictToMelee,
-	TFCond_DefenseBuffNoCritBlock,
-	TFCond_Reprogrammed,
-	TFCond_CritMmmph,
-	TFCond_DefenseBuffMmmph,
-	TFCond_FocusBuff,
-	TFCond_DisguiseRemoved,
-	TFCond_MarkedForDeathSilent,
-	TFCond_DisguisedAsDispenser,
-	TFCond_Sapped,
-	TFCond_UberchargedHidden,
-	TFCond_UberchargedCanteen,
-	TFCond_HalloweenBombHead,
-	TFCond_HalloweenThriller,
-	TFCond_RadiusHealOnDamage,
-	TFCond_CritOnDamage,
-	TFCond_UberchargedOnTakeDamage,
-	TFCond_UberBulletResist,
-	TFCond_UberBlastResist,
-	TFCond_UberFireResist,
-	TFCond_SmallBulletResist,
-	TFCond_SmallBlastResist,
-	TFCond_SmallFireResist,
-	TFCond_Stealthed, // 64
-	TFCond_MedigunDebuff,
-	TFCond_StealthedUserBuffFade,
-	TFCond_BulletImmune,
-	TFCond_BlastImmune,
-	TFCond_FireImmune,
-	TFCond_PreventDeath,
-	TFCond_MVMBotRadiowave,
-	TFCond_HalloweenSpeedBoost,
-	TFCond_HalloweenQuickHeal,
-	TFCond_HalloweenGiant,
-	TFCond_HalloweenTiny,
-	TFCond_HalloweenInHell,
-	TFCond_HalloweenGhostMode,
-
-	TFCond_DodgeChance = 79,
-	TFCond_Parachute,
-	TFCond_BlastJumping,
-	TFCond_HalloweenKart,
-	TFCond_HalloweenKartDash,
-	TFCond_BalloonHead,
-	TFCond_MeleeOnly,
-	TFCond_SwimmingCurse,
-	TFCond_HalloweenKartNoTurn,
-	TFCond_HalloweenKartCage,
-	TFCond_HasRune,
-	TFCond_RuneStrength,
-	TFCond_RuneHaste,
-	TFCond_RuneRegen,
-	TFCond_RuneResist,
-	TFCond_RuneVampire,
-	TFCond_RuneWarlock,
-	TFCond_RunePrecision, // 96
-	TFCond_RuneAgility,
+TFCond_Slowed = 0,
+TFCond_Zoomed,
+TFCond_Disguising,
+TFCond_Disguised,
+TFCond_Cloaked,
+TFCond_Ubercharged,
+TFCond_TeleportedGlow,
+TFCond_Taunting,
+TFCond_UberchargeFading,
+TFCond_Unknown1, //9
+TFCond_CloakFlicker = 9,
+TFCond_Teleporting,
+TFCond_Kritzkrieged,
+TFCond_Unknown2, //12
+TFCond_TmpDamageBonus = 12,
+TFCond_DeadRingered,
+TFCond_Bonked,
+TFCond_Dazed,
+TFCond_Buffed,
+TFCond_Charging,
+TFCond_DemoBuff,
+TFCond_CritCola,
+TFCond_InHealRadius,
+TFCond_Healing,
+TFCond_OnFire,
+TFCond_Overhealed,
+TFCond_Jarated,
+TFCond_Bleeding,
+TFCond_DefenseBuffed,
+TFCond_Milked,
+TFCond_MegaHeal,
+TFCond_RegenBuffed,
+TFCond_MarkedForDeath,
+TFCond_NoHealingDamageBuff,
+TFCond_SpeedBuffAlly, // 32
+TFCond_HalloweenCritCandy,
+TFCond_CritCanteen,
+TFCond_CritDemoCharge,
+TFCond_CritHype,
+TFCond_CritOnFirstBlood,
+TFCond_CritOnWin,
+TFCond_CritOnFlagCapture,
+TFCond_CritOnKill,
+TFCond_RestrictToMelee,
+TFCond_DefenseBuffNoCritBlock,
+TFCond_Reprogrammed,
+TFCond_CritMmmph,
+TFCond_DefenseBuffMmmph,
+TFCond_FocusBuff,
+TFCond_DisguiseRemoved,
+TFCond_MarkedForDeathSilent,
+TFCond_DisguisedAsDispenser,
+TFCond_Sapped,
+TFCond_UberchargedHidden,
+TFCond_UberchargedCanteen,
+TFCond_HalloweenBombHead,
+TFCond_HalloweenThriller,
+TFCond_RadiusHealOnDamage,
+TFCond_CritOnDamage,
+TFCond_UberchargedOnTakeDamage,
+TFCond_UberBulletResist,
+TFCond_UberBlastResist,
+TFCond_UberFireResist,
+TFCond_SmallBulletResist,
+TFCond_SmallBlastResist,
+TFCond_SmallFireResist,
+TFCond_Stealthed, // 64
+TFCond_MedigunDebuff,
+TFCond_StealthedUserBuffFade,
+TFCond_BulletImmune,
+TFCond_BlastImmune,
+TFCond_FireImmune,
+TFCond_PreventDeath,
+TFCond_MVMBotRadiowave,
+TFCond_HalloweenSpeedBoost,
+TFCond_HalloweenQuickHeal,
+TFCond_HalloweenGiant,
+TFCond_HalloweenTiny,
+TFCond_HalloweenInHell,
+TFCond_HalloweenGhostMode,
+TFCond_MiniCritOnKill,
+TFCond_DodgeChance, //79
+TFCond_ObscuredSmoke = 79,
+TFCond_Parachute,
+TFCond_BlastJumping,
+TFCond_HalloweenKart,
+TFCond_HalloweenKartDash,
+TFCond_BalloonHead,
+TFCond_MeleeOnly,
+TFCond_SwimmingCurse,
+TFCond_HalloweenKartNoTurn, //87
+TFCond_FreezeInput = 87,
+TFCond_HalloweenKartCage,
+TFCond_HasRune,
+TFCond_RuneStrength,
+TFCond_RuneHaste,
+TFCond_RuneRegen,
+TFCond_RuneResist,
+TFCond_RuneVampire,
+TFCond_RuneWarlock,
+TFCond_RunePrecision, // 96
+TFCond_RuneAgility,
+TFCond_GrapplingHook,
+TFCond_GrapplingHookSafeFall,
+TFCond_GrapplingHookLatched,
+TFCond_GrapplingHookBleeding,
+TFCond_AfterburnImmune,
+TFCond_RuneKnockout,
+TFCond_RuneImbalance,
+TFCond_CritRuneTemp,
+TFCond_PasstimeInterception,
+TFCond_SwimmingNoEffects,
 };*/
 
-#define TF2_PLAYER_BONKED		(1<<14)
-#define TF2_PLAYER_SLOWED       (1 << 0)    // 1
-#define TF2_PLAYER_ZOOMED       (1 << 1)    // 2
-#define TF2_PLAYER_DISGUISING   (1 << 2)    // 4
-#define TF2_PLAYER_DISGUISED	(1 << 3)    // 8
-#define TF2_PLAYER_CLOAKED      (1 << 4)    // 16
-#define TF2_PLAYER_INVULN       (1 << 5)    // 32
-#define TF2_PLAYER_TELEGLOW     (1 << 6)    // 64
+#define TF2_PLAYER_SLOWED       (1 << 0)	// 1
+#define TF2_PLAYER_ZOOMED       (1 << 1)	// 2
+#define TF2_PLAYER_DISGUISING   (1 << 2)	// 4
+#define TF2_PLAYER_DISGUISED	(1 << 3)	// 8
+#define TF2_PLAYER_CLOAKED      (1 << 4)	// 16
+#define TF2_PLAYER_INVULN       (1 << 5)	// 32
+#define TF2_PLAYER_TELEGLOW     (1 << 6)	// 64
+#define TF2_PLAYER_TAUNTING	    (1 << 7)	// 128
+#define TF2_PLAYER_TELEPORTING	(1 << 10)	// 1024 Player is teleporting
+#define TF2_PLAYER_BONKED		(1 << 14)
 #define TF2_PLAYER_KRITS		524288
 #define TF2_PLAYER_HEALING	    2097152    
-#define TF2_PLAYER_TAUNTING	    (1 << 7)    // 128
-#define TF2_PLAYER_TELEPORTING	(1<<10)    // 1024 Player is teleporting
-#define TF2_PLAYER_ONFIRE	    4194304 // fix may 2013
+#define TF2_PLAYER_ONFIRE	    4194304		// fix may 2013
 
 //#define TF2_SPY_FOV_KNIFEATTACK 90.0f
 
@@ -256,16 +268,8 @@ typedef enum
 	TF_TEAM_RED = 2,
 	TF_TEAM_GREEN = 3,
 	TF_TEAM_YELLOW = 4
-};
+};*/
 
-typedef enum
-{
-	ENGI_DISP = 0,
-	ENGI_ENTRANCE,
-	ENGI_EXIT,
-	ENGI_SENTRY,
-	ENGI_SAPPER
-}eEngiBuild;*/
 typedef enum
 {
 	ENGI_DISP = 0,
@@ -365,172 +369,10 @@ private:
 	const char *m_szName;
 };
 
-
 class CBasePlayer;
-
-template< class T, class I = int >
-class CUtlMemoryTF2Items : public CUtlMemory< T, I >
-{
-public:
-	CUtlMemoryTF2Items( int nGrowSize = 0, int nInitSize = 0 ) { CUtlMemory< T, I >( nGrowSize, nInitSize ); }
-    CUtlMemoryTF2Items( T* pMemory, int numElements ) { CUtlMemory< T, I >( pMemory, numElements ); }
-    CUtlMemoryTF2Items( const T* pMemory, int numElements ) { CUtlMemory< T, I >( pMemory, numElements ); }
-    //~CUtlMemoryTF2Items() { ~CUtlMemory< T, I >(); }
-    
-	void Purge()
-	{
-		if ( !CUtlMemory< T, I >::IsExternallyAllocated() )
-		{
-			if (CUtlMemory< T, I >::m_pMemory)
-			{
-				UTLMEMORY_TRACK_FREE();
-				//free( (void*)m_pMemory );
-#ifdef TF2ITEMS_DEBUG_ITEMS
-				META_CONPRINTF("CUtlMemory tried to be freed!\n");
-#endif
-				CUtlMemory< T, I >::m_pMemory = 0;
-			}
-			CUtlMemory< T, I >::m_nAllocationCount = 0;
-		}
-	}
-};
-
-// Taken from the TF2Items extension by Asher "asherkin" Baker
-class CAttributeManager;
-
-class CEconItemAttribute
-{
-public:
-	CEconItemAttribute() {};
-
-	CEconItemAttribute(uint16 iAttributeDefinitionIndex, float flValue/* = -1.0*/)
-	{
-		this->m_iAttributeDefinitionIndex = iAttributeDefinitionIndex;
-		this->m_flValue = flValue;
-		this->m_nRefundableCurrency = 0;
-		this->m_pVTable = NULL;
-	}
-
-public:
-	void *m_pVTable;
-
-	uint16 m_iAttributeDefinitionIndex;
-	float m_flValue;
-	int32 m_nRefundableCurrency;
-};
-
-class CEconItem;
-
-class CEconItemHandle
-{
-public:
-	void *m_pVTable;
-
-	CEconItem *m_pItem;
-
-	int64 m_ulItemID;
-	uint64 m_SteamID;
-};
-
-class CAttributeList
-{
-public:
-	void *m_pVTable;
-
-	CUtlVector<CEconItemAttribute, CUtlMemoryTF2Items<CEconItemAttribute> > m_Attributes;
-	void *m_pAttributeManager;
-
-
-public:
-	CAttributeList& operator=(const CAttributeList &other)
-	{
-		m_pVTable = other.m_pVTable;
-
-		m_Attributes = other.m_Attributes;
-		m_pAttributeManager = other.m_pAttributeManager;
-
-
-		return *this;
-	}
-};
-
-
-class ITexture;
-class ITextureCompositor;
-
-class CEconItemView
-{
-public:
-	void *m_pVTable; //0
-
-	uint16 m_iItemDefinitionIndex; //4
-
-	int32 m_iEntityQuality; //8
-	uint32 m_iEntityLevel; //12
-
-	uint64 m_iItemID; //16
-	uint32 m_iItemIDHigh; //24
-	uint32 m_iItemIDLow; //28
-	uint32 m_iAccountID; //32
-	uint32 m_iInventoryPosition; //36
-
-	CEconItemHandle m_ItemHandle; //40 (44, 48, 52, 56, 60)
-
-	bool	m_bColorInit; //64
-	uint32	m_unHalloweenRGB; //68
-	uint32	m_unHalloweenAltRGB; //72
-	uint32	m_unRGB; //76
-	uint32	m_unAltRGB; //80
-
-	ITexture *m_pWeaponSkinBase; //84
-	ITextureCompositor *m_pWeaponSkinBaseCompositor; //88
-
-	// no love given here
-	uint32 m_Unk1; //92
-	uint32 m_Unk2; //94
-	uint32 m_Unk3; //100
-
-	int32 m_iTeamNumber; //104
-
-	bool m_bInitialized; //108
-
-	CAttributeList m_AttributeList; //112 (116, 120, 124, 128, 132, 136)
-	CAttributeList m_NetworkedDynamicAttributesForDemos; //140 (144, 148, 152, 156, 160, 164)
-
-	bool m_bDoNotIterateStaticAttributes; //168
-};
-/*
-class CEconItemView
-{
-public:
-	void *m_pVTable;
-
-	uint16 m_iItemDefinitionIndex;
-	
-	int32 m_iEntityQuality;
-	uint32 m_iEntityLevel;
-
-	uint64 m_iItemID;
-	uint32 m_iItemIDHigh;
-	uint32 m_iItemIDLow;
-	uint32 m_iAccountID;
-	uint32 m_iInventoryPosition;
-
-	void *m_pAlternateItemData;
-	bool m_bInitialized;
-
-	void *m_pVTable_Attributes;
-	CUtlVector<CEconItemAttribute, CUtlMemoryTF2Items<CEconItemAttribute> > m_Attributes;
-	CAttributeManager *m_pAttributeManager;
-	
-	bool m_bDoNotIterateStaticAttributes;
-};*/
-
-
 
 #define EVENT_FLAG_PICKUP 0
 #define EVENT_CAPPOINT    1
-
 
 class CBotFortress : public CBot
 {
@@ -648,8 +490,6 @@ public:
 	virtual void updateClass () { };
 
 	virtual void currentlyDead ();
-
-	virtual void onInventoryApplication (){}
 
 	void pickedUpFlag ();
 
@@ -904,11 +744,6 @@ public:
 	// 
 	CBotTF2();
 
-	void onInventoryApplication();
-
-	void giveWeapon ( int slot, int index );
-	void PostGiveNamedItem ( CEconItemView *cscript );
-
 	void MannVsMachineWaveComplete();
 	void MannVsMachineAlarmTriggered (Vector vLoc);
 
@@ -928,7 +763,6 @@ public:
 
 	void enemyAtIntel ( Vector vPos, int type = EVENT_FLAG_PICKUP, int iArea = -1 );
 	//
-	void fixWeapons ();
 
 	bool isTF2 () { return true; }
 
@@ -1113,7 +947,6 @@ private:
 	MyEHandle m_pRedPayloadBomb;
 	MyEHandle m_pBluePayloadBomb;
 	//
-	bool m_bFixWeapons;
 	// if demoman has already deployed stickies this is true
 	// once the demoman explodes them then this becomes false
 	// and it can deploy stickies again
@@ -1157,19 +990,11 @@ private:
 	float m_fCarryTime;
 
 	float m_fCheckNextCarrying;
-	float m_fEquipHatTime;
-
-	bool m_bHatEquipped;
 
 	//stack<CTF2LoadoutAdded*> m_toApply;
 
-	void *m_pVTable;
-	void *m_pVTable_Attributes;
-
 	float m_fUseBuffItemTime;
 
-	CTF2Loadout *m_pHat;
-	CTF2Loadout *m_pMisc;
 	CTF2Loadout *m_pMelee;
 	CTF2Loadout *m_pPrimary;
 	CTF2Loadout *m_pSecondary;

@@ -142,13 +142,13 @@ void RCBOT2_Cvar_setup (ICvar *cvar)
 		strcpy(sv_tags_str,sv_tags->GetString());
 
 		// fix
-		if ( strstr(sv_tags_str,"rcbot2") == NULL )
+		if ( strstr(sv_tags_str,"afkbot") == NULL )
 		{
 
 			if ( sv_tags_str[0] == 0 )
-				strcat(sv_tags_str,"rcbot2");
+				strcat(sv_tags_str,"afkbot");
 			else
-				strcat(sv_tags_str,",rcbot2");
+				strcat(sv_tags_str,",afkbot");
 
 			sv_tags->SetValue(sv_tags_str);
 

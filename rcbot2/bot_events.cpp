@@ -38,10 +38,10 @@
 #include "bot_strings.h"
 #include "bot_globals.h"
 #include "bot_fortress.h"
-#include "bot_dod_bot.h"
+//#include "bot_dod_bot.h"
 #include "bot_weapons.h"
 #include "bot_getprop.h"
-#include "bot_dod_bot.h"
+//#include "bot_dod_bot.h"
 #include "bot_squads.h"
 #include "bot_schedule.h"
 #include "bot_waypoint_locations.h"
@@ -236,10 +236,10 @@ private:
 ////////////////////////////////////////////////
 
 
-void CRoundStartEvent :: execute ( IBotEventInterface *pEvent )
+/*void CRoundStartEvent :: execute ( IBotEventInterface *pEvent )
 {
 	CBots::roundStart();
-}
+}*/
 
 void CPlayerHurtEvent :: execute ( IBotEventInterface *pEvent )
 {
@@ -391,17 +391,17 @@ void CPlayerDeathEvent :: execute ( IBotEventInterface *pEvent )
 	}
 }
 
-void CBombPickupEvent :: execute ( IBotEventInterface *pEvent )
+/*void CBombPickupEvent :: execute ( IBotEventInterface *pEvent )
 {
-}
+}*/
 
 void CPlayerFootstepEvent :: execute ( IBotEventInterface *pEvent )
 {
 }
 
-void CBombDroppedEvent :: execute ( IBotEventInterface *pEvent )
+/*void CBombDroppedEvent :: execute ( IBotEventInterface *pEvent )
 {
-}
+}*/
 
 void CWeaponFireEvent :: execute ( IBotEventInterface *pEvent )
 {
@@ -435,13 +435,6 @@ void CBulletImpactEvent :: execute ( IBotEventInterface *pEvent )
 }
 /////////////////////////////////////////
 
-/*
-[RCBot] [DEBUG game_event] player_sapped_object
-[RCBot] [DEBUG game_event] userid = 2
-[RCBot] [DEBUG game_event] ownerid = 4
-[RCBot] [DEBUG game_event] object = 2
-[RCBot] [DEBUG game_event] sapperid = 400
-*/
 void CTF2ObjectSapped :: execute ( IBotEventInterface *pEvent )
 {
 	int owner = pEvent->getInt("ownerid",-1);
@@ -546,18 +539,6 @@ void CPlayerHealed ::execute(IBotEventInterface *pEvent)
 	}
 }
 
-/*
-[RCBot] [DEBUG game_event] object_destroyed
-[RCBot] [DEBUG game_event] userid = 2
-[RCBot] [DEBUG game_event] attacker = 4
-[RCBot] [DEBUG game_event] weapon = wrench
-[RCBot] [DEBUG game_event] weapon_logclassname = wrench
-[RCBot] [DEBUG game_event] weaponid = 10
-[RCBot] [DEBUG game_event] priority = 6
-[RCBot] [DEBUG game_event] objecttype = 3
-[RCBot] [DEBUG game_event] index = 436
-[RCBot] [DEBUG game_event] was_building = 0
-*/
 void CTF2ObjectDestroyed :: execute ( IBotEventInterface *pEvent )
 {
 	int type = pEvent->getInt("objecttype",-1);
@@ -603,29 +584,6 @@ void CTF2ObjectDestroyed :: execute ( IBotEventInterface *pEvent )
 
 }
 
-
-void CPostInventoryApplicationTF2 :: execute ( IBotEventInterface *pEvent )
-{
-	int iUserID = pEvent->getInt( "userid" );
-
-	edict_t *pEdict = CBotGlobals::playerByUserId(iUserID);
-
-	CBot *pBot = CBots::getBotPointer(pEdict);
-
-	if ( pBot )
-	{
-		pBot->onInventoryApplication();
-	}
-}
-/*
-player_upgradedobject
-Name: 	player_upgradedobject
-Structure: 	
-short 	userid 	
-byte 	object 	
-short 	index 	
-bool 	isbuilder 	
-*/
 void CTF2UpgradeObjectEvent :: execute ( IBotEventInterface *pEvent )
 {
 	if ( bot_use_vc_commands.GetBool() && randomInt(0,1) )
@@ -761,14 +719,7 @@ void CTF2RoundStart :: execute ( IBotEventInterface *pEvent )
 	  CBots::botFunction(&roundstart);
 
 }
-/*
-teamplay_capture_broken
-Name: 	teamplay_capture_broken
-Structure: 	
-byte 	cp 	
-string 	cpname 	
-float 	time_remaining 
-*/
+
 void CTF2PointStopCapture :: execute ( IBotEventInterface *pEvent )
 {
 	int capindex = pEvent->getInt("cp",0);
@@ -776,16 +727,7 @@ void CTF2PointStopCapture :: execute ( IBotEventInterface *pEvent )
 	CTeamFortress2Mod::removeCappers(capindex);
 	
 }
-/*
-teamplay_capture_blocked
 
-Note: When a player blocks the capture of a control point
-Name: 	teamplay_capture_blocked
-Structure: 	
-byte 	cp 	index of the point that was blocked
-string 	cpname 	name of the point
-byte 	blocker 	index of the player that blocked the cap 
-*/
 void CTF2PointBlockedCapture :: execute ( IBotEventInterface *pEvent )
 {
 	int capindex = pEvent->getInt("cp",0);
@@ -834,16 +776,7 @@ void CTF2PointEndTouch :: execute ( IBotEventInterface *pEvent )
 }
 
 void CTF2PointStartCapture :: execute ( IBotEventInterface *pEvent )
-{/*
- [RCBot] [DEBUG game_event] teamplay_point_startcapture
-[RCBot] [DEBUG game_event] cp = 0
-[RCBot] [DEBUG game_event] cpname = #Dustbowl_cap_1_A
-[RCBot] [DEBUG game_event] team = 2
-[RCBot] [DEBUG game_event] capteam = 3
-[RCBot] [DEBUG game_event] captime = 64.134995
-[RCBot] [DEBUG game_event] cappers = 
-[RCBot] [DEBUG game_event] priority = 7
-*/
+{
 	int capteam = pEvent->getInt("capteam",0);
 	int capindex = pEvent->getInt("cp",0);
 	const char *cappers = pEvent->getString("cappers",NULL);
@@ -1030,7 +963,7 @@ void CFlagCaptured :: execute ( IBotEventInterface *pEvent )
 
 }
 /////////////////////////////////////////////////
-void CDODPointCaptured :: execute ( IBotEventInterface *pEvent )
+/*void CDODPointCaptured :: execute ( IBotEventInterface *pEvent )
 {
 	int cp = pEvent->getInt("cp");
 	const char *szCappers = pEvent->getString("cappers",NULL);
@@ -1108,7 +1041,7 @@ void CDODBombPlanted :: execute ( IBotEventInterface *pEvent )
 		}
 	}*/
 
-	CBots::botFunction(&func);
+	/*CBots::botFunction(&func);
 
 	CDODMod::m_Flags.setBombPlanted(cp,true);
 
@@ -1149,12 +1082,6 @@ void CDODChangeClass :: execute ( IBotEventInterface *pEvent )
 	}
 }
 
-/*
-[RCBot] [DEBUG GAME_EVENT] [BEGIN "dod_stats_weapon_attack"]
-[RCBot] [DEBUG GAME_EVENT] 	attacker = 5
-[RCBot] [DEBUG GAME_EVENT] 	weapon = 14
-[RCBot] [DEBUG GAME_EVENT] [END "dod_stats_weapon_attack"]*/
-
 void CDODFireWeaponEvent :: execute ( IBotEventInterface *pEvent )
 {
 	int iAttacker = pEvent->getInt("attacker",-1);
@@ -1171,7 +1098,7 @@ void CDODFireWeaponEvent :: execute ( IBotEventInterface *pEvent )
 	}
 
 
-}
+}*/
 
 ///////////////////////////////////////////////////////
 
@@ -1193,18 +1120,28 @@ inline bool CBotEvent :: isType ( const char *szType )
 ///////////////////////////////////////////////////////
 void CBotEvents :: setupEvents ()
 {
-	addEvent(new CTF2MVMWaveCompleteEvent());
-	addEvent(new CTF2MVMWaveFailedEvent());
-	addEvent(new CRoundStartEvent());
 	addEvent(new CPlayerHurtEvent());
 	addEvent(new CPlayerDeathEvent());
-	addEvent(new CBombPickupEvent());
 	addEvent(new CPlayerFootstepEvent());
-	addEvent(new CBombDroppedEvent());
 	addEvent(new CWeaponFireEvent());
 	addEvent(new CBulletImpactEvent());
 	addEvent(new CFlagEvent());
 	addEvent(new CPlayerSpawnEvent());
+	////////////// css
+	/*addEvent(new CRoundStartEvent());
+	addEvent(new CBombPickupEvent());
+	addEvent(new CBombDroppedEvent());*/
+	////////////// dods
+	/*addEvent(new CDODChangeClass());
+	addEvent(new CDODBombPlanted());
+	addEvent(new CDODBombExploded());
+	addEvent(new CDODBombDefused());
+	addEvent(new CDODPointCaptured());
+	addEvent(new CDODFireWeaponEvent());
+	addEvent(new CDODRoundStart());
+	addEvent(new CDODRoundActive());
+	addEvent(new CDODRoundWin());
+	addEvent(new CDODRoundOver());*/
 	////////////// tf2
 	addEvent(new CTF2BuiltObjectEvent());
 	addEvent(new CTF2ChangeClass());
@@ -1220,17 +1157,16 @@ void CBotEvents :: setupEvents ()
 	addEvent(new COverTimeBegin());
 	addEvent(new CPlayerHealed());
 	addEvent(new CPlayerTeleported());
-	addEvent(new CDODChangeClass());
-	addEvent(new CDODBombPlanted());
-	addEvent(new CDODBombExploded());
-	addEvent(new CDODBombDefused());
-	addEvent(new CDODPointCaptured());
-	addEvent(new CDODFireWeaponEvent());
 	addEvent(new CTF2RoundWinEvent());
 	addEvent(new CTF2PointUnlocked());
 	addEvent(new CTF2PointLocked());
 	addEvent(new CTF2MannVsMachineAlarm());
-	addEvent(new CPostInventoryApplicationTF2());
+	addEvent(new CTF2MVMWaveCompleteEvent());
+	addEvent(new CTF2MVMWaveFailedEvent());
+	addEvent(new CTF2RoundActive());
+	addEvent(new CTF2PointStartTouch());
+	addEvent(new CTF2PointEndTouch());
+
 /*
 pumpkin_lord_summoned 
 merasmus_summoned 
@@ -1240,7 +1176,8 @@ pumpkin_lord_killed
 merasmus_killed 
 merasmus_escaped 
 eyeball_boss_killed 
-eyeball_boss_escaped */
+eyeball_boss_escaped
+*/
 
 	addEvent(new CBossSummonedEvent("pumpkin_lord_summoned"));
 	addEvent(new CBossSummonedEvent("merasmus_summoned"));
@@ -1250,20 +1187,13 @@ eyeball_boss_escaped */
 	addEvent(new CBossKilledEvent("merasmus_escaped"));
 	addEvent(new CBossKilledEvent("eyeball_boss_killed"));
 	addEvent(new CBossKilledEvent("eyeball_boss_escaped"));
-	addEvent(new CTF2RoundActive());
-	addEvent(new CDODRoundStart());
-	addEvent(new CDODRoundActive());
-	addEvent(new CDODRoundWin());
-	addEvent(new CDODRoundOver());
-	addEvent(new CTF2PointStartTouch());
-	addEvent(new CTF2PointEndTouch());
 }
 
 void CBotEvents :: addEvent ( CBotEvent *pEvent )
 {
 	extern IGameEventManager2 *gameeventmanager;
 	//extern CRCBotMetaPlugin g_RCBOTServerPlugin;
-	extern RCBotPluginMeta g_RCBotPluginMeta;
+	extern AFKBot g_AFKBot;
 
 	//if ( gameeventmanager )
 	//	gameeventmanager->AddListener( g_RCBotPluginMeta.getEventListener(), pEvent->getName(), true );

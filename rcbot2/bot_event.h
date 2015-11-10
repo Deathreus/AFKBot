@@ -94,7 +94,7 @@ private:
 	eModId m_iModId;
 };
 
-class CRoundStartEvent : public CBotEvent
+/*class CRoundStartEvent : public CBotEvent
 {
 public:
 	CRoundStartEvent()
@@ -104,18 +104,7 @@ public:
 	}
 
 	void execute ( IBotEventInterface *pEvent );
-};
-class CPostInventoryApplicationTF2 : public CBotEvent
-{
-public:
-	CPostInventoryApplicationTF2()
-	{
-		setType("post_inventory_application");
-		setMod(MOD_TF2);
-	}
-
-	void execute ( IBotEventInterface *pEvent );
-};
+};*/
 
 class CTF2RoundWinEvent : public CBotEvent
 {
@@ -151,7 +140,7 @@ public:
 	void execute ( IBotEventInterface *pEvent );
 };
 
-class CBombPickupEvent : public CBotEvent
+/*class CBombPickupEvent : public CBotEvent
 {
 public:
 	CBombPickupEvent()
@@ -161,7 +150,7 @@ public:
 	}
 
 	void execute ( IBotEventInterface *pEvent );
-};
+};*/
 
 class CPlayerFootstepEvent : public CBotEvent
 {
@@ -186,7 +175,7 @@ public:
 	void execute ( IBotEventInterface *pEvent );
 };
 
-class CBombDroppedEvent : public CBotEvent
+/*class CBombDroppedEvent : public CBotEvent
 {
 public:
 	CBombDroppedEvent()
@@ -196,7 +185,7 @@ public:
 	}
 
 	void execute ( IBotEventInterface *pEvent );
-};
+};*/
 
 class COverTimeBegin : public CBotEvent
 {
@@ -547,12 +536,7 @@ public:
 	void execute ( IBotEventInterface *pEvent );
 };
 
-	/*
-	[RCBot] [DEBUG GAME_EVENT] [BEGIN "dod_stats_weapon_attack"]
-	[RCBot] [DEBUG GAME_EVENT] 	attacker = 5
-	[RCBot] [DEBUG GAME_EVENT] 	weapon = 14
-	[RCBot] [DEBUG GAME_EVENT] [END "dod_stats_weapon_attack"]*/
-class CDODFireWeaponEvent : public CBotEvent
+/*class CDODFireWeaponEvent : public CBotEvent
 {
 public:
 	CDODFireWeaponEvent()
@@ -670,7 +654,7 @@ public:
 	}
 
 	void execute ( IBotEventInterface *pEvent );
-};
+};*/
 
 typedef enum
 {

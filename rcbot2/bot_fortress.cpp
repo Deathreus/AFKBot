@@ -944,8 +944,6 @@ void CBotFortress :: spawnInit ()
 	m_bSentryGunVectorValid = false;
 	m_bDispenserVectorValid = false;
 	m_bTeleportExitVectorValid = false;
-
-	
 }
 
 bool CBotFortress :: isBuilding ( edict_t *pBuilding )
@@ -1710,8 +1708,6 @@ void CBotTF2 :: spawnInit()
 	m_pMelee = NULL;
 	m_pPrimary = NULL;
 	m_pSecondary = NULL;
-	m_pHat = NULL;
-	m_pMisc = NULL;
 	m_fUseBuffItemTime = 0.0f;
 	//m_bHatEquipped = false;
 	m_iTrapCPIndex = -1;
@@ -1720,10 +1716,10 @@ void CBotTF2 :: spawnInit()
 	m_fCarryTime = 0.0f;
 
 	m_bIsCarryingTeleExit = false;
-	 m_bIsCarryingSentry = false;;
-	 m_bIsCarryingDisp = false;;
-	 m_bIsCarryingTeleEnt = false;;
-	 m_bIsCarryingObj = false;;
+	m_bIsCarryingSentry = false;
+	m_bIsCarryingDisp = false;
+	m_bIsCarryingTeleEnt = false;
+	m_bIsCarryingObj = false;
 
 	m_nextVoicecmd = TF_VC_INVALID;
 	m_fAttackPointTime = 0.0f;
@@ -1752,12 +1748,9 @@ void CBotTF2 :: spawnInit()
 	//m_pPushPayloadBomb = NULL;
 	//m_pDefendPayloadBomb = NULL;
 
-	m_bFixWeapons = true;
 	m_iPrevWeaponSelectFailed = 0;
 
 	m_fCheckNextCarrying = 0.0;
-
-	
 }
 
 // return true if we don't want to hang around on the point
@@ -1770,11 +1763,6 @@ bool CBotTF2 ::checkAttackPoint()
 	}
 
 	return false;
-}
-
-void CBotTF2 :: fixWeapons ()
-{
-
 }
 
 void CBotTF2 :: setClass ( TF_Class _class )
@@ -2695,93 +2683,6 @@ void CBotFortress::updateConditions()
 			removeCondition(CONDITION_BUILDING_SAPPED);
 	}
 }
-void CBotTF2 :: giveWeapon ( int slot, int index )
-{
-	/*
-	// GiveNamedItem
-	extern IServerGameEnts *servergameents;
-	edict_t *pWeapon;
-	CBaseEntity *pEnt = m_pEdict->GetUnknown()->GetBaseEntity();
-	unsigned int gni_offset = 399;
-	unsigned int rpi_offset = 269;
-	extern IServerTools *servertools;	
-
-	GiveNamedItem_func *GiveNamedItem = (GiveNamedItem_func*)(&((unsigned long*)pEnt)[gni_offset]);
-	RemovePlayerItem_func *RemovePlayerItem = (RemovePlayerItem_func*)(&((unsigned long*)pEnt)[rpi_offset]);
-	CBaseHandle *m_Weapons = CClassInterface::getWeaponList(m_pEdict);
-	CBaseHandle *m_Weapon_iter;
-
-	m_Weapon_iter = m_Weapons;
-
-	bool bFound = false;
-	
-	m_pWeapons->update(overrideAmmoTypes());
-
-	CBotWeapon *pWeaponInSlot = m_pWeapons->getCurrentWeaponInSlot(slot);
-
-	if ( pWeaponInSlot->getWeaponEntity() )
-	{
-		(*RemovePlayerItem)(pWeaponInSlot->getWeaponEntity()->GetUnknown()->GetBaseEntity());
-
-		// find classname for index (slot must also match)
-		const char *pWeaponName;// = CTeamFortress2Mod::findWeaponWithIndex(index,slot);
-
-		if ( pWeaponName != NULL )
-		{
-			CBaseEntity *pNewWeapon = (*GiveNamedItem)(pWeaponName,0);
-
-			edict_t *pEdict = servergameents->BaseEntityToEdict(pNewWeapon);
-
-			CClassInterface::setEntityIndex_Level_Quality(pEdict,index);
-		}
-
-	}*/
-}
-
-void CBotTF2 :: onInventoryApplication ()
-{
-	m_fEquipHatTime = engine->Time() + 0.1f;
-}
-
-void CBotTF2 :: PostGiveNamedItem ( CEconItemView *cscript )
-{
-	m_pVTable = cscript->m_pVTable;
-	m_pVTable_Attributes = cscript->m_AttributeList.m_pVTable;
-}
-/*
-void CBotTF2 :: addLoadoutWeapon ( CTF2Loadout *weap )
-{
-	m_LoadoutsApplyAttributes.Push(weap);
-}
-*/
-void CBotTF2::upgradeWeapon(int iSlot)
-{
-	CTF2Loadout *wep = NULL;
-	// (const char *pszClassname, int iIndex, int iQuality, int iMinLevel, int iMaxLevel)
-	CTF2Loadout copy(wep->m_pszClassname, wep->m_iIndex, wep->m_iQuality, wep->m_iMinLevel, wep->m_iMaxLevel);
-	
-	switch (iSlot)
-	{
-	case TF2_SLOT_MELEE:
-		wep = m_pMelee;
-		break;
-	case TF2_SLOT_PRMRY:
-		wep = m_pPrimary;
-		break;
-	case TF2_SLOT_SCNDR:
-		wep = m_pSecondary;
-		break;
-	}
-
-	RCBotPluginMeta::TF2_RemoveWeaponSlot(m_pEdict,iSlot);
-
-	copy = *wep;
-	copy.m_bCanBeUsedInMedieval = wep->m_bCanBeUsedInMedieval;
-	
-	//copy.m_Attributes
-		
-	RCBotPluginMeta::givePlayerLoadOut(m_pEdict, &copy, iSlot, m_pVTable, m_pVTable_Attributes);
-}
 
 
 void CBotTF2::modThink()
@@ -2789,112 +2690,6 @@ void CBotTF2::modThink()
 	static bool bNeedHealth;
 	static bool bNeedAmmo;
 	static bool bIsCloaked;
-
-	extern ConVar rcbot_customloadouts;
-
-	if (rcbot_customloadouts.GetBool() && m_pVTable && m_pVTable_Attributes && (m_fEquipHatTime > 0.0f) && (m_fEquipHatTime < engine->Time()))
-	{
-		// Equip
-		if (isAlive())
-		{
-			m_iClass = (TF_Class)CClassInterface::getTF2Class(m_pEdict);
-
-			if (isDesiredClass(m_iClass))
-			{
-				extern ConVar rcbot_melee_only;
-
-				if ((m_iClass == TF_CLASS_ENGINEER) && !CTeamFortress2Mod::isMedievalMode())
-					m_pMelee = NULL;
-				else if (m_pMelee == NULL)
-					m_pMelee = CTeamFortress2Mod::findRandomWeaponLoadOutInSlot(m_iClass, TF2_SLOT_MELEE);
-
-				extern ConVar *mp_stalemate_meleeonly;
-
-				if (!mp_stalemate_meleeonly || !mp_stalemate_meleeonly->GetBool() || !CTeamFortress2Mod::isSuddenDeath())
-				{
-					// only add primary / secondary weapons if they are given them by the map
-					/*if (RCBotPluginMeta::TF2_getPlayerWeaponSlot(m_pEdict, TF2_SLOT_PRMRY) &&
-						RCBotPluginMeta::TF2_getPlayerWeaponSlot(m_pEdict, TF2_SLOT_SCNDR))
-						{*/
-					if (m_pPrimary == NULL)
-						m_pPrimary = CTeamFortress2Mod::findRandomWeaponLoadOutInSlot(m_iClass, TF2_SLOT_PRMRY);
-
-					if ((m_iClass == TF_CLASS_SPY) && !CTeamFortress2Mod::isMedievalMode())
-						m_pSecondary = NULL;
-					else if (m_pSecondary == NULL)
-						m_pSecondary = CTeamFortress2Mod::findRandomWeaponLoadOutInSlot(m_iClass, TF2_SLOT_SCNDR);
-				}
-				else
-				{
-					// sudden death
-					m_pPrimary = NULL;
-					m_pSecondary = NULL;
-				}
-
-				// adding this will remove the builder -- don't do it!!!
-				if ((m_iClass == TF_CLASS_ENGINEER) && !CTeamFortress2Mod::isMedievalMode())
-					m_pHat = NULL;
-				else if (m_pHat == NULL)
-					m_pHat = CTeamFortress2Mod::findRandomWeaponLoadOutInSlot(m_iClass, TF2_SLOT_HAT);
-
-				if (m_pMisc == NULL)
-					m_pMisc = CTeamFortress2Mod::findRandomWeaponLoadOutInSlot(m_iClass, TF2_SLOT_MISC);
-
-				if (m_pMelee != NULL)
-					RCBotPluginMeta::givePlayerLoadOut(m_pEdict, m_pMelee, TF2_SLOT_MELEE, m_pVTable, m_pVTable_Attributes);
-				if (m_pPrimary != NULL)
-					RCBotPluginMeta::givePlayerLoadOut(m_pEdict, m_pPrimary, TF2_SLOT_PRMRY, m_pVTable, m_pVTable_Attributes);
-				if (m_pSecondary != NULL)
-					RCBotPluginMeta::givePlayerLoadOut(m_pEdict, m_pSecondary, TF2_SLOT_SCNDR, m_pVTable, m_pVTable_Attributes);
-				if (m_pHat != NULL)
-					RCBotPluginMeta::givePlayerLoadOut(m_pEdict, m_pHat, TF2_SLOT_HAT, m_pVTable, m_pVTable_Attributes);
-				if (m_pMisc != NULL)
-					RCBotPluginMeta::givePlayerLoadOut(m_pEdict, m_pMisc, TF2_SLOT_MISC, m_pVTable, m_pVTable_Attributes);
-
-				m_fEquipHatTime = 0.0f;
-				m_bHatEquipped = true;
-			}
-		}
-	}
-	/*
-	if ( rcbot_customloadouts.GetBool() )
-	{
-	if ( !m_bMeleeAttempt && (m_pWeapons->getCurrentWeaponInSlot(TF2_SLOT_MELEE) == NULL) )
-	{
-	m_bMeleeAttempt = true;
-	UTIL_TF2EquipStockWeapon(m_pEdict,TF2_SLOT_MELEE,m_pVTable,m_pVTable_Attributes);
-	}
-	else if ( !m_bPrimaryAttempt && (m_pWeapons->getCurrentWeaponInSlot(TF2_SLOT_PRMRY) == NULL) )
-	{
-	m_bPrimaryAttempt = true;
-	UTIL_TF2EquipStockWeapon(m_pEdict,TF2_SLOT_PRMRY,m_pVTable,m_pVTable_Attributes);
-	}
-	else if ( !m_bSecondaryAttempt && (m_pWeapons->getCurrentWeaponInSlot(TF2_SLOT_SCNDR) == NULL) )
-	{
-	m_bSecondaryAttempt = true;
-	UTIL_TF2EquipStockWeapon(m_pEdict,TF2_SLOT_SCNDR,m_pVTable,m_pVTable_Attributes);
-	}
-	}*/
-
-	/*
-
-	if ( m_toApply.size() > 0 )
-	{
-	CTF2LoadoutAdded *p = m_toApply.top();
-
-	p->m_loadout->applyAttributes(p->m_pEnt);
-
-	m_toApply.pop();
-
-	delete p;
-	}
-	*/
-	/*	if ( !m_LoadoutsApplyAttributes.IsEmpty() )
-		{
-		CTF2Loadout
-		}*/
-
-
 
 	if (CTeamFortress2Mod::isLosingTeam(m_iTeam))
 		wantToShoot(false);
@@ -6708,7 +6503,7 @@ void CBotTF2 :: modAim ( edict_t *pEntity, Vector &v_origin, Vector *v_desired_o
 				Vector vRight;
 				Vector vUp;
 
-				QAngle eyes = m_pController->GetLocalAngles();
+				QAngle eyes = m_pPlayerInfo->GetAbsAngles();
 
 				// in fov? Check angle to edict
 				AngleVectors(eyes,&vForward,&vRight,&vUp);
@@ -7715,14 +7510,9 @@ CBotTF2::CBotTF2()
 { 
 		CBotFortress(); 
 		m_iDesiredResistType = 0;
-		m_pHat = NULL;
-		m_pMisc = NULL;
 		m_pSecondary = NULL;
 		m_pPrimary = NULL;
 		m_pMelee = NULL;
-		m_pVTable = m_pVTable_Attributes = NULL;
-		m_bHatEquipped = false;
-		m_fEquipHatTime = 0.0f;
 		m_fDispenserPlaceTime = 0.0f;
 		m_fDispenserHealAmount = 0.0f;
 	 m_fTeleporterEntPlacedTime = 0;
@@ -7738,7 +7528,6 @@ CBotTF2::CBotTF2()
 		m_pPushPayloadBomb = NULL;
 		m_pRedPayloadBomb = NULL;
 		m_pBluePayloadBomb = NULL;
-		m_bFixWeapons = false;
 		m_iTrapType = TF_TRAP_TYPE_NONE;
 		m_pLastEnemySentry = MyEHandle(NULL);
 		m_prevSentryHealth = 0;
@@ -7802,10 +7591,4 @@ bool CBotFortress :: getIgnoreBox ( Vector *vLoc, float *fSize )
 	}
 
 	return false;
-}
-
-CAttribute :: CAttribute ( const char *name, float fval )
-{
-	m_name = CStrings::getString(name);
-	m_fval = fval;
 }

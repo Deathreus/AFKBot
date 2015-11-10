@@ -2,7 +2,7 @@
 #include "bot_kv.h"
 #include "bot_globals.h"
 
-void CRCBotKeyValueList :: parseFile ( FILE *fp )
+void CAFKBotKeyValueList :: parseFile ( FILE *fp )
 {
 	char buffer[2*(RCBOT_MAX_KV_LEN)];
 	char szKey[RCBOT_MAX_KV_LEN];
@@ -71,13 +71,13 @@ void CRCBotKeyValueList :: parseFile ( FILE *fp )
 
 		CBotGlobals::botMessage(NULL,0,"m_KVs.push_back(%s,%s)",szKey, szValue);
 
-		m_KVs.push_back(new CRCBotKeyValue(szKey,szValue));
+		m_KVs.push_back(new CAFKBotKeyValue(szKey,szValue));
 
 	}
 
 }
 
-CRCBotKeyValueList :: ~CRCBotKeyValueList()
+CAFKBotKeyValueList :: ~CAFKBotKeyValueList()
 {
 	for ( unsigned int i = 0; i < m_KVs.size(); i ++ )
 	{
@@ -88,7 +88,7 @@ CRCBotKeyValueList :: ~CRCBotKeyValueList()
 	m_KVs.clear();
 }
 
-CRCBotKeyValue *CRCBotKeyValueList :: getKV ( const char *key )
+CAFKBotKeyValue *CAFKBotKeyValueList :: getKV ( const char *key )
 {
 	for ( unsigned int i = 0; i < m_KVs.size(); i ++ )
 	{
@@ -99,9 +99,9 @@ CRCBotKeyValue *CRCBotKeyValueList :: getKV ( const char *key )
 	return NULL;
 }
 
-bool CRCBotKeyValueList :: getFloat ( const char *key, float *val )
+bool CAFKBotKeyValueList :: getFloat ( const char *key, float *val )
 {
-	CRCBotKeyValue *pKV;
+	CAFKBotKeyValue *pKV;
 
 	pKV = getKV(key);
 
@@ -114,9 +114,9 @@ bool CRCBotKeyValueList :: getFloat ( const char *key, float *val )
 }
 
 	
-bool CRCBotKeyValueList :: getInt ( const char *key, int *val )
+bool CAFKBotKeyValueList :: getInt ( const char *key, int *val )
 {
-	CRCBotKeyValue *pKV;
+	CAFKBotKeyValue *pKV;
 
 	pKV = getKV(key);
 
@@ -129,9 +129,9 @@ bool CRCBotKeyValueList :: getInt ( const char *key, int *val )
 }
 
 
-bool CRCBotKeyValueList :: getString ( const char *key, char **val )
+bool CAFKBotKeyValueList :: getString ( const char *key, char **val )
 {
-	CRCBotKeyValue *pKV;
+	CAFKBotKeyValue *pKV;
 
 	pKV = getKV(key);
 
@@ -143,7 +143,7 @@ bool CRCBotKeyValueList :: getString ( const char *key, char **val )
 	return true;
 }
 
-CRCBotKeyValue :: CRCBotKeyValue (const char *szKey, char *szValue )
+CAFKBotKeyValue :: CAFKBotKeyValue (const char *szKey, char *szValue )
 {
 	strncpy(m_szKey,szKey,RCBOT_MAX_KV_LEN-1);
 	m_szKey[RCBOT_MAX_KV_LEN-1] = 0;

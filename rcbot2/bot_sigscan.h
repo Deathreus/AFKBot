@@ -4,10 +4,6 @@
 #include "bot_const.h"
 
 /* From SOURCEMOD */
-class CEconItemSchema;
-class CEconWearable;
-
-typedef CEconItemSchema* (*FUNC_GET_ECON_ITEM_SCHEMA)(void);
 
 struct DynLibInfo
 {
@@ -15,7 +11,7 @@ struct DynLibInfo
 	size_t memorySize;
 };
 
-class CRCBotKeyValueList;
+class CAFKBotKeyValueList;
 
 class CSignatureFunction
 {
@@ -30,7 +26,7 @@ private:
 
 	void *findSignature ( void *addrInBase, const char *signature );
 protected:
-	void findFunc ( CRCBotKeyValueList *kv, const char *pKey, void *pAddrBase, const char *defaultsig );
+	void findFunc ( CAFKBotKeyValueList *kv, const char *pKey, void *pAddrBase, const char *defaultsig );
 
 	void *m_func;
 };
@@ -38,7 +34,7 @@ protected:
 class CGameRulesObject : public CSignatureFunction
 {
 public:
-	CGameRulesObject(CRCBotKeyValueList *list, void *pAddrBase);
+	CGameRulesObject(CAFKBotKeyValueList *list, void *pAddrBase);
 
 	bool found() { return m_func != NULL; }
 
@@ -48,22 +44,13 @@ public:
 class CCreateGameRulesObject : public CSignatureFunction
 {
 public:
-	CCreateGameRulesObject(CRCBotKeyValueList *list, void *pAddrBase);
+	CCreateGameRulesObject(CAFKBotKeyValueList *list, void *pAddrBase);
 
 	bool found() { return m_func != NULL; }
 
 	void **getGameRules();
 };
 
-class CGetEconItemSchema : public CSignatureFunction
-{
-public:
-	CGetEconItemSchema ( CRCBotKeyValueList *list, void *pAddrBase );
-
-	CEconItemSchema *callme();
-};
-
-extern CGetEconItemSchema *g_pGetEconItemSchema;
 extern CGameRulesObject *g_pGameRules_Obj;
 extern CCreateGameRulesObject *g_pGameRules_Create_Obj;
 

@@ -41,11 +41,11 @@
 #include "bot_globals.h"
 #include "in_buttons.h"
 #include "bot_weapons.h"
-#include "bot_hldm_bot.h"
+//#include "bot_hldm_bot.h"
 #include "bot_fortress.h"
 #include "bot_profiling.h"
 #include "bot_getprop.h"
-#include "bot_dod_bot.h"
+//#include "bot_dod_bot.h"
 #include "bot_squads.h"
 #include "bot_waypoint_visibility.h"
 
@@ -401,7 +401,7 @@ void CBotTF2WaitFlagTask :: debugString ( char *string )
 	sprintf(string,"CBotTF2WaitFlagTask\nm_vOrigin = (%0.4f,%0.4f,%0.4f)",m_vOrigin.x,m_vOrigin.y,m_vOrigin.z);
 }
 //////////
-CBotDODBomb :: CBotDODBomb ( int iBombType, int iBombID, edict_t *pBomb, Vector vPosition, int iPrevOwner )
+/*CBotDODBomb :: CBotDODBomb ( int iBombType, int iBombID, edict_t *pBomb, Vector vPosition, int iPrevOwner )
 {
 	m_iType = iBombType;
 	m_iBombID = iBombID; 
@@ -707,7 +707,7 @@ void CBotDODAttackPoint :: execute (CBot *pBot,CBotSchedule *pSchedule)
 void CBotDODAttackPoint :: debugString ( char *string )
 {
 	sprintf(string,"CBotDODAttackPoint\nm_iFlagID = %d\n m_vOrigin = (%0.1f,%0.1f,%0.1f,radius = %0.1f)",m_iFlagID,m_vOrigin.x,m_vOrigin.y,m_vOrigin.z,m_fRadius);
-}
+}*/
 
 ///////////
 
@@ -1040,7 +1040,7 @@ void CBotTF2UpgradeBuilding:: debugString ( char *string )
 	sprintf(string,"CBotTF2UpgradeBuilding");
 }
 
-void CBotHL2DMUseButton :: execute (CBot *pBot,CBotSchedule *pSchedule)
+/*void CBotHL2DMUseButton :: execute (CBot *pBot,CBotSchedule *pSchedule)
 {
 	static Vector vOrigin;
 	
@@ -1199,7 +1199,7 @@ void CBotGravGunPickup :: execute(CBot *pBot,CBotSchedule *pSchedule)
 			}
 		}
 	}
-}
+}*/
 
 ///////////////////////////////////////////////////////////////////////
 /*
@@ -1737,13 +1737,13 @@ void CBotDefendTask :: execute (CBot *pBot,CBotSchedule *pSchedule)
 			pBot->setLookAtTask(LOOK_SNIPE);*/
 	}
 
-	if ( m_fTime < engine->Time() )
+	/*if ( m_fTime < engine->Time() )
 	{
 		if ( pBot->inSquad() && pBot->isSquadLeader() )
 			pBot->addVoiceCommand(DOD_VC_GOGOGO);
 
 		complete();
-	}
+	}*/
 }
 
 //////////////////////
@@ -3670,7 +3670,7 @@ void CAttackEntityTask :: execute (CBot *pBot,CBotSchedule *pSchedule)
 }
 
 ///
-CThrowGrenadeTask :: CThrowGrenadeTask (CBotWeapon *pWeapon, int ammo, Vector vLoc )
+/*CThrowGrenadeTask :: CThrowGrenadeTask (CBotWeapon *pWeapon, int ammo, Vector vLoc )
 {
 	m_pWeapon = pWeapon;
 	m_fTime = 0;
@@ -3754,7 +3754,7 @@ void CThrowGrenadeTask ::execute (CBot *pBot,CBotSchedule *pSchedule)
 			fail();
 		}
 	}
-}
+}*/
 ///
 CBotInvestigateHidePoint :: CBotInvestigateHidePoint ( int iWaypointIndexToInvestigate, int iOriginalWaypointIndex )
 {
@@ -3866,7 +3866,7 @@ void CBotInvestigateHidePoint::debugString ( char *string )
 }
 //////
 
-void CAutoBuy :: init () 
+/*void CAutoBuy :: init () 
 { 
 	m_bTimeset = false;
 }
@@ -3885,7 +3885,7 @@ void CAutoBuy :: execute (CBot *pBot,CBotSchedule *pSchedule)
 		helpers->ClientCommand(pBot->getEdict(),"autobuy\n");	
 		complete();
 	}
-}
+}*/
 
 CFindLastEnemy::CFindLastEnemy (Vector vLast,Vector vVelocity)
 {
@@ -3968,7 +3968,7 @@ void CFollowTask::debugString ( char *string )
 }
 ////////////////////////////////////////////////
 
-void CDODDropAmmoTask :: debugString ( char *string )
+/*void CDODDropAmmoTask :: debugString ( char *string )
 {
 	sprintf(string,"CDODDropAmmoTask");
 }
@@ -4010,7 +4010,7 @@ void CDODDropAmmoTask :: execute (CBot *pBot,CBotSchedule *pSchedule)
 		return;
 	}
 		
-}
+}*/
 
 ////////////////////////////////////////////
 CCrouchHideTask :: CCrouchHideTask( edict_t *pHideFrom )
@@ -4610,11 +4610,11 @@ void CMessAround::execute ( CBot *pBot, CBotSchedule *pSchedule )
 		if ( CTeamFortress2Mod::hasRoundStarted() )
 			complete();
 	}
-	else if ( pBot->isDOD() )
+	/*else if ( pBot->isDOD() )
 	{
 		if ( CDODMod::m_Flags.getNumFlags() > 0 )
 			complete();
-	}
+	}*/
 
 }
 
@@ -4999,7 +4999,7 @@ void CBotFollowSquadLeader :: execute (CBot *pBot,CBotSchedule *pSchedule)
 }
 ////////////////////////////////////////////////////
 
-CBotDODSnipe :: CBotDODSnipe ( CBotWeapon *pWeaponToUse, Vector vOrigin, float fYaw, bool bUseZ, float z, int iWaypointType )
+/*CBotDODSnipe :: CBotDODSnipe ( CBotWeapon *pWeaponToUse, Vector vOrigin, float fYaw, bool bUseZ, float z, int iWaypointType )
 {
 	QAngle angle;
 	m_fEnemyTime = 0.0f;
@@ -5326,7 +5326,7 @@ void CBotHL2DMSnipe :: execute (CBot *pBot,CBotSchedule *pSchedule)
 		// havin' fun
 		m_fEnemyTime = engine->Time();
 	}
-}
+}*/
 ///////////////////////////////////////////
 // interrupts
 
