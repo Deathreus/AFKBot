@@ -319,8 +319,6 @@ void AFKBot::Hook_PlayerRunCmd(CUserCmd *ucmd, IMoveHelper *moveHelper)
 		ucmd->tick_count = cmd->tick_count;
 		ucmd->command_number = cmd->command_number;
 
-		servertools->SnapPlayerToPosition(NULL, cmd->viewangles, NULL);
-
 		g_pLastBot = (CBotTF2*)pBot;
 
 		RETURN_META(MRES_OVERRIDE);

@@ -54,7 +54,6 @@
 class CUserCmd;
 class IMoveHelper;
 class CEconItemView;
-class CBasePlayer;
 class CTF2Loadout;
 
 #if defined WIN32 && !defined snprintf

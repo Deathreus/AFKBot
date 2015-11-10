@@ -2837,7 +2837,7 @@ void CBot :: doLook ()
 		//else if ( m_vViewAngles.x < -180.0f )
 		//	m_vViewAngles.x = -180.0f;
 
-		CBasePlayer *pPlayer;
+		CBasePlayer *pPlayer = META_IFACEPTR(CBasePlayer);;
 
 		/*
 		SnapEyeAngles( const QAngle &viewAngles );
