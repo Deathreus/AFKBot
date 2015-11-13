@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game Engine ("HL
- *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game g_pEngine ("HL
+ *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL Engine and MODs
+ *    respects for all of the code used other than the HL g_pEngine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -711,7 +711,7 @@ private:
 	int m_iHideWaypoint; // waypoint id of place to hide
 	int m_iSnipeWaypoint; // waypoint id of place to snipe
 	Vector m_vHideOrigin; // origin of hiding place
-	float m_fHideTime; // if above engine time, hide
+	float m_fHideTime; // if above g_pEngine time, hide
 	int m_iPrevClip; // used to check i actually fired a bullet or not
 	float m_fEnemyTime; // last time i saw an enemy
 	float m_fAimTime; // last time i got ready to aim - gives bots time to aim before shooting
@@ -740,7 +740,7 @@ private:
 	int m_iHideWaypoint; // waypoint id of place to hide
 	int m_iSnipeWaypoint; // waypoint id of place to snipe
 	Vector m_vHideOrigin; // origin of hiding place
-	float m_fHideTime; // if above engine time, hide
+	float m_fHideTime; // if above g_pEngine time, hide
 	int m_iPrevClip; // used to check i actually fired a bullet or not
 	float m_fEnemyTime; // last time i saw an enemy
 	float m_fAimTime; // last time i got ready to aim - gives bots time to aim before shooting

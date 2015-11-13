@@ -124,7 +124,7 @@ ConCommandBase *puppet_bot_cmd = NULL;
 ConVar *mp_stalemate_enable = NULL;
 ConVar *mp_stalemate_meleeonly = NULL;
 
-void RCBOT2_Cvar_setup (ICvar *cvar)
+void AFKBOT_Cvar_setup (ICvar *cvar)
 {
 	mp_stalemate_enable = cvar->FindVar("mp_stalemate_enable");
 	mp_stalemate_meleeonly = cvar->FindVar("mp_stalemate_meleeonly");

@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game Engine ("HL
- *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game g_pEngine ("HL
+ *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL Engine and MODs
+ *    respects for all of the code used other than the HL g_pEngine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -497,7 +497,7 @@ void CBotGlobals :: freeMemory ()
 
 bool CBotGlobals::initModFolder() {
 	char szGameFolder[512];
-	engine->GetGameDir(szGameFolder, 512);
+	g_pEngine->GetGameDir(szGameFolder, 512);
 
 	int iLength = strlen(CStrings::getString(szGameFolder));
 	int pos = iLength - 1;
@@ -514,7 +514,7 @@ bool CBotGlobals::initModFolder() {
 bool CBotGlobals :: gameStart ()
 {
 	char szGameFolder[512];
-	engine->GetGameDir(szGameFolder,512);	
+	g_pEngine->GetGameDir(szGameFolder,512);	
 	char szSteamFolder[512];
 	/*
 	CFileSystemPassThru a;
@@ -617,7 +617,7 @@ int CBotGlobals :: numClients ()
 
 		if ( pEdict )
 		{
-			if ( engine->GetPlayerUserId(pEdict) > 0 )
+			if ( g_pEngine->GetPlayerUserId(pEdict) > 0 )
 				iCount++;
 		}
 	}
@@ -654,7 +654,7 @@ edict_t *CBotGlobals :: playerByUserId(int iUserId)
 
 		if ( pEdict )
 		{
-			if ( engine->GetPlayerUserId(pEdict) == iUserId )
+			if ( g_pEngine->GetPlayerUserId(pEdict) == iUserId )
 				return pEdict;
 		}
 	}
@@ -707,7 +707,7 @@ void CBotGlobals :: serverSay ( char *fmt, ... )
 
 	strcat(string,"\"");
 
-	engine->ServerCommand(string);
+	g_pEngine->ServerCommand(string);
 }
 
 // TO DO :: put into CClient
@@ -925,7 +925,7 @@ void CBotGlobals :: botMessage ( edict_t *pEntity, int iErr, char *fmt, ... )
 
 	if ( pEntity )
 	{
-		engine->ClientPrintf(pEntity,string);
+		g_pEngine->ClientPrintf(pEntity,string);
 	}
 	else
 	{
@@ -1064,11 +1064,12 @@ void CBotGlobals :: buildFileName ( char *szOutput, const char *szFile, const ch
 	}
 }
 
-QAngle CBotGlobals::playerAngles ( edict_t *pPlayer )
+QAngle CBotGlobals :: playerAngles ( edict_t *pEntity )
 {
-	IPlayerInfo *pPlayerInfo = playerinfomanager->GetPlayerInfo(pPlayer);
+	return playerinfomanager->GetPlayerInfo(pEntity)->GetAbsAngles();
+	/*IPlayerInfo *pPlayerInfo = playerinfomanager->GetPlayerInfo(pPlayer);
 	CBotCmd lastCmd = pPlayerInfo->GetLastUserCommand();
-	return lastCmd.viewangles;
+	return lastCmd.viewangles;*/
 }
 
 QAngle CBotGlobals :: entityEyeAngles ( edict_t *pEntity )

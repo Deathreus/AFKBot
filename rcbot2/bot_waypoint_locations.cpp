@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game Engine ("HL
- *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game g_pEngine ("HL
+ *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL Engine and MODs
+ *    respects for all of the code used other than the HL g_pEngine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -808,10 +808,10 @@ void CWaypointLocations :: DrawWaypoints ( CClient *pClient, float fDist )
 							// from Valve developer community wiki
 							// http://developer.valvesoftware.com/wiki/Transforming_the_Multiplayer_SDK_into_Coop
 
-							clusterIndex = engine->GetClusterForOrigin( vOrigin );
-							engine->GetPVSForCluster( clusterIndex, sizeof(m_bPvs), m_bPvs );							
+							clusterIndex = g_pEngine->GetClusterForOrigin( vOrigin );
+							g_pEngine->GetPVSForCluster( clusterIndex, sizeof(m_bPvs), m_bPvs );							
 
-							if ( engine->CheckOriginInPVS( vWpt, m_bPvs, sizeof( m_bPvs ) ) )
+							if ( g_pEngine->CheckOriginInPVS( vWpt, m_bPvs, sizeof( m_bPvs ) ) )
 								pWpt->draw(pEntity,pClient->isPathWaypointOn()&&(pClient->currentWaypoint()==iWpt),iDrawType);
 						}
 					}

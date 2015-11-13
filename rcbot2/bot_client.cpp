@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game Engine ("HL
- *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game g_pEngine ("HL
+ *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL Engine and MODs
+ *    respects for all of the code used other than the HL g_pEngine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -59,7 +59,7 @@ void CToolTip::send(edict_t *pPlayer)
 	AFKBot::HudTextMessage(pPlayer, m_pszMessage);
 
 	if ( m_pszSound )
-		engine->ClientCommand(pPlayer,"play %s",m_pszSound);
+		g_pEngine->ClientCommand(pPlayer,"play %s",m_pszSound);
 }
 
 void CClient :: init ()
@@ -101,13 +101,13 @@ void CClient :: init ()
 
 bool CClient :: needToRenderMenu () 
 { 
-	return m_fNextUpdateMenuTime < engine->Time(); 
+	return m_fNextUpdateMenuTime < g_pEngine->Time(); 
 }
 
 void CClient :: updateRenderMenuTime () 
 { 
 	extern ConVar rcbot_menu_update_time2;
-	m_fNextUpdateMenuTime = engine->Time() + rcbot_menu_update_time2.GetFloat(); 
+	m_fNextUpdateMenuTime = g_pEngine->Time() + rcbot_menu_update_time2.GetFloat(); 
 }
 
 void CClient :: setEdict ( edict_t *pPlayer )
@@ -118,34 +118,34 @@ void CClient :: setEdict ( edict_t *pPlayer )
 	
 void CClient :: setupMenuCommands ()
 {
-	/*engine->ClientCommand(m_pPlayer,"alias \"rcbot_setup\" \"bind 0 menuselect0\"");
-	engine->ClientCommand(m_pPlayer,"rcbot_setup");bind 2 \"menuselect 2\"");*/
-	engine->ClientCommand(m_pPlayer,"bind 1 \"menuselect 1\"");
-	engine->ClientCommand(m_pPlayer,"bind 2 \"menuselect 2\"");
-	engine->ClientCommand(m_pPlayer,"bind 3 \"menuselect 3\"");
-	engine->ClientCommand(m_pPlayer,"bind 4 \"menuselect 4\"");
-	engine->ClientCommand(m_pPlayer,"bind 5 \"menuselect 5\"");
-	engine->ClientCommand(m_pPlayer,"bind 6 \"menuselect 6\"");
-	engine->ClientCommand(m_pPlayer,"bind 7 \"menuselect 7\"");
-	engine->ClientCommand(m_pPlayer,"bind 8 \"menuselect 8\"");
-	engine->ClientCommand(m_pPlayer,"bind 9 \"menuselect 9\"");
-	engine->ClientCommand(m_pPlayer,"bind 0 \"menuselect 0\"");
+	/*g_pEngine->ClientCommand(m_pPlayer,"alias \"rcbot_setup\" \"bind 0 menuselect0\"");
+	g_pEngine->ClientCommand(m_pPlayer,"rcbot_setup");bind 2 \"menuselect 2\"");*/
+	g_pEngine->ClientCommand(m_pPlayer,"bind 1 \"menuselect 1\"");
+	g_pEngine->ClientCommand(m_pPlayer,"bind 2 \"menuselect 2\"");
+	g_pEngine->ClientCommand(m_pPlayer,"bind 3 \"menuselect 3\"");
+	g_pEngine->ClientCommand(m_pPlayer,"bind 4 \"menuselect 4\"");
+	g_pEngine->ClientCommand(m_pPlayer,"bind 5 \"menuselect 5\"");
+	g_pEngine->ClientCommand(m_pPlayer,"bind 6 \"menuselect 6\"");
+	g_pEngine->ClientCommand(m_pPlayer,"bind 7 \"menuselect 7\"");
+	g_pEngine->ClientCommand(m_pPlayer,"bind 8 \"menuselect 8\"");
+	g_pEngine->ClientCommand(m_pPlayer,"bind 9 \"menuselect 9\"");
+	g_pEngine->ClientCommand(m_pPlayer,"bind 0 \"menuselect 0\"");
 }
 	
 void CClient :: resetMenuCommands ()
 {
-	/*engine->ClientCommand(m_pPlayer,"alias \"rcbot_reset\" \"bind 0 slot10\"");
-	engine->ClientCommand(m_pPlayer,"rcbot_reset");bind 2 \"menuselect 2\"");*/
-	engine->ClientCommand(m_pPlayer,"bind 1 \"slot1\"");
-	engine->ClientCommand(m_pPlayer,"bind 2 \"slot2\"");
-	engine->ClientCommand(m_pPlayer,"bind 3 \"slot3\"");
-	engine->ClientCommand(m_pPlayer,"bind 4 \"slot4\"");
-	engine->ClientCommand(m_pPlayer,"bind 5 \"slot5\"");
-	engine->ClientCommand(m_pPlayer,"bind 6 \"slot6\"");
-	engine->ClientCommand(m_pPlayer,"bind 7 \"slot7\"");
-	engine->ClientCommand(m_pPlayer,"bind 8 \"slot8\"");
-	engine->ClientCommand(m_pPlayer,"bind 9 \"slot9\"");
-	engine->ClientCommand(m_pPlayer,"bind 0 \"slot10\"");
+	/*g_pEngine->ClientCommand(m_pPlayer,"alias \"rcbot_reset\" \"bind 0 slot10\"");
+	g_pEngine->ClientCommand(m_pPlayer,"rcbot_reset");bind 2 \"menuselect 2\"");*/
+	g_pEngine->ClientCommand(m_pPlayer,"bind 1 \"slot1\"");
+	g_pEngine->ClientCommand(m_pPlayer,"bind 2 \"slot2\"");
+	g_pEngine->ClientCommand(m_pPlayer,"bind 3 \"slot3\"");
+	g_pEngine->ClientCommand(m_pPlayer,"bind 4 \"slot4\"");
+	g_pEngine->ClientCommand(m_pPlayer,"bind 5 \"slot5\"");
+	g_pEngine->ClientCommand(m_pPlayer,"bind 6 \"slot6\"");
+	g_pEngine->ClientCommand(m_pPlayer,"bind 7 \"slot7\"");
+	g_pEngine->ClientCommand(m_pPlayer,"bind 8 \"slot8\"");
+	g_pEngine->ClientCommand(m_pPlayer,"bind 9 \"slot9\"");
+	g_pEngine->ClientCommand(m_pPlayer,"bind 0 \"slot10\"");
 }
 
 void CClient :: playSound ( const char *pszSound )
@@ -190,7 +190,7 @@ void CClient :: autoEventWaypoint ( int iType, float fRadius, bool bAtOtherOrigi
 void CClient :: teleportTo (Vector vOrigin)
 {
 	m_bIsTeleporting = true;
-	m_fTeleportTime = engine->Time()+0.1f;
+	m_fTeleportTime = g_pEngine->Time()+0.1f;
 
 	Vector *v_origin = CClassInterface::getOrigin(m_pPlayer);
 
@@ -258,7 +258,7 @@ void CClient :: think ()
 	}
 	*/
 
-	//if ( m_fMonitorHighFiveTime > engine->Time() )
+	//if ( m_fMonitorHighFiveTime > g_pEngine->Time() )
 	//{
 
 	if ( (m_pPlayer != NULL) && (m_pPlayerInfo == NULL) )
@@ -268,11 +268,11 @@ void CClient :: think ()
 
 	if ( CBotGlobals::isMod(MOD_TF2) )
 	{
-		if ( (m_fMonitorHighFiveTime < engine->Time()) && (m_pPlayer != NULL) && (m_pPlayerInfo != NULL) && m_pPlayerInfo->IsConnected() && 
+		if ( (m_fMonitorHighFiveTime < g_pEngine->Time()) && (m_pPlayer != NULL) && (m_pPlayerInfo != NULL) && m_pPlayerInfo->IsConnected() && 
 			!m_pPlayerInfo->IsDead() && m_pPlayerInfo->IsPlayer() && !m_pPlayerInfo->IsObserver() && 
 			CClassInterface::getTF2HighFiveReady(m_pPlayer) )
 		{
-			m_fMonitorHighFiveTime = engine->Time() + 0.25f;
+			m_fMonitorHighFiveTime = g_pEngine->Time() + 0.25f;
 
 			if ( CClassInterface::getHighFivePartner(m_pPlayer) == NULL )
 			{
@@ -287,7 +287,7 @@ void CClient :: think ()
 				if ( pBot != NULL )
 				{
 					((CBotTF2*)pBot)->highFivePlayer(m_pPlayer,CClassInterface::getTF2TauntYaw(m_pPlayer));
-					m_fMonitorHighFiveTime = engine->Time() + 3.0f;
+					m_fMonitorHighFiveTime = g_pEngine->Time() + 3.0f;
 				}				
 
 				delete newFunc;
@@ -298,14 +298,14 @@ void CClient :: think ()
 	if ( m_szSoundToPlay[0] != 0 )
 	{
 		if ( bot_cmd_enable_wpt_sounds.GetBool() )
-			engine->ClientCommand(m_pPlayer,m_szSoundToPlay);
+			g_pEngine->ClientCommand(m_pPlayer,m_szSoundToPlay);
 
 		m_szSoundToPlay[0] = 0;
 	}
 
 	if ( m_bIsTeleporting )
 	{
-		if ( m_fTeleportTime < engine->Time() )
+		if ( m_fTeleportTime < g_pEngine->Time() )
 		{
 			m_bIsTeleporting = false;
 			m_fTeleportTime = 0;
@@ -324,7 +324,7 @@ void CClient :: think ()
 	if ( m_bShowMenu )
 	{
 		m_bShowMenu = false;
-		engine->ClientCommand(m_pPlayer,"cancelselect");
+		g_pEngine->ClientCommand(m_pPlayer,"cancelselect");
 	}
 
 	if ( m_pMenu != NULL )
@@ -337,13 +337,13 @@ void CClient :: think ()
 	if ( isWaypointOn() )
 		CWaypoints::drawWaypoints(this);
 
-	if ( m_fUpdatePos < engine->Time() )
+	if ( m_fUpdatePos < g_pEngine->Time() )
 	{
 		m_vVelocity = (getOrigin()-m_vLastPos);
 		m_fSpeed = m_vVelocity.Length();
 		m_vLastPos = getOrigin();
 
-		m_fUpdatePos = engine->Time() + 1.0f;
+		m_fUpdatePos = g_pEngine->Time() + 1.0f;
 	}
 
 	if ( isDebugging() )
@@ -371,7 +371,7 @@ void CClient :: think ()
 
 		if ( (m_pDebugBot!=NULL) && isDebugOn(BOT_DEBUG_HUD) )
 		{
-			if ( m_fNextPrintDebugInfo < engine->Time() )
+			if ( m_fNextPrintDebugInfo < g_pEngine->Time() )
 			{
 				char msg[1024];
 				CBot *pBot = CBots::getBotPointer(m_pDebugBot);
@@ -414,14 +414,14 @@ void CClient :: think ()
 				//int ent_index, int line_offset, float duration, int r, int g, int b, int a, const char *format, ...
 			//	debugoverlay->AddEntityTextOverlay();
 #endif
-				m_fNextPrintDebugInfo = engine->Time() + 1.0f;
+				m_fNextPrintDebugInfo = g_pEngine->Time() + 1.0f;
 			}
 		}
 			//this->cm_pDebugBot->getTaskDebug();
 		//m_pDebugBot->canAvoid();
 	}
 
-	if ( m_fNextBotServerMessage < engine->Time() )
+	if ( m_fNextBotServerMessage < g_pEngine->Time() )
 	{
 		if ( !m_NextTooltip.empty() )
 		{
@@ -433,10 +433,10 @@ void CClient :: think ()
 
 			delete pTooltip;
 
-			m_fNextBotServerMessage = engine->Time() + 11.0f;
+			m_fNextBotServerMessage = g_pEngine->Time() + 11.0f;
 		}
 		else
-			m_fNextBotServerMessage = engine->Time() + 1.0f;
+			m_fNextBotServerMessage = g_pEngine->Time() + 1.0f;
 	}
 
 
@@ -456,7 +456,7 @@ void CClient :: think ()
 				start = 1; // grab one location
 
 
-			m_fLastAutoWaypointCheckTime = engine->Time() + 0.5f;
+			m_fLastAutoWaypointCheckTime = g_pEngine->Time() + 0.5f;
 
 			if ( !m_pPlayerInfo->IsDead() )
 				m_vLastAutoWaypointCheckPos[0].SetVector(getOrigin());
@@ -530,7 +530,7 @@ void CClient :: think ()
 			}
 			//g_pBotManager->GetBotController(m_pPlayer)->IsEFlagSet();
 
-			if ( /*(pev->waterlevel < 3) &&*/ (m_fCanPlaceJump < engine->Time()) )
+			if ( /*(pev->waterlevel < 3) &&*/ (m_fCanPlaceJump < g_pEngine->Time()) )
 			{	
 				Vector v_floor;
 
@@ -612,7 +612,7 @@ void CClient :: think ()
 					m_iLastJumpWaypointIndex = -1;
 
 					// wait a sec after player lands before checking jump again
-					m_fCanPlaceJump = engine->Time() + 0.5;
+					m_fCanPlaceJump = g_pEngine->Time() + 0.5;
 				}				
 			}
 
@@ -656,14 +656,14 @@ void CClient :: think ()
 			else if ( !(iMoveType == MOVETYPE_FLY) && (m_iLastMoveType == MOVETYPE_FLY) )
 			{
 				// went OFF a ladder
-				m_fCanPlaceLadder = engine->Time() + 0.2f;
+				m_fCanPlaceLadder = g_pEngine->Time() + 0.2f;
 			}
 			
 			// ****************************************************
 			// If we have walked off a ladder for a small amount of time
 			// Make the top/bottom ladder waypoint
 			// ****************************************************
-			if ( m_fCanPlaceLadder && (m_fCanPlaceLadder < engine->Time() ) )
+			if ( m_fCanPlaceLadder && (m_fCanPlaceLadder < g_pEngine->Time() ) )
 			{
 				if ( m_iLastLadderWaypointIndex != -1 )
 					// place a ladder waypoint before jumping off
@@ -731,7 +731,7 @@ void CClient :: think ()
 			m_iLastButtons = cmd.buttons;
 			m_iLastMoveType = iMoveType;
 
-			if ( m_fLastAutoWaypointCheckTime < engine->Time() )
+			if ( m_fLastAutoWaypointCheckTime < g_pEngine->Time() )
 			{
 				// ****************************************
 				// Corner - Check
@@ -817,7 +817,7 @@ void CClient :: think ()
 					tr = CBotGlobals::getTraceResult();
 
 #ifndef __linux__
-					if ( m_bDebugAutoWaypoint && !engine->IsDedicatedServer() )
+					if ( m_bDebugAutoWaypoint && !g_pEngine->IsDedicatedServer() )
 					{
 						debugoverlay->AddLineOverlay(vCheckOrigin+Vector(0,0,16),vCheckOrigin-Vector(0,0,16),255,255,255,0,2);
 						debugoverlay->AddLineOverlay(vPlayerOrigin,vCheckOrigin,255,255,255,0,2);
@@ -923,7 +923,7 @@ void CClient :: think ()
 					}
 				}
 
-				m_fLastAutoWaypointCheckTime = engine->Time() + 0.5f;
+				m_fLastAutoWaypointCheckTime = g_pEngine->Time() + 0.5f;
 			}
 		}
 	}
@@ -936,7 +936,7 @@ void CClient::giveMessage(char *msg,float fTime)
 	if ( rcbot_tooltips.GetBool() )
 	{
 		m_NextTooltip.push(new CToolTip(msg,NULL));
-		m_fNextBotServerMessage = engine->Time() + fTime;
+		m_fNextBotServerMessage = g_pEngine->Time() + fTime;
 	}
 }
 
@@ -1021,7 +1021,7 @@ void CClient :: clientDisconnected ()
 		}
 	}
 
-	if ( !engine->IsDedicatedServer() )
+	if ( !g_pEngine->IsDedicatedServer() )
 	{
 		if ( CClients::isListenServerClient(this) )
 		{

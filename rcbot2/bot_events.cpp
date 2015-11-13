@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game Engine ("HL
- *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game g_pEngine ("HL
+ *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL Engine and MODs
+ *    respects for all of the code used other than the HL g_pEngine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -822,7 +822,7 @@ void CTF2PointCaptured :: execute ( IBotEventInterface *pEvent )
 
 	// update points
 	CTeamFortress2Mod::m_ObjectiveResource.m_fUpdatePointTime = 0;
-	CTeamFortress2Mod::m_ObjectiveResource.m_fNextCheckMonitoredPoint = engine->Time() + 0.2f;
+	CTeamFortress2Mod::m_ObjectiveResource.m_fNextCheckMonitoredPoint = g_pEngine->Time() + 0.2f;
 
     // MUST BE AFTER POINTS HAVE BEEN UPDATED!
     CBots::botFunction(&cap);

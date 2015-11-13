@@ -103,12 +103,12 @@ IServerGameDLL *server = NULL;
 IGameEventManager2 *gameevents = NULL;
 IServerPluginCallbacks *vsp_callbacks = NULL;
 ICvar *icvar = NULL;
-IVEngineServer *engine = NULL;  // helper functions (messaging clients, loading content, making entities, running commands, etc)
+IVEngineServer *g_pEngine = NULL;  // helper functions (messaging clients, loading content, making entities, running commands, etc)
 IFileSystem *filesystem = NULL;  // file I/O 
 IGameEventManager2 *gameeventmanager = NULL;
 IGameEventManager *gameeventmanager1 = NULL;  // game events interface
 IPlayerInfoManager *playerinfomanager = NULL;  // game dll interface to interact with players
-IServerPluginHelpers *helpers = NULL;  // special 3rd party plugin helpers from the engine
+IServerPluginHelpers *helpers = NULL;  // special 3rd party plugin helpers from the g_pEngine
 IServerGameClients* gameclients = NULL;
 IEngineTrace *enginetrace = NULL;
 IEffects *g_pEffects = NULL;
@@ -221,18 +221,18 @@ void AFKBot::HudTextMessage(edict_t *pEntity, const char *szMessage)
 	bf_write *buf = nullptr;
 
 	if (hint > 0) {
-		buf = engine->UserMessageBegin(filter, hint);
+		buf = g_pEngine->UserMessageBegin(filter, hint);
 		buf->WriteString(szMessage);
-		engine->MessageEnd();
+		g_pEngine->MessageEnd();
 	}
 
 	if (say > 0) {
 		char chatline[128];
 		snprintf(chatline, sizeof(chatline), "\x01\x04[RCBot2]\x01 %s\n", szMessage);
 
-		buf = engine->UserMessageBegin(filter, say);
+		buf = g_pEngine->UserMessageBegin(filter, say);
 		buf->WriteString(chatline);
-		engine->MessageEnd();
+		g_pEngine->MessageEnd();
 	}
 
 	delete filter;
@@ -272,9 +272,9 @@ void AFKBot::BroadcastTextMessage(const char *szMessage)
 		char chatline[128];
 		snprintf(chatline, sizeof(chatline), "\x01\x04[RCBot2]\x01 %s\n", szMessage);
 
-		buf = engine->UserMessageBegin(filter, say);
+		buf = g_pEngine->UserMessageBegin(filter, say);
 		buf->WriteString(chatline);
-		engine->MessageEnd();
+		g_pEngine->MessageEnd();
 	}
 
 	delete filter;
@@ -304,8 +304,10 @@ void AFKBot::Hook_PlayerRunCmd(CUserCmd *ucmd, IMoveHelper *moveHelper)
 	if ( pBot )
 	{
 		static CUserCmd *cmd;
+		static CPlayerState *pl;
 		
 		cmd = pBot->getUserCMD();
+		pl = pBot->getPlayerState();
 
 		// put the bot's commands into this move frame
 		ucmd->buttons = cmd->buttons;
@@ -319,12 +321,12 @@ void AFKBot::Hook_PlayerRunCmd(CUserCmd *ucmd, IMoveHelper *moveHelper)
 		ucmd->tick_count = cmd->tick_count;
 		ucmd->command_number = cmd->command_number;
 
-		g_pLastBot = (CBotTF2*)pBot;
+		pl->v_angle = pBot->getViewAngles();
 
-		RETURN_META(MRES_OVERRIDE);
+		g_pLastBot = (CBotTF2*)pBot;
 	}
 
-//g_pSM->LogMessage(NULL, "H %i %i %f %f %f %f %i", ucmd->command_number, ucmd->tick_count, ucmd->viewangles.x, ucmd->viewangles.y, ucmd->viewangles.z, ucmd->forwardmove, ucmd->buttons); 
+//g_pSM->LogMessage(NULL, "H %i | %i | %f | %f | %f | %f | %f | %i", ucmd->command_number, ucmd->tick_count, ucmd->viewangles.x, ucmd->viewangles.y, ucmd->viewangles.z, ucmd->forwardmove, ucmd->sidemove, ucmd->buttons); 
 
 RETURN_META(MRES_IGNORED); 
 }
@@ -337,7 +339,7 @@ class BaseAccessor : public IConCommandBaseAccessor
 public:
 	bool RegisterConCommandBase(ConCommandBase *pCommandBase)
 	{
-		/* Always call META_REGCVAR instead of going through the engine. */
+		/* Always call META_REGCVAR instead of going through the g_pEngine. */
 		return META_REGCVAR(pCommandBase);
 	}
 } s_BaseAccessor;
@@ -374,7 +376,7 @@ bf_write *AFKBot::Hook_MessageBegin(IRecipientFilter *filter, int msg_type)
 	else
 		current_msg_buffer[0] = 0;
 	
-	current_msg = SH_CALL(engine, &IVEngineServer::UserMessageBegin)(filter, msg_type);
+	current_msg = SH_CALL(g_pEngine, &IVEngineServer::UserMessageBegin)(filter, msg_type);
 
 	if (current_msg)
 	{
@@ -459,7 +461,7 @@ bool AFKBot::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool l
 	PLUGIN_SAVEVARS();
 
 	GET_V_IFACE_CURRENT(GetEngineFactory, enginetrace, IEngineTrace, INTERFACEVERSION_ENGINETRACE_SERVER);	
-	GET_V_IFACE_CURRENT(GetEngineFactory, engine, IVEngineServer, INTERFACEVERSION_VENGINESERVER);
+	GET_V_IFACE_CURRENT(GetEngineFactory, g_pEngine, IVEngineServer, INTERFACEVERSION_VENGINESERVER);
 	GET_V_IFACE_CURRENT(GetEngineFactory, gameevents, IGameEventManager2, INTERFACEVERSION_GAMEEVENTSMANAGER2);
 	GET_V_IFACE_CURRENT(GetEngineFactory, helpers, IServerPluginHelpers, INTERFACEVERSION_ISERVERPLUGINHELPERS);
 	GET_V_IFACE_CURRENT(GetEngineFactory, icvar, ICvar, CVAR_INTERFACE_VERSION);
@@ -492,8 +494,8 @@ bool AFKBot::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool l
 	}
 
 
-	/*SH_ADD_HOOK_MEMFUNC(IVEngineServer, UserMessageBegin, engine, this, &AFKBot::Hook_MessageBegin, false);
-	SH_ADD_HOOK_MEMFUNC(IVEngineServer, MessageEnd, engine, this, &AFKBot::Hook_MessageEnd, false);*/
+	/*SH_ADD_HOOK_MEMFUNC(IVEngineServer, UserMessageBegin, g_pEngine, this, &AFKBot::Hook_MessageBegin, false);
+	SH_ADD_HOOK_MEMFUNC(IVEngineServer, MessageEnd, g_pEngine, this, &AFKBot::Hook_MessageEnd, false);*/
 	
 	SH_ADD_HOOK_MEMFUNC(IServerGameDLL, LevelInit, server, this, &AFKBot::Hook_LevelInit, true);
 	SH_ADD_HOOK_MEMFUNC(IServerGameDLL, ServerActivate, server, this, &AFKBot::Hook_ServerActivate, true);
@@ -603,7 +605,7 @@ bool AFKBot::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool l
 	KeyValues *mainkv = new KeyValues("metamodplugin");
 	
 	const char *rcbot2path;
-	CBotGlobals::botMessage(NULL, 0, "Reading rcbot2 path from VDF...");
+	//CBotGlobals::botMessage(NULL, 0, "Reading rcbot2 path from VDF...");
 	
 	mainkv->LoadFromFile(filesystem, "addons/metamod/afkbot.vdf", "MOD");
 	
@@ -634,7 +636,7 @@ bool AFKBot::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool l
 
 	CClassInterface::init();
 
-	RCBOT2_Cvar_setup(g_pCVar);
+	AFKBOT_Cvar_setup(g_pCVar);
 
 	if (fp) {
 		fclose(fp);
@@ -839,7 +841,7 @@ void AFKBot::Hook_ClientPutInServer(edict_t *pEntity, char const *playername)
 	
 	if ( !is_Rcbot && pClient )
 	{	
-		if ( !engine->IsDedicatedServer() )
+		if ( !g_pEngine->IsDedicatedServer() )
 		{
 			if ( CClients::noListenServerClient() )
 			{

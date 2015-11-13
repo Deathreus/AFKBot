@@ -17,7 +17,7 @@ void UTIL_FindServerClassnamePrint(const char *name_cmd)
 
 	for (int i = 0; i < gpGlobals->maxEntities; i++)
 	{
-		current = engine->PEntityOfEntIndex(i);
+		current = g_pEngine->PEntityOfEntIndex(i);
 		if (current == NULL)
 		{
 			continue;
@@ -152,7 +152,7 @@ SendProp *UTIL_FindSendProp(SendTable *pTable, const char *name)
  *
  * As a special exception, AlliedModders LLC gives you permission to link the
  * code of this program (as well as its derivative works) to "Half-Life 2," the
- * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+ * "Source g_pEngine," the "SourcePawn JIT," and any Game MODs that run on software
  * by the Valve Corporation.  You must obey the GNU General Public License in
  * all respects for all other code used.  Additionally, AlliedModders LLC grants
  * this exception to all derivative works.  AlliedModders LLC defines further
@@ -591,7 +591,7 @@ edict_t *CClassInterface::FindEntityByClassnameNearest(Vector vstart, const char
 
 	for (register short int i = 0; i < max; i++)
 	{
-		current = engine->PEntityOfEntIndex(i);
+		current = g_pEngine->PEntityOfEntIndex(i);
 
 		if (current == NULL)
 			continue;
@@ -631,7 +631,7 @@ edict_t *CClassInterface::FindEntityByNetClassNearest(Vector vstart, const char 
 
 	for (short int i = 0; i < gpGlobals->maxEntities; i++)
 	{
-		current = engine->PEntityOfEntIndex(i);
+		current = g_pEngine->PEntityOfEntIndex(i);
 		if (current == NULL)
 		{
 			continue;
@@ -672,7 +672,7 @@ const char *CClassInterface::FindEntityNetClass(int start, const char *classname
 
 	for (int i = ((start != -1) ? start : 0); i < gpGlobals->maxEntities; i++)
 	{
-		current = engine->PEntityOfEntIndex(i);
+		current = g_pEngine->PEntityOfEntIndex(i);
 		if (current == NULL)
 		{
 			continue;
@@ -703,7 +703,7 @@ edict_t *CClassInterface::FindEntityByNetClass(int start, const char *classname)
 
 	for (int i = ((start != -1) ? start : 0); i < gpGlobals->maxEntities; i++)
 	{
-		current = engine->PEntityOfEntIndex(i);
+		current = g_pEngine->PEntityOfEntIndex(i);
 		if (current == NULL)
 		{
 			continue;

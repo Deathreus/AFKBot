@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game Engine ("HL
- *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game g_pEngine ("HL
+ *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL Engine and MODs
+ *    respects for all of the code used other than the HL g_pEngine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -315,7 +315,7 @@ bool CBotWeapons ::update ( bool bOverrideAllFromEngine )
 	}
 
 	// if weapons have changed this will be different
-	if ( iWeaponsSignature != m_iWeaponsSignature ) // m_fUpdateWeaponsTime < engine->Time() )
+	if ( iWeaponsSignature != m_iWeaponsSignature ) // m_fUpdateWeaponsTime < g_pEngine->Time() )
 	{
 		int iWeaponState;
 		register unsigned short int i,j;
@@ -367,7 +367,7 @@ bool CBotWeapons ::update ( bool bOverrideAllFromEngine )
 		}
 
 		// check again in 1 second
-		m_fUpdateWeaponsTime = engine->Time() + 1.0f;
+		m_fUpdateWeaponsTime = g_pEngine->Time() + 1.0f;
 
 		m_iWeaponsSignature = iWeaponsSignature;
 
@@ -482,7 +482,7 @@ void CBotWeapons :: addWeapon ( int iId, edict_t *pent, bool bOverrideAll )
 
 	origin = m_pBot->getOrigin();
 
-	// if entity comes from the engine use the entity
+	// if entity comes from the g_pEngine use the entity
 	if ( pent )
 	{
 		m_theWeapons[iId].setWeaponEntity(pent,bOverrideAll);

@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game Engine ("HL
- *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game g_pEngine ("HL
+ *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL Engine and MODs
+ *    respects for all of the code used other than the HL g_pEngine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -551,7 +551,7 @@ bool CTeamFortress2Mod ::isBoss ( edict_t *pEntity, float *fFactor )
 
 void CTeamFortress2Mod :: updateTeleportTime ( edict_t *pOwner )
 {
-	m_Teleporters[ENTINDEX(pOwner)-1].m_fLastTeleported = engine->Time();
+	m_Teleporters[ENTINDEX(pOwner)-1].m_fLastTeleported = g_pEngine->Time();
 }
 
 float CTeamFortress2Mod :: getTeleportTime ( edict_t *pOwner )
@@ -746,20 +746,20 @@ void CTeamFortress2Mod:: flagPickedUp (int iTeam, edict_t *pPlayer)
 
 bool CTeamFortress2Mod :: isArenaPointOpen ()
 {
-	return m_fArenaPointOpenTime < engine->Time();
+	return m_fArenaPointOpenTime < g_pEngine->Time();
 }
 
 void CTeamFortress2Mod :: resetSetupTime ()
 {
-	m_fRoundTime = engine->Time() + m_Timer.getSetupTime();
-	m_fArenaPointOpenTime = engine->Time() + m_fPointTime;
+	m_fRoundTime = g_pEngine->Time() + m_Timer.getSetupTime();
+	m_fArenaPointOpenTime = g_pEngine->Time() + m_fPointTime;
 }
 
 bool CTeamFortress2Mod::hasRoundStarted ()
 {
-	return m_bHasRoundStarted || (!isMapType(TF_MAP_MVM)&&(engine->Time() > m_fRoundTime));
+	return m_bHasRoundStarted || (!isMapType(TF_MAP_MVM)&&(g_pEngine->Time() > m_fRoundTime));
 
-	//return (engine->Time() > m_fRoundTime);
+	//return (g_pEngine->Time() > m_fRoundTime);
 }
 
 void CTeamFortress2Mod :: setPointOpenTime ( int time )
@@ -1157,7 +1157,7 @@ void CTeamFortress2Mod::updatePointMaster()
 					CBaseEntity *pent = m_PointMaster->m_ControlPointRounds[r];
 					CTeamControlPointRound* pointRound = (CTeamControlPointRound*)((unsigned long)pent + (unsigned long)rcbot_const_round_offset.GetInt());
 
-					CBotGlobals::botMessage(NULL, 0, "Control Points for Round %d", r);
+					//CBotGlobals::botMessage(NULL, 0, "Control Points for Round %d", r);
 
 					for (int i = 0; i < pointRound->m_ControlPoints.Count(); ++i) {
 						CBaseHandle* handle = &pointRound->m_ControlPoints.Element(i);
@@ -1167,7 +1167,7 @@ void CTeamFortress2Mod::updatePointMaster()
 
 							if (!edict->IsFree()) {
 								infoCount++;
-								CBotGlobals::botMessage(NULL, 0, "%d, %d, %d, %s", r, i, handle->GetSerialNumber(), edict->GetClassName());
+								//CBotGlobals::botMessage(NULL, 0, "%d, %d, %d, %s", r, i, handle->GetSerialNumber(), edict->GetClassName());
 							}
 						}
 					}
@@ -1233,8 +1233,8 @@ void CTeamFortress2Mod :: roundReset ()
 		// if all points are owned by RED at start up then its an attack defend map
 		setAttackDefendMap(i==numpoints);
 
-		m_ObjectiveResource.m_fUpdatePointTime = engine->Time() + rcbot_tf2_autoupdate_point_time.GetFloat();
-		m_ObjectiveResource.m_fNextCheckMonitoredPoint = engine->Time() + 0.2f;
+		m_ObjectiveResource.m_fUpdatePointTime = g_pEngine->Time() + rcbot_tf2_autoupdate_point_time.GetFloat();
+		m_ObjectiveResource.m_fNextCheckMonitoredPoint = g_pEngine->Time() + 0.2f;
 
 		m_ObjectiveResource.updatePoints();
 

@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game Engine ("HL
- *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game g_pEngine ("HL
+ *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL Engine and MODs
+ *    respects for all of the code used other than the HL g_pEngine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -97,11 +97,6 @@ void CBotProfiles :: deleteProfiles ()
 // find profiles and setup list
 void CBotProfiles :: setupProfiles ()
 {
-	unsigned int iId;
-	bool bDone;
-	char szId[4];
-	char filename[512];
-
 	extern ConVar bot_anglespeed;
 
 	// Setup Default profile
@@ -111,8 +106,8 @@ void CBotProfiles :: setupProfiles ()
 		IBotNavigator::MAX_PATH_TICKS, // path ticks
 		2, // visrevs clients
 		8.0f, // sensitivity
-		0.5f, // braveness
-		0.5f, // aim skill
+		0.65f, // braveness
+		0.85f, // aim skill
 		-1 // class
 		);	
 
