@@ -55,6 +55,8 @@
 #include "bot_kv.h"
 #include "bot_sigscan.h"
 
+//#include "baseentity.h"
+
 //#include "ndebugoverlay.h"
 CBotTF2 *g_pLastBot;
 
@@ -307,7 +309,7 @@ void AFKBot::Hook_PlayerRunCmd(CUserCmd *ucmd, IMoveHelper *moveHelper)
 		static CPlayerState *pl;
 		
 		cmd = pBot->getUserCMD();
-		pl = pBot->getPlayerState();
+		pl = gameclients->GetPlayerState(pEdict);
 
 		// put the bot's commands into this move frame
 		ucmd->buttons = cmd->buttons;
@@ -322,6 +324,7 @@ void AFKBot::Hook_PlayerRunCmd(CUserCmd *ucmd, IMoveHelper *moveHelper)
 		ucmd->command_number = cmd->command_number;
 
 		pl->v_angle = pBot->getViewAngles();
+		pl->fixangle = FIXANGLE_ABSOLUTE;
 
 		g_pLastBot = (CBotTF2*)pBot;
 	}
@@ -477,7 +480,7 @@ bool AFKBot::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool l
 	GET_V_IFACE_ANY(GetServerFactory, servertools, IServerTools, VSERVERTOOLS_INTERFACE_VERSION);
 
 #ifndef __linux__
-	GET_V_IFACE_CURRENT(GetEngineFactory,debugoverlay, IVDebugOverlay, VDEBUG_OVERLAY_INTERFACE_VERSION);
+	GET_V_IFACE_CURRENT(GetEngineFactory, debugoverlay, IVDebugOverlay, VDEBUG_OVERLAY_INTERFACE_VERSION);
 #endif
 	GET_V_IFACE_ANY(GetServerFactory, servergamedll, IServerGameDLL, INTERFACEVERSION_SERVERGAMEDLL);
 	GET_V_IFACE_ANY(GetServerFactory, gameclients, IServerGameClients, INTERFACEVERSION_SERVERGAMECLIENTS);

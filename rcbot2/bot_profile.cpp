@@ -82,32 +82,25 @@ void CBotProfiles :: deleteProfiles ()
 	m_pDefaultProfile = NULL;
 }
 
-// requires CBotProfile 'read' declared
-#ifndef __linux__
-#define READ_PROFILE_STRING(kvname,varname) if ( !pKVL->getString(##kvname##,&read.varname) ) { read.varname = m_pDefaultProfile->varname; }
-#define READ_PROFILE_INT(kvname,varname) if ( !pKVL->getInt(##kvname##,&read.varname) ) { read.varname = m_pDefaultProfile->varname; }
-// reads integers between 0 and 100 and converts to between 0.0 and 1.0
-#define READ_PROFILE_FLOAT(kvname,varname) { float fval; if ( !pKVL->getFloat(##kvname##,&fval) ) { read.varname = m_pDefaultProfile->varname; } else { read.varname = fval * 0.01f; } }
-#else
-#define READ_PROFILE_STRING(kvname,varname) if ( !pKVL->getString(kvname,&read.varname) ) { read.varname = m_pDefaultProfile->varname; }
-#define READ_PROFILE_INT(kvname,varname) if ( !pKVL->getInt(kvname,&read.varname) ) { read.varname = m_pDefaultProfile->varname; }
-// reads integers between 0 and 100 and converts to between 0.0 and 1.0
-#define READ_PROFILE_FLOAT(kvname,varname) { float fval; if ( !pKVL->getFloat(kvname,&fval) ) { read.varname = m_pDefaultProfile->varname; } else { read.varname = fval * 0.01f; } }
-#endif
 // find profiles and setup list
 void CBotProfiles :: setupProfiles ()
 {
-	extern ConVar bot_anglespeed;
+	extern ConVar bot_skill;
+	extern ConVar bot_sensitivity;
+	extern ConVar bot_braveness;
+	extern ConVar bot_visrevs;
+	extern ConVar bot_visrevs_client;
+	extern ConVar bot_pathrevs;
 
 	// Setup Default profile
 	m_pDefaultProfile = new CBotProfile(
 		"default", // model (team in HL2DM)
-		CBotVisibles::DEFAULT_MAX_TICKS, // vis ticks
-		IBotNavigator::MAX_PATH_TICKS, // path ticks
-		2, // visrevs clients
-		8.0f, // sensitivity
-		0.65f, // braveness
-		0.85f, // aim skill
+		bot_visrevs.GetInt(), // vis ticks
+		bot_pathrevs.GetInt(), // path ticks
+		bot_visrevs_client.GetInt(), // visrevs clients
+		bot_sensitivity.GetFloat(), // sensitivity
+		bot_braveness.GetFloat(), // braveness
+		bot_skill.GetFloat(), // aim skill
 		-1 // class
 		);	
 

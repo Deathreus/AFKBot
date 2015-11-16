@@ -747,7 +747,7 @@ public:
 
 	void selectWeaponName ( const char *szWeaponName );
 
-	CBotWeapon *getCurrentWeapon ();
+	virtual CBotWeapon *getCurrentWeapon ();
 
 	void kill ();
 
@@ -833,7 +833,7 @@ public:
 	inline float getTouchDistance () { return m_fWaypointTouchDistance; }
 
 	inline CUserCmd *getUserCMD () { return &cmd; }
-	inline CPlayerState *getPlayerState() { return &pl; }
+	inline CPlayerState *getPlayerState() { return &m_pPl; }
 
 	inline float getForwardMove() { return m_fForwardSpeed; }
 	inline float getSideMove() { return m_fSideSpeed; }
@@ -1038,7 +1038,7 @@ protected:
 	CBotWeapons *m_pWeapons;
 	////////////////////////////////////
 	IPlayerInfo *m_pPlayerInfo; //-- sensors
-	CPlayerState pl;
+	CPlayerState m_pPl;
 	CUserCmd cmd; // actuator command
 	////////////////////////////////////
 	MyEHandle m_pEnemy; // current enemy

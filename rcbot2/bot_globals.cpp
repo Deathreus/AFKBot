@@ -1064,12 +1064,12 @@ void CBotGlobals :: buildFileName ( char *szOutput, const char *szFile, const ch
 	}
 }
 
-QAngle CBotGlobals :: playerAngles ( edict_t *pEntity )
+QAngle CBotGlobals :: playerAngles ( edict_t *pPlayer )
 {
-	return playerinfomanager->GetPlayerInfo(pEntity)->GetAbsAngles();
-	/*IPlayerInfo *pPlayerInfo = playerinfomanager->GetPlayerInfo(pPlayer);
+	//return playerinfomanager->GetPlayerInfo(pPlayer)->GetAbsAngles();
+	IPlayerInfo *pPlayerInfo = playerinfomanager->GetPlayerInfo(pPlayer);
 	CBotCmd lastCmd = pPlayerInfo->GetLastUserCommand();
-	return lastCmd.viewangles;*/
+	return lastCmd.viewangles;
 }
 
 QAngle CBotGlobals :: entityEyeAngles ( edict_t *pEntity )

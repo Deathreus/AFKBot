@@ -458,7 +458,14 @@ public:
 	virtual bool isCloaked () { return false; }
 	virtual bool isDisguised () { return false; }
 
+	virtual CBotWeapon *getCurrentWeapon()
+	{
+		return CBot::getCurrentWeapon();
+	}
+
 	virtual bool handleAttack ( CBotWeapon *pWeapon, edict_t *pEnemy ) { return CBot::handleAttack(pWeapon,pEnemy); }
+
+	void resetAttackingEnemy() { m_pAttackingEnemy = NULL; }
 
 	virtual bool setVisible ( edict_t *pEntity, bool bVisible );
 
@@ -620,6 +627,7 @@ protected:
 	MyEHandle m_pNearestEnemyDisp;
 	MyEHandle m_pNearestTeleEntrance;
 	MyEHandle m_pNearestPipeGren;
+	MyEHandle m_pAttackingEnemy;
 
 	MyEHandle m_pFlag;
 	MyEHandle m_pPrevSpy;
@@ -743,6 +751,8 @@ public:
 
 	// 
 	CBotTF2();
+
+	virtual CBotWeapon *getCurrentWeapon();
 
 	void MannVsMachineWaveComplete();
 	void MannVsMachineAlarmTriggered (Vector vLoc);

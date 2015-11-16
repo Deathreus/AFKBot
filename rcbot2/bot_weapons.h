@@ -667,7 +667,7 @@ public:
 		return m_pWeaponInfo->getPreference();
 	}
 
-	virtual bool outOfAmmo (CBot *pBot);
+	bool outOfAmmo (CBot *pBot);
 
 	bool needToReload (CBot *pBot);
 
@@ -739,11 +739,11 @@ public:
 /////////////////////////////////////
 	CBotWeapon *getBestWeapon ( edict_t *pEnemy, bool bAllowMelee = true, bool bAllowMeleeFallback = true, bool bMeleeOnly = false, bool bExplosivesOnly = false, bool bIgnorePrimaryMinimum = false );
 
-	void addWeapon ( int iId, edict_t *pent = NULL, bool bOverrideAll = true );
+	CBotWeapon *addWeapon( CWeapon *pWeaponInfo, int iId, edict_t *pent, bool bOverrideAll = true );
 
 	CBotWeapon *getWeapon ( CWeapon *pWeapon );
 
-	CBotWeapon *getActiveWeapon ( const char *szWeaponName );
+	CBotWeapon *getActiveWeapon( const char *szWeaponName, edict_t *pWeaponUpdate = NULL, bool bOverrideAmmoTypes = true );
 
 	CBotWeapon *getCurrentWeaponInSlot ( int iSlot );
 
