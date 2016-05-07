@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game g_pEngine ("HL
- *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game Engine ("HL
+ *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL g_pEngine and MODs
+ *    respects for all of the code used other than the HL Engine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -844,7 +844,7 @@ void CWaypointNavigator :: failMove ()
 	if ( !m_iFailedGoals.IsMember(m_iGoalWaypoint) )
 	{
 		m_iFailedGoals.Add(m_iGoalWaypoint);
-		m_fNextClearFailedGoals = g_pEngine->Time() + randomFloat(8.0f,30.0f);
+		m_fNextClearFailedGoals = engine->Time() + randomFloat(8.0f,30.0f);
 	}
 }
 
@@ -1058,7 +1058,7 @@ bool CWaypointNavigator :: workRoute ( Vector vFrom,
 			{
 				edict_t *pListenEdict;
 
-				if ( !g_pEngine->IsDedicatedServer() && ((pListenEdict = CClients::getListenServerClient())!=NULL) )
+				if ( !engine->IsDedicatedServer() && ((pListenEdict = CClients::getListenServerClient())!=NULL) )
 				{
 					debugoverlay->AddLineOverlayAlpha(succWpt->getOrigin(),currWpt->getOrigin(),255,0,0,255,false,5.0f);
 				}
@@ -1169,7 +1169,7 @@ bool CWaypointNavigator :: workRoute ( Vector vFrom,
 		if ( !m_iFailedGoals.IsMember(m_iGoalWaypoint) )
 		{
 			m_iFailedGoals.Add(m_iGoalWaypoint);
-			m_fNextClearFailedGoals = g_pEngine->Time() + randomFloat(8.0f,30.0f);
+			m_fNextClearFailedGoals = engine->Time() + randomFloat(8.0f,30.0f);
 		}
 
 		return true; // waypoint not found but searching is complete
@@ -1205,7 +1205,7 @@ bool CWaypointNavigator :: workRoute ( Vector vFrom,
 		{
 			edict_t *pListenEdict;
 
-			if ( !g_pEngine->IsDedicatedServer() && ((pListenEdict = CClients::getListenServerClient())!=NULL) )
+			if ( !engine->IsDedicatedServer() && ((pListenEdict = CClients::getListenServerClient())!=NULL) )
 			{
 				debugoverlay->AddLineOverlayAlpha(CWaypoints::getWaypoint(iCurrentNode)->getOrigin()+Vector(0,0,8.0f),CWaypoints::getWaypoint(iParent)->getOrigin()+Vector(0,0,8.0f),255,255,255,255,false,5.0f);
 			}
@@ -1419,7 +1419,7 @@ void CWaypointNavigator :: updatePosition ()
 	m_pBot->walkingTowardsWaypoint(pWaypoint,&m_bOffsetApplied,m_vOffset);
 
 	// fix for bots not finding goals
-	if ( m_fNextClearFailedGoals && ( m_fNextClearFailedGoals < g_pEngine->Time() ) )
+	if ( m_fNextClearFailedGoals && ( m_fNextClearFailedGoals < engine->Time() ) )
 	{
 		m_iFailedGoals.Destroy();
 		m_fNextClearFailedGoals = 0;
@@ -2058,11 +2058,11 @@ void CWaypoint :: load ( FILE *bfp, int iVersion )
 
 bool CWaypoint :: checkGround ()
 {
-	if ( m_fNextCheckGroundTime < g_pEngine->Time() )
+	if ( m_fNextCheckGroundTime < engine->Time() )
 	{
 		CBotGlobals::quickTraceline(NULL,m_vOrigin,m_vOrigin-Vector(0,0,80.0f));
 		m_bHasGround = ( CBotGlobals::getTraceResult()->fraction < 1.0f );
-		m_fNextCheckGroundTime = g_pEngine->Time() + 1.0f;
+		m_fNextCheckGroundTime = engine->Time() + 1.0f;
 	}
 
 	return m_bHasGround;
@@ -2070,7 +2070,7 @@ bool CWaypoint :: checkGround ()
 // draw waypoints to this client pClient
 void CWaypoints :: drawWaypoints( CClient *pClient )
 {
-	float fTime = g_pEngine->Time();
+	float fTime = engine->Time();
 	CWaypoint *pWpt;
 	//////////////////////////////////////////
 	// TODO
@@ -2080,7 +2080,7 @@ void CWaypoints :: drawWaypoints( CClient *pClient )
 	if ( m_fNextDrawWaypoints > fTime )
 		return;
 
-	m_fNextDrawWaypoints = g_pEngine->Time() + 1.0f;
+	m_fNextDrawWaypoints = engine->Time() + 1.0f;
 	/////////////////////////////////////////////////
 	pClient->updateCurrentWaypoint();
 
@@ -2146,7 +2146,7 @@ void CWaypoints :: freeMemory ()
 
 void CWaypoints :: precacheWaypointTexture ()
 {
-	m_iWaypointTexture = g_pEngine->PrecacheModel( "sprites/lgtning.vmt" );
+	m_iWaypointTexture = engine->PrecacheModel( "sprites/lgtning.vmt" );
 }
 
 ///////////////////////////////////////////////////////
@@ -2223,6 +2223,8 @@ int CWaypoints :: getClosestFlagged ( int iFlags, Vector &vOrigin, int iTeam, fl
 
 	CWaypoint *pWpt;
 
+	CBotMod *pCurrentMod = CBotGlobals::getCurrentMod();
+
 	for ( i = 0; i < size; i ++ )
 	{
 		pWpt = &m_theWaypoints[i];
@@ -2237,7 +2239,8 @@ int CWaypoints :: getClosestFlagged ( int iFlags, Vector &vOrigin, int iTeam, fl
 		{
 			if ( pWpt->hasFlag(iFlags) )
 			{
-				if ( !CTeamFortress2Mod::m_ObjectiveResource.isWaypointAreaValid(pWpt->getArea()) )
+				// BUG FIX
+				if ( !pCurrentMod->isWaypointAreaValid(pWpt->getArea(),iFlags) ) // CTeamFortress2Mod::m_ObjectiveResource.isWaypointAreaValid(pWpt->getArea()) )
 					continue;
 
 				if ( (iFrom == -1) )
@@ -2490,6 +2493,8 @@ int CWaypoints :: nearestWaypointGoal ( int iFlags, Vector &origin, float fDist,
 
 	size = numWaypoints();
 
+	CBotMod *pCurrentMod = CBotGlobals::getCurrentMod();
+
 	for ( i = 0; i < size; i ++ )
 	{
 		pWpt = &m_theWaypoints[i];
@@ -2498,7 +2503,8 @@ int CWaypoints :: nearestWaypointGoal ( int iFlags, Vector &origin, float fDist,
 		{
 			if ( (iFlags == -1) || pWpt->hasFlag(iFlags) )
 			{
-				if ( CTeamFortress2Mod::m_ObjectiveResource.isWaypointAreaValid(pWpt->getArea()) )
+				// FIX DODS bug
+				if (pCurrentMod->isWaypointAreaValid(pWpt->getArea(),iFlags)) // CTeamFortress2Mod::m_ObjectiveResource.isWaypointAreaValid(pWpt->getArea()))
 				{
 					if ( (distance = pWpt->distanceFrom(origin)) < fDist)
 					{
@@ -2744,6 +2750,8 @@ CWaypoint *CWaypoints :: randomWaypointGoalNearestArea ( int iFlags, int iTeam, 
 
 	dataUnconstArray<AStarNode*> goals;
 
+	CBotMod *pCurrentMod = CBotGlobals::getCurrentMod();
+
 	if ( iWpt1 == -1 )
 	   iWpt1 = CWaypointLocations::NearestWaypoint(*origin,200,-1);
 
@@ -2758,7 +2766,7 @@ CWaypoint *CWaypoints :: randomWaypointGoalNearestArea ( int iFlags, int iTeam, 
 		{
 			if ( (iFlags == -1) || pWpt->hasSomeFlags(iFlags) )
 			{
-				if ( !bForceArea && !CTeamFortress2Mod::m_ObjectiveResource.isWaypointAreaValid(pWpt->getArea()) )
+				if ( !bForceArea && !pCurrentMod->isWaypointAreaValid(pWpt->getArea(),iFlags) )
 					continue;
 				else if ( bForceArea && (pWpt->getArea() != iArea) )
 					continue;
@@ -2832,6 +2840,8 @@ CWaypoint *CWaypoints :: randomWaypointGoalBetweenArea ( int iFlags, int iTeam, 
 
 	dataUnconstArray<AStarNode*> goals;
 
+	CBotMod *pCurrentMod = CBotGlobals::getCurrentMod();
+
 	for ( i = 0; i < size; i ++ )
 	{
 		pWpt = &m_theWaypoints[i];
@@ -2841,7 +2851,7 @@ CWaypoint *CWaypoints :: randomWaypointGoalBetweenArea ( int iFlags, int iTeam, 
 			if ( (iFlags == -1) || pWpt->hasSomeFlags(iFlags) )
 			{
 
-				if ( !bForceArea && !CTeamFortress2Mod::m_ObjectiveResource.isWaypointAreaValid(pWpt->getArea()) )
+				if (!bForceArea && !pCurrentMod->isWaypointAreaValid(pWpt->getArea(),iFlags))
 					continue;
 				else if ( bForceArea && (pWpt->getArea() != iArea) )
 					continue;
@@ -2909,6 +2919,8 @@ CWaypoint *CWaypoints :: randomWaypointGoal ( int iFlags, int iTeam, int iArea, 
 
 	dataUnconstArray<CWaypoint*> goals;
 
+	CBotMod *pCurrentMod = CBotGlobals::getCurrentMod();
+
 	for ( i = 0; i < size; i ++ )
 	{
 		if ( iIgnore == i )
@@ -2920,7 +2932,7 @@ CWaypoint *CWaypoints :: randomWaypointGoal ( int iFlags, int iTeam, int iArea, 
 		{
 			if ( (iFlags == -1) || pWpt->hasSomeFlags(iFlags) )
 			{
-				if ( !bForceArea && !CTeamFortress2Mod::m_ObjectiveResource.isWaypointAreaValid(pWpt->getArea()) )
+				if (!bForceArea && !pCurrentMod->isWaypointAreaValid(pWpt->getArea(),iFlags))
 					continue;
 				else if ( bForceArea && (pWpt->getArea() != iArea) )
 					continue;
@@ -2974,7 +2986,7 @@ int CWaypoints :: freeWaypointIndex ()
 
 bool CWaypoint :: checkReachable ()
 {
-	if ( m_fCheckReachableTime < g_pEngine->Time() )
+	if ( m_fCheckReachableTime < engine->Time() )
 	{
 		CWaypoint *pOther;
 		int numPathsTo = numPathsToThisWaypoint();
@@ -3001,7 +3013,7 @@ bool CWaypoint :: checkReachable ()
 		}
 
 		m_bIsReachable = !( i == numPathsTo );
-		m_fCheckReachableTime = g_pEngine->Time() + 1.0f;
+		m_fCheckReachableTime = engine->Time() + 1.0f;
 	}
 
 	return m_bIsReachable;
@@ -3027,11 +3039,11 @@ bool CWaypoint :: isPathOpened ( Vector vPath )
 
 		if ( info->vOrigin == vPath )
 		{
-			if ( info->fNextCheck < g_pEngine->Time() )
+			if ( info->fNextCheck < engine->Time() )
 			{
 				info->bVisibleLastCheck = CBotGlobals::checkOpensLater(m_vOrigin,vPath);
 
-				info->fNextCheck = g_pEngine->Time() + 2.0f;
+				info->fNextCheck = engine->Time() + 2.0f;
 			}
 
 			return info->bVisibleLastCheck;
@@ -3041,7 +3053,7 @@ bool CWaypoint :: isPathOpened ( Vector vPath )
 	// not found -- add now
 	wpt_opens_later_t newinfo;
 
-	newinfo.fNextCheck = g_pEngine->Time() + 2.0f;
+	newinfo.fNextCheck = engine->Time() + 2.0f;
 	newinfo.vOrigin = vPath;
 	newinfo.bVisibleLastCheck = CBotGlobals::checkOpensLater(m_vOrigin,vPath);
 

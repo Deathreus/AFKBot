@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game g_pEngine ("HL
- *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game Engine ("HL
+ *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL g_pEngine and MODs
+ *    respects for all of the code used other than the HL Engine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -60,14 +60,14 @@ void CWaypointVisibilityTable :: workVisibility ()
 
 			if ( iTicks >= WAYPOINT_VIS_TICKS )
 			{
-				if ( m_fNextShowMessageTime < g_pEngine->Time() )
+				if ( m_fNextShowMessageTime < engine->Time() )
 				{
 					percent = (int)(((float)iCurFrom / iSize) * 100);
 
 					if ( m_iPrevPercent != percent )
 					{
 						Msg(" *** working out visibility %d percent***\n",percent);
-						m_fNextShowMessageTime = g_pEngine->Time() + 2.5f;
+						m_fNextShowMessageTime = engine->Time() + 2.5f;
 						m_iPrevPercent = percent;
 					}
 				}

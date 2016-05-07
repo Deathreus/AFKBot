@@ -1680,7 +1680,7 @@ void CDODBot :: hearVoiceCommand ( edict_t *pPlayer, byte cmd )
 			updateCondition(CONDITION_COVERT);
 			removeCondition(CONDITION_PUSH);
 			removeCondition(CONDITION_RUN);
-
+			 
 			if ( randomFloat(0.0f,1.0f) > 0.75f )
 				addVoiceCommand(DOD_VC_YES);
 		}

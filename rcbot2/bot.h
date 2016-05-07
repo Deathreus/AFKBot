@@ -20,10 +20,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game g_pEngine ("HL
- *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game Engine ("HL
+ *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL g_pEngine and MODs
+ *    respects for all of the code used other than the HL Engine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -40,6 +40,8 @@
 #ifndef __RCBOT2_H__
 #define __RCBOT2_H__
 
+//#include "cbase.h"
+//#include "baseentity.h"
 #include "filesystem.h"
 #include "interface.h"
 #include "engine/iserverplugin.h"
@@ -62,31 +64,21 @@
 #include "bot_const.h"
 #include "bot_ehandle.h"
 #include <queue>
-
-#include "networkvar.h"
-#include "PlayerState.h"
-
-//#include "cbase.h"
-
-#if defined WIN32 && !defined snprintf
-#define snprintf _snprintf
-#endif
-
 using namespace std;
 
 #define MAX_AMMO_TYPES 32
 #define MAX_VOICE_CMDS 32
 #define MIN_WPT_TOUCH_DIST 16.0f
 
-// Interfaces from the g_pEngine
+// Interfaces from the engine
 //using namespace VEngineServerV21;
 //using namespace ServerGameClientsV3;
-extern IVEngineServer *g_pEngine;  // helper functions (messaging clients, loading content, making entities, running commands, etc)
+extern IVEngineServer *engine;  // helper functions (messaging clients, loading content, making entities, running commands, etc)
 extern IFileSystem *filesystem;  // file I/O 
 //extern IGameEventManager *gameeventmanager;  // game events interface
 extern IGameEventManager2 *gameeventmanager;
 extern IPlayerInfoManager *playerinfomanager;  // game dll interface to interact with players
-extern IServerPluginHelpers *helpers;  // special 3rd party plugin helpers from the g_pEngine
+extern IServerPluginHelpers *helpers;  // special 3rd party plugin helpers from the engine
 extern IServerGameClients* gameclients;
 extern IEngineTrace *enginetrace;
 extern IEffects *g_pEffects;
@@ -100,7 +92,6 @@ extern CGlobalVars *gpGlobals;
 #define T_OFFSETMAX  3
 
 class CBotSquad;
-class CBasePlayer;
 
 bool BotFunc_BreakableIsEnemy ( edict_t *pBreakable, edict_t *pEdict );
 
@@ -147,7 +138,7 @@ public:
 	// Right now this is only requested at server startup time so it can't be changed on the fly, etc.
 	virtual float			GetTickInterval( void ) const = 0;
 
-	// Give the list of datatable classes to the g_pEngine.  The g_pEngine matches class names from here with
+	// Give the list of datatable classes to the engine.  The engine matches class names from here with
 	//  edict_t::classname to figure out how to encode a class's data for networking
 	virtual ServerClass*	GetAllServerClasses( void ) = 0;
 
@@ -437,22 +428,22 @@ public:
 
 	inline Vector getOrigin ()
 	{
-		return m_pPlayerInfo->GetAbsOrigin();
+		return m_pController->GetLocalOrigin();
 	}
 	// linux fix 2
 	inline float distanceFrom(Vector vOrigin)
 	{
-		return (vOrigin - m_pPlayerInfo->GetAbsOrigin()).Length();
+		return (vOrigin - m_pController->GetLocalOrigin()).Length();
 	}
 	inline float distanceFrom(edict_t *pEntity)
 	{
-		return (pEntity->GetCollideable()->GetCollisionOrigin() - m_pPlayerInfo->GetAbsOrigin()).Length();
+		return (pEntity->GetCollideable()->GetCollisionOrigin() - m_pController->GetLocalOrigin()).Length();
 		//return distanceFrom(CBotGlobals::entityOrigin(pEntity));
 	}
 
 	inline float distanceFrom2D(edict_t *pEntity)
 	{
-		return (pEntity->GetCollideable()->GetCollisionOrigin() - m_pPlayerInfo->GetAbsOrigin()).Length2D();
+		return (pEntity->GetCollideable()->GetCollisionOrigin() - m_pController->GetLocalOrigin()).Length2D();
 		//return distanceFrom(CBotGlobals::entityOrigin(pEntity));
 	}
 
@@ -643,7 +634,7 @@ public:
 			m_bMoveToIsValid = false; 
 			m_iMovePriority = m_iMoveLookPriority;
 			m_fWaypointStuckTime = 0;
-			m_fCheckStuckTime = g_pEngine->Time() + 4.0f;
+			m_fCheckStuckTime = engine->Time() + 4.0f;
 		}
 	}
 
@@ -658,13 +649,13 @@ public:
 
 	inline void setLookAtTask ( eLookTask lookTask, float fTime = 0 ) 
 	{ 
-		if ( (m_iMoveLookPriority >= m_iLookPriority) && ((fTime > 0) || ( m_fLookSetTime < g_pEngine->Time())) )
+		if ( (m_iMoveLookPriority >= m_iLookPriority) && ((fTime > 0) || ( m_fLookSetTime < engine->Time())) )
 		{
 			m_iLookPriority = m_iMoveLookPriority;
 			m_iLookTask = lookTask; 
 
 			if ( fTime > 0 )
-				m_fLookSetTime = g_pEngine->Time() + fTime;
+				m_fLookSetTime = engine->Time() + fTime;
 		}	
 	}
 
@@ -788,9 +779,9 @@ public:
 
 	inline void resetLookAroundTime () { m_fLookAroundTime = 0.0f; }
 
-	Vector snipe ( Vector &vAiming );
+	inline Vector snipe ( Vector &vAiming );
 
-	//inline void dontAvoid () { m_fAvoidTime = g_pEngine->Time() + 1.0f; }
+	//inline void dontAvoid () { m_fAvoidTime = engine->Time() + 1.0f; }
 
 	float m_fWaypointStuckTime;
 
@@ -832,22 +823,9 @@ public:
 
 	inline float getTouchDistance () { return m_fWaypointTouchDistance; }
 
-	inline CUserCmd *getUserCMD () { return &cmd; }
-	inline CPlayerState *getPlayerState() { return &m_pPl; }
-
-	inline float getForwardMove() { return m_fForwardSpeed; }
-	inline float getSideMove() { return m_fSideSpeed; }
-	inline float getUpMove() { return m_fUpSpeed; }
-
-	inline int getButtons() { return m_iButtons; }
-	inline int getImpulse() { return m_iImpulse; }
-	inline int getSelectWeapon() { return m_iSelectWeapon; }
-
-	inline QAngle getViewAngles() { return m_vViewAngles; }
+	inline CBotCmd *getUserCMD () { return &cmd; }
 
 	void forceGotoWaypoint ( int wpt );
-
-	void snapEyeAngles(const QAngle &viewAngles);
 
 	// bot is defending -- mod specific stuff
 	virtual void defending () {}
@@ -910,6 +888,11 @@ public:
 	inline bool isListeningToPlayer ( edict_t *pPlayer ) 
 	{
 		return (m_PlayerListeningTo.get() == pPlayer);
+	}
+
+	inline IBotController *getController () const 
+	{
+		return m_pController;
 	}
 
 	void updateUtilTime ( int util );
@@ -1038,8 +1021,8 @@ protected:
 	CBotWeapons *m_pWeapons;
 	////////////////////////////////////
 	IPlayerInfo *m_pPlayerInfo; //-- sensors
-	CPlayerState m_pPl;
-	CUserCmd cmd; // actuator command
+	IBotController *m_pController; //-- actuators
+	CBotCmd cmd; // actuator command
 	////////////////////////////////////
 	MyEHandle m_pEnemy; // current enemy
 	MyEHandle m_pOldEnemy;
@@ -1147,6 +1130,21 @@ protected:
 	bool m_bWantToInvestigateSound;
 };
 
+class CAddbot
+{
+
+public:
+
+	CAddbot ()
+	{
+		memset(this,sizeof(CAddbot),0);
+	};
+
+	const char *m_szClass;
+	const char *m_szTeam;
+	const char *m_szBotName;
+};
+
 class CBots
 {
 public:
@@ -1207,12 +1205,6 @@ public:
 
 	static bool addBot ( const char *szClass, const char *szTeam, const char *szName );
 
-	static void makeBot ( edict_t *pPlayer );
-	static void makeNotBot( edict_t *pPlayer );
-
-	static CBot *get ( int iIndex ) { return m_Bots[iIndex]; }
-	static CBot *get ( edict_t *pPlayer ) { return m_Bots[slotOfEdict(pPlayer)]; }
-
 private:
 	static CBot **m_Bots;
 
@@ -1224,12 +1216,16 @@ private:
 	//
 	static bool m_bControlBotsOnly;
 	static bool m_bControlNext;
+	static CBotProfile *m_pNextProfile;
+	static char m_szNextName[64];
 	// End - workaround
 
 	// add or kick bot time
 	static float m_flAddKickBotTime;
 
 	static queue<edict_t*> m_ControlQueue;
+
+	static queue<CAddbot> m_AddBotQueue;
 
 };
 

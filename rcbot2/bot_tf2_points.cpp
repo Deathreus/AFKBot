@@ -246,7 +246,8 @@ void CTeamRoundTimer :: reset ()
 {
 	CTeamRoundTimer();
 
-	m_Resource = CClassInterface::FindEntityByNetClass(gpGlobals->maxClients + 1, "CTeamRoundTimer");
+	m_Resource = CClassInterface::FindEntityByNetClass(gpGlobals->maxClients+1,"CTeamRoundTimer");
+
 	if ( m_Resource.get() != NULL )
 	{
 		CClassInterface::setupCTeamRoundTimer(this);
@@ -401,12 +402,12 @@ void CTFObjectiveResource::	debugprint ( void )
 {
 	edict_t *pEdict = CClients::getListenServerClient();
 
-	/*CBotGlobals::botMessage(pEdict,0,"m_iNumControlPoints = %d",*m_iNumControlPoints);
+	CBotGlobals::botMessage(pEdict,0,"m_iNumControlPoints = %d",*m_iNumControlPoints);
 	CBotGlobals::botMessage(pEdict,0,"m_bBlocked[8]\t[%s,%s,%s,%s,%s,%s,%s,%s]",m_bBlocked[0]?"Y":"N",m_bBlocked[1]?"Y":"N",m_bBlocked[2]?"Y":"N",m_bBlocked[3]?"Y":"N",m_bBlocked[4]?"Y":"N",m_bBlocked[5]?"Y":"N",m_bBlocked[6]?"Y":"N",m_bBlocked[7]?"Y":"N");
 	CBotGlobals::botMessage(pEdict,0,"m_bCPLocked[byte]\t[%d]",*m_bCPLocked);
 	CBotGlobals::botMessage(pEdict,0,"m_bCPLocked[8]\t[%s,%s,%s,%s,%s,%s,%s,%s]",m_bCPLocked[0]?"Y":"N",m_bCPLocked[1]?"Y":"N",m_bCPLocked[2]?"Y":"N",m_bCPLocked[3]?"Y":"N",m_bCPLocked[4]?"Y":"N",m_bCPLocked[5]?"Y":"N",m_bCPLocked[6]?"Y":"N",m_bCPLocked[7]?"Y":"N");
 	CBotGlobals::botMessage(pEdict,0,"m_bCPIsVisible[8]\t[%s,%s,%s,%s,%s,%s,%s,%s]",m_bCPIsVisible[0]?"Y":"N",m_bCPIsVisible[1]?"Y":"N",m_bCPIsVisible[2]?"Y":"N",m_bCPIsVisible[3]?"Y":"N",m_bCPIsVisible[4]?"Y":"N",m_bCPIsVisible[5]?"Y":"N",m_bCPIsVisible[6]?"Y":"N",m_bCPIsVisible[7]?"Y":"N");
-	CBotGlobals::botMessage(pEdict,0,"m_iOwner[8]\t[%s,%s,%s,%s,%s,%s,%s,%s]",(m_iOwner[0]==2)?"red":((m_iOwner[0]==3)?"blue":"unassigned"),(m_iOwner[1]==2)?"red":((m_iOwner[1]==3)?"blue":"unassigned"),(m_iOwner[2]==2)?"red":((m_iOwner[2]==3)?"blue":"unassigned"),(m_iOwner[3]==2)?"red":((m_iOwner[3]==3)?"blue":"unassigned"),(m_iOwner[4]==2)?"red":((m_iOwner[4]==3)?"blue":"unassigned"),(m_iOwner[5]==2)?"red":((m_iOwner[5]==3)?"blue":"unassigned"),(m_iOwner[6]==2)?"red":((m_iOwner[6]==3)?"blue":"unassigned"),(m_iOwner[7]==2)?"red":((m_iOwner[7]==3)?"blue":"unassigned"));*/
+	CBotGlobals::botMessage(pEdict,0,"m_iOwner[8]\t[%s,%s,%s,%s,%s,%s,%s,%s]",(m_iOwner[0]==2)?"red":((m_iOwner[0]==3)?"blue":"unassigned"),(m_iOwner[1]==2)?"red":((m_iOwner[1]==3)?"blue":"unassigned"),(m_iOwner[2]==2)?"red":((m_iOwner[2]==3)?"blue":"unassigned"),(m_iOwner[3]==2)?"red":((m_iOwner[3]==3)?"blue":"unassigned"),(m_iOwner[4]==2)?"red":((m_iOwner[4]==3)?"blue":"unassigned"),(m_iOwner[5]==2)?"red":((m_iOwner[5]==3)?"blue":"unassigned"),(m_iOwner[6]==2)?"red":((m_iOwner[6]==3)?"blue":"unassigned"),(m_iOwner[7]==2)?"red":((m_iOwner[7]==3)?"blue":"unassigned"));
 }
 
 int CTFObjectiveResource::NearestArea ( Vector vOrigin )
@@ -765,9 +766,9 @@ bool CTFObjectiveResource :: updateDefendPoints ( int team )
 
 void CTFObjectiveResource :: think ()
 {
-	if ( m_bInitialised && ( m_fNextCheckMonitoredPoint < g_pEngine->Time() ) )
+	if ( m_bInitialised && ( m_fNextCheckMonitoredPoint < engine->Time() ) )
 	{
-		bool bupdate = (m_fUpdatePointTime < g_pEngine->Time());
+		bool bupdate = (m_fUpdatePointTime < engine->Time());
 
 		int team = 0;
 
@@ -795,11 +796,11 @@ void CTFObjectiveResource :: think ()
 
 			updatePoints();
 
-			m_fNextCheckMonitoredPoint = g_pEngine->Time() + 5.0f;
-			m_fUpdatePointTime = g_pEngine->Time() + rcbot_tf2_autoupdate_point_time.GetFloat();
+			m_fNextCheckMonitoredPoint = engine->Time() + 5.0f;
+			m_fUpdatePointTime = engine->Time() + rcbot_tf2_autoupdate_point_time.GetFloat();
 		}
 		else
-			m_fNextCheckMonitoredPoint = g_pEngine->Time() + 1.0f;
+			m_fNextCheckMonitoredPoint = engine->Time() + 1.0f;
 	}
 	
 }
@@ -839,7 +840,7 @@ bool CTFObjectiveResource :: updateAttackPoints ( int team )
 		if ( m_bCPIsVisible[i] == 0 )
 			continue;
 		// not unlocked
-		if ( m_flUnlockTimes[i] > g_pEngine->Time() )
+		if ( m_flUnlockTimes[i] > engine->Time() )
 			continue;
 		// not in round
 		if ( m_pControlPoints[i] && pRound && !pRound->isPointInRound(m_pControlPoints[i]) )
@@ -1039,7 +1040,7 @@ bool CTFObjectiveResource :: updateAttackPoints ( int team )
 
 void CTFObjectiveResource :: updateCaptureTime(int index)
 {
-	m_fLastCaptureTime[index] = g_pEngine->Time();
+	m_fLastCaptureTime[index] = engine->Time();
 }
 
 float CTFObjectiveResource :: getLastCaptureTime(int index)

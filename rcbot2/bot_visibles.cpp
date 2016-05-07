@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game g_pEngine ("HL
- *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game Engine ("HL
+ *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL g_pEngine and MODs
+ *    respects for all of the code used other than the HL Engine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -189,8 +189,8 @@ void CBotVisibles :: checkVisible ( edict_t *pEntity, int *iTicks, bool *bVisibl
 			// update tick -- counts the number of PVS done (cpu intensive)
 			*iTicks = *iTicks + 1;
 
-			clusterIndex = g_pEngine->GetClusterForOrigin( m_pBot->getOrigin() );
-			g_pEngine->GetPVSForCluster( clusterIndex, sizeof(m_bPvs), m_bPvs );
+			clusterIndex = engine->GetClusterForOrigin( m_pBot->getOrigin() );
+			engine->GetPVSForCluster( clusterIndex, sizeof(m_bPvs), m_bPvs );
 			
 			vEntityOrigin = CBotGlobals::entityOrigin(pEntity);
 
@@ -198,7 +198,7 @@ void CBotVisibles :: checkVisible ( edict_t *pEntity, int *iTicks, bool *bVisibl
 			if ( iIndex <= gpGlobals->maxClients )
 				vEntityOrigin + Vector(0,0,32);
 
-			playerInPVS = g_pEngine->CheckOriginInPVS(vEntityOrigin,m_bPvs,sizeof(m_bPvs));//g_pEngine->CheckBoxInPVS( vectorSurroundMins, vectorSurroundMaxs, m_bPvs, sizeof( m_bPvs ) );
+			playerInPVS = engine->CheckOriginInPVS(vEntityOrigin,m_bPvs,sizeof(m_bPvs));//engine->CheckBoxInPVS( vectorSurroundMins, vectorSurroundMaxs, m_bPvs, sizeof( m_bPvs ) );
 
 			if ( playerInPVS )
 			{
