@@ -105,6 +105,7 @@ extern ConVar rcbot_getweaponslot_offset;
 extern ConVar rcbot_removewearable_offset;
 extern ConVar rcbot_weaponequip_offset;
 extern ConVar rcbot_gamerules_offset;
+extern ConVar rcbot_bot_quota_interval;
 //extern ConVar rcbot_util_learning;
 //extern ConVar rcbot_bot_add_cmd;
 //extern ConVar rcbot_bot_add_cmd;
@@ -117,6 +118,6 @@ extern ConVar *mp_friendlyfire;
 extern ConCommandBase *puppet_bot_cmd;
 
 
-void RCBOT2_Cvar_setup (ICvar *cvar);
+void AFKBOT_Cvar_setup (ICvar *cvar);
 
 #endif

@@ -30,10 +30,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game Engine ("HL
- *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game g_pEngine ("HL
+ *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL Engine and MODs
+ *    respects for all of the code used other than the HL g_pEngine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -49,18 +49,18 @@
 #include <iplayerinfo.h>
 #include <sh_vector.h>
 #include "engine_wrappers.h"
+#include <shareddefs.h>
 
 class CUserCmd;
 class IMoveHelper;
 class CEconItemView;
 class CTF2Loadout;
-class CEconWearable;
 
 #if defined WIN32 && !defined snprintf
 #define snprintf _snprintf
 #endif
 
-class RCBotPluginMeta : public ISmmPlugin, public IMetamodListener
+class AFKBot : public ISmmPlugin, public IMetamodListener
 {
 public:
 	bool Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool late);
@@ -73,12 +73,7 @@ public: //IMetamodListener stuff
 public: //hooks
 
 	void Hook_ServerActivate(edict_t *pEdictList, int edictCount, int clientMax);
-	bool Hook_LevelInit(const char *pMapName,
-		char const *pMapEntities,
-		char const *pOldLevel,
-		char const *pLandmarkName,
-		bool loadGame,
-		bool background);
+	bool Hook_LevelInit(const char *pMapName, char const *pMapEntities, char const *pOldLevel, char const *pLandmarkName, bool loadGame, bool background);
 	void Hook_GameFrame(bool simulating);
 	void Hook_LevelShutdown(void);
 	void Hook_ClientActive(edict_t *pEntity, bool bLoadGame);
@@ -89,15 +84,7 @@ public: //hooks
 	//Called for a game event.  Same definition as server plugins???
 	bool FireGameEvent( IGameEvent *pevent, bool bDontBroadcast );
 	void Hook_PlayerRunCmd(CUserCmd *ucmd, IMoveHelper *moveHelper);
-	CBaseEntity *Hook_GiveNamedItem(const char *name, int subtype, CEconItemView *cscript, bool b);
-	void Hook_EquipWearable(CEconWearable *pItem);
-	void Hook_EquipWeapon(CBaseEntity *pWeapon);
-	void Hook_RemovePlayerItem(CBaseEntity *pWeapon);
-	bool Hook_ClientConnect(edict_t *pEntity, 
-		const char *pszName,
-		const char *pszAddress,
-		char *reject,
-		int maxrejectlen);
+	bool Hook_ClientConnect(edict_t *pEntity, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen);
 	bf_write *Hook_MessageBegin(IRecipientFilter *filter, int msg_type);
 	void Hook_MessageEnd();
 
@@ -108,20 +95,17 @@ public: //hooks
 	bool Hook_WriteString(const char *pStr);
 
 	static CBaseEntity *TF2_getPlayerWeaponSlot(edict_t *pPlayer, int iSlot);
-	static void TF2_removeWearable(edict_t *pPlayer, CBaseEntity *pWearable);
-	static void TF2_removePlayerItem(edict_t *pPlayer, CBaseEntity *pItem);
-	static void TF2_RemoveWeaponSlot(edict_t *pPlayer, int iSlot);
 	static void TF2_equipWeapon(edict_t *pPlayer, CBaseEntity *pWeapon);
-	static bool givePlayerLoadOut(edict_t *pPlayer, CTF2Loadout *pLoadout, int iSlot, void *pVTable, void *pVTable_Attributes);
-	static void giveRandomLoadout(edict_t *pPlayer, int iClass, int iSlot, void *pVTable, void *pVTable_Attributes);
-	static void TF2_equipWearable(edict_t *pPlayer, CBaseEntity *pWearable);
-	static bool TF2_ClearAttributeCache(edict_t *pEdict);
+
 	static void HudTextMessage(edict_t *pEntity, const char *szMessage);
+	static void BroadcastTextMessage(const char *szMessage);
+
 #if SOURCE_ENGINE >= SE_ORANGEBOX
 	void Hook_ClientCommand(edict_t *pEntity, const CCommand &args);
 #else
 	void Hook_ClientCommand(edict_t *pEntity);
 #endif
+
 public:
 
 	const char *GetAuthor();
@@ -133,14 +117,11 @@ public:
 	const char *GetDate();
 	const char *GetLogTag();
 
-	static bool UTIL_TF2EquipHat(edict_t *pEdict, CTF2Loadout *pHat, void *vTable, void *vTableAttributes);
-	static CTF2Loadout *UTIL_TF2EquipRandomHat(edict_t *pEdict, void *vTable, void *vTableAttributes);
-
 private:
 	int m_iClientCommandIndex;
 };
 
-extern RCBotPluginMeta g_RCBotPluginMeta;
+extern AFKBot g_AFKBot;
 
 PLUGIN_GLOBALVARS();
 

@@ -20,10 +20,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game Engine ("HL
- *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game g_pEngine ("HL
+ *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL Engine and MODs
+ *    respects for all of the code used other than the HL g_pEngine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -216,12 +216,12 @@ private:
 
 	util_list m_pBest;
 };
-#define ADD_UTILITY_WEAPON_DATA_VECTOR(utilname,condition,utility,weapon,data,vector) if ( m_fUtilTimes[utilname] < engine->Time()) { if ( condition ) { utils.addUtility(CBotUtility(this,utilname,true,utility,weapon,data,vector)); } }
-#define ADD_UTILITY_DATA_VECTOR(utilname,condition,utility,data,vector) if ( m_fUtilTimes[utilname] < engine->Time()) { if ( condition ) { utils.addUtility(CBotUtility(this,utilname,true,utility,NULL,data,vector)); } }
-#define ADD_UTILITY_WEAPON_DATA(utilname,condition,utility,weapon,data) if ( m_fUtilTimes[utilname] < engine->Time()) { if ( condition ) { utils.addUtility(CBotUtility(this,utilname,true,utility,weapon,data)); } }
-#define ADD_UTILITY_DATA(utilname,condition,utility,data) if ( m_fUtilTimes[utilname] < engine->Time()) { if ( condition ) { utils.addUtility(CBotUtility(this,utilname,true,utility,NULL,data)); } }
-#define ADD_UTILITY_WEAPON(utilname,condition,utility,weapon) if ( m_fUtilTimes[utilname] < engine->Time()) { if ( condition ) { utils.addUtility(CBotUtility(this,utilname,true,utility,weapon)); } }
-#define ADD_UTILITY(utilname,condition,utility) if ( m_fUtilTimes[utilname] < engine->Time()) { if ( condition ) { utils.addUtility(CBotUtility(this,utilname,true,utility)); } }
+#define ADD_UTILITY_WEAPON_DATA_VECTOR(utilname,condition,utility,weapon,data,vector) if ( m_fUtilTimes[utilname] < g_pEngine->Time()) { if ( condition ) { utils.addUtility(CBotUtility(this,utilname,true,utility,weapon,data,vector)); } }
+#define ADD_UTILITY_DATA_VECTOR(utilname,condition,utility,data,vector) if ( m_fUtilTimes[utilname] < g_pEngine->Time()) { if ( condition ) { utils.addUtility(CBotUtility(this,utilname,true,utility,NULL,data,vector)); } }
+#define ADD_UTILITY_WEAPON_DATA(utilname,condition,utility,weapon,data) if ( m_fUtilTimes[utilname] < g_pEngine->Time()) { if ( condition ) { utils.addUtility(CBotUtility(this,utilname,true,utility,weapon,data)); } }
+#define ADD_UTILITY_DATA(utilname,condition,utility,data) if ( m_fUtilTimes[utilname] < g_pEngine->Time()) { if ( condition ) { utils.addUtility(CBotUtility(this,utilname,true,utility,NULL,data)); } }
+#define ADD_UTILITY_WEAPON(utilname,condition,utility,weapon) if ( m_fUtilTimes[utilname] < g_pEngine->Time()) { if ( condition ) { utils.addUtility(CBotUtility(this,utilname,true,utility,weapon)); } }
+#define ADD_UTILITY(utilname,condition,utility) if ( m_fUtilTimes[utilname] < g_pEngine->Time()) { if ( condition ) { utils.addUtility(CBotUtility(this,utilname,true,utility)); } }
 
 
 #endif

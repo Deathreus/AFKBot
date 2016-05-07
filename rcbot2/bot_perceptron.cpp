@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game Engine ("HL
- *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game g_pEngine ("HL
+ *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL Engine and MODs
+ *    respects for all of the code used other than the HL g_pEngine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -305,19 +305,21 @@ void CBotNeuralNet :: batch_train ( CTrainingSet *tset, unsigned short int epoch
 			{
 				pOutputNode = m_pHidden[l];
 				//Send Error back to Input Layer
-				for (i = 0; i < m_numHidden; i++, pOutputNode++ )
+				for ( i = 0; i < m_numHidden; i ++ )
 				{	
 					ga_nn_value err = 0;
 
 					pNode = m_pHidden[l+1];
 
-					for (j = 0; j < m_numHidden; j++, pNode++ )
+					for ( j = 0; j < m_numHidden; j ++ )
 					{
 						// check the error from the next layer
-						err += pNode->getError(i);						
+						err += pNode->getError(i);
+						pNode++;
 					}
 
-					pOutputNode->setError((pOutputNode->getOutput() * (1.0f-pOutputNode->getOutput())) * err);					
+					pOutputNode->setError((pOutputNode->getOutput() * (1.0f-pOutputNode->getOutput())) * err);
+					pOutputNode ++;
 				}
 			}
 
@@ -325,9 +327,10 @@ void CBotNeuralNet :: batch_train ( CTrainingSet *tset, unsigned short int epoch
 			{
 				pNode = m_pHidden[j];
 				// update weights for hidden layer (each neuron)
-				for (i = 0; i < m_numHidden; i++, pNode++ )
+				for ( i = 0; i < m_numHidden; i ++ )
 				{	
-					pNode->train(); // update weights for this node					
+					pNode->train(); // update weights for this node
+					pNode++;
 				}
 			}
 

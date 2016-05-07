@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game Engine ("HL
- *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game g_pEngine ("HL
+ *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL Engine and MODs
+ *    respects for all of the code used other than the HL g_pEngine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -94,7 +94,7 @@ private:
 	eModId m_iModId;
 };
 
-class CRoundStartEvent : public CBotEvent
+/*class CRoundStartEvent : public CBotEvent
 {
 public:
 	CRoundStartEvent()
@@ -104,18 +104,7 @@ public:
 	}
 
 	void execute ( IBotEventInterface *pEvent );
-};
-class CPostInventoryApplicationTF2 : public CBotEvent
-{
-public:
-	CPostInventoryApplicationTF2()
-	{
-		setType("post_inventory_application");
-		setMod(MOD_TF2);
-	}
-
-	void execute ( IBotEventInterface *pEvent );
-};
+};*/
 
 class CTF2RoundWinEvent : public CBotEvent
 {
@@ -151,7 +140,7 @@ public:
 	void execute ( IBotEventInterface *pEvent );
 };
 
-class CBombPickupEvent : public CBotEvent
+/*class CBombPickupEvent : public CBotEvent
 {
 public:
 	CBombPickupEvent()
@@ -161,7 +150,7 @@ public:
 	}
 
 	void execute ( IBotEventInterface *pEvent );
-};
+};*/
 
 class CPlayerFootstepEvent : public CBotEvent
 {
@@ -186,7 +175,7 @@ public:
 	void execute ( IBotEventInterface *pEvent );
 };
 
-class CBombDroppedEvent : public CBotEvent
+/*class CBombDroppedEvent : public CBotEvent
 {
 public:
 	CBombDroppedEvent()
@@ -196,7 +185,7 @@ public:
 	}
 
 	void execute ( IBotEventInterface *pEvent );
-};
+};*/
 
 class COverTimeBegin : public CBotEvent
 {
@@ -547,12 +536,7 @@ public:
 	void execute ( IBotEventInterface *pEvent );
 };
 
-	/*
-	[RCBot] [DEBUG GAME_EVENT] [BEGIN "dod_stats_weapon_attack"]
-	[RCBot] [DEBUG GAME_EVENT] 	attacker = 5
-	[RCBot] [DEBUG GAME_EVENT] 	weapon = 14
-	[RCBot] [DEBUG GAME_EVENT] [END "dod_stats_weapon_attack"]*/
-class CDODFireWeaponEvent : public CBotEvent
+/*class CDODFireWeaponEvent : public CBotEvent
 {
 public:
 	CDODFireWeaponEvent()
@@ -670,7 +654,7 @@ public:
 	}
 
 	void execute ( IBotEventInterface *pEvent );
-};
+};*/
 
 typedef enum
 {

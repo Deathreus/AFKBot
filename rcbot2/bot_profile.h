@@ -13,10 +13,8 @@ public:
 	}
 	CBotProfile ( CBotProfile &other );
 	// setup profile
-	CBotProfile (
-		const char *szName, 
+	CBotProfile ( 
 		const char *szModel, 
-		int iTeam, 
 		int iVisionTicks, 
 		int iPathTicks, 
 		int iVisionTicksClients,

@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game Engine ("HL
- *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game g_pEngine ("HL
+ *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL Engine and MODs
+ *    respects for all of the code used other than the HL g_pEngine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -40,13 +40,13 @@
 #include "bot_weapons.h"
 #include "bot_configfile.h"
 #include "bot_getprop.h"
-#include "bot_dod_bot.h"
+//#include "bot_dod_bot.h"
 #include "bot_navigator.h"
 #include "bot_waypoint.h"
 #include "bot_waypoint_locations.h"
 #include "bot_perceptron.h"
 
-vector<edict_wpt_pair_t> CHalfLifeDeathmatchMod::m_LiftWaypoints;
+//vector<edict_wpt_pair_t> CHalfLifeDeathmatchMod::m_LiftWaypoints;
 
 void CBotMods :: parseFile ()
 {
@@ -109,7 +109,7 @@ void CBotMods :: parseFile ()
 
 		j = 0;
 
-		while ( i < len )
+		while ( (i < len) && (buffer[i] != '\n') && (buffer[i] != '\r') )
 		{
 			if ( j || (buffer[i] != ' ') )
 				val[j++] = buffer[i];
@@ -138,7 +138,7 @@ void CBotMods :: parseFile ()
 				modtype = MOD_CUSTOM;
 				curmod = new CBotMod();
 			}
-			else if ( !strcmpi("CSS",val) )
+			/*else if ( !strcmpi("CSS",val) )
 			{
 				modtype = MOD_CSS;
 				curmod = new CCounterStrikeSourceMod();
@@ -157,13 +157,13 @@ void CBotMods :: parseFile ()
 			{
 				modtype = MOD_FF;
 				curmod = new CFortressForeverMod();
-			}
+			}*/
 			else if ( !strcmpi("TF2",val) )
 			{
 				modtype = MOD_TF2;
 				curmod = new CTeamFortress2Mod();
 			}
-			else if ( !strcmpi("SVENCOOP2",val) )
+			/*else if ( !strcmpi("SVENCOOP2",val) )
 			{
 				modtype = MOD_SVENCOOP2;
 				curmod = new CBotMod();
@@ -187,7 +187,7 @@ void CBotMods :: parseFile ()
 			{
 				modtype = MOD_DOD;
 				curmod = new CDODMod();
-			}
+			}*/
 			else
 				curmod = new CBotMod();
 		}
@@ -195,22 +195,22 @@ void CBotMods :: parseFile ()
 		{
 			if ( !strcmpi("GENERIC",val) )
 				bottype = BOTTYPE_GENERIC;
-			else if ( !strcmpi("CSS",val) )
+			/*else if ( !strcmpi("CSS",val) )
 				bottype = BOTTYPE_CSS;
 			else if ( !strcmpi("HL1DM",val) )
 				bottype = BOTTYPE_HL1DM;
 			else if ( !strcmpi("HL2DM",val) )
 				bottype = BOTTYPE_HL2DM;
 			else if ( !strcmpi("FF",val) )
-				bottype = BOTTYPE_FF;
+				bottype = BOTTYPE_FF;*/
 			else if ( !strcmpi("TF2",val) )
 				bottype = BOTTYPE_TF2;
-			else if ( !strcmpi("COOP",val) )
+			/*else if ( !strcmpi("COOP",val) )
 				bottype = BOTTYPE_COOP;
 			else if ( !strcmpi("ZOMBIE",val) )
 				bottype = BOTTYPE_ZOMBIE;
 			else if ( !strcmpi("DOD",val) )
-				bottype = BOTTYPE_DOD;
+				bottype = BOTTYPE_DOD;*/
 		}
 		else if ( curmod && !strcmpi(key,"steamdir") )
 		{
@@ -313,22 +313,22 @@ void CBotMods :: createFile ()
 
 void CBotMods :: readMods()
 {
-	m_Mods.push_back(new CDODMod());
-	m_Mods.push_back(new CDODModDedicated());
+	//m_Mods.push_back(new CDODMod());
+	//m_Mods.push_back(new CDODModDedicated());
 
-	m_Mods.push_back(new CCounterStrikeSourceMod());
-	m_Mods.push_back(new CHalfLifeDeathmatchMod());
+	//m_Mods.push_back(new CCounterStrikeSourceMod());
+	//m_Mods.push_back(new CHalfLifeDeathmatchMod());
 
-	m_Mods.push_back(new CCounterStrikeSourceModDedicated());
-	m_Mods.push_back(new CHalfLifeDeathmatchModDedicated());
+	//m_Mods.push_back(new CCounterStrikeSourceModDedicated());
+	//m_Mods.push_back(new CHalfLifeDeathmatchModDedicated());
 
-	m_Mods.push_back(new CFortressForeverMod());
-	m_Mods.push_back(new CFortressForeverModDedicated());
+	//m_Mods.push_back(new CFortressForeverMod());
+	//m_Mods.push_back(new CFortressForeverModDedicated());
 
 	m_Mods.push_back(new CTeamFortress2Mod());
 	m_Mods.push_back(new CTeamFortress2ModDedicated());
 
-	m_Mods.push_back(new CHLDMSourceMod());
+	//m_Mods.push_back(new CHLDMSourceMod());
 
 	// Look for extra MODs
 
@@ -434,7 +434,7 @@ bool CBotMod :: playerSpawned ( edict_t *pEntity )
 	return true;
 }
 
-bool CHalfLifeDeathmatchMod :: playerSpawned ( edict_t *pPlayer )
+/*bool CHalfLifeDeathmatchMod :: playerSpawned ( edict_t *pPlayer )
 {
 	if ( CBotMod::playerSpawned(pPlayer) )
 	{
@@ -461,5 +461,5 @@ void CHalfLifeDeathmatchMod :: mapInit ()
 	CBotMod::mapInit();
 
 	m_LiftWaypoints.clear();
-}
+}*/
 

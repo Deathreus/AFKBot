@@ -20,10 +20,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game Engine ("HL
- *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game g_pEngine ("HL
+ *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL Engine and MODs
+ *    respects for all of the code used other than the HL g_pEngine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -475,7 +475,7 @@ CBotPickupSchedUse::CBotPickupSchedUse( edict_t *pEdict )
 {
 	addTask(new CFindPathTask(pEdict));	
 	addTask(new CMoveToTask(pEdict));
-	addTask(new CBotHL2DMUseButton(pEdict));
+	//addTask(new CBotHL2DMUseButton(pEdict));
 }
 
 void CBotPickupSchedUse :: init ()
@@ -558,8 +558,8 @@ CGotoHideSpotSched :: CGotoHideSpotSched ( CBot *pBot, edict_t *pEdict, bool bIs
 	pBot->setCoverFrom(pEdict);
 	addTask(new CFindGoodHideSpot(pEdict));
 	addTask(pHideGoalPoint);
-	if ( bIsGrenade )
-		addTask(new CDODWaitForGrenadeTask(pEdict));
+	//if ( bIsGrenade )
+		//addTask(new CDODWaitForGrenadeTask(pEdict));
 
 	// don't need to hide if the player we're hiding from died while we're running away
 	pHideGoalPoint->failIfTaskEdictDead();
@@ -737,7 +737,7 @@ void CBotTF2ShootLastEnemyPos::init()
 CDeployMachineGunSched :: CDeployMachineGunSched ( CBotWeapon *pWeapon, CWaypoint *pWaypoint, Vector vEnemy )
 {
 	addTask(new CFindPathTask(CWaypoints::getWaypointIndex(pWaypoint),LOOK_LAST_ENEMY));
-	addTask(new CBotDODSnipe(pWeapon,pWaypoint->getOrigin(),pWaypoint->getAimYaw(),true,vEnemy.z,pWaypoint->getFlags()));
+	//addTask(new CBotDODSnipe(pWeapon,pWaypoint->getOrigin(),pWaypoint->getAimYaw(),true,vEnemy.z,pWaypoint->getFlags()));
 }
 //////////////////////////////////////////////////
 CBotDefendPointSched ::	CBotDefendPointSched ( Vector vPoint, int iRadius, int iArea )

@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game Engine ("HL
- *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game g_pEngine ("HL
+ *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL Engine and MODs
+ *    respects for all of the code used other than the HL g_pEngine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -40,7 +40,7 @@ CProfileTimer CProfileTimers :: m_Timers[PROFILING_TIMERS] =
 CProfileTimer("CBots::botThink()"), // BOTS_THINK_TIMER
 CProfileTimer("CBot::think()"), // BOT_THINK_TIMER
 CProfileTimer("Nav::findRoute()"), // BOT_ROUTE_TIMER
-CProfileTimer("updateVisibles()") // BOT_VISION_TIMER
+CProfileTimer("updateVisables()") // BOT_VISION_TIMER
 };
 
 // initialise update time
@@ -159,7 +159,7 @@ void CProfileTimers::updateAndDisplay()
 {
 	if ( CClients::clientsDebugging(BOT_DEBUG_PROFILE) )
 	{
-		if ( m_fNextUpdate < engine->Time() )
+		if ( m_fNextUpdate < g_pEngine->Time() )
 		{
 			int i = 0;
 
@@ -172,7 +172,7 @@ void CProfileTimers::updateAndDisplay()
 			}
 
 			// next update in 1 second
-			m_fNextUpdate = engine->Time() + 1.0f;
+			m_fNextUpdate = g_pEngine->Time() + 1.0f;
 
 			CClients::clientDebugMsg(BOT_DEBUG_PROFILE,"|----------------PROFILING---UPDATE---------------------------------|");
 			CClients::clientDebugMsg(BOT_DEBUG_PROFILE,"|------name------|---overall---|---min----|---max----|----avg---|-prct-|");

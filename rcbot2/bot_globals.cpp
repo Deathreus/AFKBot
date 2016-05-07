@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game Engine ("HL
- *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game g_pEngine ("HL
+ *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL Engine and MODs
+ *    respects for all of the code used other than the HL g_pEngine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -49,6 +49,7 @@
 
 #ifndef __linux__
 #include <direct.h> // for mkdir
+#include <sys/stat.h>
 #else
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -164,24 +165,60 @@ int CBotGlobals ::numPlayersOnTeam(int iTeam, bool bAliveOnly)
 	return num;
 }
 
+bool CBotGlobals::dirExists(const char *path)
+{
+#ifdef _WIN32
+
+	struct _stat info;
+
+	if (_stat(path, &info) != 0)
+		return false;
+	else if (info.st_mode & _S_IFDIR)
+		return true;
+	else
+		return false;
+
+#else
+
+	struct stat info;
+
+	if (stat(path, &info) != 0)
+		return false;
+	else if (info.st_mode & S_IFDIR)
+		return true;
+	else
+		return false;
+
+#endif
+}
+
 void CBotGlobals::readRCBotFolder()
 {
 	KeyValues *mainkv = new KeyValues("Metamod Plugin");
 
-	// Find the RCBOT2 Path from metamod VDF
-	CBotGlobals::botMessage(NULL, 0, "Reading rcbot2 path from VDF...");
-
-	if (mainkv->LoadFromFile(filesystem, "addons/metamod/rcbot2.vdf", "MOD"))
-	{
+	if (mainkv->LoadFromFile(filesystem, "addons/metamod/afkbot.vdf", "MOD")) {
+		char folder[256] = "\0";
 		const char *szRCBotFolder = mainkv->GetString("rcbot2path");
 
-		if (szRCBotFolder && *szRCBotFolder)
-		{
+		if (szRCBotFolder && *szRCBotFolder) {
+			CBotGlobals::botMessage(NULL, 0, "RCBot Folder -> trying %s", szRCBotFolder);
+
+			if (!dirExists(szRCBotFolder)) {
+				snprintf(folder, sizeof(folder), "%s/addons/sourcemod/configs/afkbot", CBotGlobals::modFolder());
+
+				szRCBotFolder = CStrings::getString(folder);
+				CBotGlobals::botMessage(NULL, 0, "RCBot Folder -> trying %s", szRCBotFolder);
+
+				if (!dirExists(szRCBotFolder)) {
+					CBotGlobals::botMessage(NULL, 0, "RCBot Folder -> not found ...");
+				}
+			}
+
 			m_szRCBotFolder = CStrings::getString(szRCBotFolder);
 		}
-
-		mainkv->deleteThis();
 	}
+
+	mainkv->deleteThis();
 }
 
 float CBotGlobals :: grenadeWillLand ( Vector vOrigin, Vector vEnemy, float fProjSpeed, float fGrenadePrimeTime, float *fAngle )
@@ -458,10 +495,26 @@ void CBotGlobals :: freeMemory ()
 	m_pCommands->freeMemory();
 }
 
+bool CBotGlobals::initModFolder() {
+	char szGameFolder[512];
+	g_pEngine->GetGameDir(szGameFolder, 512);
+
+	int iLength = strlen(CStrings::getString(szGameFolder));
+	int pos = iLength - 1;
+
+	while ((pos > 0) && (szGameFolder[pos] != '\\') && (szGameFolder[pos] != '/')) {
+		pos--;
+	}
+	pos++;
+
+	m_szModFolder = CStrings::getString(&szGameFolder[pos]);
+	return true;
+}
+
 bool CBotGlobals :: gameStart ()
 {
 	char szGameFolder[512];
-	engine->GetGameDir(szGameFolder,512);	
+	g_pEngine->GetGameDir(szGameFolder,512);	
 	char szSteamFolder[512];
 	/*
 	CFileSystemPassThru a;
@@ -564,7 +617,7 @@ int CBotGlobals :: numClients ()
 
 		if ( pEdict )
 		{
-			if ( engine->GetPlayerUserId(pEdict) > 0 )
+			if ( g_pEngine->GetPlayerUserId(pEdict) > 0 )
 				iCount++;
 		}
 	}
@@ -601,7 +654,7 @@ edict_t *CBotGlobals :: playerByUserId(int iUserId)
 
 		if ( pEdict )
 		{
-			if ( engine->GetPlayerUserId(pEdict) == iUserId )
+			if ( g_pEngine->GetPlayerUserId(pEdict) == iUserId )
 				return pEdict;
 		}
 	}
@@ -654,7 +707,7 @@ void CBotGlobals :: serverSay ( char *fmt, ... )
 
 	strcat(string,"\"");
 
-	engine->ServerCommand(string);
+	g_pEngine->ServerCommand(string);
 }
 
 // TO DO :: put into CClient
@@ -872,7 +925,7 @@ void CBotGlobals :: botMessage ( edict_t *pEntity, int iErr, char *fmt, ... )
 
 	if ( pEntity )
 	{
-		engine->ClientPrintf(pEntity,string);
+		g_pEngine->ClientPrintf(pEntity,string);
 	}
 	else
 	{
@@ -919,10 +972,15 @@ bool CBotGlobals :: makeFolders ( char *szFile )
 #ifndef __linux__
         mkdir(szFolderName);
 #else
-        if ( mkdir(szFolderName, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == 0 ) 
-		botMessage(NULL,0,"Trying to create folder '%s' successful",szFolderName);
-	else
-		botMessage(NULL,0,"Trying to create folder '%s' failed",szFolderName);
+		if ( mkdir(szFolderName, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == 0 ) {
+			botMessage(NULL,0,"Trying to create folder '%s' successful",szFolderName);
+		} else {
+			if (dirExists(szFolderName)) {
+				botMessage(NULL,0,"Folder '%s' already exists", szFolderName);
+			} else {
+				botMessage(NULL,0,"Trying to create folder '%s' failed",szFolderName);
+			}
+		}
 #endif   
 	}
 
@@ -976,40 +1034,7 @@ FILE *CBotGlobals :: openFile ( char *szFile, char *szMode )
 void CBotGlobals :: buildFileName ( char *szOutput, const char *szFile, const char *szFolder, const char *szExtension, bool bModDependent )
 {
 	if (m_szRCBotFolder == NULL)
-	{
-#ifdef HOMEFOLDER
-		char home[512];
-		home[0] = 0;
-#endif
-		szOutput[0] = 0;
-
-#if defined(HOMEFOLDER) && defined(__linux)
-		char *lhome = getenv ("HOME");
-
-		if (lhome != NULL) 
-		{
-			strncpy(home,lhome,511);
-			home[511] = 0; 
-		}
-		else
-			strcpy(home,".");
-#endif
-
-#if defined(HOMEFOLDER) && defined(WIN32)
-		ExpandEnvironmentStringsA("%userprofile%", home, 511);
-#endif
-
-#ifdef HOMEFOLDER
-		strcat(szOutput, home);
-		addDirectoryDelimiter(szOutput);
-#endif
-
-		/*#ifndef HOMEFOLDER
-			strcat(szOutput,"..");
-			#endif HOMEFOLDER*/
-
 		strcat(szOutput, BOT_FOLDER);
-	}
 	else
 		strcpy(szOutput, m_szRCBotFolder);
 
@@ -1039,8 +1064,9 @@ void CBotGlobals :: buildFileName ( char *szOutput, const char *szFile, const ch
 	}
 }
 
-QAngle CBotGlobals::playerAngles ( edict_t *pPlayer )
+QAngle CBotGlobals :: playerAngles ( edict_t *pPlayer )
 {
+	//return playerinfomanager->GetPlayerInfo(pPlayer)->GetAbsAngles();
 	IPlayerInfo *pPlayerInfo = playerinfomanager->GetPlayerInfo(pPlayer);
 	CBotCmd lastCmd = pPlayerInfo->GetLastUserCommand();
 	return lastCmd.viewangles;

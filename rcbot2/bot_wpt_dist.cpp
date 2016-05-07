@@ -38,7 +38,7 @@ void CWaypointDistances :: load ()
 			fread(m_Distances,sizeof(int),CWaypoints::MAX_WAYPOINTS * CWaypoints::MAX_WAYPOINTS,bfp);
 		}
 
-		m_fSaveTime = engine->Time() + 100.0f;
+		m_fSaveTime = g_pEngine->Time() + 100.0f;
 
 		fclose(bfp);
 	}
@@ -46,7 +46,7 @@ void CWaypointDistances :: load ()
 
 void CWaypointDistances :: save ()
 {
-	//if ( m_fSaveTime < engine->Time() )
+	//if ( m_fSaveTime < g_pEngine->Time() )
 	//{
 		char filename[1024];	
 		char *szMapName = CBotGlobals::getMapName();
@@ -61,7 +61,7 @@ void CWaypointDistances :: save ()
 
 			if ( bfp == NULL )
 			{
-				m_fSaveTime = engine->Time() + 100.0f;
+				m_fSaveTime = g_pEngine->Time() + 100.0f;
 				return; // give up
 			}
 
@@ -73,7 +73,7 @@ void CWaypointDistances :: save ()
 
 			fwrite(m_Distances,sizeof(int),CWaypoints::MAX_WAYPOINTS * CWaypoints::MAX_WAYPOINTS,bfp);
 
-			m_fSaveTime = engine->Time() + 100.0f;
+			m_fSaveTime = g_pEngine->Time() + 100.0f;
 
 			fclose(bfp);
 		}

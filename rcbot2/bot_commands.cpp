@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game Engine ("HL
- *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game g_pEngine ("HL
+ *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL Engine and MODs
+ *    respects for all of the code used other than the HL g_pEngine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -33,7 +33,7 @@
 #include "bot_strings.h"
 #include "bot_commands.h"
 #include "bot_globals.h"
-#include "bot_accessclient.h"
+//#include "bot_accessclient.h"
 #include "bot_schedule.h"
 #include "bot_waypoint.h" // for waypoint commands
 #include "bot_waypoint_locations.h" // for waypoint commands
@@ -47,22 +47,22 @@
 
 CBotCommandContainer *CBotGlobals :: m_pCommands = new CRCBotCommand();
 extern IVDebugOverlay *debugoverlay;
+
 ///////////////////////////////////////////////////
 // Setup commands
+
 CRCBotCommand :: CRCBotCommand ()
 {
-	setName("rcbot");
+	setName("afkbot");
 	setAccessLevel(0);
 	add(new CWaypointCommand());
-	add(new CAddBotCommand());
-	add(new CControlCommand());
+	//add(new CControlCommand());
 	add(new CPathWaypointCommand());
 	add(new CDebugCommand());
 	add(new CPrintCommands());
-	add(new CConfigCommand());
 	add(new CKickBotCommand());
-	add(new CUsersCommand());
-	add(new CUtilCommand());
+	add(new CAFKOnCommand());
+	add(new CAFKOffCommand());
 }
 
 CWaypointCommand :: CWaypointCommand()
@@ -96,7 +96,66 @@ CWaypointCommand :: CWaypointCommand()
 	add(new CWaypointShowVisCommand());
 	add(new CWaypointAutoWaypointCommand());
 	add(new CWaypointAutoFix());
-}///////////////
+}
+
+CDebugCommand::CDebugCommand()
+{
+	setName("debug");
+	setAccessLevel(CMD_ACCESS_DEBUG);
+
+	add(new CDebugGameEventCommand());
+	add(new CDebugNavCommand());
+	add(new CDebugVisCommand());
+	add(new CDebugThinkCommand());
+	add(new CDebugLookCommand());
+	add(new CDebugHudCommand());
+	add(new CDebugAimCommand());
+	add(new CDebugChatCommand());
+	add(new CBotGoto());
+	add(new CBotFlush());
+	add(new CDebugTaskCommand());
+	add(new CBotTaskCommand());
+	add(new CDebugButtonsCommand());
+	add(new CDebugSpeedCommand());
+	add(new CDebugUsercmdCommand());
+	add(new CDebugUtilCommand());
+	add(new CDebugProfilingCommand());
+	add(new CDebugEdictsCommand());
+	add(new CDebugMemoryScanCommand());
+	add(new CDebugMemoryCheckCommand());
+
+}
+///////////////
+
+eBotCommandResult CAFKOnCommand::execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
+{
+	edict_t *pEntity = NULL;
+
+	if (pClient)
+		pEntity = pClient->getPlayer();
+
+	CBotGlobals::botMessage(pEntity, 0, "AFK Enabled");
+
+	CBots::makeBot(pEntity);
+
+	return COMMAND_ACCESSED;
+}
+///////////////
+
+eBotCommandResult CAFKOffCommand::execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
+{
+	edict_t *pEntity = NULL;
+
+	if (pClient)
+		pEntity = pClient->getPlayer();
+
+	CBotGlobals::botMessage(pEntity, 0, "AFK Disabled");
+
+	CBots::makeNotBot(pEntity);
+
+	return COMMAND_ACCESSED;
+}
+////////////////////////////////
 
 CWaypointShowCommand :: CWaypointShowCommand()
 {
@@ -181,240 +240,7 @@ eBotCommandResult CWaypointCut :: execute ( CClient *pClient, const char *pcmd, 
 
 	return COMMAND_ERROR;
 }
-
 ////////////////////////////////
-eBotCommandResult CSetProp :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	if ( pClient )
-	{
-		// classname           // key             // type          //value
-		if ( (pcmd && *pcmd) &&(arg1 && *arg1) && (arg2 && *arg2) && (arg3 && *arg3))
-		{
-			//int i = 0;
-
-			edict_t *pPlayer = pClient->getPlayer();
-//			edict_t *pEdict;
-			edict_t *pNearest = NULL;
-//			float fDistance;
-//			float fNearest = 400.0f;
-
-			pNearest = CClassInterface::FindEntityByNetClassNearest(pClient->getOrigin(),pcmd);
-
-			if ( pNearest )
-			{
-				void *data = NULL;
-
-				extern bool g_PrintProps;
-				unsigned int m_offset = 0;
-
-				ServerClass *sc = UTIL_FindServerClass(pcmd);
-
-				if ( sc )
-				{
-					UTIL_FindSendPropInfo(sc,arg1,&m_offset);
-
-					if ( m_offset )
-					{
-						static IServerUnknown *pUnknown;
-						static CBaseEntity *pEntity;
-						Vector vdata;
-
-						pUnknown = (IServerUnknown *)pNearest->GetUnknown();
-					 
-						pEntity = pUnknown->GetBaseEntity();
-
-						data = (void *)((char *)pEntity + m_offset);
-
-						if ( data )
-						{
-							bool *booldata = (bool*)data;
-							int *intdata = (int*)data;
-							float *floatdata = (float*)data;
-
-							if ( strcmp(arg2,"int")==0)
-								*intdata = atoi(arg3);
-							else if ( strcmp(arg2,"bool")==0 )
-								*booldata = (atoi(arg3)==1);
-							else if ( strcmp(arg2,"float")==0 )
-								*floatdata = atof(arg3);
-						}
-						else
-							CBotGlobals::botMessage(pPlayer,0,"NULL");
-					}
-					else
-						CBotGlobals::botMessage(NULL,0,"OFFSET NOT FOUND");
-				}
-				else
-					CBotGlobals::botMessage(NULL,0,"CLASS NOT FOUND");
-
-			}
-			else
-				CBotGlobals::botMessage(NULL,0,"EDICT NOT FOUND");
-		}
-		else
-			CBotGlobals::botMessage(NULL,0,"Usage: getprop CLASSNAME KEY TYPE(int,bool,float) VALUE");
-
-		return COMMAND_ACCESSED;
-	}
-
-	return COMMAND_ERROR;
-}
-
-////////////////////////////////
-eBotCommandResult CGetProp :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	if ( pClient )
-	{
-		if ( (pcmd && *pcmd) &&(arg1 && *arg1) )
-		{
-			//int i = 0;
-
-			edict_t *pPlayer = pClient->getPlayer();
-//			edict_t *pEdict;
-			edict_t *pNearest = NULL;
-//			float fDistance;
-//			float fNearest = 400.0f;
-
-			pNearest = CClassInterface::FindEntityByNetClassNearest(pClient->getOrigin(),pcmd);
-
-			if ( pNearest )
-			{
-				void *data = NULL;
-
-				extern bool g_PrintProps;
-				unsigned int m_offset = 0;
-
-				ServerClass *sc = UTIL_FindServerClass(pcmd);
-
-				if ( sc )
-				{
-					UTIL_FindSendPropInfo(sc,arg1,&m_offset);
-
-					if ( m_offset )
-					{
-						static IServerUnknown *pUnknown;
-						static CBaseEntity *pEntity;
-						Vector vdata;
-
-						pUnknown = (IServerUnknown *)pNearest->GetUnknown();
-					 
-						pEntity = pUnknown->GetBaseEntity();
-
-						int preoffs = 0;
-
-						if ( (arg2 && *arg2) )
-						{
-							preoffs = atoi(arg2);	
-						}
-
-						data = (void *)((char *)pEntity + m_offset);
-
-						if ( data )
-						{
-							vdata = *((Vector*)data+preoffs);
-	
-							CBotGlobals::botMessage(pPlayer,0,"int = %d, float = %f, bool = %s, Vector = (%0.4f,%0.4f,%0.4f)",*((int*)data + preoffs),*((float*)data+preoffs),*((bool*)data+preoffs) ? ("true"):("false"),vdata.x,vdata.y,vdata.z );
-						}
-						else
-							CBotGlobals::botMessage(pPlayer,0,"NULL");
-					}
-					else
-						CBotGlobals::botMessage(NULL,0,"OFFSET NOT FOUND");
-				}
-				else
-					CBotGlobals::botMessage(NULL,0,"CLASS NOT FOUND");
-
-			}
-			else
-				CBotGlobals::botMessage(NULL,0,"EDICT NOT FOUND");
-		}
-		else
-			CBotGlobals::botMessage(NULL,0,"Usage: getprop CLASS CLASSNAME KEY");
-
-		return COMMAND_ACCESSED;
-	}
-
-	return COMMAND_ERROR;
-}
-//////////////////////////////
-eBotCommandResult CFindProp :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	if ( pcmd && *pcmd )
-	{
-		UTIL_FindPropPrint(pcmd);
-		return COMMAND_ACCESSED;
-	}
-
-	return COMMAND_ERROR;
-}
-///////////////////////////
-eBotCommandResult CFindClassname :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	if ( pClient )
-	{
-
-		if ( pcmd && *pcmd )
-		{
-			const char *pclass = CClassInterface::FindEntityNetClass(0,pcmd);
-
-			if ( pclass )
-				CBotGlobals::botMessage(pClient->getPlayer(),0,"%s network name = %s",pcmd,pclass);
-			else
-				CBotGlobals::botMessage(pClient->getPlayer(),0,"%s network name not found",pcmd,pclass);
-		}
-
-
-		return COMMAND_ACCESSED;
-	}
-
-	return COMMAND_ERROR;
-}
-
-////////////////////////////////
-eBotCommandResult CFindClass :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	if ( pClient )
-	{
-
-		if ( pcmd && *pcmd )
-		{
-			UTIL_FindServerClassPrint(pcmd);
-		}
-
-
-		return COMMAND_ACCESSED;
-	}
-
-	return COMMAND_ERROR;
-}
-///////////////////////////////////////////
-////////////////////////////////
-eBotCommandResult CPrintProps :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	if ( pClient )
-	{
-
-		if ( pcmd && *pcmd )
-		{
-			extern bool g_PrintProps;
-			unsigned int m_offset;
-			g_PrintProps = true;
-			
-			ServerClass *sc = UTIL_FindServerClass(pcmd);
-
-			if ( sc )
-				UTIL_FindSendPropInfo(sc,"",&m_offset);
-
-			g_PrintProps = false;
-		}
-
-
-		return COMMAND_ACCESSED;
-	}
-
-	return COMMAND_ERROR;
-}
-///////////////////////////////////////////
 
 CWaypointPaste :: CWaypointPaste()
 {
@@ -690,47 +516,6 @@ eBotCommandResult CWaypointSetAngleCommand :: execute ( CClient *pClient, const 
 }
 
 
-CUsersCommand :: CUsersCommand ()
-{
-	setName("users");
-	setAccessLevel(0);
-
-	add(new CShowUsersCommand());
-}
-
-CDebugCommand :: CDebugCommand()
-{
-	setName("debug");
-	setAccessLevel(CMD_ACCESS_DEBUG);
-
-	add(new CDebugGameEventCommand());
-	add(new CDebugBotCommand());
-	add(new CDebugNavCommand());
-	add(new CDebugVisCommand());
-	add(new CDebugThinkCommand());
-	add(new CDebugLookCommand());
-	add(new CDebugHudCommand());
-	add(new CDebugAimCommand());
-	add(new CBotGoto());
-	add(new CBotFlush());
-	add(new CDebugTaskCommand());
-	add(new CBotTaskCommand());
-	add(new CDebugButtonsCommand());
-	add(new CDebugSpeedCommand());
-	add(new CDebugUsercmdCommand());
-	add(new CDebugUtilCommand());
-	add(new CDebugProfilingCommand());
-	add(new CDebugEdictsCommand());
-	add(new CPrintProps());
-	add(new CGetProp());
-	add(new CSetProp());
-	add(new CFindClass());
-	add(new CFindClassname());
-	add(new CFindProp());
-	add(new CDebugMemoryScanCommand());
-	add(new CDebugMemoryCheckCommand());
-
-}
 /////////////////////
 CWaypointOnCommand::CWaypointOnCommand()
 {
@@ -741,7 +526,7 @@ CWaypointOnCommand::CWaypointOnCommand()
 CWaypointDrawTypeCommand::CWaypointDrawTypeCommand()
 {
 	setName("drawtype");
-	setHelp("0: for effects engine (maximum limit of beams)\n1: for debug overlay (no limit of beams) [LISTEN SERVER CLIENT ONLY]");
+	setHelp("0: for effects g_pEngine (maximum limit of beams)\n1: for debug overlay (no limit of beams) [LISTEN SERVER CLIENT ONLY]");
 	setAccessLevel(CMD_ACCESS_WAYPOINT);
 }
 
@@ -954,7 +739,7 @@ eBotCommandResult CWaypointDeleteCommand :: execute ( CClient *pClient, const ch
 	return COMMAND_ACCESSED;
 }
 /////////////////////
-CControlCommand :: CControlCommand ()
+/*CControlCommand :: CControlCommand ()
 {
 	setName("control");
 	setAccessLevel(CMD_ACCESS_BOT);
@@ -979,47 +764,9 @@ eBotCommandResult CControlCommand :: execute ( CClient *pClient, const char *pcm
 	}
 	else
 		return COMMAND_ERROR;
-}
+}*/
 ////////////////////
 
-CAddBotCommand ::CAddBotCommand()
-{
-	setName("addbot");
-	setAccessLevel(CMD_ACCESS_BOT);
-}
-
-eBotCommandResult CAddBotCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{	
-//	bool bOkay = false;
-
-	edict_t *pEntity = NULL;
-
-	if ( pClient )
-		pEntity = pClient->getPlayer();
-
-	//extern ConVar *sv_cheats;
-	//extern ConVar bot_sv_cheats_auto;
-	//extern ConVar bot_sv_cheat_warning;
-
-	//if ( !bot_sv_cheat_warning.GetBool() || bot_sv_cheats_auto.GetBool() || !CBots::controlBots() || (!sv_cheats || sv_cheats->GetBool()) )
-	//{
-		//if ( !pcmd || !*pcmd )
-		//	bOkay = CBots::createBot();
-		//else
-		//bOkay = CBots::createBot();
-
-		///if ( CBots::createBot(pcmd,arg1,arg2) )
-		if ( CBots::addBot(pcmd,arg1,arg2) )
-			CBotGlobals::botMessage(pEntity,0,"bot adding...");
-		else
-			CBotGlobals::botMessage(pEntity,0,"error: couldn't create bot! (Check maxplayers)");
-	//}
-	//else
-	//	CBotGlobals::botMessage(pEntity,0,"error: sv_cheats must be 1 to add bots");
-
-	return COMMAND_ACCESSED;
-}
-//////////////////////
 //edits schedules
 
 eBotCommandResult CBotTaskCommand::execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
@@ -1050,7 +797,7 @@ eBotCommandResult CBotTaskCommand::execute ( CClient *pClient, const char *pcmd,
 					((CBotTF2*)pBot)->executeAction(&util);
 				}
 				// 71
-				else if ( !strcmp(pcmd,"gren") )
+				/*else if ( !strcmp(pcmd,"gren") )
 				{
 					CBotWeapons *pWeapons;
 					CBotWeapon *gren;
@@ -1063,7 +810,7 @@ eBotCommandResult CBotTaskCommand::execute ( CClient *pClient, const char *pcmd,
 						CBotSchedule *sched = new CBotSchedule(new CThrowGrenadeTask(gren,pBot->getAmmo(gren->getWeaponInfo()->getAmmoIndex1()),pClient->getOrigin()));
 						pSched->add(sched);
 					}
-				}
+				}*/
 				else if ( !strcmp(pcmd,"snipe") )
 				{
 					if ( pClient )
@@ -1079,32 +826,32 @@ eBotCommandResult CBotTaskCommand::execute ( CClient *pClient, const char *pcmd,
 							}
 							else
 							{
-							CBotWeapon *pWeapon;
-							CBotWeapons *m_pWeapons;
-							CBotSchedule *snipe = new CBotSchedule();
-							CBotTask *findpath = new CFindPathTask(CWaypoints::getWaypointIndex(pWaypoint));
-							CBotTask *snipetask;
+								/*CBotWeapon *pWeapon;
+								CBotWeapons *m_pWeapons;
+								CBotSchedule *snipe = new CBotSchedule();
+								CBotTask *findpath = new CFindPathTask(CWaypoints::getWaypointIndex(pWaypoint));
+								CBotTask *snipetask;
 
-							m_pWeapons = pBot->getWeapons();
-							pWeapon = m_pWeapons->hasWeapon(DOD_WEAPON_K98_SCOPED) ? m_pWeapons->getWeapon(CWeapons::getWeapon(DOD_WEAPON_K98_SCOPED)) : m_pWeapons->getWeapon(CWeapons::getWeapon(DOD_WEAPON_SPRING));
+								m_pWeapons = pBot->getWeapons();
+								pWeapon = m_pWeapons->hasWeapon(DOD_WEAPON_K98_SCOPED) ? m_pWeapons->getWeapon(CWeapons::getWeapon(DOD_WEAPON_K98_SCOPED)) : m_pWeapons->getWeapon(CWeapons::getWeapon(DOD_WEAPON_SPRING));
 
-							if ( pWeapon )
-							{
-								// linux fix - copy origin onto vector here
-								Vector vOrigin = pWaypoint->getOrigin();
-								snipetask = new CBotDODSnipe(pWeapon,vOrigin,pWaypoint->getAimYaw(),false,0,pWaypoint->getFlags());
+								if ( pWeapon )
+								{
+									// linux fix - copy origin onto vector here
+									Vector vOrigin = pWaypoint->getOrigin();
+									snipetask = new CBotDODSnipe(pWeapon,vOrigin,pWaypoint->getAimYaw(),false,0,pWaypoint->getFlags());
 
-								findpath->setCompleteInterrupt(CONDITION_PUSH);
-								snipetask->setCompleteInterrupt(CONDITION_PUSH);
+									findpath->setCompleteInterrupt(CONDITION_PUSH);
+									snipetask->setCompleteInterrupt(CONDITION_PUSH);
 
-								snipe->setID(SCHED_DEFENDPOINT);
-								snipe->addTask(findpath);
-								snipe->addTask(snipetask);
+									snipe->setID(SCHED_DEFENDPOINT);
+									snipe->addTask(findpath);
+									snipe->addTask(snipetask);
 								
-								pSched->add(snipe);
-							}
-							else
-								CBotGlobals::botMessage(NULL,0,"Bot is not a sniper");
+									pSched->add(snipe);
+								}
+								else
+									CBotGlobals::botMessage(NULL,0,"Bot is not a sniper");*/
 							}
 						}
 						else
@@ -1532,8 +1279,8 @@ eBotCommandResult CWaypointAreaSetToNearest::execute ( CClient *pClient, const c
 
 				if ( CBotGlobals::isCurrentMod(MOD_TF2) )
 					setarea = CTeamFortress2Mod::m_ObjectiveResource.NearestArea(pWpt->getOrigin());
-				else if (CBotGlobals::isCurrentMod(MOD_DOD) )
-					setarea = CDODMod::m_Flags.findNearestObjective(pWpt->getOrigin());
+				/*else if (CBotGlobals::isCurrentMod(MOD_DOD) )
+					setarea = CDODMod::m_Flags.findNearestObjective(pWpt->getOrigin());*/
 				
 				if ( setarea > 0 )
 					pWpt->setArea(setarea);
@@ -1928,6 +1675,16 @@ eBotCommandResult CDebugAimCommand :: execute ( CClient *pClient, const char *pc
 	return COMMAND_ACCESSED;
 }
 
+eBotCommandResult CDebugChatCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
+{
+	if ( !pcmd || !*pcmd )
+		return COMMAND_ERROR;
+
+	pClient->setDebug(BOT_DEBUG_CHAT,atoi(pcmd)>0);
+
+	return COMMAND_ACCESSED;
+}
+
 eBotCommandResult CDebugProfilingCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
 {
 	if ( !pcmd || !*pcmd )
@@ -1957,141 +1714,6 @@ eBotCommandResult CDebugTaskCommand :: execute ( CClient *pClient, const char *p
 
 	return COMMAND_ACCESSED;
 }
-
-eBotCommandResult CGodModeUtilCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	if ( pClient )
-	{
-		edict_t *pEntity = pClient->getPlayer();
-
-		if ( pEntity )
-		{
-			int *playerflags = CClassInterface::getPlayerFlagsPointer(pEntity);
-
-			if ( playerflags )
-			{
-				char msg[256];
-
-				if ( *playerflags & FL_GODMODE )
-					*playerflags &= ~FL_GODMODE;
-				else
-					*playerflags |= FL_GODMODE;
-
-				sprintf(msg,"god mode %s",(*playerflags & FL_GODMODE)?"enabled":"disabled");
-				
-				//CRCBotPlugin::HudTextMessage(pEntity,msg);
-				CBotGlobals::botMessage(pEntity,0,msg);
-
-				return COMMAND_ACCESSED;
-
-			}
-		}
-	}
-
-	return COMMAND_ERROR;
-}
-
-eBotCommandResult CSetTeleportUtilCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	if ( pClient )
-	{
-		pClient->setTeleportVector();
-		engine->ClientPrintf(pClient->getPlayer(),"Teleport Position Remembered!");
-		return COMMAND_ACCESSED;
-	}
-
-	return COMMAND_ERROR;
-}
-
-eBotCommandResult CTeleportUtilCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	if ( pClient )
-	{
-		Vector *vTeleport;
-
-		vTeleport = pClient->getTeleportVector();
-
-		if ( vTeleport != NULL )
-		{
-			CBotGlobals::teleportPlayer(pClient->getPlayer(),*vTeleport);
-			//CRCBotPlugin::HudTextMessage(pClient->getPlayer(),"teleported to your remembered location");
-			CBotGlobals::botMessage(pClient->getPlayer(),0,"teleported to your remembered location");
-
-			return COMMAND_ACCESSED;
-		}
-	}
-
-	return COMMAND_ERROR;
-}
-
-eBotCommandResult CNoTouchCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-
-	if ( pClient )
-	{
-		edict_t *pEntity = pClient->getPlayer();
-
-		if ( pEntity )
-		{
-			int *playerflags = CClassInterface::getPlayerFlagsPointer(pEntity);
-
-			if ( playerflags )
-			{
-				char msg[256];
-
-				if ( *playerflags & FL_DONTTOUCH )
-					*playerflags &= ~FL_DONTTOUCH;
-				else
-					*playerflags |= FL_DONTTOUCH;
-
-				sprintf(msg,"notouch mode %s",(*playerflags & FL_DONTTOUCH)?"enabled":"disabled");
-				CBotGlobals::botMessage(NULL,0,msg);
-				//CRCBotPlugin::HudTextMessage(pEntity,msg);
-
-				return COMMAND_ACCESSED;
-
-			}
-		}
-	}
-
-	return COMMAND_ERROR;
-}
-
-eBotCommandResult CNoClipCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-
-	edict_t *pEntity = NULL;
-
-	if ( pClient )
-		pEntity = pClient->getPlayer();
-
-	if ( pEntity )
-    {
-		char msg[256];
-		byte *movetype = CClassInterface::getMoveTypePointer(pEntity);
-
-		
-       if ( (*movetype & 15) != MOVETYPE_NOCLIP )
-	   {
-           *movetype &= ~15;
-		   *movetype |= MOVETYPE_NOCLIP;
-	   }
-       else
-	   {
-		   *movetype &= ~15;
-		   *movetype |= MOVETYPE_WALK;
-	   }
-
-	   sprintf(msg,"%s used no_clip %d on self\n",pClient->getName(),((*movetype & 15) == MOVETYPE_NOCLIP));
-           
-	  // CRCBotPlugin::HudTextMessage(pEntity,msg);
-	   CBotGlobals::botMessage(pEntity,0,msg);
-	   return COMMAND_ACCESSED;
-    }
-
-	return COMMAND_ERROR;
-}
-
 
 eBotCommandResult CDebugUtilCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
 {
@@ -2144,98 +1766,6 @@ eBotCommandResult CDebugButtonsCommand :: execute ( CClient *pClient, const char
 	return COMMAND_ACCESSED;
 }
 
-eBotCommandResult CDebugBotCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	if ( (!pcmd || !*pcmd) )
-	{
-		extern IServerGameEnts *servergameents;
-		// do a traceline in front of player
-		
-		Vector vOrigin = pClient->getOrigin();
-		QAngle angles = CBotGlobals::entityEyeAngles(pClient->getPlayer());
-		Vector forward;
-
-		AngleVectors(angles,&forward);
-
-		CBotGlobals::quickTraceline(pClient->getPlayer(),vOrigin,vOrigin+forward*1024.0f);
-		CBaseEntity *pEntity;
-
-		if ( (pEntity = CBotGlobals::getTraceResult()->m_pEnt) != NULL )
-		{
-			edict_t *pEdict = servergameents->BaseEntityToEdict(pEntity);
-			if ( CBots::getBotPointer(pEdict) != NULL )
-			{
-				pClient->setDebugBot(pEdict);
-				CBotGlobals::botMessage(pClient->getPlayer(),0,"debug bot set to bot you are looking at");
-				return COMMAND_ACCESSED;
-			}
-			else
-			{
-			pClient->setDebugBot(NULL);
-			CBotGlobals::botMessage(pClient->getPlayer(),0,"debug bot cleared");
-			}
-		}
-		else
-		{
-		pClient->setDebugBot(NULL);
-		CBotGlobals::botMessage(pClient->getPlayer(),0,"debug bot cleared");
-		}
-		return COMMAND_ERROR;
-	}
-	
-	edict_t *pEnt = CBotGlobals::findPlayerByTruncName(pcmd);
-
-	if ( !pEnt )
-	{
-		CBotGlobals::botMessage(pClient->getPlayer(),0,"can't find a player with that name");
-		return COMMAND_ERROR;
-	}
-
-	CBot *pBot = CBots::getBotPointer(pEnt);
-
-	if ( !pBot )
-	{
-		CBotGlobals::botMessage(pClient->getPlayer(),0,"can't find a bot with that name");
-		return COMMAND_ERROR;
-	}
-
-	pClient->setDebugBot(pBot->getEdict());	
-
-	return COMMAND_ACCESSED;
-}
-
-///////////////////////
-// command
-
-CUtilCommand :: CUtilCommand()
-{
-	setName("util");
-	add(new CSearchCommand());
-	add(new CSetTeleportUtilCommand());
-	add(new CTeleportUtilCommand());
-	add(new CNoClipCommand());
-	add(new CGodModeUtilCommand());
-	add(new CNoTouchCommand());
-}
-
-CConfigCommand :: CConfigCommand()
-{
-	setName("config");
-	add(new CGameEventVersion());
-	add(new CMaxBotsCommand());
-	add(new CMinBotsCommand());
-}
-
-eBotCommandResult CGameEventVersion :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	if ( !pcmd || !*pcmd )
-		return COMMAND_ERROR;
-
-	CBotGlobals::setEventVersion(atoi(pcmd));
-	
-	return COMMAND_ACCESSED;
-}
-
 
 // kickbot
 eBotCommandResult CKickBotCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
@@ -2253,94 +1783,6 @@ eBotCommandResult CKickBotCommand :: execute ( CClient *pClient, const char *pcm
 	}
 
 	
-	return COMMAND_ACCESSED;
-}
-
-eBotCommandResult CShowUsersCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	edict_t *pEntity = NULL;
-
-	if ( pClient )
-		pEntity = pClient->getPlayer();
-
-	CAccessClients::showUsers(pEntity);
-
-	return COMMAND_ACCESSED;
-}
-
-eBotCommandResult CMaxBotsCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	edict_t *pEntity = NULL;
-
-	if ( pClient )
-		pEntity = pClient->getPlayer();
-
-	if ( pcmd && *pcmd )
-	{
-		int max = atoi(pcmd);
-
-		bool err = false;
-		int min_bots = CBots::getMinBots();
-
-		if ( max <= -1 )// skip check for disabling max bots (require <=)
-			max = -1;
-		else if ( (min_bots >= 0) && (max <= min_bots) )
-		{
-			CBotGlobals::botMessage(pEntity,0,"max_bots must be greater than min_bots (min_bots is currently : %d)",min_bots);
-			err = true;
-		}
-		if ( max > CBotGlobals::maxClients() )				
-			max = CBotGlobals::maxClients();
-
-		if ( !err )
-		{
-			CBots :: setMaxBots(max);
-
-			CBotGlobals::botMessage(pEntity,0,"max_bots set to %d",max);
-		}
-		
-	}
-	else
-		CBotGlobals::botMessage(pEntity,0,"max_bots is currently %d",CBots::getMaxBots());
-
-	return COMMAND_ACCESSED;
-}
-
-eBotCommandResult CMinBotsCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	edict_t *pEntity = NULL;
-
-	if ( pClient )
-		pEntity = pClient->getPlayer();
-
-	if ( pcmd && *pcmd )
-	{
-		int min = atoi(pcmd);
-		int max_bots = CBots::getMaxBots();
-
-		bool err = false;
-
-		if ( min > CBotGlobals::maxClients() )
-			min = CBotGlobals::maxClients();	
-		
-		if ( min <= -1 ) // skip check for disabling min bots (require <=)
-			min = -1;
-		else if ( (max_bots >= 0) && (min >= CBots::getMaxBots()) )
-		{
-			CBotGlobals::botMessage(pEntity,0,"min_bots must be less than max_bots (max_bots is currently : %d)",max_bots);
-			err = true;
-		}	
-
-		if ( !err )
-		{
-			CBots :: setMinBots(min);
-
-			CBotGlobals::botMessage(pEntity,0,"min_bots set to %d",min);
-		}
-	}
-	else
-		CBotGlobals::botMessage(pEntity,0,"min_bots is currently %d",CBots::getMinBots());
-
 	return COMMAND_ACCESSED;
 }
 
@@ -2414,10 +1856,10 @@ void CBotCommand :: freeMemory ()
 	// nothing to free -- done in CStrings
 }
 
-bool CBotCommand :: hasAccess ( CClient *pClient )
+/*bool CBotCommand :: hasAccess ( CClient *pClient )
 {
 	return (m_iAccessLevel & pClient->accessLevel()) == m_iAccessLevel;
-}
+}*/
 
 bool CBotCommand :: isCommand ( const char *szCommand )
 {
@@ -2440,8 +1882,8 @@ eBotCommandResult CBotCommandContainer :: execute ( CClient *pClient, const char
 
 		if ( pCommand->isCommand(pcmd) )
 		{			
-			if ( pClient && !pCommand->hasAccess(pClient) )
-				return COMMAND_REQUIRE_ACCESS;
+			/*if ( pClient && !pCommand->hasAccess(pClient) )
+				return COMMAND_REQUIRE_ACCESS;*/
 			if ( !pClient && !canbeUsedDedicated() )
 			{
 				CBotGlobals::botMessage(NULL,0,"Sorry, this command cannot be used on a dedicated server");

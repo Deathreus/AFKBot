@@ -304,10 +304,10 @@ public:
 
 	float getSetupTime ()
 	{
-		if ((m_Resource.get() != NULL) && m_nSetupTimeLength)
+		if ( (m_Resource.get() != NULL) && m_nSetupTimeLength )
 			return (float)*m_nSetupTimeLength;
 		//else error!
-		
+
 		return 0.0f;
 	}
 

@@ -9,18 +9,20 @@ static ICvar *s_pCVar;
 
 ConVar rcbot_tf2_debug_spies_cloakdisguise("rcbot_tf2_debug_spies_cloakdisguise","1",0,"Debug command : allow spy bots to cloak and disguise");
 ConVar rcbot_tf2_medic_letgotime("rcbot_tf2_medic_letgotime","0.4",0,"Time for medic to let go of medigun to switch players");
-ConVar rcbot_const_round_offset("rcbot_const_round_offset","852",0,"TF2 OFFSET for Round Class");
-
+ConVar rcbot_const_round_offset("rcbot_const_round_offset","844",0,"TF2 OFFSET for Round Class");
+ConVar rcbot_const_point_master_offset("rcbot_const_mstr_offset","844",0,"TF2 OFFSET for Point Master Class");
 //ConVar rcbot_const_point_offset("rcbot_const_pnt_offset","1140",0,"TF2 OFFSET for Point Class");
 //ConVar rcbot_const_point_data_offset("rcbot_const_pnt_data_offset","1642",0,"TF2 OFFSET for Point Class data");
 ConVar rcbot_tf2_pyro_airblast("rcbot_tf2_pyro_airblast_ammo","50",0,"Ammo must be above this to airblast -- if 200 airblast will be disabled");
 ConVar rcbot_projectile_tweak("rcbot_projtweak","0.05",0,"Tweaks the bots knowledge of projectiles and gravity");
 //ConVar bot_sv_cheat_warning("rcbot_sv_cheats_warning","0",0,"If disabled, bots will try to spawn even if sv_cheats is 0 - use only with admin cvar plugin");
-ConVar bot_cmd_enable_wpt_sounds("rcbot_enable_wpt_sounds","1",0,"Enable/disable sound effects when editing waypoints");
 //ConVar bot_cmd_nocheats("rcbot_botcmd_nocheats","1",0,"If 1 bots don't need cheats to play");
-ConVar bot_general_difficulty("rcbot_skill","0.6",0,"General difficulty of the bots. 0.5 = stock, < 0.5 easier, > 0.5 = harder");
 //ConVar bot_sv_cheats_auto("rcbot_sv_cheats_auto","0",0,"automatically put sv_cheats on and off for when adding bots only");
-ConVar bot_visrevs_clients("rcbot_visrevs_clients","4",0,"how many revs the bot searches for visible players and enemies, lower to reduce cpu usage");
+ConVar bot_cmd_enable_wpt_sounds("rcbot_enable_wpt_sounds","1",0,"Enable/disable sound effects when editing waypoints");
+ConVar bot_skill("rcbot_skill","0.6",0,"General difficulty of the bots. 0.5 = stock, < 0.5 easier, > 0.5 = harder");
+ConVar bot_sensitivity("rcbot_sensitivity", "8.0", 0, "aiming sensitivity of the bot");
+ConVar bot_braveness("rcbot_braveness","0.5",0,"braveness of the bot, determines how often they will take risks");
+ConVar bot_visrevs_clients("rcbot_visrevs_clients","3",0,"how many revs the bot searches for visible players and enemies, lower to reduce cpu usage");
 ConVar bot_spyknifefov("rcbot_spyknifefov","80",0,"the FOV from the enemy that spies must backstab from");
 ConVar bot_visrevs("rcbot_visrevs","9",0,"how many revs the bot searches for visible monsters, lower to reduce cpu usage min:5");
 ConVar bot_pathrevs("rcbot_pathrevs","40",0,"how many revs the bot searches for a path each frame, lower to reduce cpu usage, but causes bots to stand still more");
@@ -43,7 +45,7 @@ ConVar bot_avoid_radius("rcbot_avoid_radius","80",0,"radius in units for bots to
 ConVar bot_avoid_strength("rcbot_avoid_strength","100",0,"strength of avoidance (0 = disable)");
 ConVar bot_messaround("rcbot_messaround","1",0,"bots mess around at start up");
 ConVar bot_heavyaimoffset("rcbot_heavyaimoffset","0.1",0,"fraction of how much the heavy aims at a diagonal offset");
-ConVar bot_aimsmoothing("rcbot_aimsmooting","1",0,"(0 = no smoothing)");
+ConVar bot_aimsmoothing("rcbot_aimsmoothing","1",0,"(0 = no smoothing)");
 ConVar bot_bossattackfactor("rcbot_bossattackfactor","1.0",0,"the higher the more often the bots will shoot the boss");
 ConVar rcbot_enemyshootfov("rcbot_enemyshootfov","0.97",0,"the fov dot product before the bot shoots an enemy 0.7 = 45 degrees");
 ConVar rcbot_enemyshoot_gravgun_fov("rcbot_enemyshoot_gravgun_fov","0.98",0,"the fov dot product before the bot shoots an enemy 0.98 = 11 degrees");
@@ -76,7 +78,8 @@ ConVar rcbot_speed_boost("rcbot_speed_boost","1",0,"multiplier for bots speed");
 ConVar rcbot_melee_only("rcbot_melee_only","0",0,"if 1 bots will only use melee weapons");
 ConVar rcbot_debug_iglev("rcbot_debug_iglev","0",0,"bot think ignores functions to test cpu speed");
 ConVar rcbot_dont_move("rcbot_dontmove","0",0,"if 1 , bots will all move forward");
-
+ConVar rcbot_runplayercmd_dods("rcbot_runplayer_cmd_dods","417",0,"offset of the DOD:S PlayerRunCommand function");
+ConVar rcbot_runplayercmd_tf2("rcbot_runplayer_cmd_tf2","418",0,"offset of the TF2 PlayerRunCommand function");
 ConVar rcbot_runplayercmd_hookonce("rcbot_runplayer_hookonce","1",0,"function will hook only once, if 0 it will unook and rehook after every map");
 ConVar rcbot_ladder_offs("rcbot_ladder_offs","42",0,"difference in height for bot to think it has touched the ladder waypoint");
 ConVar rcbot_ffa("rcbot_ffa","0",0,"Free for all mode -- bots shoot everyone");
@@ -100,33 +103,20 @@ ConVar rcbot_spy_runaway_health("rcbot_spy_runaway_health","70",0,"health which 
 ConVar rcbot_supermode("rcbot_supermode","0",0,"If 1 will make every bot skill and reaction much higher");
 ConVar rcbot_addbottime("rcbot_addbottime","0.83",0,"The time in seconds for bots to be added after another");
 ConVar rcbot_customloadouts("rcbot_customloadouts","0",0,"if 1 bots can use custom weapons");
-ConVar rcbot_enable_attributes("rcbot_enable_attributes", "1", 0, "Enable/disable attributes on TF2 weapon loadouts");
-
+ConVar rcbot_givenameditem_offset("rcbot_givenameditem_offset","471",0,"offset of the GiveNamedItem function");
+ConVar rcbot_equipwearable_offset("rcbot_equipwearable_offset","426",0,"offset of the EquipWearable function");
+ConVar rcbot_rmplayeritem_offset("rcbot_rmplayeritem_offset","270",0,"offset of the RemovePlayerItem function");
+ConVar rcbot_enable_attributes("rcbot_enable_attributes","1",0,"Enable/disable attributes on TF2 weapon loadouts");
 ConVar rcbot_force_generation("rcbot_force_generation","0",0,"force generation of weapons");
 ConVar rcbot_equiphats("rcbot_equiphats", "0", 0, "Allow bots to quip a random hat (unstable)");
-
+ConVar rcbot_getweaponslot_offset("rcbot_getweaponslot_offset", "268", 0, "offset of the getweaponslot function");
+ConVar rcbot_removewearable_offset("rcbot_removewearable_offset", "427", 0, "offset of the removewearable function");
+ConVar rcbot_weaponequip_offset("rcbot_weaponequip_offset", "261", 0, "offset for weapon equip function");
+ConVar rcbot_gamerules_offset("rcbot_gamerules_offset", "5", 0, "offset for gamerules object");
+ConVar rcbot_weaponswitch_offset("rcbot_weaponswitch_offset", "264", 0, "offset for weapon Switch function");
+ConVar rcbot_bot_quota_interval("rcbot_bot_quota_interval", "-1", 0, "Interval between bot quota checks");
 //ConVar rcbot_bot_add_cmd("rcbot_bot_add_cmd","bot",0,"command to add puppet bots");
 //ConVar rcbot_bot_add_cmd("rcbot_hook_engine","1",0,"command to add puppet bots");
-
-// OFFSETS
-ConVar rcbot_gamerules_offset("rcbot_gamerules_offset", "5", 0, "offset for gamerules object");
-
-// ENTIY SIZE OFFSET
-ConVar rcbot_const_point_master_offset("rcbot_const_mstr_offset", "852", 0, "TF2 OFFSET for Point Master Class");
-
-// CBASEENTITY OFFSETS
-ConVar rcbot_weaponequip_offset("rcbot_weaponequip_offset",			"262", 0, "offset for weapon equip function");
-ConVar rcbot_weaponswitch_offset("rcbot_weaponswitch_offset",		"265", 0, "offset for weapon Switch function");
-ConVar rcbot_getweaponslot_offset("rcbot_getweaponslot_offset",		"269", 0, "offset of the getweaponslot function");
-ConVar rcbot_rmplayeritem_offset("rcbot_rmplayeritem_offset",		"271", 0, "offset of the RemovePlayerItem function");
-ConVar rcbot_runplayercmd_dods("rcbot_runplayer_cmd_dods",			"418", 0, "offset of the DOD:S PlayerRunCommand function");
-ConVar rcbot_runplayercmd_tf2("rcbot_runplayer_cmd_tf2",			"419", 0, "offset of the TF2 PlayerRunCommand function");
-ConVar rcbot_equipwearable_offset("rcbot_equipwearable_offset",		"427", 0, "offset of the EquipWearable function");
-ConVar rcbot_removewearable_offset("rcbot_removewearable_offset",	"428", 0, "offset of the removewearable function");
-
-ConVar rcbot_givenameditem_offset("rcbot_givenameditem_offset",		"472", 0, "offset of the GiveNamedItem function");
-
-
 ConVar *sv_gravity = NULL;
 ConVar *sv_cheats = NULL;//("sv_cheats");
 ConVar *mp_teamplay = NULL;
@@ -136,7 +126,7 @@ ConCommandBase *puppet_bot_cmd = NULL;
 ConVar *mp_stalemate_enable = NULL;
 ConVar *mp_stalemate_meleeonly = NULL;
 
-void RCBOT2_Cvar_setup (ICvar *cvar)
+void AFKBOT_Cvar_setup (ICvar *cvar)
 {
 	mp_stalemate_enable = cvar->FindVar("mp_stalemate_enable");
 	mp_stalemate_meleeonly = cvar->FindVar("mp_stalemate_meleeonly");
@@ -154,13 +144,13 @@ void RCBOT2_Cvar_setup (ICvar *cvar)
 		strcpy(sv_tags_str,sv_tags->GetString());
 
 		// fix
-		if ( strstr(sv_tags_str,"rcbot2") == NULL )
+		if ( strstr(sv_tags_str,"afkbot") == NULL )
 		{
 
 			if ( sv_tags_str[0] == 0 )
-				strcat(sv_tags_str,"rcbot2");
+				strcat(sv_tags_str,"afkbot");
 			else
-				strcat(sv_tags_str,",rcbot2");
+				strcat(sv_tags_str,",afkbot");
 
 			sv_tags->SetValue(sv_tags_str);
 

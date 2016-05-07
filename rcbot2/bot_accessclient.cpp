@@ -54,6 +54,7 @@ bool CAccessClient :: forBot ()
 
 bool CAccessClient :: isForSteamId ( const char *szSteamId )
 {
+	CBotGlobals::botMessage(NULL, 0, "AccessClient: '%s','%s'", m_szSteamId, szSteamId);
 	return FStrEq(m_szSteamId,szSteamId);
 }
 
@@ -169,6 +170,8 @@ void CAccessClients :: load ()
 			if ( buffer[0] == 0 )
 				continue;
 			if ( buffer[0] == '\n' )
+				continue;
+			if ( buffer[0] == '\r' )
 				continue;
 			if ( buffer[0] == '#' )
 				continue;

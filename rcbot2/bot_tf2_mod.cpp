@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game Engine ("HL
- *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game g_pEngine ("HL
+ *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL Engine and MODs
+ *    respects for all of the code used other than the HL g_pEngine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -81,7 +81,6 @@ MyEHandle CTeamFortress2Mod::m_pPayLoadBombBlue = MyEHandle(NULL);
 MyEHandle CTeamFortress2Mod::m_pPayLoadBombRed = MyEHandle(NULL);
 bool CTeamFortress2Mod::m_bRoundOver = false;
 int CTeamFortress2Mod::m_iWinningTeam = 0;
-int CTeamFortress2Mod::m_iLastWinningTeam = 0;
 Vector CTeamFortress2Mod::m_vFlagLocationBlue = Vector(0,0,0);
 Vector CTeamFortress2Mod::m_vFlagLocationRed = Vector(0,0,0);
 bool CTeamFortress2Mod::m_bFlagLocationValidBlue = false;
@@ -94,11 +93,8 @@ bool CTeamFortress2Mod::m_bMVMAlarmSounded = false;
 float CTeamFortress2Mod::m_fMVMCapturePointRadius = 0.0f;
 int CTeamFortress2Mod::m_iCapturePointWptID = -1;
 int CTeamFortress2Mod::m_iFlagPointWptID = -1;
-vector<CTF2Loadout*> CTeamFortress2Mod::m_pLoadoutWeapons[TF2_SLOT_MAX][9]; 
-MyEHandle CTeamFortress2Mod::m_pNearestTankBoss = NULL;
-float CTeamFortress2Mod::m_fNearestTankDistance = 0.0f;
-Vector CTeamFortress2Mod::m_vNearestTankLocation = Vector(0, 0, 0);
-vector<CAttributeID*> CAttributeLookup::attributes;
+vector<CTF2Loadout*> CTeamFortress2Mod::m_pLoadoutWeapons[TF2_SLOT_MAX][9];
+
 extern ConVar bot_use_disp_dist;
 
 CTF2Loadout :: CTF2Loadout ( const char *pszClassname, int iIndex, int iQuality, int iMinLevel, int iMaxLevel )
@@ -110,165 +106,6 @@ CTF2Loadout :: CTF2Loadout ( const char *pszClassname, int iIndex, int iQuality,
 	m_iMaxLevel = iMaxLevel;
 	m_bCanBeUsedInMedieval = false;
 
-}
-void CSCICopy(CEconItemView *olditem, CEconItemView *newitem)
-{
-	memset(newitem, 0, sizeof(CEconItemView));
-
-	//#define copymember(a) newitem->a = olditem->a
-#define copymember(a) memcpy(&newitem->a, &olditem->a, sizeof(newitem->a));
-
-	copymember(m_pVTable);
-
-	copymember(m_iItemDefinitionIndex);
-
-	copymember(m_iEntityQuality);
-	copymember(m_iEntityLevel);
-
-	copymember(m_iItemID);
-	copymember(m_iItemIDHigh);
-	copymember(m_iItemIDLow);
-	copymember(m_iAccountID);
-	copymember(m_iInventoryPosition);
-
-	copymember(m_ItemHandle);
-
-	copymember(m_bColorInit);
-	copymember(m_bPaintOverrideInit);
-	copymember(m_bHasPaintOverride);
-
-	copymember(m_flOverrideIndex);
-	copymember(m_unRGB);
-	copymember(m_unAltRGB);
-
-	copymember(m_iTeamNumber);
-
-	copymember(m_bInitialized);
-
-	// copy ctor so the CUtlVector is copied correctly
-	newitem->m_AttributeList = olditem->m_AttributeList;
-	newitem->m_NetworkedDynamicAttributesForDemos = olditem->m_NetworkedDynamicAttributesForDemos;
-
-	copymember(m_bDoNotIterateStaticAttributes);
-
-	/*
-	META_CONPRINTF("Copying attributes...\n");
-	int nCount = olditem->m_Attributes.Count();
-	META_CONPRINTF("Count: %d\n", nCount);
-	newitem->m_Attributes.SetSize( nCount );
-	for ( int i = 0; i < nCount; i++ )
-	{
-	META_CONPRINTF("Copying %d...\n", i+1);
-	newitem->m_Attributes[ i ] = olditem->m_Attributes[ i ];
-	}
-	*/
-}
-
-/*
-int TF2II_GetItemLevelByID(int iItemDefinitionIndex)
-{
-	int iLevel = 1;
-	//new iSlot = TF2II_GetItemSlotByID(iItemDefinitionIndex);
-	//if (iSlot >= TF2ItemSlot_Hat && iSlot <= TF2ItemSlot_Misc)
-	//	iLevel = GetRandomInt(1, 100);
-	switch (iItemDefinitionIndex)
-	{
-	case 125;	262; 335, 336, 360, 434, 435: iLevel = 1;
-	case 164, 343: iLevel = 5;
-	case 115, 116, 126, 165, 240, 261, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 263, 279, 346, 347, 486, 408, 409, 410, 470, 473, 490, 491, 492, 514, 515, 516, 517, 518, 519, 520, 537: iLevel = 10;
-	case 422: iLevel = 13;
-	case 166, 333, 392, 443, 483, 484: iLevel = 15;
-	case 170, 189, 295, 299, 296, 345, 420, 432, 454, 1899: iLevel = 20;
-	case 334: iLevel = 28;
-	case 332: iLevel = 30;
-	case 278, 287, 289, 290, 291: iLevel = 31;
-	case 292, 471: iLevel = 50;
-	}
-	return iLevel;
-}
-*/
-/*
-void CTF2Loadout::getScript ( CEconItemView *cscript )
-{
-	static CEconItemAttribute m_Attributes[16];
-	extern ConVar rcbot_enable_attributes;
-
-	cscript->m_iEntityLevel = m_iLevel;
-	cscript->m_iEntityQuality = m_iQuality;
-	cscript->m_iItemDefinitionIndex = m_iIndex;
-	cscript->m_bInitialized = true;
-
-	if ( rcbot_enable_attributes.GetBool() )
-	{
-		unsigned int size = copyAttributesIntoArray(m_Attributes,cscript->m_pVTable_Attributes);
-
-		if ( size > 0 )
-		{
-			cscript->m_Attributes.CopyArray(m_Attributes,size);
-
-			cscript->m_bDoNotIterateStaticAttributes = true;
-
-			if ( cscript->m_iEntityQuality == 0 )
-				cscript->m_iEntityQuality = 6;
-		}
-	}
-
-}*/
-/*
-const char *CTF2Loadout :: getScript ( CEconItemView *script )
-{
-	script->m_iEntityLevel = m_iLevel;
-	script->m_iItemDefinitionIndex = m_iIndex;
-	script->m_iEntityQuality = m_iQuality;
-	script->m_bInitialized = true;
-
-	return m_pszClassname;
-}*/
-
-void CAttributeLookup::addAttribute(const char *pszAttrib, int id)
-{
-	attributes.push_back(new CAttributeID(id, pszAttrib));
-}
-
-void CAttributeLookup::freeMemory()
-{
-	for (unsigned int i = 0; i < attributes.size(); i++)
-	{
-		CAttributeID *attrib = attributes[i];
-
-		delete attrib;
-
-		attributes[i] = NULL;
-	}
-}
-
-int CAttributeLookup::findAttributeID(const char *name)
-{
-	unsigned int i;
-
-	for (i = 0; i < attributes.size(); i++)
-	{
-		CAttributeID *attrib = attributes.at(i);
-
-		if (attrib && (strcmp(attrib->m_attribute, name) == 0))
-		{
-			return attrib->m_id;
-		}
-	}
-
-	return -1;
-}
-
-CTF2Loadout *CTeamFortress2Mod :: getRandomHat ( int iClass )
-{
-	int iSize;
-
-	if ( (iSize = m_pLoadoutWeapons[TF2_SLOT_HAT][iClass].size()) > 0)
-	{
-		return m_pLoadoutWeapons[TF2_SLOT_HAT][iClass].at(randomInt(0, iSize - 1));
-	}
-
-	return NULL;
 }
 
 bool CTeamFortress2Mod::isSuddenDeath()
@@ -291,389 +128,11 @@ bool CTeamFortress2Mod::isSuddenDeath()
 	return false;
 }
 
-#define CHECK_PREFAB_INT(val) ((prefab==NULL)||(prefab->GetInt(val,-1)==-1))?kv->GetInt(val):prefab->GetInt(val)
-#define CHECK_PREFAB_STRING(val) ((prefab==NULL)||(prefab->GetString(val,NULL)==NULL))?kv->GetString(val):prefab->GetString(val)
-#define CHECK_PREFAB_FINDKEY(keyname) ((prefab==NULL)||(prefab->FindKey(keyname)==NULL))?kv->FindKey(keyname):prefab->FindKey(keyname)
-
-void CTeamFortress2Mod :: setupLoadOutWeapons ()
-{	
-	extern IFileSystem *filesystem;
-	KeyValues *mainkv = new KeyValues("tfweapons");
-	
-	KeyValues *kv;
-	KeyValues *usedbyclass;	
-	KeyValues *attribs;
-	KeyValues *prefabs;
-	KeyValues *prefab;
-
-	CBotGlobals::botMessage(NULL,0,"Reading Weapon Loadout details from TF MOD...");
-	mainkv->LoadFromFile(filesystem,"scripts/items/items_game.txt","MOD");
-
-	kv = mainkv->FindKey("items");
-	prefabs = mainkv->FindKey("prefabs");
-
-	attribs = mainkv->FindKey("attributes");
-
-	if ( attribs )
-	{
-		attribs = attribs->FindKey("1");
-
-		if ( attribs )
-		{
-			do 
-			{
-				int id;
-
-				const char *keyname = attribs->GetName();
-
-				const char *attrib_name;
-
-				if ( keyname && *keyname )
-				{
-					id = atoi ( keyname );
-
-					attrib_name = attribs->GetString("name");
-
-					CAttributeLookup::addAttribute(CStrings::getString(attrib_name), id);
-				}
-			} while ((attribs = attribs->GetNextTrueSubKey()) != NULL );
-		}
-
-	}
-
-	if ( kv )
-	{
-		kv = kv->FindKey("default");
-
-		if ( kv )
-		{
-			while ((kv = kv->GetNextTrueSubKey()) != NULL)
-			{
-				int iclass = 0;
-
-				CTF2Loadout *added = NULL;
-
-				const char *szPrefab = kv->GetString("prefab");
-				prefab = NULL;
-
-				if ((strncmp(szPrefab, "valve", 5) == 0) && (strlen(szPrefab) > 6))
-				{				
-					prefab = prefabs->FindKey(&szPrefab[6]);
-
-					if (prefab == NULL)
-					{
-						// search prefabs for "valve"
-					}
-				}
-				else if ((szPrefab != NULL) && (*szPrefab != NULL))
-				{
-					prefab = prefabs->FindKey(szPrefab);
-				}
-
-				const char *szKeyName = kv->GetName();
-
-				int iindex;
-
-				if (szKeyName && *szKeyName)
-				{
-					if ((*szKeyName >= '0') && (*szKeyName <= '9'))
-						iindex = atoi(szKeyName);
-					else
-						continue; // not a number
-				}
-				else
-					continue;
-
-				const char *pszquality;
-				int iquality = 0;
-				int iminlevel = 1;
-				int imaxlevel = 1;
-				bool bIsWeapon = false;
-				int islot = 0;
-
-				// These two demoman weapons seem to cause problems
-				// skip them
-				if (iindex == 1151)
-					continue;
-				if (iindex == 1150)
-					continue;
-
-				KeyValues *loadout;
-
-				if (prefab != NULL)
-					loadout = prefab;
-				else
-					loadout = kv;
-
-				const char *classname = CHECK_PREFAB_STRING("item_class");//loadout->GetString("item_class");
-
-				if ( (classname == NULL) || (*classname == 0) )
-					continue;
-
-				const char *slot = CHECK_PREFAB_STRING("item_slot"); //loadout->GetString("item_slot");
-
-				if ( ( slot == NULL ) || (*slot == 0 ) )
-					continue;
-
-				usedbyclass = CHECK_PREFAB_FINDKEY("used_by_classes");// loadout->FindKey("used_by_classes");
-
-				if (usedbyclass)
-				{
-					if (usedbyclass->FindKey("scout") && ((usedbyclass->GetInt("scout", 0) == 1) || (strcmp(usedbyclass->GetString("scout"), loadout->GetString("item_slot"))==0)))
-						iclass |= (1 << TF_CLASS_SCOUT);
-					if (usedbyclass->FindKey("sniper") && ((usedbyclass->GetInt("sniper", 0) == 1) || (strcmp(usedbyclass->GetString("sniper"), loadout->GetString("item_slot")) == 0)))
-						iclass |= (1 << TF_CLASS_SNIPER);
-					if (usedbyclass->FindKey("soldier") && ((usedbyclass->GetInt("soldier", 0) == 1) || (strcmp(usedbyclass->GetString("soldier"), loadout->GetString("item_slot")) == 0)))
-						iclass |= (1 << TF_CLASS_SOLDIER);
-					if (usedbyclass->FindKey("demoman") && ((usedbyclass->GetInt("demoman", 0) == 1) || (strcmp(usedbyclass->GetString("demoman"), loadout->GetString("item_slot")) == 0)))
-						iclass |= (1 << TF_CLASS_DEMOMAN);
-					if (usedbyclass->FindKey("medic") && ((usedbyclass->GetInt("medic", 0) == 1) || (strcmp(usedbyclass->GetString("medic"), loadout->GetString("item_slot")) == 0)))
-						iclass |= (1 << TF_CLASS_MEDIC);;
-					if (usedbyclass->FindKey("heavy") && ((usedbyclass->GetInt("heavy", 0) == 1) || (strcmp(usedbyclass->GetString("heavy"), loadout->GetString("item_slot")) == 0)))
-						iclass |= (1 << TF_CLASS_HWGUY);
-					if (usedbyclass->FindKey("pyro") && ((usedbyclass->GetInt("pyro", 0) == 1) || (strcmp(usedbyclass->GetString("pyro"), loadout->GetString("item_slot")) == 0)))
-						iclass |= (1 << TF_CLASS_PYRO);
-					if (usedbyclass->FindKey("spy") && ((usedbyclass->GetInt("spy", 0) == 1) || (strcmp(usedbyclass->GetString("spy"), loadout->GetString("item_slot")) == 0)))
-						iclass |= (1 << TF_CLASS_SPY);
-					if (usedbyclass->FindKey("engineer") && ((usedbyclass->GetInt("engineer", 0) == 1) || (strcmp(usedbyclass->GetString("engineer"), loadout->GetString("item_slot")) == 0)))
-						iclass |= (1 << TF_CLASS_ENGINEER);
-				}
-
-				if (iclass == 0)
-					continue;
-
-				pszquality = CHECK_PREFAB_STRING("item_quality");
-
-				if ( pszquality && *pszquality )
-					iquality = (strcmp(pszquality,"unique")==0)?6:0;
-
-				iminlevel = CHECK_PREFAB_INT("min_ilevel");
-				imaxlevel = CHECK_PREFAB_INT("max_ilevel");
-
-				if ( strcmp(classname,"tf_wearable") == 0 )
-				{
-					islot = 0;
-
-					// hat
-					if (strcmp(slot, "misc") == 0)
-					{
-						islot = TF2_SLOT_MISC;
-					}
-					else if (strcmp(slot, "head") == 0)
-					{
-						islot = TF2_SLOT_HAT;
-					}
-					if ( islot != 0 )
-					{
-						added = new CTF2Loadout(classname, iindex, iquality, iminlevel,imaxlevel);
-
-						// find which hats are available for which class and add them
-						for (int i = 1; i <= 9; i++)
-						{
-							if ((iclass & (1 << i)) > 0)
-								m_pLoadoutWeapons[islot][i - 1].push_back(added);
-						}
-
-						CBotGlobals::botMessage(NULL, 0, "FOUND hat : %s", loadout->GetString("name"));
-					}
-				}
-
-				if ( added == NULL )
-				{
-
-					CWeapon *pWeapon = CWeapons::getWeapon(classname);
-					const char *craft_class;
-
-					craft_class = CHECK_PREFAB_STRING("craft_class");
-
-					// check if bots can use this weapon
-					if (pWeapon == NULL)
-					{
-
-						if (!strcmp(craft_class, "weapon"))
-						{
-							CBotGlobals::botMessage(NULL, 1, "Weapon not in weapons ini \"%s\"", classname);
-						}
-
-						continue;
-					}
-
-					if ( strcmp(slot,"primary") == 0 )
-						islot = TF2_SLOT_PRMRY;
-					else if ( strcmp(slot,"melee") == 0 )
-						islot = TF2_SLOT_MELEE;
-					else if ( strcmp(slot,"secondary") == 0 )
-						islot = TF2_SLOT_SCNDR;
-					else
-						continue;
-
-					
-
-					if (!craft_class || !*craft_class)
-						continue;
-
-					if (strcmp(craft_class, "weapon"))
-						continue;
-
-					if ( pWeapon->getSlot() != islot )
-					{
-						CBotGlobals::botMessage(NULL,1,"Weapon Slot mismatch for %s - set as %d -- should be %d",pWeapon->getWeaponName(),pWeapon->getSlot(),islot);
-						continue;
-					}
-
-					/*if ( ((iclass == TF_CLASS_ENGINEER) && (islot == TF2_SLOT_MELEE)) || (strcmp(classname,"tf_weapon_wrench")==0) )
-					{
-						// don't add any wrenches -- may cause bots unable to build sentries
-						continue;
-					}*/
-
-					CBotGlobals::botMessage(NULL, 0, "FOUND loadout : %s", loadout->GetString("name"));
-
-					//attributes
-					added = new CTF2Loadout(classname,iindex,iquality,iminlevel,imaxlevel);
-
-					for (int i = 1; i <= 9; i++)
-					{
-						if ((iclass & (1<<i)) > 0)
-							m_pLoadoutWeapons[islot][i - 1].push_back(added);
-					}
-
-					//m_pLoadoutWeapons[islot][iclass-1].push_back(added);
-					bIsWeapon = true;
-				}
-
-				if ( added )
-				{
-					//if ( prefab != NULL )
-					//	loadout = kv;
-
-					attribs = CHECK_PREFAB_FINDKEY("attributes");
-
-					if ( attribs )
-					{
-						attribs = attribs->GetFirstSubKey();
-
-						if ( attribs )
-						{
-							do 
-							{
-								const char *attribname = attribs->GetName();
-								float fval = attribs->GetFloat("value");
-
-								if ( attribname && *attribname )
-								{
-									int iId = CAttributeLookup::findAttributeID(attribname);
-
-									if ( bIsWeapon && (strcmp(attribname,"damage penalty") == 0) )
-									{
-										// don't add any weapons that don't cause damage e.g. rocket jumper
-										if ( fval == 0 )
-										{
-											// delete
-											for (int i = 1; i <= 9; i++)
-											{
-												if ((iclass & (1 << i)) > 0)
-													m_pLoadoutWeapons[islot][i - 1].pop_back();
-											}
-
-										//	m_pLoadoutWeapons[islot][iclass-1].pop_back();
-
-											delete added; // free
-
-											attribs = NULL; // break loop
-
-											iId = -1; // don't add
-										}
-									}
-									else if (strcmp(attribname, "allowed in medieval mode") == 0)
-									{
-										added->m_bCanBeUsedInMedieval = true;
-									}
-
-									if ( iId != -1 )
-										added->addAttribute(iId,fval);
-								}
-							}while ( attribs && ((attribs = attribs->GetNextTrueSubKey()) != NULL) );
-						}
-					}
-				}
-			}
-		}
-	}
-
-	mainkv->deleteThis();
-	/*
-	m_pLoadoutWeapons[TF2_SLOT_PRMRY][TF_CLASS_PYRO].push_back(new CTF2LoadoutWeapon("tf_weapon_flamethrower",40,6,10,"170 ; 2.5 ; 24 ; 1.0 ; 28 ; 0.0",200));
-	m_pLoadoutWeapons[TF2_SLOT_SCNDR][TF_CLASS_PYRO].push_back(new CTF2LoadoutWeapon("tf_weapon_flaregun",39,6,10,"25 ; 0.5",16));
-	m_pLoadoutWeapons[TF2_SLOT_PRMRY][TF_CLASS_SOLDIER].push_back(new CTF2LoadoutWeapon("tf_weapon_rocketlauncher_directhit",127,6,1,"100 ; 0.3 ; 103 ; 1.8 ; 2 ; 1.25 ; 114 ; 1.0 ; 328 ; 1.0",20));
-	*/
-
-}
-
-CTF2Loadout *CTeamFortress2Mod::findRandomWeaponLoadOutInSlot(int iclass, int islot)
-{
-	vector<CTF2Loadout*> *list = &(m_pLoadoutWeapons[islot][iclass - 1]);
-	CTF2Loadout *weap = NULL;
-
-	if (list->size() == 0)
-		return NULL;
-
-	if (((islot == TF2_SLOT_PRMRY) || (islot == TF2_SLOT_SCNDR)) && CTeamFortress2Mod::isMedievalMode())
-	{
-		vector<CTF2Loadout*> newlist;
-		unsigned int _size = list->size();
-
-		// add all medieval weapons
-		for (unsigned i = 0; i < _size; i++)
-		{
-			CTF2Loadout *temp = list->at(i);
-
-			if (temp->m_bCanBeUsedInMedieval)
-			{
-				newlist.push_back(temp);
-			}
-		}
-
-		if (newlist.size() > 0)
-		{			
-			weap = newlist.at(randomInt(0, newlist.size()-1));
-		}
-	}
-	else
-		weap = list->at(randomInt(0, list->size() - 1));
-
-	return weap;
-}
-
 bool CTeamFortress2Mod::isMedievalMode()
 {
 	return CClassInterface::TF2_IsMedievalMode(GetGameRules());
 }
-/*
-CTF2Loadout *CTeamFortress2Mod::findRandomWeaponLoadOut ( int iclass, const char *classname )
-{
-	// find weapon slot
-	int islot;
-	// this is only used to find the slot
-	CWeapon *pWeapon = CWeapons::getWeapon(classname);//::getWeapon(classname);
 
-	if ( pWeapon == NULL )
-		return NULL;
-
-	islot = pWeapon->getSlot();
-
-	if ( islot == TF2_SLOT_SHOTGUN )
-	{
-		// find the slot for this shotgun
-		if ( iclass == TF_CLASS_ENGINEER )
-			islot = TF2_SLOT_PRMRY;
-		else
-			islot = TF2_SLOT_SCNDR;
-	}
-
-	return findRandomWeaponLoadOutInSlot(iclass, islot);
-}
-*/
 bool CTeamFortress2Mod :: checkWaypointForTeam(CWaypoint *pWpt, int iTeam)
 {
 // Returns true if team can go to waypoint
@@ -755,7 +214,6 @@ void CTeamFortress2Mod :: initMod ()
 		*/
 	CRCBotTF2UtilFile::loadConfig();
 
-	setupLoadOutWeapons();
 	//memset(g_fBotUtilityPerturb,0,sizeof(float)*TF_CLASS_MAX*BOT_UTIL_MAX);
 }
 
@@ -764,15 +222,11 @@ void CTeamFortress2Mod :: mapInit ()
 {
 	CBotMod::mapInit();
 
-	m_vNearestTankLocation = Vector(0, 0, 0);
-
 	unsigned int i = 0;
 	string_t mapname = gpGlobals->mapname;
 
 	const char *szmapname = mapname.ToCStr();
 
-	m_iLastWinningTeam = 0;
-	m_iWinningTeam = 0;
 	m_pResourceEntity = NULL;
 	m_ObjectiveResource.m_ObjectiveResource = NULL;
 	m_ObjectiveResource.reset();
@@ -1028,7 +482,6 @@ int CTeamFortress2Mod :: getDispenserLevel ( edict_t *pDispenser )
 	//if ( pSentry && pSentry->
 }
 
-
 int CTeamFortress2Mod :: getEnemyTeam ( int iTeam )
 {
 	return (iTeam == TF2_TEAM_BLUE)?TF2_TEAM_RED:TF2_TEAM_BLUE;
@@ -1082,7 +535,7 @@ bool CTeamFortress2Mod ::isBoss ( edict_t *pEntity, float *fFactor )
 	{
 		if ( m_pBoss.get() == pEntity )
 			return true;
-		else if (isTankBoss(pEntity))
+		else if (strcmp(pEntity->GetClassName(),"tank_boss")==0)
 		{
 			if ( fFactor != NULL )
 				*fFactor = 200.0f;
@@ -1098,7 +551,7 @@ bool CTeamFortress2Mod ::isBoss ( edict_t *pEntity, float *fFactor )
 
 void CTeamFortress2Mod :: updateTeleportTime ( edict_t *pOwner )
 {
-	m_Teleporters[ENTINDEX(pOwner)-1].m_fLastTeleported = engine->Time();
+	m_Teleporters[ENTINDEX(pOwner)-1].m_fLastTeleported = g_pEngine->Time();
 }
 
 float CTeamFortress2Mod :: getTeleportTime ( edict_t *pOwner )
@@ -1109,11 +562,6 @@ float CTeamFortress2Mod :: getTeleportTime ( edict_t *pOwner )
 bool CTeamFortress2Mod :: isSentry ( edict_t *pEntity, int iTeam, bool checkcarrying )
 {
 	return (!iTeam || (iTeam == getTeam(pEntity))) && (strcmp(pEntity->GetClassName(),"obj_sentrygun")==0) && (checkcarrying||!CClassInterface::isSentryGunBeingPlaced(pEntity));
-}
-
-bool CTeamFortress2Mod::isTankBoss(edict_t *pEntity)
-{
-	return (strcmp(pEntity->GetClassName(), "tank_boss") == 0);
 }
 
 bool CTeamFortress2Mod :: isTeleporter ( edict_t *pEntity, int iTeam, bool checkcarrying )
@@ -1298,20 +746,20 @@ void CTeamFortress2Mod:: flagPickedUp (int iTeam, edict_t *pPlayer)
 
 bool CTeamFortress2Mod :: isArenaPointOpen ()
 {
-	return m_fArenaPointOpenTime < engine->Time();
+	return m_fArenaPointOpenTime < g_pEngine->Time();
 }
 
 void CTeamFortress2Mod :: resetSetupTime ()
 {
-	m_fRoundTime = engine->Time() + m_Timer.getSetupTime();
-	m_fArenaPointOpenTime = engine->Time() + m_fPointTime;
+	m_fRoundTime = g_pEngine->Time() + m_Timer.getSetupTime();
+	m_fArenaPointOpenTime = g_pEngine->Time() + m_fPointTime;
 }
 
 bool CTeamFortress2Mod::hasRoundStarted ()
 {
-	return m_bHasRoundStarted || (!isMapType(TF_MAP_MVM)&&(engine->Time() > m_fRoundTime));
+	return m_bHasRoundStarted || (!isMapType(TF_MAP_MVM)&&(g_pEngine->Time() > m_fRoundTime));
 
-	//return (engine->Time() > m_fRoundTime);
+	//return (g_pEngine->Time() > m_fRoundTime);
 }
 
 void CTeamFortress2Mod :: setPointOpenTime ( int time )
@@ -1340,50 +788,16 @@ bool CTeamFortress2Mod :: isPayloadBomb ( edict_t *pEntity, int iTeam )
 	return ((strncmp(pEntity->GetClassName(),"mapobj_cart_dispenser",21)==0) && (CClassInterface::getTeam(pEntity)==iTeam));
 }
 
-
-void CTeamFortress2Mod::checkMVMTankBoss(edict_t *pEntity)
-{
-	float fTankDistance = CBotGlobals::entityOrigin(pEntity).DistTo(m_vMVMCapturePoint);
-
-	if (m_pNearestTankBoss.get() != NULL)
-	{
-		if (!CBotGlobals::entityIsAlive(m_pNearestTankBoss))
-		{
-			m_pNearestTankBoss = NULL;
-			m_fNearestTankDistance = 0.0f;
-		}
-	}
-
-	if (CBotGlobals::entityIsAlive(pEntity) && ((m_pNearestTankBoss.get()==NULL)||((m_fNearestTankDistance == 0.0f) || (fTankDistance < m_fNearestTankDistance))))
-	{
-		m_fNearestTankDistance = fTankDistance;
-		m_pNearestTankBoss = pEntity;
-		m_vNearestTankLocation = CBotGlobals::entityOrigin(pEntity);
-	}
-}
-
 CWaypoint *CTeamFortress2Mod :: getBestWaypointMVM ( CBot *pBot, int iFlags )
 {
 	Vector vFlagLocation;
 
 	bool bFlagLocationValid = CTeamFortress2Mod::getFlagLocation(TF2_TEAM_BLUE,&vFlagLocation);		
 
-	float fTankDistance = 0.0f;
-
-	edict_t *pTank;
-	// check tank boss is valid
-	if ((pTank=m_pNearestTankBoss.get()) != NULL)
-	{
-		if (CBotGlobals::entityIsAlive(pTank) == false)
-			m_pNearestTankBoss = NULL;
-	}
-
 	if ( hasRoundStarted() && m_bMVMFlagStartValid && m_bMVMCapturePointValid && bFlagLocationValid )
 	{
 		if ( m_bMVMAlarmSounded )
 			return CWaypoints::randomWaypointGoalNearestArea(iFlags,TF2_TEAM_RED,0,false,pBot,true,&m_vMVMCapturePoint,-1,true,m_iCapturePointWptID);
-		else if ((m_pNearestTankBoss.get() != NULL) && (m_fNearestTankDistance < vFlagLocation.DistTo(m_vMVMCapturePoint)))
-			return CWaypoints::randomWaypointGoalBetweenArea(iFlags, TF2_TEAM_RED, 0, false, pBot, true, &m_vNearestTankLocation, &m_vMVMCapturePoint, true, -1, m_iCapturePointWptID);
 		else if ( ((m_vMVMFlagStart-vFlagLocation).Length()<1024.0f) )
 			return CWaypoints::randomWaypointGoalNearestArea(iFlags,TF2_TEAM_RED,0,false,pBot,true,&vFlagLocation,-1,true);
 		else 
@@ -1539,10 +953,7 @@ edict_t *CTeamFortress2Mod::getBuilding (eEngiBuild object, edict_t *pOwner)
 	static short int i;
 	static tf_tele_t *tele;
 
-	i = ENTINDEX(pOwner)-1;
-
-	if (i < 0)
-		return NULL;
+	i = ENTINDEX(pOwner)+1;
 
 	switch ( object )
 	{
@@ -1714,18 +1125,60 @@ void CTeamFortress2Mod::updatePointMaster()
 
 		if ( pMaster )
 		{
+#ifdef _WIN32
 			extern ConVar rcbot_const_point_master_offset;
-
 			extern IServerGameEnts *servergameents;
 
 			CBaseEntity *pMasterEntity = servergameents->EdictToBaseEntity(pMaster);
-			unsigned long full_size = sizeof(pMasterEntity);
 
+			unsigned long full_size = sizeof(pMasterEntity);
 			unsigned long mempoint = ((unsigned long)pMasterEntity) + rcbot_const_point_master_offset.GetInt();
 
 			m_PointMaster = (CTeamControlPointMaster*)mempoint;
-
 			m_PointMasterResource = pMaster;
+#else
+			extern ConVar rcbot_const_point_master_offset;
+			CBaseEntity *pent = pMaster->GetUnknown()->GetBaseEntity();
+			unsigned long mempoint = ((unsigned long)pent)+rcbot_const_point_master_offset.GetInt();
+
+			m_PointMaster = (CTeamControlPointMaster*)mempoint;
+			m_PointMasterResource = pMaster;
+#endif
+
+			extern ConVar rcbot_const_round_offset;
+
+			int idx = m_PointMaster->m_iCurrentRoundIndex;
+			int size = m_PointMaster->m_ControlPointRounds.Size();
+
+			if (idx >= 0 && size >= 0 && idx < 100 && size < 100) {
+				int infoCount = 0;
+
+				for (int r = 0; r < m_PointMaster->m_ControlPointRounds.Size(); ++r) {
+					CBaseEntity *pent = m_PointMaster->m_ControlPointRounds[r];
+					CTeamControlPointRound* pointRound = (CTeamControlPointRound*)((unsigned long)pent + (unsigned long)rcbot_const_round_offset.GetInt());
+
+					//CBotGlobals::botMessage(NULL, 0, "Control Points for Round %d", r);
+
+					for (int i = 0; i < pointRound->m_ControlPoints.Count(); ++i) {
+						CBaseHandle* handle = &pointRound->m_ControlPoints.Element(i);
+
+						if (handle->IsValid()) {
+							edict_t* edict = INDEXENT(handle->GetEntryIndex());
+
+							if (!edict->IsFree()) {
+								infoCount++;
+								//CBotGlobals::botMessage(NULL, 0, "%d, %d, %d, %s", r, i, handle->GetSerialNumber(), edict->GetClassName());
+							}
+						}
+					}
+				}
+
+				if (infoCount == 0) {
+					CBotGlobals::botMessage(NULL, 0, "If you are playing cp_* maps, and you get this message, something might be wrong with your mstr_offset!");
+				}
+			} else {
+				CBotGlobals::botMessage(NULL, 0, "If you are playing cp_* maps, and you get this message, something might be wrong with your mstr_offset!");
+			}
 		}
 	}
 
@@ -1780,15 +1233,12 @@ void CTeamFortress2Mod :: roundReset ()
 		// if all points are owned by RED at start up then its an attack defend map
 		setAttackDefendMap(i==numpoints);
 
-		m_ObjectiveResource.m_fUpdatePointTime = engine->Time() + rcbot_tf2_autoupdate_point_time.GetFloat();
-		m_ObjectiveResource.m_fNextCheckMonitoredPoint = engine->Time() + 0.2f;
+		m_ObjectiveResource.m_fUpdatePointTime = g_pEngine->Time() + rcbot_tf2_autoupdate_point_time.GetFloat();
+		m_ObjectiveResource.m_fNextCheckMonitoredPoint = g_pEngine->Time() + 0.2f;
 
 		m_ObjectiveResource.updatePoints();
 
 	}
-
-	m_pNearestTankBoss = NULL;
-	m_fNearestTankDistance = 0.0f;
 
 	m_iWinningTeam = 0;
 	m_bRoundOver = false;
@@ -1796,6 +1246,7 @@ void CTeamFortress2Mod :: roundReset ()
 	m_iFlagCarrierTeam = 0;
 	m_pPayLoadBombBlue = NULL;
 	m_pPayLoadBombRed = NULL;
+
 
 	if ( isMapType(TF_MAP_MVM) )	
 	{
@@ -1805,7 +1256,7 @@ void CTeamFortress2Mod :: roundReset ()
 
 			if ( pGoal )
 			{
-				m_vNearestTankLocation = m_vMVMFlagStart = m_vFlagLocationBlue = pGoal->getOrigin();
+				m_vMVMFlagStart = m_vFlagLocationBlue = pGoal->getOrigin();
 				m_bMVMFlagStartValid = m_bFlagLocationValidBlue = true;
 				m_iFlagPointWptID = CWaypoints::getWaypointIndex(pGoal);
 			}			
@@ -1953,63 +1404,6 @@ bool CTeamFortress2Mod::isCapping ( edict_t *pPlayer )//, int iCapIndex = -1 )
 	return false;
 }
 
-
-/*void CTF2Loadout :: addAttribute ( CAttribute *attrib )
-{
-	m_Attributes.push_back(attrib);
-}*/
-
-unsigned int CTF2Loadout::copyAttributesIntoArray ( CEconItemAttribute *pArray, void *pVTable )
-{
-	for ( unsigned int i = 0; i < m_Attributes.size(); i ++ )
-	{
-		pArray[i] = *(m_Attributes[i]);
-		pArray[i].m_pVTable = pVTable;
-	}
-
-	return m_Attributes.size();
-}
-
-void CTF2Loadout :: addAttribute ( int id, float fval )
-{
-	m_Attributes.push_back(new CEconItemAttribute(id,fval));
-}
-
-void  CTF2Loadout :: applyAttributes  ( CBaseEntity *pEnt )
-{/*
-	extern IServerGameEnts *servergameents;
-
-	edict_t *pEdict = servergameents->BaseEntityToEdict(pEnt);
-
-	for ( unsigned int i = 0; i < m_Attributes.size(); i ++ )
-	{		
-		int id = m_Attributes[i]->m_iAttributeDefinitionIndex;
-		float fval = m_Attributes[i]->m_flValue;
-
-		UTIL_ApplyAttribute(pEdict,g_pszAttributeNames[id],fval);		
-	}*/
-}
-
-void  CTF2Loadout :: applyAttributes  ( CEconItemView *cscript )
-{
-	for ( unsigned int i = 0; i < m_Attributes.size(); i ++ )
-	{
-		m_Attributes[i]->m_pVTable = cscript->m_AttributeList.m_pVTable;
-
-		cscript->m_AttributeList.m_Attributes.AddToHead((*m_Attributes[i]));
-	}
-}
-
-void  CTF2Loadout :: freeMemory ()
-{
-	for ( unsigned int i = 0; i < m_Attributes.size(); i ++ )
-	{
-		CEconItemAttribute *pdel = m_Attributes[i];
-		delete pdel;
-		m_Attributes[i] = NULL;
-	}
-}
-
 void CTeamFortress2Mod::freeMemory()
 {
 	vector<CTF2Loadout*> loadouts_to_free;
@@ -2052,9 +1446,4 @@ void CTeamFortress2Mod::freeMemory()
 	}
 
 	loadouts_to_free.clear();
-}
-
-void CAttribute :: applyAttribute ( edict_t *pEdict )
-{
-	//UTIL_ApplyAttribute(pEdict,m_name,m_fval);
 }

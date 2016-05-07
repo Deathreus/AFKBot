@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game Engine ("HL
- *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game g_pEngine ("HL
+ *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL Engine and MODs
+ *    respects for all of the code used other than the HL g_pEngine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -739,13 +739,11 @@ public:
 /////////////////////////////////////
 	CBotWeapon *getBestWeapon ( edict_t *pEnemy, bool bAllowMelee = true, bool bAllowMeleeFallback = true, bool bMeleeOnly = false, bool bExplosivesOnly = false, bool bIgnorePrimaryMinimum = false );
 
-	//void addWeapon ( int iId, edict_t *pent = NULL, bool bOverrideAll = true );
-
-	CBotWeapon *addWeapon(CWeapon *pWeaponInfo, int iId, edict_t *pent, bool bOverrideAll = true);
+	CBotWeapon *addWeapon( CWeapon *pWeaponInfo, int iId, edict_t *pent, bool bOverrideAll = true );
 
 	CBotWeapon *getWeapon ( CWeapon *pWeapon );
 
-	CBotWeapon *getActiveWeapon(const char *szWeaponName, edict_t *pWeaponUpdate = NULL, bool bOverrideAmmoTypes = true);
+	CBotWeapon *getActiveWeapon( const char *szWeaponName, edict_t *pWeaponUpdate = NULL, bool bOverrideAmmoTypes = true );
 
 	CBotWeapon *getCurrentWeaponInSlot ( int iSlot );
 
@@ -777,7 +775,6 @@ public:
 
 	CBotWeapon *getPrimaryWeapon (); // return the most important weapon bot is holding if if out o ammo
 
-	inline void resetSignature() { m_iWeaponsSignature = 0; }
 private:
 	// bot that has these weapons
 	CBot *m_pBot;
