@@ -17,14 +17,14 @@
 
 #include <eiface.h>
 
-extern IVEngineServer *g_pEngine;
+extern IVEngineServer *engine;
 extern CGlobalVars *gpGlobals;
 
 #if SOURCE_ENGINE == SE_EPISODEONE && defined METAMOD_PLAPI_VERSION
-#error "Metamod:Source 1.6 API is not supported on the old g_pEngine."
+#error "Metamod:Source 1.6 API is not supported on the old engine."
 #endif
 
-#define ENGINE_CALL(func) SH_CALL(g_pEngine, &IVEngineServer::func)
+#define ENGINE_CALL(func) SH_CALL(engine, &IVEngineServer::func)
 
 /**
  * Wrap some API calls for legacy MM:S.
@@ -47,16 +47,16 @@ class CCommand
 public:
 	const char *ArgS()
 	{
-		return g_pEngine->Cmd_Args();
+		return engine->Cmd_Args();
 	}
 	int ArgC()
 	{
-		return g_pEngine->Cmd_Argc();
+		return engine->Cmd_Argc();
 	}
 
 	const char *Arg(int index)
 	{
-		return g_pEngine->Cmd_Argv(index);
+		return engine->Cmd_Argv(index);
 	}
 };
 
@@ -64,7 +64,7 @@ public:
 #endif
 
 /**
- * Left 4 Dead g_pEngine removed these from IVEngineServer.
+ * Left 4 Dead engine removed these from IVEngineServer.
  */
 #if SOURCE_ENGINE >= SE_LEFT4DEAD
 
@@ -85,11 +85,11 @@ inline edict_t *PEntityOfEntIndex(int iEntIndex)
 
 inline int IndexOfEdict(const edict_t *pEdict)
 {
-	return g_pEngine->IndexOfEdict(pEdict);
+	return engine->IndexOfEdict(pEdict);
 }
 inline edict_t *PEntityOfEntIndex(int iEntIndex)
 {
-	return g_pEngine->PEntityOfEntIndex(iEntIndex);
+	return engine->PEntityOfEntIndex(iEntIndex);
 }
 
 #endif

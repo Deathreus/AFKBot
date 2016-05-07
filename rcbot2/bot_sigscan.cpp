@@ -29,9 +29,15 @@
 #include "bot_kv.h"
 #include "bot_getprop.h"
 #include "bot_sigscan.h"
+#include "bot_mods.h"
 
+CGetEconItemSchema *g_pGetEconItemSchema = NULL;
+CSetRuntimeAttributeValue *g_pSetRuntimeAttributeValue = NULL;
+CGetAttributeDefinitionByName *g_pGetAttributeDefinitionByName = NULL;
+CAttributeList_GetAttributeByID *g_pAttribList_GetAttributeByID = NULL;
 CGameRulesObject *g_pGameRules_Obj = NULL;
 CCreateGameRulesObject *g_pGameRules_Create_Obj = NULL;
+CGetAttributeDefinitionByID *g_pGetAttributeDefinitionByID = NULL;
 
 void **g_pGameRules = NULL;
 
@@ -64,7 +70,7 @@ size_t CSignatureFunction :: decodeHexString(unsigned char *buffer, size_t maxle
 			s_byte[1] = hexstr[i + 3];
 			s_byte[2] = '\0';
 			// Read it as an integer 
-			sscanf(s_byte, "%x", &r_byte);
+			sscanf_s(s_byte, "%x", &r_byte);
 			// Save the value 
 			buffer[written - 1] = r_byte;
 			// Adjust index 
@@ -258,7 +264,7 @@ void *CSignatureFunction::findSignature ( void *addrInBase, const char *signatur
 }
 
 
-void CSignatureFunction :: findFunc ( CAFKBotKeyValueList *kv, const char*pKey, void *pAddrBase, const char *defaultsig )
+void CSignatureFunction :: findFunc ( CRCBotKeyValueList *kv, const char*pKey, void *pAddrBase, const char *defaultsig )
 {
 	char *sig = NULL;
 
@@ -268,7 +274,7 @@ void CSignatureFunction :: findFunc ( CAFKBotKeyValueList *kv, const char*pKey, 
 		m_func = findSignature(pAddrBase,defaultsig);
 }
 
-CGameRulesObject::CGameRulesObject(CAFKBotKeyValueList *list, void *pAddrBase)
+CGameRulesObject::CGameRulesObject(CRCBotKeyValueList *list, void *pAddrBase)
 {
 #ifdef _WIN32
 	m_func = NULL;
@@ -277,7 +283,7 @@ CGameRulesObject::CGameRulesObject(CAFKBotKeyValueList *list, void *pAddrBase)
 #endif
 }
 
-CCreateGameRulesObject::CCreateGameRulesObject(CAFKBotKeyValueList *list, void *pAddrBase)
+CCreateGameRulesObject::CCreateGameRulesObject(CRCBotKeyValueList *list, void *pAddrBase)
 {
 #ifdef _WIN32
 	findFunc(list, "create_gamerules_object_win", pAddrBase, "\\x55\\x8B\\xEC\\x8B\\x0D\\x2A\\x2A\\x2A\\x2A\\x85\\xC9\\x74\\x07");
@@ -293,3 +299,323 @@ void **CCreateGameRulesObject::getGameRules()
 
 	return *reinterpret_cast<void ***>(addr + rcbot_gamerules_offset.GetInt());
 }
+
+CGetEconItemSchema::CGetEconItemSchema ( CRCBotKeyValueList *list, void *pAddrBase )
+{
+#ifdef _WIN32
+	findFunc(list,"get_item_schema_win",pAddrBase,"\\xE8\\x2A\\x2A\\x2A\\x2A\\x83\\xC0\\x04\\xC3");
+#else
+	findFunc(list,"get_item_schema_linux",pAddrBase,"@_Z15GEconItemSchemav");
+#endif
+}
+
+CEconItemSchema *CGetEconItemSchema::callme()
+{
+	void *thefunc = m_func;
+	CEconItemSchema *pret = NULL;
+
+	if ( thefunc == NULL )
+		return NULL;
+#ifdef _WIN32
+	__asm
+	{
+		call thefunc;
+		mov pret, eax;
+	};
+#else
+	FUNC_GET_ECON_ITEM_SCHEMA func = (FUNC_GET_ECON_ITEM_SCHEMA)thefunc;
+
+	pret = func();
+#endif
+	return pret;
+}
+
+
+
+CSetRuntimeAttributeValue::CSetRuntimeAttributeValue ( CRCBotKeyValueList *list, void *pAddrBase )
+{
+#ifdef _WIN32
+	findFunc(list,"set_attribute_value_win",pAddrBase,"\\x55\\x8B\\xEC\\x83\\xEC\\x14\\x33\\xD2\\x53\\x8B\\xD9\\x56\\x57\\x8B\\x73\\x10\\x85\\xF6");
+#else
+	findFunc(list,"set_attribute_value_linux",pAddrBase,"@_ZN14CAttributeList24SetRuntimeAttributeValueEPK28CEconItemAttributeDefinitionf");
+#endif
+}
+
+bool CSetRuntimeAttributeValue::callme(edict_t *pEnt, CAttributeList *list, CEconItemAttributeDefinition *attrib,float value)
+{
+	union {
+		int (CAttributeList::*SetRunTimeAttributeValue)(CEconItemAttributeDefinition*, float);
+		void* addr;
+	} u;
+
+	int bret = 0;
+	void *thefunc = m_func;
+
+	int iEntityIndex = ENTINDEX(pEnt);
+
+	if ( list && attrib && thefunc )
+	{
+		u.addr = m_func;
+
+		bret = (reinterpret_cast<CAttributeList*>(list)->*u.SetRunTimeAttributeValue)(attrib,value);
+		/*
+#ifdef _WIN32
+		__asm 
+		{
+			mov ecx, list;
+			push attrib;
+			push value;
+			call thefunc;
+			mov bret, eax;
+		};
+#else
+		FUNC_SET_ATTRIB_VALUE func = (FUNC_SET_ATTRIB_VALUE)thefunc;
+
+		bret = func(list,attrib,value);
+#endif*/
+	}
+
+	return (bret==1) || ((bret & 0x1FFF) == ((iEntityIndex + 4) * 4));
+}
+
+
+CGetAttributeDefinitionByID::CGetAttributeDefinitionByID(CRCBotKeyValueList *list, void *pAddrBase)
+{
+#ifdef _WIN32
+	findFunc(list, "get_attrib_def_id_win", pAddrBase, "\\x55\\x8B\\xEC\\x83\\xEC\\x2A\\x53\\x56\\x8B\\xD9\\x8D\\x2A\\x2A\\x57");
+#else
+	findFunc(list, "get_attrib_def_id_linux", pAddrBase, "@_ZN15CEconItemSchema22GetAttributeDefinitionEi");
+#endif
+}
+
+CEconItemAttributeDefinition *CGetAttributeDefinitionByID::callme(CEconItemSchema *schema, int id)
+{
+	void *pret = NULL;
+
+	if (schema && m_func)
+	{
+		void *thefunc = m_func;
+#ifdef _WIN32
+		__asm
+		{
+			mov ecx, schema;
+			push id;
+			call thefunc;
+			mov pret, eax;
+		};
+#else
+		FUNC_GET_ATTRIB_BY_NAME func = (FUNC_GET_ATTRIB_BY_NAME)thefunc;
+
+		pret = (void*)func(schema, id);
+#endif
+	}
+
+	return (CEconItemAttributeDefinition*)pret;
+}
+
+
+CGetAttributeDefinitionByName::CGetAttributeDefinitionByName ( CRCBotKeyValueList *list, void *pAddrBase )
+{
+#ifdef _WIN32
+	findFunc(list,"get_attrib_definition_win",pAddrBase,"\\x55\\x8B\\xEC\\x83\\xEC\\x18\\x83\\x7D\\x08\\x00\\x53\\x56\\x57\\x8B\\xD9\\x75\\x2A\\x33\\xC0\\x5F");
+#else
+	findFunc(list,"get_attrib_definition_linux",pAddrBase,"@_ZN15CEconItemSchema28GetAttributeDefinitionByNameEPKc");
+#endif
+}
+
+CEconItemAttributeDefinition *CGetAttributeDefinitionByName::callme(CEconItemSchema *schema, const char *attrib)
+{
+	void *pret = NULL;
+
+	if ( schema && m_func )
+	{
+		void *thefunc = m_func;
+#ifdef _WIN32
+		__asm
+		{
+			mov ecx, schema;
+			push attrib;
+			call thefunc;
+			mov pret, eax;
+		};
+#else
+		FUNC_GET_ATTRIB_BY_NAME func = (FUNC_GET_ATTRIB_BY_NAME)thefunc;
+
+		pret = (void*)func(schema,attrib);
+#endif
+	}
+
+	return (CEconItemAttributeDefinition*)pret;
+}
+
+
+CAttributeList_GetAttributeByID::CAttributeList_GetAttributeByID ( CRCBotKeyValueList *list, void *pAddrBase )
+{
+#ifdef _WIN32
+	findFunc(list,"attributelist_get_attrib_by_id_win",pAddrBase,"\\x55\\x8B\\xEC\\x51\\x8B\\xC1\\x53\\x56\\x33\\xF6\\x89\\x45\\xFC\\x8B\\x58\\x10");
+#else
+	findFunc(list,"attributelist_get_attrib_by_id_linux",pAddrBase,"@_ZNK14CAttributeList16GetAttributeByIDEi");
+#endif
+}
+
+CEconItemAttribute *CAttributeList_GetAttributeByID::callme(CAttributeList *list, int id)
+{
+	void *pret = NULL;
+
+	if ( list && m_func )
+	{
+		void *thefunc = m_func;
+#ifdef _WIN32
+		__asm
+	   {
+		  mov ecx, list;
+		  push id;
+		  call thefunc;
+		  mov pret, eax;
+	   };
+#else
+	   FUNC_ATTRIBLIST_GET_ATTRIB_BY_ID func = (FUNC_ATTRIBLIST_GET_ATTRIB_BY_ID)thefunc;
+
+	   pret = (void*)func(list,id);
+#endif
+	}
+
+	return (CEconItemAttribute*)pret;
+}
+
+// TF2 Attributes - Flamin Sarge
+bool TF2_SetAttrib(edict_t *pedict, const char *strAttrib, float flVal)
+{
+	//CBaseEntity *pEntity;
+
+	if (!pedict || pedict->IsFree())
+		return false;
+
+	CAttributeList *pList = CClassInterface::getAttributeList(pedict);
+
+	CEconItemSchema *pSchema = g_pGetEconItemSchema->callme();
+
+	if (pSchema == NULL) 
+		return false;
+
+	int id = CAttributeLookup::findAttributeID(strAttrib);
+
+	if (id == -1)
+		return false;
+
+	CEconItemAttributeDefinition *pAttribDef = g_pGetAttributeDefinitionByID->callme(pSchema, id);
+
+	if ( (unsigned int)pAttribDef < 0x10000)
+	{
+		return false;
+	}
+
+	bool bSuccess = g_pSetRuntimeAttributeValue->callme(pedict, pList, pAttribDef, flVal);
+
+	//Just a note, the above SDKCall returns ((entindex + 4) * 4) | 0xA000), and you can AND it with 0x1FFF to get back the entindex if you want, though it's pointless)
+	//I don't know any other specifics, such as if the highest 3 bits actually matter
+	//And I don't know what happens when you hit ent index 2047
+	//	ClearAttributeCache(GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity"));
+	//	decl String:strClassname[64];
+	//	GetEntityClassname(entity, strClassname, sizeof(strClassname));
+	//	if (strncmp(strClassname, "tf_wea", 6, false) == 0 || StrEqual(strClassname, "tf_powerup_bottle", false))
+	//	{
+	//		new client = GetEntPropEnt(entity, Prop_Send, "m_hOwnerEntity");
+	//		if (client > 0 && client <= MaxClients && IsClientInGame(client)) ClearAttributeCache(client);
+	//	}
+
+	return bSuccess;
+}
+
+CEconItemAttribute *TF2Attrib_GetByName(edict_t *entity, const char *strAttrib)
+{	
+	if (entity->IsFree())
+	{
+		return NULL;
+	}
+
+	CAttributeList *pList = CClassInterface::getAttributeList(entity);
+
+	if (pList == NULL)
+		return NULL;
+
+	if (*(int*)((unsigned long)pList + 4) == 0x0)
+	{
+		throw "Invalid Attribute List?";
+
+		return NULL;
+	}
+
+	if (!g_pGetEconItemSchema)
+		return NULL;
+
+	CEconItemSchema *pSchema = g_pGetEconItemSchema->callme();
+
+	if (pSchema == NULL)
+		return NULL;
+	CEconItemAttributeDefinition *pAttribDef = g_pGetAttributeDefinitionByName->callme(pSchema, strAttrib);
+
+	if ((unsigned int)pAttribDef < 0x10000)
+		return NULL;
+
+	unsigned short int iDefIndex = *(unsigned short int*)(((unsigned long)pAttribDef) + 4);
+
+	CEconItemAttribute *pAttrib = g_pAttribList_GetAttributeByID->callme(pList, iDefIndex);
+
+	if ((unsigned int)pAttrib < 0x10000)
+		pAttrib = NULL;
+
+	return pAttrib;
+}
+
+bool TF2_setAttribute(edict_t *pEdict, const char *szName, float flVal)
+{
+	// Creates the new Attribute
+	CEconItemAttribute *pAttrib = NULL;
+
+	try
+	{
+		pAttrib = TF2Attrib_GetByName(pEdict, szName);
+	}
+
+	catch (const char *str)
+	{
+		if ( str && *str )
+			return false;
+	}
+
+	if (((unsigned int)pAttrib) < 0x10000)
+	{
+		return TF2_SetAttrib(pEdict, szName, flVal);
+	}
+	else
+		pAttrib->m_flValue = flVal;
+
+	return true;
+}
+
+/*
+CEconItemAttribute *UTIL_AttributeList_GetAttributeByID ( CAttributeList *list, int id )
+{
+	void *pret = NULL;
+
+	if ( list && AttributeList_GetAttributeByID )
+	{
+#ifdef _WIN32
+		__asm
+	   {
+		  mov ecx, list;
+		  push id;
+		  call AttributeList_GetAttributeByID;
+		  mov pret, eax;
+	   };
+#else
+	   FUNC_ATTRIBLIST_GET_ATTRIB_BY_ID func = (FUNC_ATTRIBLIST_GET_ATTRIB_BY_ID)AttributeList_GetAttributeByID;
+
+	   pret = (void*)func(list,id);
+#endif
+	}
+
+	return (CEconItemAttribute*)pret;
+}
+*/

@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game g_pEngine ("HL
- *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game Engine ("HL
+ *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL g_pEngine and MODs
+ *    respects for all of the code used other than the HL Engine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -49,7 +49,7 @@ void CBotButtons :: duck (float fFor, float fFrom)
 
 void CBotButton :: hold ( float fFrom, float fFor, float fLetGoTime )
 {
-	fFrom += g_pEngine->Time();
+	fFrom += engine->Time();
 	m_fTimeStart = fFrom;
 	m_fTimeEnd = fFrom + fFor;
 	m_fLetGoTime = m_fTimeEnd+fLetGoTime;
@@ -104,7 +104,7 @@ int CBotButtons :: getBitMask ()
 
 		int iBitMask = 0;
 
-		float fTime = g_pEngine->Time();
+		float fTime = engine->Time();
 
 		for (unsigned int i = 0; i < m_theButtons.size(); i ++ )
 		{			
@@ -125,7 +125,7 @@ bool CBotButtons :: canPressButton ( int iButtonId )
 	for (unsigned int i = 0; i < m_theButtons.size(); i ++ )
 	{			
 		if ( m_theButtons[i]->getID() == iButtonId )
-			return m_theButtons[i]->canPress(g_pEngine->Time());
+			return m_theButtons[i]->canPress(engine->Time());
 	}
 	return false;		
 }
@@ -140,7 +140,7 @@ bool CBotButtons :: holdingButton ( int iButtonId )
 	for ( unsigned int i = 0; i < m_theButtons.size(); i ++ )
 	{
 		if ( m_theButtons[i]->getID() == iButtonId )
-			return m_theButtons[i]->held(g_pEngine->Time());
+			return m_theButtons[i]->held(engine->Time());
 	}
 
 	return false;

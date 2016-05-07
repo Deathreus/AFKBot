@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game g_pEngine ("HL
- *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game Engine ("HL
+ *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL g_pEngine and MODs
+ *    respects for all of the code used other than the HL Engine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -494,7 +494,7 @@ void CWaypointLocations :: FindNearestBlastInBucket ( int i, int j, int k, const
 	
 	dataUnconstArray<int> *arr = &(m_iLocations[i][j][k]);
 	short int size = (short int)arr->Size();
-//	CBotMod *curmod = CBotGlobals::getCurrentMod();
+	CBotMod *curmod = CBotGlobals::getCurrentMod();
 
 	for ( register short int l = 0; l < size; l ++ )
 	//while ( !tempStack.IsEmpty() )
@@ -517,7 +517,7 @@ void CWaypointLocations :: FindNearestBlastInBucket ( int i, int j, int k, const
 			continue;
 		}
 
-		if ( bCheckArea && !CTeamFortress2Mod::m_ObjectiveResource.isWaypointAreaValid(curr_wpt->getArea()) )
+		if ( bCheckArea && !curmod->isWaypointAreaValid(curr_wpt->getArea(),curr_wpt->getFlags()) )
 			continue;
 
 		if ( bIsBot )
@@ -611,7 +611,7 @@ void CWaypointLocations :: FindNearestInBucket ( int i, int j, int k, const Vect
 			}
 		}
 
-		if ( bCheckArea && !CTeamFortress2Mod::m_ObjectiveResource.isWaypointAreaValid(curr_wpt->getArea()) )
+		if ( bCheckArea && !curmod->isWaypointAreaValid(curr_wpt->getArea(),curr_wpt->getFlags()) )
 			continue;
 
 		if ( iFlagsOnly != 0 )
@@ -808,10 +808,10 @@ void CWaypointLocations :: DrawWaypoints ( CClient *pClient, float fDist )
 							// from Valve developer community wiki
 							// http://developer.valvesoftware.com/wiki/Transforming_the_Multiplayer_SDK_into_Coop
 
-							clusterIndex = g_pEngine->GetClusterForOrigin( vOrigin );
-							g_pEngine->GetPVSForCluster( clusterIndex, sizeof(m_bPvs), m_bPvs );							
+							clusterIndex = engine->GetClusterForOrigin( vOrigin );
+							engine->GetPVSForCluster( clusterIndex, sizeof(m_bPvs), m_bPvs );							
 
-							if ( g_pEngine->CheckOriginInPVS( vWpt, m_bPvs, sizeof( m_bPvs ) ) )
+							if ( engine->CheckOriginInPVS( vWpt, m_bPvs, sizeof( m_bPvs ) ) )
 								pWpt->draw(pEntity,pClient->isPathWaypointOn()&&(pClient->currentWaypoint()==iWpt),iDrawType);
 						}
 					}

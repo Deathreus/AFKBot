@@ -20,10 +20,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game g_pEngine ("HL
- *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game Engine ("HL
+ *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL g_pEngine and MODs
+ *    respects for all of the code used other than the HL Engine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -36,15 +36,15 @@
 #include "bot_const.h"
 #include "bot_strings.h"
 #include "bot_fortress.h"
-//#include "bot_dod_bot.h"
+#include "bot_dod_bot.h"
 #include "bot_waypoint.h"
 #include "bot_tf2_points.h"
 
 #define MAX_CAP_POINTS 32
 
-//#define DOD_MAPTYPE_UNKNOWN 0 
-//#define DOD_MAPTYPE_FLAG 1
-//#define DOD_MAPTYPE_BOMB 2
+#define DOD_MAPTYPE_UNKNOWN 0 
+#define DOD_MAPTYPE_FLAG 1
+#define DOD_MAPTYPE_BOMB 2
 
 #define BOT_ADD_METHOD_DEFAULT 0
 #define BOT_ADD_METHOD_PUPPET 1
@@ -79,6 +79,31 @@ typedef enum
 	BOTTYPE_NS2,
 	BOTTYPE_MAX
 }eBotType;
+
+
+// tf2
+class CAttributeID
+{
+public:
+	CAttributeID(int id, const char *attrib)
+	{
+		m_id = id;
+		m_attribute = attrib;
+	}
+
+	int m_id;
+	const char *m_attribute;
+};
+
+class CAttributeLookup
+{
+public:
+	static void addAttribute(const char *szAttrib, int id);
+	static int findAttributeID(const char *szAttrib);
+	static void freeMemory();
+private:
+	static vector<CAttributeID*> attributes;
+};
 
 class CBotMod
 {
@@ -190,7 +215,7 @@ private:
 	edict_t *m_pEdict;
 	int m_iId;
 };
-
+*/
 #define MAX_DOD_FLAGS 8
 
 class CDODFlags
@@ -298,7 +323,7 @@ public:
 
 	inline float isBombExplodeImminent ( int id )
 	{
-		return (g_pEngine->Time() - m_fBombPlantedTime[id]) > DOD_BOMB_EXPLODE_IMMINENT_TIME;
+		return (engine->Time() - m_fBombPlantedTime[id]) > DOD_BOMB_EXPLODE_IMMINENT_TIME;
 	}
 
 	inline void setBombPlanted ( int id, bool val )
@@ -306,7 +331,7 @@ public:
 		m_bBombPlanted[id] = val;
 
 		if ( val )
-			m_fBombPlantedTime[id] = g_pEngine->Time();
+			m_fBombPlantedTime[id] = engine->Time();
 		else
 			m_fBombPlantedTime[id] = 0;
 	}
@@ -601,7 +626,7 @@ public:
 
 	//to do for snipers and machine gunners
 	/*static unsigned short int getNumberOfClassOnTeam ( int iClass );
-	static unsigned short int getNumberOfPlayersOnTeam ( int iClass );
+	static unsigned short int getNumberOfPlayersOnTeam ( int iClass );*/
 
 protected:
 
@@ -750,7 +775,7 @@ public:
 	//void mapInit ();
 
 	//void entitySpawn ( edict_t *pEntity );
-}; */
+};
 
 #define NEWENUM typedef enum {
 
@@ -819,15 +844,31 @@ class CTF2Loadout
 public:
 	CTF2Loadout ( const char *pszClassname, int iIndex, int iQuality, int iMinLevel, int iMaxLevel );
 
+	//const char *getScript ( CEconItemView *script );
+	//CEconItemView *getScript ( CEconItemView *other );
+	void getScript ( CEconItemView *cscript );
+
+	void addAttribute ( int id, float fval );
+
+	unsigned int copyAttributesIntoArray ( CEconItemAttribute *pArray, void *pVTable = NULL );
+	//void addAttribute ( CAttribute *attrib );
+
+	//void applyAttributes ( edict_t *pEdict );
+	void applyAttributes ( CEconItemView *cscript );
+	void applyAttributes  ( CBaseEntity *pEnt );
+
 	void freeMemory ();
 
 	int m_iIndex;
-	int m_iSlot;
+//	int m_iSlot;
 	int m_iQuality;
 	bool m_bCanBeUsedInMedieval;
 	int m_iMinLevel;
 	int m_iMaxLevel;
 	const char *m_pszClassname;
+	//vector<CAttribute*> m_Attributes;
+	vector<CEconItemAttribute*> m_Attributes;
+	//CEconItemView m_ItemView;
 };
 
 class CTeamFortress2Mod : public CBotMod
@@ -888,7 +929,8 @@ public:
 	static void setArea ( int area ) { m_iArea = area; }
 
 	static bool isSentry ( edict_t *pEntity, int iTeam, bool checkcarrying = false );
-
+	static bool isTankBoss(edict_t *pEntity);
+	static void checkMVMTankBoss(edict_t *pEntity);
 	static bool isTeleporter ( edict_t *pEntity, int iTeam, bool checkcarrying = false );
 
 	static void updateTeleportTime ( edict_t *pOwner );
@@ -1010,6 +1052,12 @@ public:
 		m_bHasRoundStarted = false;
 		m_bRoundOver = true;
 		m_iWinningTeam = iWinningTeam;
+		m_iLastWinningTeam = m_iWinningTeam;
+	}
+
+	static inline bool wonLastRound(int iTeam)
+	{
+		return m_iLastWinningTeam == iTeam;
 	}
 
 	static inline bool isLosingTeam ( int iTeam )
@@ -1310,6 +1358,7 @@ private:
 
 	static bool m_bRoundOver;
 	static int m_iWinningTeam;
+	static int m_iLastWinningTeam;
 
 	static Vector m_vFlagLocationBlue;
 	static bool m_bFlagLocationValidBlue;
@@ -1328,6 +1377,9 @@ private:
 
 	static void setupLoadOutWeapons ( void );
 
+	static MyEHandle m_pNearestTankBoss;
+	static float m_fNearestTankDistance;
+	static Vector m_vNearestTankLocation;
 	// slots X nine classes
 	static vector<CTF2Loadout*> m_pLoadoutWeapons[TF2_SLOT_MAX][9];
 	//static vector<CTF2Loadout*> m_pHats;
@@ -1350,7 +1402,7 @@ public:
 private:
 
 };
-/*
+
 class CHalfLifeDeathmatchMod : public CBotMod
 {
 public:

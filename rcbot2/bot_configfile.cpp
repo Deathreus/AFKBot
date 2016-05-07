@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game g_pEngine ("HL
- *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game Engine ("HL
+ *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL g_pEngine and MODs
+ *    respects for all of the code used other than the HL Engine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -105,17 +105,11 @@ void CBotConfigFile :: load ()
 		if ( line[0] == '#' )
 			continue;
 
-		size_t len = strlen(line);
+		//len = strlen(line);
 
-		if (line[len-1] == '\n') {
-			line[--len] = '\0';
-		}
+		//if ( line[len-1] == '\n' || ( line[len-1] == '\r' ))
+		//	line[--len] = 0;
 
-		if (line[len-1] == '\r') {
-			line[--len] = '\0';
-		}
-
-		//CBotGlobals::botMessage(NULL, 0, line);
 		m_Commands.push_back(CStrings::getString(line));
 	}
 
@@ -125,33 +119,14 @@ void CBotConfigFile :: load ()
 
 void CBotConfigFile :: doNextCommand ()
 {
-	char cmd[64] = {0};
-
-	if ( (m_fNextCommandTime < g_pEngine->Time()) && (m_iCmd < m_Commands.size()) )
+	if ( (m_fNextCommandTime < engine->Time()) && (m_iCmd < m_Commands.size()) )
 	{
-		snprintf(cmd, sizeof(cmd), "%s\n", m_Commands[m_iCmd]);
-		g_pEngine->ServerCommand(cmd);
+		engine->ServerCommand(m_Commands[m_iCmd]);
 
-		//CBotGlobals::botMessage(NULL,0,"Bot Command '%s' executed",m_Commands[m_iCmd]);
+		CBotGlobals::botMessage(NULL,0,"Bot Command '%s' executed",m_Commands[m_iCmd]);
 		m_iCmd ++;
-		m_fNextCommandTime = g_pEngine->Time() + 0.1f;
+		m_fNextCommandTime = engine->Time() + 0.1f;
 	}
-}
-
-void CBotConfigFile :: executeCommands ()
-{
-	char cmd[64] = {0};
-
-	while ( (m_iCmd < m_Commands.size()) )
-	{
-		snprintf(cmd, sizeof(cmd), "%s\n", m_Commands[m_iCmd]);
-		g_pEngine->ServerCommand(cmd);
-
-		//CBotGlobals::botMessage(NULL,0,"Bot Command '%s' executed",m_Commands[m_iCmd]);
-		m_iCmd ++;
-	}
-
-	g_pEngine->ServerExecute();
 }
 
 void CRCBotTF2UtilFile :: init()
