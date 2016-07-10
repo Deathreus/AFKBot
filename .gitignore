@@ -8,16 +8,10 @@
 *.sln.docstates
 
 # Build results
-[Dd]ebug/
-[Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
-x64/
-x86/
-build/
-bld/
-[Bb]in/
-[Oo]bj/
+msvc12/[Dd]ebug/
+msvc12/[Dd]ebugPublic/
+msvc12/[Rr]elease/
+msvc12/[Rr]eleases/
 
 # Roslyn cache directories
 *.ide/
