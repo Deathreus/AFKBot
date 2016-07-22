@@ -16,6 +16,9 @@ msvc12/[Rr]eleases/
 # Roslyn cache directories
 *.ide/
 
+# AMBuild packages
+build/
+
 # MSTest test Results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
