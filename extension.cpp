@@ -331,7 +331,6 @@ void AFKBot::PlayerRunCmd(CUserCmd *ucmd, IMoveHelper *moveHelper)
 		pl->fixangle = FIXANGLE_ABSOLUTE;
 
 		g_pLastBot = (CBotTF2*)pBot;
-		pBot->SetUserCMD(*ucmd);
 	}
 
 	//g_pSM->LogMessage(NULL, "H %i | %i | %f | %f | %f | %f | %f | %i", ucmd->command_number, ucmd->tick_count, ucmd->viewangles.x, ucmd->viewangles.y, ucmd->viewangles.z, ucmd->forwardmove, ucmd->sidemove, ucmd->buttons); 
@@ -347,8 +346,6 @@ void OnVSPListening(IServerPluginCallbacks *iface)
 void AFKBot::ServerActivate(edict_t *pEdictList, int edictCount, int clientMax)
 {
 	META_LOG(g_PLAPI, "ServerActivate() called: edictCount = %d, clientMax = %d", edictCount, clientMax);
-
-	//CAccessClients::load();
 
 	CBotGlobals::SetClientMax(clientMax);
 }
@@ -515,8 +512,6 @@ bool AFKBot::LevelInit(const char *pMapName,
 	//CClients::initall();
 	// Must set this
 	CBotGlobals::SetMapName(pMapName);
-
-	Msg("Level \"%s\" has been loaded\n", pMapName);
 
 	CWaypoints::PrecacheWaypointTexture();
 
@@ -801,6 +796,8 @@ static cell_t SetClientAFKBot(IPluginContext *pContext, const cell_t *params)
 	}
 	else
 		return pContext->ThrowNativeError("Invalid client %d\nHe is either not connected, a fake client, or in spectator", params[1]);
+
+	return 0;
 }
 
 static cell_t IsClientAFKBot(IPluginContext *pContext, const cell_t *params)
