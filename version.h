@@ -9,12 +9,11 @@
 
 #if defined SM_GENERATED_BUILD
 #include "version_auto.h"
+
 #else
 
-#ifndef SM_GENERATED_BUILD
 #undef BINARY_NAME
 #define BINARY_NAME "afkbot.ext.2.ep2v.dll\0"
-#endif
 
 #define SM_BUILD_TAG		"-manual"
 #define SM_BUILD_UNIQUEID	"[MANUAL BUILD]"

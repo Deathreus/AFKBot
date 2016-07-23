@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game g_pEngine ("HL
- *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game engine ("HL
+ *    engine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL g_pEngine and MODs
+ *    respects for all of the code used other than the HL engine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -123,7 +123,7 @@ extern const char *g_szLookTaskToString[LOOK_MAX];
 #define BOT_TAG "[AFKBot] " // for printing messages
 
 /*
-// g_pEngine player info, no game related infos here
+// engine player info, no game related infos here
 // If you change this, change the two byteswap defintions: 
 // cdll_client_int.cpp and cdll_engine_int.cpp
 typedef struct player_info_s
@@ -174,10 +174,10 @@ typedef enum
 #define MIN_COVER_MOVE_DIST 128
 
 #undef INDEXENT
-#define INDEXENT(iEdictNum) g_pEngine->PEntityOfEntIndex(iEdictNum)
+#define INDEXENT(iEdictNum) engine->PEntityOfEntIndex(iEdictNum)
 
 #undef ENTINDEX
-#define ENTINDEX(pEdict) g_pEngine->IndexOfEdict(pEdict)
+#define ENTINDEX(pEdict) engine->IndexOfEdict(pEdict)
 
 #define BOT_NAME "AFKBot"
 #ifdef __linux__
@@ -186,7 +186,7 @@ typedef enum
 #define BOT_VER "TF2/HL2DM/DOD:S 1.00 META Win32 473 (BUILD " ## __DATE__ ## "-" ## __TIME__ ## ")"
 #endif
 #define BOT_NAME_VER "AFKBot version"
-#define BOT_VER_CVAR "afkbot_ver"
+#define BOT_VER_CVAR "Version"
 #define BOT_FOLDER "afkbot"
 
 typedef enum

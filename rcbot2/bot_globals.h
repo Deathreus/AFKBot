@@ -20,10 +20,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game g_pEngine ("HL
- *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game engine ("HL
+ *    engine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL g_pEngine and MODs
+ *    respects for all of the code used other than the HL engine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -49,171 +49,171 @@
 class CBotGlobals
 {
 public:
-	CBotGlobals ();
+	CBotGlobals();
 
-	static void init ();
-	static bool initModFolder ();
+	static void Init();
+	static bool InitModFolder();
 
-	static bool gameStart ();	
+	static bool GameStart();
 
-	static QAngle entityEyeAngles ( edict_t *pEntity );
+	static QAngle EntityEyeAngles(edict_t *pEntity);
 
-	static QAngle playerAngles ( edict_t *pPlayer );
+	static QAngle PlayerAngles(edict_t *pPlayer);
 
-	static void freeMemory ();
+	static void FreeMemory();
 
-	static inline bool isPlayer ( edict_t *pEdict )
+	static inline bool IsPlayer(edict_t *pEdict)
 	{
 		static int index;
 
 		index = ENTINDEX(pEdict);
 
-		return (index>0)&&(index<=gpGlobals->maxClients);
+		return (index > 0) && (index <= gpGlobals->maxClients);
 	}
 
-	static bool walkableFromTo (edict_t *pPlayer,Vector v_src, Vector v_dest);
+	static bool WalkableFromTo(edict_t *pPlayer, Vector v_src, Vector v_dest);
 
-	static void teleportPlayer ( edict_t *pPlayer, Vector v_dest );
+	static void TeleportPlayer(edict_t *pPlayer, Vector v_dest);
 
-	static float yawAngleFromEdict(edict_t *pEntity,Vector vOrigin);
+	static float YawAngleFromEdict(edict_t *pEntity, Vector vOrigin);
 	//static float getAvoidAngle(edict_t *pEdict,Vector origin);
 
 	// make folders for a file if they don't exist
-	static bool makeFolders ( char *szFile );
+	static bool MakeFolders(char *szFile);
 	// just open file but also make folders if possible
-	static FILE *openFile ( char *szFile, char *szMode );
+	static FILE *OpenFile(char *szFile, char *szMode);
 	// get the proper location
-	static void buildFileName ( char *szOutput, const char *szFile, const char *szFolder = NULL, const char *szExtension = NULL, bool bModDependent = false );
+	static void BuildFileName(char *szOutput, const char *szFile, const char *szFolder = NULL, const char *szExtension = NULL, bool bModDependent = false);
 	// add a directory delimiter to the string like '/' (linux) or '\\' (windows) or
-	static void addDirectoryDelimiter ( char *szString );
+	static void AddDirectoryDelimiter(char *szString);
 	// print a message to client pEntity with bot formatting
-	static void botMessage ( edict_t *pEntity, int iErr, char *fmt, ... );	
-	
-	static void fixFloatAngle ( float *fAngle );
+	static void BotMessage(edict_t *pEntity, int iErr, char *fmt, ...);
 
-	static float DotProductFromOrigin ( edict_t *pEnemy, Vector pOrigin );
-	static float DotProductFromOrigin ( Vector vPlayer, Vector vFacing, QAngle eyes );
+	static void FixFloatAngle(float *fAngle);
 
-	static int numPlayersOnTeam(int iTeam, bool bAliveOnly);
-	static void setMapName ( const char *szMapName );
-	static char *getMapName (); 
+	static void NormalizeAngle(QAngle &qAngle);
 
-	static bool IsMapRunning () { return m_bMapRunning; }
-	static void setMapRunning ( bool bSet ) { m_bMapRunning = bSet; }
+	static float DotProductFromOrigin(edict_t *pEnemy, Vector pOrigin);
+	static float DotProductFromOrigin(Vector vPlayer, Vector vFacing, QAngle eyes);
 
-	static bool isNetworkable ( edict_t *pEntity );
+	static int NumPlayersOnTeam(int iTeam, bool bAliveOnly);
+	static void SetMapName(const char *szMapName);
+	static char *GetMapName();
 
-	static inline bool entityIsValid ( edict_t *pEntity )
+	static bool IsMapRunning() { return m_bMapRunning; }
+	static void SetMapRunning(bool bSet) { m_bMapRunning = bSet; }
+
+	static bool IsNetworkable(edict_t *pEntity);
+
+	static inline bool EntityIsValid(edict_t *pEntity)
 	{
 		return pEntity && !pEntity->IsFree() && pEntity->GetNetworkable() && pEntity->GetIServerEntity();
 		//return ( !FNullEnt(pEntity) && !pEntity->IsFree() && pEntity->GetNetworkable() && pEntity->GetIServerEntity() && pEntity->GetCollideable() );
 	}
 
-	static void serverSay ( char *fmt, ... );
+	static void ServerSay(char *fmt, ...);
 
-	static bool isAlivePlayer ( edict_t *pEntity );
+	static bool IsAlivePlayer(edict_t *pEntity);
 
-	static bool setWaypointDisplayType ( int iType );
+	static bool SetWaypointDisplayType(int iType);
 
-	static void fixFloatDegrees360 ( float *pFloat );
+	static void FixFloatDegrees360(float *pFloat);
 
-	static edict_t *findPlayerByTruncName ( const char *name );
+	static edict_t *FindPlayerByTruncName(const char *name);
 
-// linux fix
-	inline static CBotMod *getCurrentMod ()
+	// linux fix
+	inline static CBotMod *GetCurrentMod()
 	{
 		return m_pCurrentMod;
 	}
 
 	////////////////////////////////////////////////////////////////////////
 	// useful functions
-	static bool boundingBoxTouch2d ( 
+	static bool BoundingBoxTouch2d(
 		const Vector2D &a1, const Vector2D &a2,
-		const Vector2D &bmins, const Vector2D &bmaxs );
+		const Vector2D &bmins, const Vector2D &bmaxs);
 
-	static bool onOppositeSides2d ( 
+	static bool OnOppositeSides2d(
 		const Vector2D &amins, const Vector2D &amaxs,
-		const Vector2D &bmins, const Vector2D &bmaxs );
+		const Vector2D &bmins, const Vector2D &bmaxs);
 
-	static bool linesTouching2d ( 
+	static bool LinesTouching2d(
 		const Vector2D &amins, const Vector2D &amaxs,
-		const Vector2D &bmins, const Vector2D &bmaxs );
+		const Vector2D &bmins, const Vector2D &bmaxs);
 
-	static bool boundingBoxTouch3d (
+	static bool BoundingBoxTouch3d(
 		const Vector &a1, const Vector &a2,
-		const Vector &bmins, const Vector &bmaxs );
+		const Vector &bmins, const Vector &bmaxs);
 
-	static bool onOppositeSides3d (
+	static bool OnOppositeSides3d(
 		const Vector &amins, const Vector &amaxs,
-		const Vector &bmins, const Vector &bmaxs );
+		const Vector &bmins, const Vector &bmaxs);
 
-	static bool linesTouching3d (
+	static bool LinesTouching3d(
 		const Vector &amins, const Vector &amaxs,
-		const Vector &bmins, const Vector &bmaxs );
+		const Vector &bmins, const Vector &bmaxs);
 
-	static float grenadeWillLand (  Vector vOrigin, Vector vEnemy, float fProjSpeed = 400.0f, float fGrenadePrimeTime = 5.0f, float *fAngle = NULL );
+	static float GrenadeWillLand(Vector vOrigin, Vector vEnemy, float fProjSpeed = 400.0f, float fGrenadePrimeTime = 5.0f, float *fAngle = NULL);
 	////////////////////////////////////////////////////////////////////////
 
 	/*static Vector forwardVec ();
 	static Vector rightVec ();
 	static Vector upVec ();*/
 	////////
-	static trace_t *getTraceResult () { return &m_TraceResult; }
-	static bool isVisibleHitAllExceptPlayer ( edict_t *pPlayer, Vector vSrc, Vector vDest, edict_t *pDest = NULL );
-	static bool isVisible ( edict_t *pPlayer, Vector vSrc, Vector vDest);
-	static bool isVisible ( edict_t *pPlayer, Vector vSrc, edict_t *pDest);
-	static bool isShotVisible ( edict_t *pPlayer, Vector vSrc, Vector vDest, edict_t *pDest );
-	static bool isVisible ( Vector vSrc, Vector vDest);
-	static void traceLine ( Vector vSrc, Vector vDest, unsigned int mask, ITraceFilter *pFilter);
-	static float quickTraceline ( edict_t *pIgnore, Vector vSrc, Vector vDest ); // return fFraction
-	static bool traceVisible (edict_t *pEnt);
+	static trace_t *GetTraceResult() { return &m_TraceResult; }
+	static bool IsVisibleHitAllExceptPlayer(edict_t *pPlayer, Vector vSrc, Vector vDest, edict_t *pDest = NULL);
+	static bool IsVisible(edict_t *pPlayer, Vector vSrc, Vector vDest);
+	static bool IsVisible(edict_t *pPlayer, Vector vSrc, edict_t *pDest);
+	static bool IsShotVisible(edict_t *pPlayer, Vector vSrc, Vector vDest, edict_t *pDest);
+	static bool IsVisible(Vector vSrc, Vector vDest);
+	static void TraceLine(Vector vSrc, Vector vDest, unsigned int mask, ITraceFilter *pFilter);
+	static float QuickTraceline(edict_t *pIgnore, Vector vSrc, Vector vDest); // return fFraction
+	static bool TraceVisible(edict_t *pEnt);
 	////////
-	static inline Vector entityOrigin ( edict_t *pEntity ) 
-	{ 
-		return pEntity->GetIServerEntity()->GetCollideable()->GetCollisionOrigin(); 
+	static inline Vector EntityOrigin(edict_t *pEntity)
+	{
+		return pEntity->GetIServerEntity()->GetCollideable()->GetCollisionOrigin();
 	}
-	static int getTeam ( edict_t *pEntity );
-	static bool entityIsAlive ( edict_t *pEntity );
-	static int countTeamMatesNearOrigin ( Vector vOrigin, float fRange, int iTeam, edict_t *pIgnore = NULL );
-	static int numClients ();
-	static void levelInit();
+	static int GetTeam(edict_t *pEntity);
+	static bool EntityIsAlive(edict_t *pEntity);
+	static int CountTeamMatesNearOrigin(Vector vOrigin, float fRange, int iTeam, edict_t *pIgnore = NULL);
+	static int NumClients();
+	static void LevelInit();
 
-	static inline void setClientMax ( int iMaxClients ) { m_iMaxClients = iMaxClients; }
+	static inline void SetClientMax(int iMaxClients) { m_iMaxClients = iMaxClients; }
 
-	static inline void setEventVersion ( int iVersion ){m_iEventVersion = iVersion;}
+	static inline void SetEventVersion(int iVersion){ m_iEventVersion = iVersion; }
 
-	static inline bool isEventVersion ( int iVersion ){return (m_iEventVersion == iVersion);}
+	static inline bool IsEventVersion(int iVersion){ return (m_iEventVersion == iVersion); }
 
-	static inline bool getTeamplayOn (){return m_bTeamplay;}
+	static inline bool GetTeamplayOn(){ return m_bTeamplay; }
 
-	static inline void setTeamplay ( bool bOn ){m_bTeamplay = bOn;}
+	static inline void SetTeamplay(bool bOn){ m_bTeamplay = bOn; }
 
-	static inline bool isMod ( eModId iMod ) { 	return m_iCurrentMod == iMod; }
+	static inline bool IsMod(eModId iMod) { return m_iCurrentMod == iMod; }
 
-	static inline char *gameFolder (){return m_szGameFolder;}
+	static inline char *GameFolder(){ return m_szGameFolder; }
 
-	static inline char *modFolder (){return m_szModFolder;}
+	static inline char *ModFolder(){ return m_szModFolder; }
 
-	static inline int maxClients () {return m_iMaxClients;}
+	static inline int MaxClients() { return m_iMaxClients; }
 
-	static edict_t *playerByUserId(int iUserId);
+	static edict_t *PlayerByUserId(int iUserId);
 
-	static bool isCurrentMod ( eModId modid );
+	static bool IsCurrentMod(eModId modid);
 
-	static bool checkOpensLater ( Vector vSrc, Vector vDest );
+	static bool CheckOpensLater(Vector vSrc, Vector vDest);
 
-	inline static bool setupMapTime ( ) { return m_fMapStartTime == 0; }
+	inline static bool SetupMapTime() { return m_fMapStartTime == 0; }
 
-	static bool isBreakableOpen ( edict_t *pBreakable );
+	static bool IsBreakableOpen(edict_t *pBreakable);
 
-	static Vector getVelocity ( edict_t *pPlayer );
+	static Vector GetVelocity(edict_t *pPlayer);
 
 	////////
 	static CBotCommandContainer *m_pCommands;
 
-	static void readRCBotFolder();
-	
-	static bool dirExists(const char *path);
+	static void ReadRCBotFolder();
 
 	static bool str_is_empty(const char *s) {
 		while (*s != '\0') {

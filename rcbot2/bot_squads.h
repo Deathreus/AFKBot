@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game g_pEngine ("HL
- *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game engine ("HL
+ *    engine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL g_pEngine and MODs
+ *    respects for all of the code used other than the HL engine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -69,7 +69,7 @@ class CBotSquad
 {
 public:
 
-	CBotSquad ( edict_t *pLeader, edict_t *pMember )
+	CBotSquad(edict_t *pLeader, edict_t *pMember)
 	{
 		SetLeader(pLeader);
 		AddMember(pMember);
@@ -82,138 +82,138 @@ public:
 		m_theSquad.Destroy();
 	}
 
-	void Init ();
+	void Init();
 
-	void ReturnAllToFormation ( void );
+	void ReturnAllToFormation(void);
 
-	inline void SetLeader ( edict_t *pLeader )
+	inline void SetLeader(edict_t *pLeader)
 	{
 		m_pLeader = pLeader;
 	}
 
-	edict_t *getMember ( int iMember );
+	edict_t *GetMember(int iMember);
 
-	void ToggleFireMode ( void )
+	void ToggleFireMode(void)
 	{
 		bCanFire = !bCanFire;
 
 		/*if ( bCanFire )
 			BotPrintTalkMessageOne(m_pLeader.Get(),"Squad can now OPEN FIRE");
-		else
+			else
 			BotPrintTalkMessageOne(m_pLeader.Get(),"Squad is now HOLDING FIRE");*/
 	}
 
-	inline bool SquadCanShoot ( void )
+	inline bool SquadCanShoot(void)
 	{
 		return bCanFire;
 	}
 
-	inline bool IsStealthMode ( void )
+	inline bool IsStealthMode(void)
 	{
 		return (m_CombatType == COMBAT_STEALTH);
 	}
 
-	inline bool IsProneMode ( void )
+	inline bool IsProneMode(void)
 	{
 		return (m_CombatType == COMBAT_PRONE);
 	}
 
-	inline bool IsCrouchMode ( void )
+	inline bool IsCrouchMode(void)
 	{
 		return (m_CombatType == COMBAT_CROUCH);
 	}
 
-	inline edict_t *GetLeader ( void )
+	inline edict_t *GetLeader(void)
 	{
-		return (edict_t*)m_pLeader.get();
+		return (edict_t*)m_pLeader.Get();
 	}
 
-	void SetCombatType ( eCombatType iCombatType )
+	void SetCombatType(eCombatType iCombatType)
 	{
 		edict_t *pLeader = GetLeader();
 
 		m_CombatType = iCombatType;
 
-		if ( !pLeader /*|| (pLeader->v.flags & FL_FAKECLIENT)*/ )
+		if (!pLeader /*|| (pLeader->v.flags & FL_FAKECLIENT)*/)
 			return;
 
 		char szCombatType[16];
 
 		szCombatType[0] = 0;
 
-		switch ( m_CombatType )
+		switch (m_CombatType)
 		{
 		case COMBAT_STEALTH:
-			strcpy(szCombatType,"STEALTH");
+			strcpy(szCombatType, "STEALTH");
 			break;
 		case COMBAT_PRONE:
-			strcpy(szCombatType,"PRONE");
-            break;
-        case COMBAT_CROUCH:
-            strcpy(szCombatType,"CROUCH");
-            break;
+			strcpy(szCombatType, "PRONE");
+			break;
+		case COMBAT_CROUCH:
+			strcpy(szCombatType, "CROUCH");
+			break;
 		case COMBAT_NONE:
 		case COMBAT_COMBAT:
-			strcpy(szCombatType,"NORMAL");
+			strcpy(szCombatType, "NORMAL");
 			break;
-        }
+		}
 
 		//BotPrintTalkMessageOne ( pLeader, "Combat mode is now %s\n", szCombatType );
 	}
 
-	void ChangeLeader ( void );
+	void ChangeLeader(void);
 
-	void removeMember ( edict_t *pMember );
+	void RemoveMember(edict_t *pMember);
 
-	inline bool IsLeader ( edict_t *pLeader )
+	inline bool IsLeader(edict_t *pLeader)
 	{
 		return (GetLeader() == pLeader);
 	}
 
-	void AddMember ( edict_t *pEdict );
+	void AddMember(edict_t *pEdict);
 
-	int numMembers ();
+	int numMembers();
 
-	bool IsMember ( edict_t *pEdict );
+	bool IsMember(edict_t *pEdict);
 
-	inline bool isFormation (eSquadForm theFormation)
+	inline bool IsFormation(eSquadForm theFormation)
 	{
 		return m_theDesiredFormation == theFormation;
 	}
 
-	inline void ChangeFormation ( eSquadForm theNewFormation )
+	inline void ChangeFormation(eSquadForm theNewFormation)
 	{
 		m_theDesiredFormation = theNewFormation;
 	}
 
-	inline float GetSpread ( void ) const
+	inline float GetSpread(void) const
 	{
 		return m_fDesiredSpread;
 	}
 
-	inline void ChangeSpread ( float fNewSpread )
+	inline void ChangeSpread(float fNewSpread)
 	{
 		m_fDesiredSpread = fNewSpread;
 	}
 
-	int GetFormationPosition ( edict_t *pEdict );
+	int GetFormationPosition(edict_t *pEdict);
 
-	Vector GetFormationVector ( edict_t *pEdict );
+	Vector GetFormationVector(edict_t *pEdict);
 
-	void UpdateAngles ( void );
+	void UpdateAngles(void);
 
-	bool isDefensive () { return m_Tactics == TACTIC_DEFEND; }
+	bool IsDefensive() { return m_Tactics == TACTIC_DEFEND; }
 
-	void setTactic ( eTacticType iTactics ) { m_Tactics = iTactics; }
+	void SetTactic(eTacticType iTactics) { m_Tactics = iTactics; }
 
 	// Squad is waiting for another squad to Syncronize
-	bool isWaitingForOtherSquad ()
+	bool IsWaitingForOtherSquad()
 	{
 		return m_bIsWaitingForOther;
 	}
 
 	// Squad is given the go by another squad
-	void givenGo ()
+	void GivenGo()
 	{
 		m_bIsWaitingForOther = false;
 	}
@@ -241,9 +241,9 @@ class CBotSquads
 {
 public:
 
-	static void FreeMemory ( void );
+	static void FreeMemory(void);
 
-	static void removeSquadMember ( CBotSquad *pSquad, edict_t *pMember );
+	static void RemoveSquadMember(CBotSquad *pSquad, edict_t *pMember);
 
 	// AddSquadMember can have many effects
 	// 1. scenario: squad leader exists as squad leader
@@ -252,53 +252,20 @@ public:
 	//              assign bot to 'squad leaders' squad
 	// 3. scenario: no squad has 'squad leader' 
 	//              make a new squad
-	static CBotSquad *AddSquadMember ( edict_t *pLeader, edict_t *pMember );
+	static CBotSquad *AddSquadMember(edict_t *pLeader, edict_t *pMember);
 
-	static CBotSquad *SquadJoin ( edict_t *pLeader, edict_t *pMember );
+	static CBotSquad *SquadJoin(edict_t *pLeader, edict_t *pMember);
 
-	static CBotSquad *FindSquadByLeader ( edict_t *pLeader );
+	static CBotSquad *FindSquadByLeader(edict_t *pLeader);
 
-	static void RemoveSquad ( CBotSquad *pSquad );
+	static void RemoveSquad(CBotSquad *pSquad);
 
-	static void UpdateAngles ( void );
+	static void UpdateAngles(void);
 
-	static void ChangeLeader ( CBotSquad *theSquad );
+	static void ChangeLeader(CBotSquad *theSquad);
 
 private:
 	static dataStack<CBotSquad*> m_theSquads;
 };
-/*
-class CBotSquadE
-{
-public:
-	CBotSquadE ()
-	{
-		m_fIdleTime = 0.0f;
-		m_bIsIdle = false;
-	}
 
-	addMember ( edict_t *pEdict )
-	{
-	}
-
-	void think ()
-	{
-
-	}
-
-private:
-	edict_t 
-	float m_fIdleTime;
-	bool m_bIsIdle;
-	int m_uMembers;
-}
-
-class CBotSquadsE
-{
-public:
-	void think ();
-private:
-	static dataStack<CBotSquad*> m_theSquads;
-}
-*/
 #endif

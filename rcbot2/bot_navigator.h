@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game g_pEngine ("HL
- *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game engine ("HL
+ *    engine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL g_pEngine and MODs
+ *    respects for all of the code used other than the HL engine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -51,7 +51,7 @@ class CWaypointVisibilityTable;
 class INavigatorNode
 {
 public:
-	inline Vector getOrigin () { return m_vOrigin; }
+	inline Vector GetOrigin() { return m_vOrigin; }
 protected:
 	Vector m_vOrigin;
 };
@@ -59,84 +59,84 @@ protected:
 class IBotNavigator
 {
 public:
-	virtual void init () = 0;
+	virtual void Init() = 0;
 
 	// returns true when working out route finishes, not if successful
-	virtual bool workRoute ( Vector vFrom, Vector vTo, bool *bFail, bool bRestart = true, bool bNoInterruptions = false, int iGoalId = -1, int iConditions = 0, int iDangerId = -1 ) = 0;
+	virtual bool WorkRoute(Vector vFrom, Vector vTo, bool *bFail, bool bRestart = true, bool bNoInterruptions = false, int iGoalId = -1, int iConditions = 0, int iDangerId = -1) = 0;
 
-	virtual void rollBackPosition () = 0;
+	virtual void RollBackPosition() = 0;
 
-	virtual void failMove () = 0;
+	virtual void FailMove() = 0;
 
-	virtual float getNextYaw () = 0;
+	virtual float GetNextYaw() = 0;
 
-	virtual bool getNextRoutePoint ( Vector *vPoint ) = 0;
+	virtual bool GetNextRoutePoint(Vector *vPoint) = 0;
 
-	inline Vector getPreviousPoint () { return m_vPreviousPoint; }
+	inline Vector GetPreviousPoint() { return m_vPreviousPoint; }
 
-	virtual bool hasNextPoint () = 0;
+	virtual bool HasNextPoint() = 0;
 
-	virtual int getCurrentWaypointID () = 0;
+	virtual int GetCurrentWaypointID() = 0;
 
-	virtual int getCurrentGoalID () = 0;
+	virtual int GetCurrentGoalID() = 0;
 
-	virtual Vector getNextPoint () = 0;
+	virtual Vector GetNextPoint() = 0;
 
-	virtual void updatePosition () = 0;
+	virtual void UpdatePosition() = 0;
 
-	virtual bool canGetTo ( Vector vOrigin ) = 0;
+	virtual bool CanGetTo(Vector vOrigin) = 0;
 
-	virtual int getCurrentFlags () { return 0; }
-	virtual int getPathFlags ( int iPath ) { return 0; }
+	virtual int GetCurrentFlags() { return 0; }
+	virtual int GetPathFlags(int iPath) { return 0; }
 
-	virtual float distanceTo ( Vector vOrigin ) = 0;
+	virtual float DistanceTo(Vector vOrigin) = 0;
 
-	virtual float distanceTo ( CWaypoint *pWaypoint ) = 0;
+	virtual float DistanceTo(CWaypoint *pWaypoint) = 0;
 
-	//virtual void goBack () = 0;
+	//virtual void GoBack () = 0;
 
-	virtual void freeMapMemory () = 0;		
+	virtual void FreeMapMemory() = 0;
 
-	virtual void freeAllMemory () = 0;
+	virtual void FreeAllMemory() = 0;
 
-	virtual bool routeFound () = 0;
+	virtual bool RouteFound() = 0;
 
-	virtual void clear () = 0;
+	virtual void Clear() = 0;
 
-	virtual void getFailedGoals (dataUnconstArray <int> **goals) = 0;
+	virtual void GetFailedGoals(dataUnconstArray <int> **goals) = 0;
 
-	inline Vector getGoalOrigin () { return m_vGoal; }
+	inline Vector GetGoalOrigin() { return m_vGoal; }
 
-	virtual bool nextPointIsOnLadder () { return false; }
+	virtual bool NextPointIsOnLadder() { return false; }
 
-	virtual bool beliefLoad ( ) { return false; };
+	virtual bool BeliefLoad() { return false; };
 
-	virtual bool beliefSave ( bool bOverride = false ) { return false; };
+	virtual bool BeliefSave(bool bOverride = false) { return false; };
 
-	virtual void belief ( Vector origin, Vector vOther, float fBelief, float fStrength, BotBelief iType ) = 0;
+	virtual void Belief(Vector origin, Vector vOther, float fBelief, float fStrength, BotBelief iType) = 0;
 
 	// nearest cover position to vOrigin only
-	virtual bool getCoverPosition ( Vector vCoverOrigin, Vector *vCover ) = 0;
+	virtual bool GetCoverPosition(Vector vCoverOrigin, Vector *vCover) = 0;
 	// nearest cover postion to both vectors
-	virtual bool getHideSpotPosition ( Vector vCoverOrigin, Vector *vCover ) = 0;
+	virtual bool GetHideSpotPosition(Vector vCoverOrigin, Vector *vCover) = 0;
 
-	virtual float getCurrentBelief ( ) { return 0; }
+	virtual float GetCurrentBelief() { return 0; }
 
-	virtual float getBelief ( int index ) { return 0; }
+	virtual float GetBelief(int index) { return 0; }
 
-	virtual void beliefOne ( int iWptIndex, BotBelief iBeliefType, float fDist ) { return; }
+	virtual void BeliefOne(int iWptIndex, BotBelief iBeliefType, float fDist) { return; }
 
-	virtual int numPaths ( ) { return 0; }
+	virtual int NumPaths() { return 0; }
 
-	virtual Vector getPath ( int pathid ) { return Vector(0,0,0); }
+	virtual Vector GetPath(int pathid) { return Vector(0, 0, 0); }
 
-	virtual bool randomDangerPath (Vector *vec) { return false; }
+	virtual bool RandomDangerPath(Vector *vec) { return false; }
 
-	bool getDangerPoint ( Vector *vec ) { *vec = m_bDangerPoint ? m_vDangerPoint : Vector(0,0,0); return m_bDangerPoint; }
+	bool GetDangerPoint(Vector *vec) { *vec = m_bDangerPoint ? m_vDangerPoint : Vector(0, 0, 0); return m_bDangerPoint; }
 
-	bool wantToLoadBelief () { return m_bLoadBelief; }
-	virtual bool wantToSaveBelief () { return false; }
-	float getGoalDistance () { return m_fGoalDistance; }
+	bool WantToLoadBelief() { return m_bLoadBelief; }
+	virtual bool WantToSaveBelief() { return false; }
+	float GetGoalDistance() { return m_fGoalDistance; }
 
 	static const int MAX_PATH_TICKS = 200;
 
@@ -159,45 +159,45 @@ protected:
 class AStarNode
 {
 public:
-	AStarNode() { memset(this,0,sizeof(AStarNode)); }
+	AStarNode() { memset(this, 0, sizeof(AStarNode)); }
 	///////////////////////////////////////////////////////
-	inline void close () { setFlag(FL_ASTAR_CLOSED); }
-	inline void unClose () { removeFlag(FL_ASTAR_CLOSED); }
-	inline bool isOpen () { return hasFlag(FL_ASTAR_OPEN); }
-	inline void unOpen () { removeFlag(FL_ASTAR_OPEN); }
-	inline bool isClosed () { return hasFlag(FL_ASTAR_CLOSED); }
-	inline void open () { setFlag(FL_ASTAR_OPEN); }
+	inline void Close() { SetFlag(FL_ASTAR_CLOSED); }
+	inline void UnClose() { RemoveFlag(FL_ASTAR_CLOSED); }
+	inline bool IsOpen() { return HasFlag(FL_ASTAR_OPEN); }
+	inline void UnOpen() { RemoveFlag(FL_ASTAR_OPEN); }
+	inline bool IsClosed() { return HasFlag(FL_ASTAR_CLOSED); }
+	inline void Open() { SetFlag(FL_ASTAR_OPEN); }
 	//////////////////////////////////////////////////////	
-	inline void setHeuristic ( float fHeuristic ) { m_fHeuristic = fHeuristic; setFlag(FL_HEURISTIC_SET); }
-	inline bool heuristicSet () { return hasFlag(FL_HEURISTIC_SET); }
-	inline const float getHeuristic () { return m_fHeuristic; } const
-	
-	////////////////////////////////////////////////////////
-	inline void setFlag ( int iFlag ) { m_iFlags |= iFlag; }
-	inline bool hasFlag ( int iFlag ) { return ((m_iFlags & iFlag) == iFlag); }
-	inline void removeFlag ( int iFlag ) { m_iFlags &= ~iFlag; }
-	/////////////////////////////////////////////////////////
-	inline int getParent () { if ( hasFlag(FL_ASTAR_PARENT) ) return m_iParent; else return -1; }
-	inline void setParent ( short int iParent ) 
-	{ 
-		m_iParent = iParent; 
+	inline void SetHeuristic(float fHeuristic) { m_fHeuristic = fHeuristic; SetFlag(FL_HEURISTIC_SET); }
+	inline bool HeuristicSet() { return HasFlag(FL_HEURISTIC_SET); }
+	inline const float GetHeuristic() { return m_fHeuristic; } const
 
-		if ( m_iParent == -1 )
-			removeFlag(FL_ASTAR_PARENT); // no parent
+		////////////////////////////////////////////////////////
+		inline void SetFlag(int iFlag) { m_iFlags |= iFlag; }
+	inline bool HasFlag(int iFlag) { return ((m_iFlags & iFlag) == iFlag); }
+	inline void RemoveFlag(int iFlag) { m_iFlags &= ~iFlag; }
+	/////////////////////////////////////////////////////////
+	inline int GetParent() { if (HasFlag(FL_ASTAR_PARENT)) return m_iParent; else return -1; }
+	inline void SetParent(short int iParent)
+	{
+		m_iParent = iParent;
+
+		if (m_iParent == -1)
+			RemoveFlag(FL_ASTAR_PARENT); // no parent
 		else
-			setFlag(FL_ASTAR_PARENT);
+			SetFlag(FL_ASTAR_PARENT);
 	}
 	////////////////////////////////////////////////////////
-	inline const float getCost () { return m_fCost; } const
-	inline void setCost ( float fCost ) { m_fCost = fCost; }
+	inline const float GetCost() { return m_fCost; } const
+		inline void SetCost(float fCost) { m_fCost = fCost; }
 	////////////////////////////////////////////////////////
 	// for comparison
-	bool precedes ( AStarNode *other ) const
+	bool Precedes(AStarNode *other) const
 	{
-		return (m_fCost+m_fHeuristic) < (other->getCost() + other->getHeuristic());
+		return (m_fCost + m_fHeuristic) < (other->GetCost() + other->GetHeuristic());
 	}
-	void setWaypoint ( int iWpt ) { m_iWaypoint = iWpt; }
-	inline int getWaypoint () { return m_iWaypoint; }
+	void SetWaypoint(int iWpt) { m_iWaypoint = iWpt; }
+	inline int GetWaypoint() { return m_iWaypoint; }
 private:
 	float m_fCost;
 	float m_fHeuristic;
@@ -209,7 +209,7 @@ private:
 class AStarListNode
 {
 public:
-	AStarListNode ( AStarNode *data )
+	AStarListNode(AStarNode *data)
 	{
 		m_Data = data;
 		m_Next = NULL;
@@ -226,22 +226,22 @@ public:
 		m_Head = NULL;
 	}
 
-	bool empty ()
+	bool Empty()
 	{
-		return (m_Head==NULL);
+		return (m_Head == NULL);
 	}
 
-	AStarNode *top ()
+	AStarNode *Top()
 	{
-		if ( m_Head == NULL )
+		if (m_Head == NULL)
 			return NULL;
-		
+
 		return m_Head->m_Data;
 	}
 
-	void pop ()
+	void Pop()
 	{
-		if ( m_Head != NULL )
+		if (m_Head != NULL)
 		{
 			AStarListNode *t = m_Head;
 
@@ -252,17 +252,17 @@ public:
 	}
 
 
-	void add ( AStarNode *data )
+	void Add(AStarNode *data)
 	{
 		AStarListNode *newNode = new AStarListNode(data);
 		AStarListNode *t;
 		AStarListNode *p;
 
-		if ( m_Head == NULL )
+		if (m_Head == NULL)
 			m_Head = newNode;
 		else
 		{
-			if ( data->precedes(m_Head->m_Data) )
+			if (data->Precedes(m_Head->m_Data))
 			{
 				newNode->m_Next = m_Head;
 				m_Head = newNode;
@@ -272,9 +272,9 @@ public:
 				p = m_Head;
 				t = m_Head->m_Next;
 
-				while ( t != NULL )
+				while (t != NULL)
 				{
-					if ( data->precedes(t->m_Data) )
+					if (data->Precedes(t->m_Data))
 					{
 						p->m_Next = newNode;
 						newNode->m_Next = t;
@@ -285,18 +285,18 @@ public:
 					t = t->m_Next;
 				}
 
-				if ( t == NULL )
+				if (t == NULL)
 					p->m_Next = newNode;
 
 			}
 		}
 	}
 
-	void destroy ()
+	void Destroy()
 	{
 		AStarListNode *t;
 
-		while ( m_Head != NULL )
+		while (m_Head != NULL)
 		{
 			t = m_Head;
 			m_Head = m_Head->m_Next;
@@ -306,49 +306,49 @@ public:
 
 		m_Head = NULL;
 	}
-	
+
 private:
 	AStarListNode *m_Head;
 };
 
 /*
-struct AstarNodeCompare : binary_function<AStarNode*, AStarNode*, bool> 
+struct AstarNodeCompare : binary_function<AStarNode*, AStarNode*, bool>
 {
-  // Other stuff...
-  bool operator()(AStarNode* x, AStarNode* y) const 
-  {
-    return y->betterCost(x);
-  }
+// Other stuff...
+bool operator()(AStarNode* x, AStarNode* y) const
+{
+return y->betterCost(x);
+}
 };
 
-class AStarOpenList : public vector<AStarNode*> 
+class AStarOpenList : public vector<AStarNode*>
 {
-  AstarNodeCompare comp;
+AstarNodeCompare comp;
 public:
-  AStarOpenList(AstarNodeCompare cmp = AstarNodeCompare()) : comp(cmp) {
-    make_heap(begin(), end(), comp);
-  }
-  AStarNode* top() { return front(); }
-  void push(AStarNode* x) {
-    push_back(x);
-    push_heap(begin(), end(), comp);
-  }
-  void pop() {
-    pop_heap(begin(), end(), comp);
-    pop_back();
-  }  
+AStarOpenList(AstarNodeCompare cmp = AstarNodeCompare()) : comp(cmp) {
+make_heap(begin(), end(), comp);
+}
+AStarNode* top() { return front(); }
+void push(AStarNode* x) {
+push_back(x);
+push_heap(begin(), end(), comp);
+}
+void pop() {
+pop_heap(begin(), end(), comp);
+pop_back();
+}
 };*/
 
 
 /*
 bool operator<( const AStarNode & A, const AStarNode & B )
 {
-    return A.betterCost(&B);
+return A.betterCost(&B);
 }
 
 bool operator<( const AStarNode * A, const AStarNode * B )
 {
-    return A->betterCost(B);
+return A->betterCost(B);
 }*/
 
 #define WPT_SEARCH_AVOID_SENTRIES 1
@@ -366,104 +366,104 @@ typedef struct
 class CWaypointNavigator : public IBotNavigator
 {
 public:
-	CWaypointNavigator ( CBot *pBot ) 
-	{ 
-		init();
-		m_pBot = pBot; 
+	CWaypointNavigator(CBot *pBot)
+	{
+		Init();
+		m_pBot = pBot;
 		m_fNextClearFailedGoals = 0;
 		m_bDangerPoint = false;
 		m_iBeliefTeam = -1;
 		m_bLoadBelief = true;
 		m_bBeliefChanged = false;
-		memset(&m_lastFailedPath,0,sizeof(failedpath_t));
+		memset(&m_lastFailedPath, 0, sizeof(failedpath_t));
 	}
 
-	void init ();
+	void Init();
 
-	CWaypoint *chooseBestFromBelief ( dataUnconstArray<CWaypoint*> *goals, bool bHighDanger = false, int iSearchFlags = 0, int iTeam = 0);
-	CWaypoint *chooseBestFromBeliefBetweenAreas ( dataUnconstArray<AStarNode*> *goals, bool bHighDanger = false, bool bIgnoreBelief = false );
+	CWaypoint *ChooseBestFromBelief(dataUnconstArray<CWaypoint*> *goals, bool bHighDanger = false, int iSearchFlags = 0, int iTeam = 0);
+	CWaypoint *ChooseBestFromBeliefBetweenAreas(dataUnconstArray<AStarNode*> *goals, bool bHighDanger = false, bool bIgnoreBelief = false);
 
-	float getNextYaw ();
+	float GetNextYaw();
 
-	bool workRoute ( Vector vFrom, Vector vTo, bool *bFail, bool bRestart = true, bool bNoInterruptions = false, int iGoalId = -1, int iConditions = 0, int iDangerId = -1 );
+	bool WorkRoute(Vector vFrom, Vector vTo, bool *bFail, bool bRestart = true, bool bNoInterruptions = false, int iGoalId = -1, int iConditions = 0, int iDangerId = -1);
 
-	bool getNextRoutePoint ( Vector *vPoint );
+	bool GetNextRoutePoint(Vector *vPoint);
 
-	void clear ();
+	void Clear();
 
-	Vector getNextPoint ();
+	Vector GetNextPoint();
 
-	void updatePosition ();
+	void UpdatePosition();
 
-    float getBelief ( int index ) { if ( index >= 0 ) return m_fBelief[index]; return 0; }
+	float GetBelief(int index) { if (index >= 0) return m_fBelief[index]; return 0; }
 
-	void failMove ();
+	void FailMove();
 
-	bool hasNextPoint ();
+	bool HasNextPoint();
 
-	void freeMapMemory ();
+	void FreeMapMemory();
 
-	void freeAllMemory ();
+	void FreeAllMemory();
 
-	bool canGetTo ( Vector vOrigin );
+	bool CanGetTo(Vector vOrigin);
 
-	bool routeFound ();
+	bool RouteFound();
 
-	void rollBackPosition ();
+	void RollBackPosition();
 
-	bool nextPointIsOnLadder ();
+	bool NextPointIsOnLadder();
 
-	void open ( AStarNode *pNode );
+	void Open(AStarNode *pNode);
 
-	AStarNode *nextNode ();
+	AStarNode *NextNode();
 
-	float distanceTo ( Vector vOrigin );
+	float DistanceTo(Vector vOrigin);
 
-	float distanceTo ( CWaypoint *pWaypoint );
+	float DistanceTo(CWaypoint *pWaypoint);
 
-	Vector getCoverOrigin ( Vector vCover );
+	Vector GetCoverOrigin(Vector vCover);
 
-	void clearOpenList ();
+	void ClearOpenList();
 
-	float getCurrentBelief ( );
+	float GetCurrentBelief();
 
-	//virtual void goBack();
-	
-	void belief ( Vector origin, Vector vOther, float fBelief, float fStrength, BotBelief iType );
+	//virtual void GoBack();
 
-	void beliefOne ( int iWptIndex, BotBelief iBeliefType, float fDist );
+	void Belief(Vector origin, Vector vOther, float fBelief, float fStrength, BotBelief iType);
+
+	void BeliefOne(int iWptIndex, BotBelief iBeliefType, float fDist);
 
 	// nearest cover position to vOrigin only
-	bool getCoverPosition ( Vector vCoverOrigin, Vector *vCover );
+	bool GetCoverPosition(Vector vCoverOrigin, Vector *vCover);
 	// nearest cover postion to both vectors
-	bool getHideSpotPosition ( Vector vCoverOrigin, Vector *vCover );
+	bool GetHideSpotPosition(Vector vCoverOrigin, Vector *vCover);
 
-	void getFailedGoals ( dataUnconstArray <int> **goals) { *goals = &m_iFailedGoals; }
+	void GetFailedGoals(dataUnconstArray <int> **goals) { *goals = &m_iFailedGoals; }
 
-	int numPaths ( );
+	int numPaths();
 
-	Vector getPath ( int pathid );
+	Vector GetPath(int pathid);
 
-	bool randomDangerPath (Vector *vec);
+	bool RandomDangerPath(Vector *vec);
 
-	bool beliefLoad ( );
+	bool BeliefLoad();
 
-	bool beliefSave ( bool bOverride = false );
+	bool BeliefSave(bool bOverride = false);
 
-	bool wantToSaveBelief ();
+	bool WantToSaveBelief();
 
-	inline int getCurrentWaypointID ()
+	inline int GetCurrentWaypointID()
 	{
 		return m_iCurrentWaypoint;
 	}
 
-	inline int getCurrentGoalID ()
+	inline int GetCurrentGoalID()
 	{
 		return m_iGoalWaypoint;
 	}
 
-	int getCurrentFlags ();
-	int getPathFlags ( int iPath );
+	int GetCurrentFlags();
+	int GetPathFlags(int iPath);
 
 private:
 	CBot *m_pBot;
@@ -491,7 +491,7 @@ private:
 	dataUnconstArray<int> m_iFailedGoals;
 	float m_fNextClearFailedGoals;
 
-	float m_fBelief [CWaypoints::MAX_WAYPOINTS];
+	float m_fBelief[CWaypoints::MAX_WAYPOINTS];
 
 	AStarOpenList m_theOpenList;
 
@@ -502,29 +502,29 @@ private:
 class CNavMeshNavigator : public IBotNavigator
 {
 public:
-	virtual bool workRoute ( Vector vFrom, Vector vTo, bool *bFail, bool bRestart = true, bool bNoInterruptions = false, int iGoalId = -1, int iConditions = 0, int iDangerId = -1  );
+	virtual bool WorkRoute(Vector vFrom, Vector vTo, bool *bFail, bool bRestart = true, bool bNoInterruptions = false, int iGoalId = -1, int iConditions = 0, int iDangerId = -1);
 
-	virtual Vector getNextPoint ();
+	virtual Vector GetNextPoint();
 
-	virtual void updatePosition ();
+	virtual void UpdatePosition();
 
-	void freeMapMemory ();
+	void FreeMapMemory();
 
-	void freeAllMemory ();
+	void FreeAllMemory();
 
-	bool routeFound ();
+	bool RouteFound();
 
-	bool hasNextPoint ();
+	bool HasNextPoint();
 
-	void rollBackPosition () {};
+	void RollBackPosition() {};
 
-    void init ();
+	void Init();
 
-    void belief ( Vector origin, Vector facing, float fBelief, float fStrength, BotBelief iType ){}; //bir3yk
+	void Belief(Vector origin, Vector facing, float fBelief, float fStrength, BotBelief iType){}; //bir3yk
 
-	//void rememberEnemyPosition ( Vector vOrigin );
+	//void RememberEnemyPosition ( Vector vOrigin );
 
-	//Vector getEnemyPositionPinchPoint ( Vector vOrigin );
+	//Vector GetEnemyPositionPinchPoint ( Vector vOrigin );
 private:
 	CNavMesh *m_pNavMesh;
 };

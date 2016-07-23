@@ -6,7 +6,7 @@
  * ======================================================
  *
  * This software is provided 'as-is', without any express or implied warranty.
- * In no event will the authors be held liable for any damages arising from 
+ * In no event will the authors be held liable for any damages arising from
  * the use of this software.
  *
  * This sample plugin is public domain.
@@ -30,10 +30,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game g_pEngine ("HL
- *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game engine ("HL
+ *    engine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL g_pEngine and MODs
+ *    respects for all of the code used other than the HL engine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -44,6 +44,8 @@
 #ifndef __BOT_PLUGIN_META_H__
 #define __BOT_PLUGIN_META_H__
 
+#include "smsdk_ext.h"
+
 #include <ISmmPlugin.h>
 #include <igameevents.h>
 #include <iplayerinfo.h>
@@ -51,10 +53,20 @@
 #include "engine_wrappers.h"
 #include <shareddefs.h>
 
+#include "networkstringtabledefs.h"
+#include "IEngineSound.h"
+#include "IEngineTrace.h"
+#include "filesystem.h"
+#include "IEffects.h"
+#include "igameevents.h"
+#include "IEngineTrace.h"
+#include "ndebugoverlay.h"
+#include "irecipientfilter.h"
+
+#include "ISDKTools.h"
+
 class CUserCmd;
 class IMoveHelper;
-class CEconItemView;
-class CTF2Loadout;
 
 #if defined WIN32 && !defined snprintf
 #define snprintf _snprintf
@@ -82,23 +94,10 @@ public: //hooks
 	void Hook_SetCommandClient(int index);
 	void Hook_ClientSettingsChanged(edict_t *pEdict);
 	//Called for a game event.  Same definition as server plugins???
-	bool FireGameEvent( IGameEvent *pevent, bool bDontBroadcast );
+	bool FireGameEvent(IGameEvent *pevent, bool bDontBroadcast);
 	void Hook_PlayerRunCmd(CUserCmd *ucmd, IMoveHelper *moveHelper);
+	void Hook_EquipWeapon(CBaseEntity *pWeapon);
 	bool Hook_ClientConnect(edict_t *pEntity, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen);
-	bf_write *Hook_MessageBegin(IRecipientFilter *filter, int msg_type);
-	void Hook_MessageEnd();
-
-	void Hook_WriteChar(int val);
-	void Hook_WriteShort(int val);
-	void Hook_WriteByte(int val);
-	void Hook_WriteFloat(float val);
-	bool Hook_WriteString(const char *pStr);
-
-	static CBaseEntity *TF2_getPlayerWeaponSlot(edict_t *pPlayer, int iSlot);
-	static void TF2_equipWeapon(edict_t *pPlayer, CBaseEntity *pWeapon);
-
-	static void HudTextMessage(edict_t *pEntity, const char *szMessage);
-	static void BroadcastTextMessage(const char *szMessage);
 
 #if SOURCE_ENGINE >= SE_ORANGEBOX
 	void Hook_ClientCommand(edict_t *pEntity, const CCommand &args);
@@ -106,8 +105,12 @@ public: //hooks
 	void Hook_ClientCommand(edict_t *pEntity);
 #endif
 
-public:
+public: // utils
+	static CBaseEntity *TF2_GetPlayerWeaponSlot(edict_t *pPlayer, int iSlot);
+	static void TF2_EquipWeapon(edict_t *pPlayer, CBaseEntity *pWeapon);
 
+	static void HudTextMessage(edict_t *pEntity, const char *szMessage);
+public:
 	const char *GetAuthor();
 	const char *GetName();
 	const char *GetDescription();
@@ -120,6 +123,24 @@ public:
 private:
 	int m_iClientCommandIndex;
 };
+
+extern IGameEventManager2 *gameevents;
+extern IServerPluginCallbacks *vsp_callbacks;
+extern ICvar *icvar;
+extern IFileSystem *filesystem;
+extern IGameEventManager2 *gameeventmanager2;
+extern IGameEventManager *gameeventmanager;
+extern IPlayerInfoManager *playerinfomanager;
+extern IServerPluginHelpers *helpers;
+extern IServerGameClients* gameclients;
+extern IEngineTrace *enginetrace;
+extern IEffects *effects;
+extern CGlobalVars *gpGlobals;
+extern IVDebugOverlay *debugoverlay;
+extern IServerGameEnts *servergameents;
+extern INetworkStringTableContainer *netstringtables;
+extern IEngineSound *engsound;
+extern IServerGameDLL *servergamedll;
 
 extern AFKBot g_AFKBot;
 

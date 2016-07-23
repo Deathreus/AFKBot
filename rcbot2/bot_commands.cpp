@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game g_pEngine ("HL
- *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game engine ("HL
+ *    engine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL g_pEngine and MODs
+ *    respects for all of the code used other than the HL engine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -45,782 +45,138 @@
 
 #include "bot_tf2_points.h"
 
-CBotCommandContainer *CBotGlobals :: m_pCommands = new CRCBotCommand();
-extern IVDebugOverlay *debugoverlay;
+#ifdef GetClassName
+#undef GetClassName
+#endif
+
+CBotCommandContainer *CBotGlobals::m_pCommands = new CRCBotCommand();
 
 ///////////////////////////////////////////////////
 // Setup commands
 
-CRCBotCommand :: CRCBotCommand ()
+CRCBotCommand::CRCBotCommand()
 {
-	setName("afkbot");
-	setAccessLevel(0);
-	add(new CWaypointCommand());
-	//add(new CControlCommand());
-	add(new CPathWaypointCommand());
-	add(new CDebugCommand());
-	add(new CPrintCommands());
-	add(new CKickBotCommand());
-	add(new CAFKOnCommand());
-	add(new CAFKOffCommand());
-}
-
-CWaypointCommand :: CWaypointCommand()
-{
-	setName("waypoint");
-	//setAccessLevel(CMD_ACCESS_WAYPOINT);
-	setAccessLevel(0);
-	add(new CWaypointOnCommand());
-	add(new CWaypointOffCommand());
-	add(new CWaypointAddCommand());
-	add(new CWaypointDeleteCommand());
-	add(new CWaypointInfoCommand());
-	add(new CWaypointSaveCommand());
-	add(new CWaypointLoadCommand());
-	add(new CWaypointClearCommand());
-	add(new CWaypointGiveTypeCommand());
-	add(new CWaypointDrawTypeCommand());
-	add(new CWaypointAngleCommand());
-	add(new CWaypointSetAngleCommand());
-	add(new CWaypointSetAreaCommand());
-	add(new CWaypointSetRadiusCommand());
-	add(new CWaypointMenuCommand());
-	add(new CWaypointCut());
-	add(new CWaypointCopy());
-	add(new CWaypointPaste());
-	add(new CWaypointShiftAreas());
-	add(new CWaypointTeleportCommand());
-	add(new CWaypointAreaSetToNearest());
-	add(new CWaypointShowCommand());
-	add(new CWaypointCheckCommand());
-	add(new CWaypointShowVisCommand());
-	add(new CWaypointAutoWaypointCommand());
-	add(new CWaypointAutoFix());
+	SetName("afkbot");
+	SetAccessLevel(0);
+	Add(new CDebugCommand());
+	Add(new CPrintCommands());
+	Add(new CAFKOnCommand());
+	Add(new CAFKOffCommand());
 }
 
 CDebugCommand::CDebugCommand()
 {
-	setName("debug");
-	setAccessLevel(CMD_ACCESS_DEBUG);
+	SetName("debug");
+	SetAccessLevel(CMD_ACCESS_DEBUG);
 
-	add(new CDebugGameEventCommand());
-	add(new CDebugNavCommand());
-	add(new CDebugVisCommand());
-	add(new CDebugThinkCommand());
-	add(new CDebugLookCommand());
-	add(new CDebugHudCommand());
-	add(new CDebugAimCommand());
-	add(new CDebugChatCommand());
-	add(new CBotGoto());
-	add(new CBotFlush());
-	add(new CDebugTaskCommand());
-	add(new CBotTaskCommand());
-	add(new CDebugButtonsCommand());
-	add(new CDebugSpeedCommand());
-	add(new CDebugUsercmdCommand());
-	add(new CDebugUtilCommand());
-	add(new CDebugProfilingCommand());
-	add(new CDebugEdictsCommand());
-	add(new CDebugMemoryScanCommand());
-	add(new CDebugMemoryCheckCommand());
+	Add(new CDebugGameEventCommand());
+	Add(new CDebugNavCommand());
+	Add(new CDebugVisCommand());
+	Add(new CDebugThinkCommand());
+	Add(new CDebugLookCommand());
+	Add(new CDebugHudCommand());
+	Add(new CDebugAimCommand());
+	Add(new CDebugChatCommand());
+	Add(new CBotGoto());
+	Add(new CBotFlush());
+	Add(new CDebugTaskCommand());
+	Add(new CBotTaskCommand());
+	Add(new CDebugButtonsCommand());
+	Add(new CDebugSpeedCommand());
+	Add(new CDebugUsercmdCommand());
+	Add(new CDebugUtilCommand());
+	Add(new CDebugProfilingCommand());
+	Add(new CDebugEdictsCommand());
+	Add(new CDebugMemoryScanCommand());
+	Add(new CDebugMemoryCheckCommand());
 
 }
 ///////////////
 
-eBotCommandResult CAFKOnCommand::execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
+eBotCommandResult CAFKOnCommand::Execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
 {
 	edict_t *pEntity = NULL;
 
 	if (pClient)
-		pEntity = pClient->getPlayer();
+		pEntity = pClient->GetPlayer();
 
-	CBotGlobals::botMessage(pEntity, 0, "AFK Enabled");
+	CBotGlobals::BotMessage(pEntity, 0, "AFK Enabled");
 
-	CBots::makeBot(pEntity);
+	CBots::MakeBot(pEntity);
 
 	return COMMAND_ACCESSED;
 }
 ///////////////
 
-eBotCommandResult CAFKOffCommand::execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
+eBotCommandResult CAFKOffCommand::Execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
 {
 	edict_t *pEntity = NULL;
 
 	if (pClient)
-		pEntity = pClient->getPlayer();
+		pEntity = pClient->GetPlayer();
 
-	CBotGlobals::botMessage(pEntity, 0, "AFK Disabled");
+	CBotGlobals::BotMessage(pEntity, 0, "AFK Disabled");
 
-	CBots::makeNotBot(pEntity);
+	CBots::MakeNotBot(pEntity);
 
 	return COMMAND_ACCESSED;
 }
 ////////////////////////////////
-
-CWaypointShowCommand :: CWaypointShowCommand()
-{
-	setName("show");
-	setHelp("show <waypoint ID>, shows you to this waypoint");
-}
-
-eBotCommandResult CWaypointShowCommand::execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	if ( pClient )
-	{
-		int wpt = atoi(pcmd);
-		CWaypoint *pwpt = CWaypoints::getWaypoint(wpt);
-
-		if ( pwpt )
-		{
-			g_pEffects->Beam( CBotGlobals::entityOrigin(pClient->getPlayer()), pwpt->getOrigin(), CWaypoints::waypointTexture(), 
-				0, 0, 1,
-				5, 12, 12, 255, 
-				10, 255, 255, 255, 200, 10);	
-
-			//pClient->setShowWpt(wpt);
-
-			return COMMAND_ACCESSED;
-		}
-		//else
-			//pClient->setShowWpt(-1);
-	}
-
-	return COMMAND_ERROR;
-}
-
-//////////////
-
-CWaypointCopy :: CWaypointCopy()
-{
-	setName("copy");
-	setHelp("Go to a waypoint, and copy to hold its properties, then use paste to make a new waypoint with the same properties");
-}
-
-eBotCommandResult CWaypointCopy :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	if ( pClient )
-	{
-		pClient->updateCurrentWaypoint();
-
-		CWaypoint *pwpt = CWaypoints::getWaypoint(pClient->currentWaypoint());
-
-		if ( pwpt )
-		{
-			pClient->setWaypointCopy(pwpt);
-			return COMMAND_ACCESSED;
-		}
-	}
-
-	return COMMAND_ERROR;
-}
-//////////////////////////////////////////
-
-CWaypointCut :: CWaypointCut()
-{
-	setName("cut");
-	setHelp("allows you to move a waypoint by cutting it and pasting it");
-}
-
-eBotCommandResult CWaypointCut :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	if ( pClient )
-	{
-		pClient->updateCurrentWaypoint();
-
-		CWaypoint *pwpt = CWaypoints::getWaypoint(pClient->currentWaypoint());
-
-		if ( pwpt )
-		{
-			pClient->setWaypointCut(pwpt);
-			CWaypoints::deleteWaypoint(pClient->currentWaypoint());
-		}
-
-		return COMMAND_ACCESSED;
-	}
-
-	return COMMAND_ERROR;
-}
-////////////////////////////////
-
-CWaypointPaste :: CWaypointPaste()
-{
-	setName("paste");
-	setHelp("first copy a waypoint using the copy command and then use paste to make a new waypoint with the same properties");
-}
-
-eBotCommandResult CWaypointPaste :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	if ( pClient )
-	{
-		CWaypoints::addWaypoint(pClient,NULL,NULL,NULL,NULL,true);
-		return COMMAND_ACCESSED;
-	}
-
-	return COMMAND_ERROR;
-}
-//////////////////////////////////
-
-CWaypointShiftAreas :: CWaypointShiftAreas()
-{
-	setName("shiftareas");
-	setHelp("shift the areas of flagged waypoints to a different area/only use this once");
-}
-
-eBotCommandResult CWaypointShiftAreas :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	if ( pClient )
-	{
-		int val = 1;
-
-		if ( pcmd && *pcmd )
-			val = atoi(pcmd);
-
-		if ( arg1 && *arg1 )
-		{
-			int newarea = atoi(arg1);
-
-			if ( pClient )
-			{
-				// change area val to newarea
-				CWaypoints::shiftVisibleAreas(pClient->getPlayer(),val,newarea);
-			}
-		}
-		else
-			CWaypoints::shiftAreas(val);
-
-		return COMMAND_ACCESSED;
-	}
-
-	return COMMAND_ERROR;
-}
-////////////////////////////////////
-CWaypointSetAreaCommand :: CWaypointSetAreaCommand ()
-{
-	setName("setarea");
-	setHelp("Go to a waypoint, use setarea <areaid>");
-}
-
-eBotCommandResult CWaypointSetAreaCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	pClient->updateCurrentWaypoint();
-
-	if ( pcmd && *pcmd && ( CWaypoints::validWaypointIndex(pClient->currentWaypoint()) ) )
-	{
-		CWaypoint *pWpt = CWaypoints::getWaypoint(pClient->currentWaypoint());
-
-		pWpt->setArea(atoi(pcmd));
-	}
-	else
-		return COMMAND_ERROR;
-
-	return COMMAND_ACCESSED;
-}
-//////////////
-
-CWaypointShowVisCommand :: CWaypointShowVisCommand ()
-{
-	setName("showvis");
-	setHelp("Go to a waypoint, use showvis to see visibility");
-}
-
-eBotCommandResult CWaypointShowVisCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-#ifndef __linux__
-	pClient->updateCurrentWaypoint();
-
-	if ( CWaypoints::validWaypointIndex(pClient->currentWaypoint()) )
-	{
-		CWaypoint *pWpt = CWaypoints::getWaypoint(pClient->currentWaypoint());
-
-		int i = 0; 
-		int index;
-		bool bVis;
-		float ftime;
-
-		ftime = (pcmd&&*pcmd) ? atof(pcmd) : 5.0f;
-
-		if ( pWpt )
-		{
-			index = CWaypoints::getWaypointIndex(pWpt);
-			CWaypointVisibilityTable *pTable = CWaypoints::getVisiblity();
-	
-			for ( i = 0; i < CWaypoints::numWaypoints(); i ++ )
-			{
-				CWaypoint *pOther = CWaypoints::getWaypoint(i);
-
-				if ( !pOther->isUsed() )
-					continue;
-
-				if ( pOther->distanceFrom(pWpt) > 1024.0f )
-					continue;
-				
-				bVis = pTable->GetVisibilityFromTo(index,i);
-				
-				debugoverlay->AddTextOverlayRGB(pOther->getOrigin(),0,ftime,bVis ? 0 : 255,bVis ? 255 : 0,0,200,bVis ? "VIS" : "INV" );
-			}
-		}
-		
-	}
-	else
-		return COMMAND_ERROR;
-#endif
-	return COMMAND_ACCESSED;
-}
-
-///////////////
-CWaypointSetRadiusCommand :: CWaypointSetRadiusCommand ()
-{
-	setName("setradius");
-	setHelp("Go to a waypoint, use setradius <radius>");
-}
-
-eBotCommandResult CWaypointSetRadiusCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	pClient->updateCurrentWaypoint();
-
-	if ( pcmd && *pcmd && ( CWaypoints::validWaypointIndex(pClient->currentWaypoint()) ) )
-	{
-		CWaypoint *pWpt = CWaypoints::getWaypoint(pClient->currentWaypoint());
-
-		pWpt->setRadius(atof(pcmd));
-	}
-	else
-		return COMMAND_ERROR;
-
-	return COMMAND_ACCESSED;
-}
-/////////////////
-
-CWaypointMenuCommand :: CWaypointMenuCommand()
-{
-	setName("menu");
-};
-
-eBotCommandResult CWaypointMenuCommand:: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	pClient->setCurrentMenu(CBotMenuList::getMenu(BOT_MENU_WPT));
-
-	return COMMAND_ACCESSED;
-	/*
-	if ( pClient )
-	{
-		// number of waypoint types to show per menu
-		unsigned const int iNumToShow = 7;
-
-		unsigned int i = 0;
-		// menu level .. ?
-		unsigned int iLevel = 0;
-		// number of possible waypoint types to show
-		unsigned int iNumTypes = CWaypointTypes::getNumTypes();
-
-		char num[64], msg[64], cmd[128];
-		CWaypointType *p;
-		CWaypoint *pWpt;
-
-		// get current waypoint types on current waypoint
-		pClient->updateCurrentWaypoint();
-		pWpt = CWaypoints::getWaypoint(pClient->currentWaypoint());
-
-		if ( !pWpt )
-		{
-			CBotGlobals::botMessage(pClient->getPlayer(),0,"Not next to any waypoints to show a menu for");
-			return COMMAND_ERROR;
-		}
-
-		// Menu level to start, 0 = beginning
-		if ( pcmd && *pcmd )
-		{
-			iLevel = atoi(pcmd);
-		}
-		else
-		{
-			iLevel = 0;
-		}
-
-		//pClient->update
-
-		KeyValues *kv = new KeyValues( "menu" );
-		kv->SetString( "title", "Waypoint Menu" );
-		kv->SetInt( "level", 1 );
-		kv->SetColor( "color", Color( 255, 0, 0, 255 ));
-		kv->SetInt( "time", 15 );
-		kv->SetString( "msg", "Select Waypoint Type" );
-		
-		// start at this waypoint type index
-		unsigned int iIndex = iLevel*iNumToShow;
-
-		// run through a small number
-		while ( (i < iNumToShow) && (iIndex < iNumTypes) )
-		{
-			p = CWaypointTypes::getTypeByIndex(iIndex);
-			
-			Q_snprintf( num, sizeof(num), "%i", i );
-
-			// if waypoint has this type show it by putting a "[x]" next to it
-			if ( pWpt->getFlags() & p->getBits() )
-				Q_snprintf( msg, sizeof(msg), "%s [x]", p->getName() );
-			else
-				Q_snprintf( msg, sizeof(msg), "%s [ ]", p->getName() );
-
-			Q_snprintf( cmd, sizeof(cmd), "rcbot waypoint givetype %s", p->getName() );
-
-			KeyValues *item1 = kv->FindKey( num, true );
-			item1->SetString( "msg", msg );
-			item1->SetString( "command", cmd );
-
-			iIndex ++;
-			i++;
-		}
-
-		// finally show "More" option if available
-		if ( iIndex < iNumTypes )
-		{
-			Q_snprintf( num, sizeof(num), "%i", i );
-			Q_snprintf( msg, sizeof(msg), "More..." );
-			Q_snprintf( cmd, sizeof(cmd), "rcbot waypoint menu %d", iLevel+1 );
-
-			KeyValues *item1 = kv->FindKey( num, true );
-			item1->SetString( "msg", msg );
-			item1->SetString( "command", cmd );
-		}
-
-		helpers->CreateMessage( pClient->getPlayer(), DIALOG_MENU, kv, &g_RCBOTServerPlugin );
-		kv->deleteThis();
-
-		//pClient->showMenu();
-
-		return COMMAND_ACCESSED;
-	}
-
-	return COMMAND_ERROR;*/
-};
-////////////////////////////
-
-CWaypointSetAngleCommand :: CWaypointSetAngleCommand()
-{
-	setName("updateyaw");
-}
-
-eBotCommandResult CWaypointSetAngleCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	pClient->updateCurrentWaypoint();
-
-	if ( CWaypoints::validWaypointIndex(pClient->currentWaypoint()) )
-	{
-		CWaypoint *pWpt = CWaypoints::getWaypoint(pClient->currentWaypoint());
-
-		pWpt->setAim(CBotGlobals::playerAngles(pClient->getPlayer()).y);
-	}
-
-	return COMMAND_ACCESSED;
-}
-
-
-/////////////////////
-CWaypointOnCommand::CWaypointOnCommand()
-{
-	setName("on");
-	setAccessLevel(CMD_ACCESS_WAYPOINT);
-}
-
-CWaypointDrawTypeCommand::CWaypointDrawTypeCommand()
-{
-	setName("drawtype");
-	setHelp("0: for effects g_pEngine (maximum limit of beams)\n1: for debug overlay (no limit of beams) [LISTEN SERVER CLIENT ONLY]");
-	setAccessLevel(CMD_ACCESS_WAYPOINT);
-}
-
-eBotCommandResult CWaypointDrawTypeCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	if ( pClient )
-	{
-		if ( pcmd && *pcmd )
-		{
-			pClient->setDrawType(atoi(pcmd));
-			return COMMAND_ACCESSED;
-		}
-	}
-
-	return COMMAND_ERROR;
-}
-
-eBotCommandResult CWaypointOnCommand:: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	if ( pClient )
-	{
-		pClient->setWaypointOn(true);
-		pClient->giveMessage("Waypoints On");
-	}
-
-	return COMMAND_ACCESSED;
-}
-
-eBotCommandResult CWaypointGiveTypeCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	edict_t *pEntity = pClient->getPlayer();
-
-	if ( pcmd && *pcmd )
-	{
-		if ( pClient->currentWaypoint() == -1 )
-			CBotGlobals::botMessage(pEntity,0,"No waypoint nearby to give types (move closer to the waypoint you want to give types)");
-		else
-		{
-			char *type = NULL;
-
-			for ( int i = 0; i < 4; i ++ )
-			{
-				if ( i == 0 )
-					type = (char*)pcmd;
-				else if ( i == 1 )
-					type = (char*)arg1;
-				else if ( i == 2 )
-					type = (char*)arg2;
-				else if ( i == 3 )
-					type = (char*)arg3;
-
-				if ( !type || !*type )
-					break;
-
-				CWaypointType *pType = CWaypointTypes::getType(type);
-
-				if ( pType )
-				{
-					CWaypoint *pWaypoint = CWaypoints::getWaypoint(pClient->currentWaypoint());
-
-					if ( pWaypoint )
-					{
-						if ( pWaypoint->hasFlag(pType->getBits()) )
-						{
-							pWaypoint->removeFlag(pType->getBits());
-							CBotGlobals::botMessage(pEntity,0,"type %s removed from waypoint %d",type,CWaypoints::getWaypointIndex(pWaypoint));
-							pClient->playSound("UI/buttonrollover");
-						}
-						else
-						{
-							pWaypoint->addFlag(pType->getBits());
-							
-							if ( pType->getBits() & CWaypointTypes::W_FL_UNREACHABLE )
-							{
-								CWaypoints::deletePathsTo(CWaypoints::getWaypointIndex(pWaypoint));
-								CWaypoints::deletePathsFrom(CWaypoints::getWaypointIndex(pWaypoint));
-							}
-
-							CBotGlobals::botMessage(pEntity,0,"type %s added to waypoint %d",type,CWaypoints::getWaypointIndex(pWaypoint));
-
-							pClient->playSound("UI/buttonclickrelease");
-						}
-						
-					}
-				}
-				else
-				{
-					CBotGlobals::botMessage(pEntity,0,"type '%s' not found",type);
-					CWaypointTypes::showTypesOnConsole(pEntity);
-				}
-
-			}
-		}
-	}
-	else
-	{
-		CWaypointTypes::showTypesOnConsole(pEntity);
-	}
-
-	return COMMAND_ACCESSED;
-}
-
-//////////////////
-CWaypointOffCommand::CWaypointOffCommand()
-{
-	setName("off");
-	setAccessLevel(CMD_ACCESS_WAYPOINT);
-}
-
-eBotCommandResult CWaypointClearCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	CWaypoints::init();
-	CBotGlobals::botMessage(pClient->getPlayer(),0,"waypoints cleared");
-
-	return COMMAND_ACCESSED;
-}
-
-eBotCommandResult CWaypointOffCommand:: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	pClient->setWaypointOn(false);
-	pClient->giveMessage("Waypoints Off");
-	CBotGlobals::botMessage(pClient->getPlayer(),0,"waypoints off");
-
-	return COMMAND_ACCESSED;
-}
-////////////////////////
-CWaypointAddCommand::CWaypointAddCommand()
-{
-	setName("add");
-	setAccessLevel(CMD_ACCESS_WAYPOINT);
-}
-
-eBotCommandResult CWaypointAddCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	CWaypoints::addWaypoint(pClient,pcmd,arg1,arg2,arg3);
-
-	return COMMAND_ACCESSED;
-}
-////////////////////
-CWaypointDeleteCommand ::CWaypointDeleteCommand()
-{
-	setName("delete");
-	setAccessLevel(CMD_ACCESS_WAYPOINT);
-}
-
-eBotCommandResult CWaypointDeleteCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{	
-	if ( pClient )
-	{
-		if ( pcmd && *pcmd )
-		{
-			float radius = atof(pcmd);
-
-			if ( radius > 0 )
-			{
-				vector<int> pWpt;
-				int numdeleted = 0;
-				Vector vOrigin = pClient->getOrigin();
-
-				CWaypointLocations::GetAllInArea(vOrigin,&pWpt,-1);
-
-				for ( unsigned short int i = 0; i < pWpt.size(); i ++ )
-				{
-					CWaypoint *pWaypoint = CWaypoints::getWaypoint(pWpt[i]);
-
-					if ( pWaypoint->distanceFrom(vOrigin) < radius)
-					{
-						CWaypoints::deleteWaypoint(pWpt[i]);
-						numdeleted++;
-					}
-				}
-
-				if ( numdeleted > 0 )
-				{
-					CBotGlobals::botMessage(pClient->getPlayer(),0,"%d waypoints within range of %0.0f deleted",numdeleted,radius);
-					pClient->updateCurrentWaypoint(); // waypoint deleted so get a new one
-					pClient->playSound("buttons/combine_button_locked");
-					pClient->giveMessage("Waypoints deleted");
-				}
-				else
-				{
-					CBotGlobals::botMessage(pClient->getPlayer(),0,"no waypoints within range of %0.0f",radius);
-					pClient->playSound("weapons/wpn_denyselect");
-					pClient->giveMessage("Waypoints deleted");
-					pClient->updateCurrentWaypoint(); // waypoint deleted so get a new one
-				}
-			}
-		}
-		else
-		{
-			pClient->updateCurrentWaypoint();
-
-			if ( CWaypoints::validWaypointIndex(pClient->currentWaypoint()) )
-			{
-				CWaypoints::deleteWaypoint(pClient->currentWaypoint());
-				CBotGlobals::botMessage(pClient->getPlayer(),0,"waypoint %d deleted",pClient->currentWaypoint());
-				pClient->updateCurrentWaypoint(); // waypoint deleted so get a new one
-				pClient->playSound("buttons/combine_button_locked");
-				pClient->giveMessage("Waypoint deleted");
-			}
-			else
-			{
-				CBotGlobals::botMessage(pClient->getPlayer(),0,"no waypoint nearby to delete");
-				pClient->playSound("weapons/wpn_denyselect");
-				pClient->giveMessage("No Waypoint");
-			}
-		}
-	}
-
-	return COMMAND_ACCESSED;
-}
-/////////////////////
-/*CControlCommand :: CControlCommand ()
-{
-	setName("control");
-	setAccessLevel(CMD_ACCESS_BOT);
-}
-
-eBotCommandResult CControlCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	edict_t *pEntity = NULL;
-
-	if ( pClient )
-		pEntity = pClient->getPlayer();
-	if ( pcmd && *pcmd )
-	{
-
-		if ( CBots::controlBot(pcmd,pcmd,arg2,arg3) )
-			CBotGlobals::botMessage(pEntity,0,"bot added");
-		else
-			CBotGlobals::botMessage(pEntity,0,"error: couldn't control bot '%s'",pcmd);
-
-		return COMMAND_ACCESSED;
-
-	}
-	else
-		return COMMAND_ERROR;
-}*/
-////////////////////
 
 //edits schedules
 
-eBotCommandResult CBotTaskCommand::execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
+eBotCommandResult CBotTaskCommand::Execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
 {
 #ifndef __linux__
 
-	if ( pClient && pClient->getDebugBot()!=NULL )
+	if (pClient && pClient->GetDebugBot() != NULL)
 	{
-		edict_t *pEdict = pClient->getDebugBot();
-		CBot *pBot = CBots::getBotPointer(pEdict);
+		edict_t *pEdict = pClient->GetDebugBot();
+		CBot *pBot = CBots::GetBotPointer(pEdict);
 
-		if ( pBot->inUse() )
+		if (pBot->InUse())
 		{
-			CBotSchedules *pSched = pBot->getSchedule();
+			CBotSchedules *pSched = pBot->GetSchedule();
 
-			if ( pcmd && *pcmd )
+			if (pcmd && *pcmd)
 			{
 				//int task = atoi(pcmd);
 
-				pSched->freeMemory();
+				pSched->FreeMemory();
 
 				// 83
-				if ( !strcmp(pcmd,"pipe") )
+				if (!strcmp(pcmd, "pipe"))
 				{
-					CBotUtility util = CBotUtility(pBot,BOT_UTIL_PIPE_LAST_ENEMY,true,1.0f);
-					pBot->setLastEnemy(pClient->getPlayer());
-					pBot->getSchedule()->freeMemory();
-					((CBotTF2*)pBot)->executeAction(&util);
+					CBotUtility util = CBotUtility(pBot, BOT_UTIL_PIPE_LAST_ENEMY, true, 1.0f);
+					pBot->SetLastEnemy(pClient->GetPlayer());
+					pBot->GetSchedule()->FreeMemory();
+					((CBotTF2*)pBot)->ExecuteAction(&util);
 				}
 				// 71
 				/*else if ( !strcmp(pcmd,"gren") )
 				{
-					CBotWeapons *pWeapons;
-					CBotWeapon *gren;
+				CBotWeapons *pWeapons;
+				CBotWeapon *gren;
 
-					pWeapons = pBot->getWeapons();
-					gren = pWeapons->getGrenade();
+				pWeapons = pBot->getWeapons();
+				gren = pWeapons->getGrenade();
 
-					if ( gren )
-					{
-						CBotSchedule *sched = new CBotSchedule(new CThrowGrenadeTask(gren,pBot->getAmmo(gren->getWeaponInfo()->getAmmoIndex1()),pClient->getOrigin()));
-						pSched->add(sched);
-					}
-				}*/
-				else if ( !strcmp(pcmd,"snipe") )
+				if ( gren )
 				{
-					if ( pClient )
+				CBotSchedule *sched = new CBotSchedule(new CThrowGrenadeTask(gren,pBot->getAmmo(gren->getWeaponInfo()->getAmmoIndex1()),pClient->getOrigin()));
+				pSched->Add(sched);
+				}
+				}*/
+				else if (!strcmp(pcmd, "snipe"))
+				{
+					if (pClient)
 					{
-						
-						CWaypoint *pWaypoint = CWaypoints::getWaypoint(CWaypoints::nearestWaypointGoal(CWaypointTypes::W_FL_SNIPER,pClient->getOrigin(),200.0f,pBot->getTeam()));
-					
-						if ( pWaypoint )
+
+						CWaypoint *pWaypoint = CWaypoints::GetWaypoint(CWaypoints::NearestWaypointGoal(CWaypointTypes::W_FL_SNIPER, pClient->GetOrigin(), 200.0f, pBot->GetTeam()));
+
+						if (pWaypoint)
 						{
-							if ( CBotGlobals::isMod(MOD_TF2) )
+							if (CBotGlobals::IsMod(MOD_TF2))
 							{
 								//if ( CClassInterface::getTF2Class() )
 							}
@@ -837,30 +193,30 @@ eBotCommandResult CBotTaskCommand::execute ( CClient *pClient, const char *pcmd,
 
 								if ( pWeapon )
 								{
-									// linux fix - copy origin onto vector here
-									Vector vOrigin = pWaypoint->getOrigin();
-									snipetask = new CBotDODSnipe(pWeapon,vOrigin,pWaypoint->getAimYaw(),false,0,pWaypoint->getFlags());
+								// linux fix - copy origin onto vector here
+								Vector vOrigin = pWaypoint->getOrigin();
+								snipetask = new CBotDODSnipe(pWeapon,vOrigin,pWaypoint->getAimYaw(),false,0,pWaypoint->getFlags());
 
-									findpath->setCompleteInterrupt(CONDITION_PUSH);
-									snipetask->setCompleteInterrupt(CONDITION_PUSH);
+								findpath->setCompleteInterrupt(CONDITION_PUSH);
+								snipetask->setCompleteInterrupt(CONDITION_PUSH);
 
-									snipe->setID(SCHED_DEFENDPOINT);
-									snipe->addTask(findpath);
-									snipe->addTask(snipetask);
-								
-									pSched->add(snipe);
+								snipe->setID(SCHED_DEFENDPOINT);
+								snipe->addTask(findpath);
+								snipe->addTask(snipetask);
+
+								pSched->Add(snipe);
 								}
 								else
-									CBotGlobals::botMessage(NULL,0,"Bot is not a sniper");*/
+								CBotGlobals::BotMessage(NULL,0,"Bot is not a sniper");*/
 							}
 						}
 						else
-							CBotGlobals::botMessage(NULL,0,"Sniper waypoint not found");
+							CBotGlobals::BotMessage(NULL, 0, "Sniper waypoint not found");
 
 					}
 				}
 			}
-			
+
 		}
 	}
 
@@ -871,46 +227,46 @@ eBotCommandResult CBotTaskCommand::execute ( CClient *pClient, const char *pcmd,
 //////////////////////
 //clear bots schedules
 
-eBotCommandResult CBotFlush :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
+eBotCommandResult CBotFlush::Execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
 {
-	if ( pClient && pClient->getDebugBot()!=NULL )
+	if (pClient && pClient->GetDebugBot() != NULL)
 	{
-		edict_t *pEdict = pClient->getDebugBot();
-		CBot *pBot = CBots::getBotPointer(pEdict);
+		edict_t *pEdict = pClient->GetDebugBot();
+		CBot *pBot = CBots::GetBotPointer(pEdict);
 
-		if ( pBot->inUse() )
+		if (pBot->InUse())
 		{
-			CBotSchedules *pSched = pBot->getSchedule();
-			pSched->freeMemory();
+			CBotSchedules *pSched = pBot->GetSchedule();
+			pSched->FreeMemory();
 		}
 	}
 
 	return COMMAND_ACCESSED;
 }
 ///////////////////////
-eBotCommandResult CBotGoto :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
+eBotCommandResult CBotGoto::Execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
 {
-	if ( pClient && pClient->getDebugBot()!=NULL )
+	if (pClient && pClient->GetDebugBot() != NULL)
 	{
-		edict_t *pEdict = pClient->getDebugBot();
-		CBot *pBot = CBots::getBotPointer(pEdict);
+		edict_t *pEdict = pClient->GetDebugBot();
+		CBot *pBot = CBots::GetBotPointer(pEdict);
 
-		if ( pBot->inUse() )
+		if (pBot->InUse())
 		{
 			int iWpt;
 
-			if ( pcmd && *pcmd )
+			if (pcmd && *pcmd)
 			{
 				iWpt = atoi(pcmd);
 
-				if ( (iWpt < 0) || (iWpt >= CWaypoints::numWaypoints()) )
+				if ((iWpt < 0) || (iWpt >= CWaypoints::NumWaypoints()))
 					iWpt = -1;
 			}
 			else
-				iWpt = pClient->currentWaypoint();
+				iWpt = pClient->CurrentWaypoint();
 
-			if ( iWpt != -1 )
-				pBot->forceGotoWaypoint(iWpt);
+			if (iWpt != -1)
+				pBot->ForceGotoWaypoint(iWpt);
 		}
 	}
 
@@ -918,527 +274,8 @@ eBotCommandResult CBotGoto :: execute ( CClient *pClient, const char *pcmd, cons
 }
 /////////////////////
 
-CPathWaypointCommand :: CPathWaypointCommand ()
-{
-	setName("pathwaypoint");
-	setAccessLevel(CMD_ACCESS_WAYPOINT);
-
-	add(new CPathWaypointOnCommand());
-	add(new CPathWaypointOffCommand());
-	add(new CPathWaypointAutoOnCommand());
-	add(new CPathWaypointAutoOffCommand());
-	add(new CPathWaypointCreate1Command());
-	add(new CPathWaypointCreate2Command());
-	add(new CPathWaypointRemove1Command());
-	add(new CPathWaypointRemove2Command());
-	add(new CPathWaypointDeleteToCommand());
-	add(new CPathWaypointDeleteFromCommand());
-	add(new CPathWaypointCreateFromToCommand());
-	add(new CPathWaypointRemoveFromToCommand());
-
-}
-
-CPathWaypointDeleteToCommand :: CPathWaypointDeleteToCommand()
-{
-	setName("deleteto");
-}
-
-eBotCommandResult CPathWaypointDeleteToCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	pClient->updateCurrentWaypoint();
-
-	if ( CWaypoints::validWaypointIndex(pClient->currentWaypoint()) )
-	{
-		CWaypoints::deletePathsTo(pClient->currentWaypoint());
-	}
-
-	return COMMAND_ACCESSED;;
-}
-
-
-CPathWaypointDeleteFromCommand :: CPathWaypointDeleteFromCommand()
-{
-	setName("deletefrom");
-}
-
-eBotCommandResult CPathWaypointDeleteFromCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	pClient->updateCurrentWaypoint();
-
-	if ( CWaypoints::validWaypointIndex(pClient->currentWaypoint()) )
-	{
-		CWaypoints::deletePathsFrom(pClient->currentWaypoint());
-	}
-
-	return COMMAND_ACCESSED;
-}
-
-CPathWaypointOnCommand :: CPathWaypointOnCommand()
-{
-	setName("on");
-	setAccessLevel(CMD_ACCESS_WAYPOINT);
-}
-
-eBotCommandResult CPathWaypointOnCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	pClient->setPathWaypoint(true);
-	pClient->giveMessage("Pathwaypoints visible");
-	return COMMAND_ACCESSED;
-}
-
-CPathWaypointOffCommand :: CPathWaypointOffCommand()
-{
-	setName("off");
-	setAccessLevel(CMD_ACCESS_WAYPOINT);
-}
-
-eBotCommandResult CPathWaypointOffCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	pClient->setPathWaypoint(false);
-	pClient->giveMessage("Pathwaypoints hidden");
-	return COMMAND_ACCESSED;
-}
-
-CWaypointAutoWaypointCommand :: CWaypointAutoWaypointCommand()
-{
-	setName("autowaypoint");
-	setAccessLevel(CMD_ACCESS_WAYPOINT);
-}
-
-eBotCommandResult CWaypointAutoWaypointCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	if ( pClient )
-	{
-		pClient->setAutoWaypointMode(atoi(pcmd)>0,atoi(pcmd)==2);
-		CBotGlobals::botMessage(pClient->getPlayer(),0,"Autowaypointing Mode %s, Debug %s",(atoi(pcmd)>0)?"ON":"OFF",(atoi(pcmd)==2)?"ON":"OFF");
-	}
-
-	return COMMAND_ACCESSED;
-}
-
-CPathWaypointAutoOnCommand :: CPathWaypointAutoOnCommand()
-{
-	setName("enable");
-	setAccessLevel(CMD_ACCESS_WAYPOINT);
-}
-
-eBotCommandResult CPathWaypointAutoOnCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	if ( pClient )
-		pClient->setAutoPath(true);
-	return COMMAND_ACCESSED;
-}
-
-CPathWaypointAutoOffCommand :: CPathWaypointAutoOffCommand()
-{
-	setName("disable");
-	setAccessLevel(CMD_ACCESS_WAYPOINT);
-}
-
-eBotCommandResult CPathWaypointAutoOffCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	if ( pClient )
-		pClient->setAutoPath(false);
-	return COMMAND_ACCESSED;
-}
-
-CPathWaypointCreate1Command :: CPathWaypointCreate1Command()
-{
-	setName("create1");
-	setAccessLevel(CMD_ACCESS_WAYPOINT);
-}
-
-eBotCommandResult CPathWaypointCreate1Command :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	if ( !pClient )
-		return COMMAND_ERROR;
-
-	pClient->updateCurrentWaypoint();
-
-	if ( pClient->currentWaypoint() == -1 )
-	{
-		pClient->playSound("common/wpn_denyselect.wav");
-	}
-	else
-	{
-		pClient->setPathFrom(pClient->currentWaypoint());
-
-		pClient->playSound("common/wpn_hudoff.wav");
-	}
-
-	return COMMAND_ACCESSED;
-}
-
-CPathWaypointCreate2Command :: CPathWaypointCreate2Command()
-{
-	setName("create2");
-	setAccessLevel(CMD_ACCESS_WAYPOINT);
-}
-
-eBotCommandResult CPathWaypointCreate2Command :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	pClient->updateCurrentWaypoint();
-	pClient->setPathTo(pClient->currentWaypoint());
-
-	CWaypoint *pWpt = CWaypoints::getWaypoint(pClient->getPathFrom());
-
-	// valid?
-	if ( pWpt )
-	{
-		pWpt->addPathTo(pClient->getPathTo());
-		pClient->playSound("buttons/button9");
-	}
-	else
-		pClient->playSound("common/wpn_denyselect");
-
-	return COMMAND_ACCESSED;
-}
-
-CPathWaypointCreateFromToCommand :: CPathWaypointCreateFromToCommand()
-{
-	setName("createfromto");
-	setAccessLevel(CMD_ACCESS_WAYPOINT);
-}
-
-eBotCommandResult CPathWaypointCreateFromToCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	if ( pClient && pcmd && *pcmd && arg1 && *arg1 )
-	{
-		CWaypoint *pWaypoint = CWaypoints::getWaypoint(atoi(pcmd));
-
-		if ( pWaypoint && pWaypoint->isUsed() )
-		{
-			CWaypoint *pWaypoint2 = CWaypoints::getWaypoint(atoi(arg1));
-
-			if ( pWaypoint2 && pWaypoint2->isUsed() )
-			{
-				pWaypoint->addPathTo(atoi(arg1));
-				CBotGlobals::botMessage(pClient!=NULL ? pClient->getPlayer() : NULL,
-					0,"Added path from <%d> to <%d>",atoi(pcmd),atoi(arg1));
-
-				pWaypoint->draw(pClient->getPlayer(),true,DRAWTYPE_DEBUGENGINE);
-				pWaypoint->info(pClient->getPlayer());
-				pWaypoint2->draw(pClient->getPlayer(),true,DRAWTYPE_DEBUGENGINE);
-				pWaypoint2->info(pClient->getPlayer());
-
-				pClient->playSound("buttons/button9");
-
-				return COMMAND_ACCESSED;
-			}
-			else
-				CBotGlobals::botMessage(pClient!=NULL ? pClient->getPlayer() : NULL,
-					0,"Waypoint id <%d> not found",atoi(arg1));
-
-		}
-		else
-			CBotGlobals::botMessage(pClient!=NULL ? pClient->getPlayer() : NULL,
-				0,"Waypoint id <%d> not found",atoi(pcmd));
-	}
-	else
-		CBotGlobals::botMessage(pClient!=NULL ? pClient->getPlayer() : NULL,
-				0,"missing args <id1> <id2>");
-	
-	return COMMAND_ERROR;
-}
-
-CPathWaypointRemoveFromToCommand :: CPathWaypointRemoveFromToCommand()
-{
-	setName("removefromto");
-	setAccessLevel(CMD_ACCESS_WAYPOINT);
-}
-
-eBotCommandResult CPathWaypointRemoveFromToCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	if ( pClient && pcmd && *pcmd && arg1 && *arg1 )
-	{
-		CWaypoint *pWaypoint = CWaypoints::getWaypoint(atoi(pcmd));
-
-		if ( pWaypoint && pWaypoint->isUsed() )
-		{
-			CWaypoint *pWaypoint2 = CWaypoints::getWaypoint(atoi(arg1));
-
-			if ( pWaypoint2 && pWaypoint2->isUsed() )
-			{
-				pWaypoint->removePathTo(atoi(arg1));
-				CBotGlobals::botMessage(pClient!=NULL ? pClient->getPlayer() : NULL,
-					0,"Removed path from <%d> to <%d>",atoi(pcmd),atoi(arg1));
-
-				pWaypoint->draw(pClient->getPlayer(),true,DRAWTYPE_DEBUGENGINE);
-				pWaypoint->info(pClient->getPlayer());
-				pWaypoint2->draw(pClient->getPlayer(),true,DRAWTYPE_DEBUGENGINE);
-				pWaypoint2->info(pClient->getPlayer());
-
-				pClient->playSound("buttons/button24");
-
-				return COMMAND_ACCESSED;
-			}
-			else
-				CBotGlobals::botMessage(pClient!=NULL ? pClient->getPlayer() : NULL,
-					0,"Waypoint id <%d> not found",atoi(arg1));
-
-		}
-		else
-			CBotGlobals::botMessage(pClient!=NULL ? pClient->getPlayer() : NULL,
-				0,"Waypoint id <%d> not found",atoi(pcmd));
-	}
-	else
-		CBotGlobals::botMessage(pClient!=NULL ? pClient->getPlayer() : NULL,
-				0,"missing args <id1> <id2>");
-	
-	return COMMAND_ERROR;
-}
-
-CPathWaypointRemove1Command :: CPathWaypointRemove1Command()
-{
-	setName("remove1");
-	setAccessLevel(CMD_ACCESS_WAYPOINT);
-}
-
-eBotCommandResult CPathWaypointRemove1Command :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	pClient->updateCurrentWaypoint();
-
-	if ( pClient->currentWaypoint() != -1 )
-	{
-		pClient->setPathFrom(pClient->currentWaypoint());
-		pClient->playSound("common/wpn_hudoff.wav");
-	}
-	else
-		pClient->playSound("common/wpn_moveselect.wav");
-
-	return COMMAND_ACCESSED;
-}
-
-CPathWaypointRemove2Command :: CPathWaypointRemove2Command()
-{
-	setName("remove2");
-	setAccessLevel(CMD_ACCESS_WAYPOINT);
-}
-
-eBotCommandResult CPathWaypointRemove2Command :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	pClient->updateCurrentWaypoint();
-	pClient->setPathTo(pClient->currentWaypoint());
-
-	CWaypoint *pWpt = CWaypoints::getWaypoint(pClient->getPathFrom());
-
-	// valid?
-	if ( !pWpt )
-		pClient->playSound("common/wpn_moveselect");			
-	else
-	{
-		pClient->playSound("buttons/button9");
-
-		pWpt->removePathTo(pClient->getPathTo());
-	}
-
-	return COMMAND_ACCESSED;	
-}
-/////////////
-CWaypointAutoFix :: CWaypointAutoFix  ()
-{
-	setName("autofix");
-}
-
-eBotCommandResult CWaypointAutoFix :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	bool bFixSentry_Sniper_Defend_TeleExtWpts = false;
-
-	if ( pcmd && *pcmd )
-	{
-		bFixSentry_Sniper_Defend_TeleExtWpts = ( atoi(pcmd) == 1 );
-	}
-
-	CWaypoints::autoFix(bFixSentry_Sniper_Defend_TeleExtWpts);
-	
-	return COMMAND_ACCESSED;
-}
-
-////////////
-
-CWaypointAreaSetToNearest::CWaypointAreaSetToNearest()
-{
-	setName("setareatonearest");
-}
-
-eBotCommandResult CWaypointAreaSetToNearest::execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	if ( pClient )
-	{
-		int id;
-		CWaypoint *pWpt;
-		bool bOk = false;
-		int setarea = 0;
-
-		id = pClient->currentWaypoint();
-
-		if ( (pWpt=CWaypoints::getWaypoint(id)) != NULL )
-		{
-			if ( pWpt->isUsed() )
-			{
-
-				if ( CBotGlobals::isCurrentMod(MOD_TF2) )
-					setarea = CTeamFortress2Mod::m_ObjectiveResource.NearestArea(pWpt->getOrigin());
-				/*else if (CBotGlobals::isCurrentMod(MOD_DOD) )
-					setarea = CDODMod::m_Flags.findNearestObjective(pWpt->getOrigin());*/
-				
-				if ( setarea > 0 )
-					pWpt->setArea(setarea);
-
-				bOk = true;
-			}
-		}
-
-		if ( bOk )
-		{
-			if ( setarea > 0 )
-				CBotGlobals::botMessage(pClient->getPlayer(),0,"Changed waypoint %d area to %d",id,setarea);
-			else
-				CBotGlobals::botMessage(pClient->getPlayer(),0,"No nearest area to wpt id %d",id);
-		}
-		else
-		{
-			CBotGlobals::botMessage(pClient->getPlayer(),0,"Invalid waypoint id %d",id);
-		}
-		return COMMAND_ACCESSED;
-	}
-
-	return COMMAND_ERROR;
-}
-
-///////////////
-CWaypointCheckCommand::CWaypointCheckCommand()
-{
-	setName("check");
-}
-
-eBotCommandResult CWaypointCheckCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	// loop through every waypoint and check the areas are not outside the number of control points
-
-	CWaypoints::checkAreas((pClient==NULL)?NULL:pClient->getPlayer());
-
-	return COMMAND_ACCESSED;
-}
-
-CWaypointTeleportCommand::CWaypointTeleportCommand()
-{
-	setName("teleport");
-}
-
-eBotCommandResult CWaypointTeleportCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	if ( pClient && pcmd && *pcmd )
-	{
-		int id;
-		CWaypoint *pWpt;
-		bool bTele = false;
-
-		id = atoi(pcmd);
-
-		if ( (pWpt=CWaypoints::getWaypoint(id)) != NULL )
-		{
-			if ( pWpt->isUsed() )
-			{
-				pClient->teleportTo(pWpt->getOrigin()+Vector(0,0,8));
-				bTele = true;
-			}
-		}
-
-		if ( bTele )
-		{
-			CBotGlobals::botMessage(pClient->getPlayer(),0,"Teleported to waypoint %d",id);
-		}
-		else
-		{
-			CBotGlobals::botMessage(pClient->getPlayer(),0,"Invalid waypoint id %d",id);
-		}
-
-		return COMMAND_ACCESSED;
-	}
-
-	return COMMAND_ERROR;
-}
-//////////////
-
-CWaypointAngleCommand :: CWaypointAngleCommand()
-{
-	setName("angle");
-}
-
-eBotCommandResult CWaypointAngleCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	if ( pClient && pClient->getPlayer() )
-	{
-		pClient->updateCurrentWaypoint();
-
-		CWaypoint *pWpt = CWaypoints::getWaypoint(pClient->currentWaypoint());
-
-		if ( pWpt )
-		{
-			QAngle eye = CBotGlobals::playerAngles(pClient->getPlayer());
-			CBotGlobals::botMessage(pClient->getPlayer(),0,"Waypoint Angle == %0.3f deg, (Eye == %0.3f)",CBotGlobals::yawAngleFromEdict(pClient->getPlayer(),pWpt->getOrigin()),eye.y);
-			pClient->playSound("buttons/combine_button1");
-		}
-	}
-
-	return COMMAND_ACCESSED;
-}
-
-CWaypointInfoCommand :: CWaypointInfoCommand()
-{
-	setName("info");
-}
-
-eBotCommandResult CWaypointInfoCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	pClient->updateCurrentWaypoint();
-
-	CWaypoint *pWpt = CWaypoints::getWaypoint(pClient->currentWaypoint());
-
-	if ( pWpt )
-		pWpt->info(pClient->getPlayer());
-
-	return COMMAND_ACCESSED;
-}
-
-eBotCommandResult CWaypointSaveCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	if ( CWaypoints::save(false,(pClient!=NULL)?pClient->getPlayer():NULL,((pcmd!=NULL) && (*pcmd!=0))?pcmd:NULL,((arg1!=NULL) && (*arg1!=0))?arg1:NULL) )
-	{
-		CBotGlobals::botMessage(NULL,0,"waypoints saved");
-		if ( pClient )
-			pClient->giveMessage("Waypoints Saved");
-	}
-	else
-		CBotGlobals::botMessage(NULL,0,"error: could not save waypoints");
-
-	return COMMAND_ACCESSED;
-}
-
-eBotCommandResult CWaypointLoadCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	char *szMapName = CBotGlobals::getMapName();
-	bool bLoadOK = false;
-
-	if ( pcmd && *pcmd )
-	{
-		bLoadOK = CWaypoints::load(pcmd);
-		szMapName = (char*)pcmd;
-	}
-	else
-		bLoadOK = CWaypoints::load();
-
-	if ( bLoadOK )
-		CBotGlobals::botMessage(NULL,0,"waypoints %s loaded",szMapName);
-	else
-		CBotGlobals::botMessage(NULL,0,"error: could not load %s waypoints",szMapName);
-
-	return COMMAND_ACCESSED;
-}
-
 //usage \"memorycheck <classname> <offset> <type>\"");
-eBotCommandResult CDebugMemoryCheckCommand:: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
+eBotCommandResult CDebugMemoryCheckCommand::Execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
 {
 	// pcmd = classname
 	// arg1 = offset
@@ -1447,11 +284,11 @@ eBotCommandResult CDebugMemoryCheckCommand:: execute ( CClient *pClient, const c
 	NEED_ARG(arg1);
 	NEED_ARG(arg2);
 	// find edict
-	edict_t *pEdict = CClassInterface::FindEntityByClassnameNearest(pClient->getOrigin(),pcmd);
-	
-	if ( pEdict  == NULL )
+	edict_t *pEdict = CClassInterface::FindEntityByClassnameNearest(pClient->GetOrigin(), pcmd);
+
+	if (pEdict == NULL)
 	{
-		CBotGlobals::botMessage(pClient->getPlayer(),0,"Edict not found");
+		CBotGlobals::BotMessage(pClient->GetPlayer(), 0, "Edict not found");
 		return COMMAND_ERROR;
 	}
 
@@ -1459,44 +296,44 @@ eBotCommandResult CDebugMemoryCheckCommand:: execute ( CClient *pClient, const c
 
 	unsigned int offset = atoi(arg1);
 
-	if ( ( strcmp(arg2,"bool") == 0 ) || ( strcmp(arg2,"byte") == 0 ))
+	if ((strcmp(arg2, "bool") == 0) || (strcmp(arg2, "byte") == 0))
 	{
-		CBotGlobals::botMessage(pClient->getPlayer(),0,"%s - offset %d - Value(byte) = %d",pcmd,offset,*(byte*)(((unsigned long)pent) + offset));
+		CBotGlobals::BotMessage(pClient->GetPlayer(), 0, "%s - offset %d - Value(byte) = %d", pcmd, offset, *(byte*)(((unsigned long)pent) + offset));
 	}
-	else if ( strcmp(arg2,"int") == 0 )
+	else if (strcmp(arg2, "int") == 0)
 	{
-		CBotGlobals::botMessage(pClient->getPlayer(),0,"%s - offset %d - Value(int) = %d",pcmd,offset,*(int*)(((unsigned long)pent) + offset));
+		CBotGlobals::BotMessage(pClient->GetPlayer(), 0, "%s - offset %d - Value(int) = %d", pcmd, offset, *(int*)(((unsigned long)pent) + offset));
 		/*
 		if ( strcmp(pcmd,"team_control_point_master") == 0 )
 		{
-			CTeamControlPointMaster *p;
-			CTeamControlPointMaster check;
+		CTeamControlPointMaster *p;
+		CTeamControlPointMaster check;
 
-			unsigned int knownoffset = (unsigned int)&check.m_iCurrentRoundIndex - (unsigned int)&check;
+		unsigned int knownoffset = (unsigned int)&check.m_iCurrentRoundIndex - (unsigned int)&check;
 
-			p = (CTeamControlPointMaster*)((((unsigned long)pent) + offset) - knownoffset); //MAP_CLASS(CTeamControlPoint,(((unsigned long)pent) + offset),knownoffset);
+		p = (CTeamControlPointMaster*)((((unsigned long)pent) + offset) - knownoffset); //MAP_CLASS(CTeamControlPoint,(((unsigned long)pent) + offset),knownoffset);
 		}
 		else if ( strcmp(pcmd,"team_control_point") == 0 )
 		{
-			extern ConVar rcbot_const_point_offset;
-			extern ConVar rcbot_const_point_data_offset;
+		extern ConVar bot_const_point_offset;
+		extern ConVar bot_const_point_data_offset;
 
-			CTeamControlPoint *p = (CTeamControlPoint*)((((unsigned long)pent) + rcbot_const_point_offset.GetInt())); //MAP_CLASS(CTeamControlPoint,(((unsigned long)pent) + offset),knownoffset);
-//			CTeamControlPointData *d = (CTeamControlPointData*)((((unsigned long)pent) + rcbot_const_point_data_offset.GetInt()));
+		CTeamControlPoint *p = (CTeamControlPoint*)((((unsigned long)pent) + bot_const_point_offset.GetInt())); //MAP_CLASS(CTeamControlPoint,(((unsigned long)pent) + offset),knownoffset);
+		//			CTeamControlPointData *d = (CTeamControlPointData*)((((unsigned long)pent) + bot_const_point_data_offset.GetInt()));
 
-			CBotGlobals::botMessage(NULL,0,"NULL MSG");
+		CBotGlobals::BotMessage(NULL,0,"NULL MSG");
 		}*/
 
 	}
-	else if ( strcmp(arg2,"float") == 0 )
-		CBotGlobals::botMessage(pClient->getPlayer(),0,"%s - offset %d - Value(float) = %0.6f",pcmd,offset,*(float*)(((unsigned long)pent) + offset));
-	else if ( strcmp(arg2,"string") == 0 )
+	else if (strcmp(arg2, "float") == 0)
+		CBotGlobals::BotMessage(pClient->GetPlayer(), 0, "%s - offset %d - Value(float) = %0.6f", pcmd, offset, *(float*)(((unsigned long)pent) + offset));
+	else if (strcmp(arg2, "string") == 0)
 	{
 		string_t *str = (string_t*)(((unsigned long)pent) + offset);
-		if ( str )
-			CBotGlobals::botMessage(pClient->getPlayer(),0,"%s - offset %d - Value(string) = %s",pcmd,offset,STRING(*str));
+		if (str)
+			CBotGlobals::BotMessage(pClient->GetPlayer(), 0, "%s - offset %d - Value(string) = %s", pcmd, offset, STRING(*str));
 		else
-			CBotGlobals::botMessage(pClient->getPlayer(),0,"%s - offset %d - INVALID string",pcmd,offset);
+			CBotGlobals::BotMessage(pClient->GetPlayer(), 0, "%s - offset %d - INVALID string", pcmd, offset);
 	}
 	else
 		return COMMAND_ERROR;
@@ -1509,7 +346,7 @@ eBotCommandResult CDebugMemoryCheckCommand:: execute ( CClient *pClient, const c
 #define MEMSEARCH_FLOAT 3
 #define MEMSEARCH_STRING 4
 
-eBotCommandResult CDebugMemoryScanCommand:: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
+eBotCommandResult CDebugMemoryScanCommand::Execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
 {
 	//pcmd = classname
 	// arg1 = value
@@ -1522,29 +359,29 @@ eBotCommandResult CDebugMemoryScanCommand:: execute ( CClient *pClient, const ch
 
 	unsigned int m_prev_size = m_size;
 
-	if ( ( strcmp(arg2,"bool") == 0 ) || ( strcmp(arg2,"byte") == 0 ))
+	if ((strcmp(arg2, "bool") == 0) || (strcmp(arg2, "byte") == 0))
 		m_size = MEMSEARCH_BYTE;
-	else if ( strcmp(arg2,"int") == 0 )
+	else if (strcmp(arg2, "int") == 0)
 		m_size = MEMSEARCH_INT;
-	else if ( strcmp(arg2,"float") == 0 )
+	else if (strcmp(arg2, "float") == 0)
 		m_size = MEMSEARCH_FLOAT;
-	else if ( strcmp(arg2,"string") == 0 )
+	else if (strcmp(arg2, "string") == 0)
 		m_size = MEMSEARCH_STRING;
-	else 
+	else
 		m_size = 0;
 
-	if ( (m_prev_size != m_size) || ((m_size==0) || !arg3 || !*arg3) || ( atoi(arg3) == 0 ) )
+	if ((m_prev_size != m_size) || ((m_size == 0) || !arg3 || !*arg3) || (atoi(arg3) == 0))
 	{
-		memset(stored_offsets,0,sizeof(u_MEMSEARCH)*MAX_MEM_SEARCH);
+		memset(stored_offsets, 0, sizeof(u_MEMSEARCH)*MAX_MEM_SEARCH);
 	}
 
 
 	// find edict
-	edict_t *pEdict = CClassInterface::FindEntityByClassnameNearest(pClient->getOrigin(),pcmd);
+	edict_t *pEdict = CClassInterface::FindEntityByClassnameNearest(pClient->GetOrigin(), pcmd);
 
-	if ( pEdict  == NULL )
+	if (pEdict == NULL)
 	{
-		CBotGlobals::botMessage(pClient->getPlayer(),0,"Edict not found");
+		CBotGlobals::BotMessage(pClient->GetPlayer(), 0, "Edict not found");
 		return COMMAND_ERROR;
 	}
 
@@ -1558,42 +395,42 @@ eBotCommandResult CDebugMemoryScanCommand:: execute ( CClient *pClient, const ch
 
 	bool bfound;
 
-	for ( int i = 0; i < MAX_MEM_SEARCH; i ++ ) // 2KB search
+	for (int i = 0; i < MAX_MEM_SEARCH; i++) // 2KB search
 	{
 		bfound = false;
 
-		if ( m_size == MEMSEARCH_BYTE )
+		if (m_size == MEMSEARCH_BYTE)
 			bfound = (value == *mempoint);
-		else if ( m_size == MEMSEARCH_INT )
+		else if (m_size == MEMSEARCH_INT)
 			bfound = (ivalue == *(int*)mempoint);
-		else if ( m_size == MEMSEARCH_FLOAT )
+		else if (m_size == MEMSEARCH_FLOAT)
 			bfound = (fvalue == *(float*)mempoint);
-		else if ( m_size == MEMSEARCH_STRING )
+		else if (m_size == MEMSEARCH_STRING)
 		{
 			try
 			{
-				string_t *str = (string_t*) mempoint;
+				string_t *str = (string_t*)mempoint;
 
-				if ( str != NULL )
-				{			
+				if (str != NULL)
+				{
 					const char *pszstr = STRING(*str);
 
-					if ( pszstr )
-						bfound = ( strcmp(pszstr,arg1) == 0 );
+					if (pszstr)
+						bfound = (strcmp(pszstr, arg1) == 0);
 				}
 			}
-			catch(...)
+			catch (...)
 			{
-				CBotGlobals::botMessage(pClient->getPlayer(),0,"Invalid string");
+				CBotGlobals::BotMessage(pClient->GetPlayer(), 0, "Invalid string");
 			}
 		}
 
-		if ( bfound )
+		if (bfound)
 		{
-			if ( !stored_offsets[i].b1.searched )					
-				stored_offsets[i].b1.found = 1;				
+			if (!stored_offsets[i].b1.searched)
+				stored_offsets[i].b1.found = 1;
 		}
-		else if ( stored_offsets[i].b1.searched )
+		else if (stored_offsets[i].b1.searched)
 			stored_offsets[i].b1.found = 0;
 
 		stored_offsets[i].b1.searched = 1;
@@ -1602,12 +439,12 @@ eBotCommandResult CDebugMemoryScanCommand:: execute ( CClient *pClient, const ch
 	}
 
 	// Current valid offsets print
-	for ( int i = 0; i < MAX_MEM_SEARCH; i ++ )
+	for (int i = 0; i < MAX_MEM_SEARCH; i++)
 	{
-		if ( stored_offsets[i].data != 0 )
+		if (stored_offsets[i].data != 0)
 		{
-			if ( stored_offsets[i].b1.found )
-				CBotGlobals::botMessage(pClient->getPlayer(),0,"%d",i);
+			if (stored_offsets[i].b1.found)
+				CBotGlobals::BotMessage(pClient->GetPlayer(), 0, "%d", i);
 		}
 	}
 	// 
@@ -1616,208 +453,208 @@ eBotCommandResult CDebugMemoryScanCommand:: execute ( CClient *pClient, const ch
 }
 
 
-eBotCommandResult CDebugGameEventCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
+eBotCommandResult CDebugGameEventCommand::Execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
 {
-	if ( !pcmd || !*pcmd )
+	if (!pcmd || !*pcmd)
 		return COMMAND_ERROR;
 
-	pClient->setDebug(BOT_DEBUG_GAME_EVENT,atoi(pcmd)>0);
+	pClient->SetDebug(BOT_DEBUG_GAME_EVENT, atoi(pcmd)>0);
 
 	return COMMAND_ACCESSED;
 }
 
-eBotCommandResult CDebugVisCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
+eBotCommandResult CDebugVisCommand::Execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
 {
-	if ( !pcmd || !*pcmd )
+	if (!pcmd || !*pcmd)
 		return COMMAND_ERROR;
 
-	pClient->setDebug(BOT_DEBUG_VIS,atoi(pcmd)>0);
+	pClient->SetDebug(BOT_DEBUG_VIS, atoi(pcmd) > 0);
 
 	return COMMAND_ACCESSED;
 }
 
-eBotCommandResult CDebugThinkCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
+eBotCommandResult CDebugThinkCommand::Execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
 {
-	if ( !pcmd || !*pcmd )
+	if (!pcmd || !*pcmd)
 		return COMMAND_ERROR;
 
-	pClient->setDebug(BOT_DEBUG_THINK,atoi(pcmd)>0);
+	pClient->SetDebug(BOT_DEBUG_THINK, atoi(pcmd) > 0);
 
 	return COMMAND_ACCESSED;
 }
 
-eBotCommandResult CDebugLookCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
+eBotCommandResult CDebugLookCommand::Execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
 {
-	if ( !pcmd || !*pcmd )
+	if (!pcmd || !*pcmd)
 		return COMMAND_ERROR;
 
-	pClient->setDebug(BOT_DEBUG_LOOK,atoi(pcmd)>0);
+	pClient->SetDebug(BOT_DEBUG_LOOK, atoi(pcmd) > 0);
 
 	return COMMAND_ACCESSED;
 }
 
-eBotCommandResult CDebugHudCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
+eBotCommandResult CDebugHudCommand::Execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
 {
-	if ( !pcmd || !*pcmd )
+	if (!pcmd || !*pcmd)
 		return COMMAND_ERROR;
 
-	pClient->setDebug(BOT_DEBUG_HUD,atoi(pcmd)>0);
+	pClient->SetDebug(BOT_DEBUG_HUD, atoi(pcmd) > 0);
 
 	return COMMAND_ACCESSED;
 }
-eBotCommandResult CDebugAimCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
+eBotCommandResult CDebugAimCommand::Execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
 {
-	if ( !pcmd || !*pcmd )
+	if (!pcmd || !*pcmd)
 		return COMMAND_ERROR;
 
-	pClient->setDebug(BOT_DEBUG_AIM,atoi(pcmd)>0);
-
-	return COMMAND_ACCESSED;
-}
-
-eBotCommandResult CDebugChatCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
-{
-	if ( !pcmd || !*pcmd )
-		return COMMAND_ERROR;
-
-	pClient->setDebug(BOT_DEBUG_CHAT,atoi(pcmd)>0);
+	pClient->SetDebug(BOT_DEBUG_AIM, atoi(pcmd) > 0);
 
 	return COMMAND_ACCESSED;
 }
 
-eBotCommandResult CDebugProfilingCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
+eBotCommandResult CDebugChatCommand::Execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
 {
-	if ( !pcmd || !*pcmd )
+	if (!pcmd || !*pcmd)
 		return COMMAND_ERROR;
 
-	pClient->setDebug(BOT_DEBUG_PROFILE,atoi(pcmd)>0);
+	pClient->SetDebug(BOT_DEBUG_CHAT, atoi(pcmd) > 0);
 
 	return COMMAND_ACCESSED;
 }
 
-eBotCommandResult CDebugNavCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
+eBotCommandResult CDebugProfilingCommand::Execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
 {
-	if ( !pcmd || !*pcmd )
+	if (!pcmd || !*pcmd)
 		return COMMAND_ERROR;
 
-	pClient->setDebug(BOT_DEBUG_NAV,atoi(pcmd)>0);
+	pClient->SetDebug(BOT_DEBUG_PROFILE, atoi(pcmd) > 0);
 
 	return COMMAND_ACCESSED;
 }
 
-eBotCommandResult CDebugTaskCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
+eBotCommandResult CDebugNavCommand::Execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
 {
-	if ( !pcmd || !*pcmd )
+	if (!pcmd || !*pcmd)
 		return COMMAND_ERROR;
 
-	pClient->setDebug(BOT_DEBUG_TASK,atoi(pcmd)>0);
+	pClient->SetDebug(BOT_DEBUG_NAV, atoi(pcmd) > 0);
 
 	return COMMAND_ACCESSED;
 }
 
-eBotCommandResult CDebugUtilCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
+eBotCommandResult CDebugTaskCommand::Execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
 {
-	if ( !pcmd || !*pcmd )
+	if (!pcmd || !*pcmd)
 		return COMMAND_ERROR;
 
-	pClient->setDebug(BOT_DEBUG_UTIL,atoi(pcmd)>0);
+	pClient->SetDebug(BOT_DEBUG_TASK, atoi(pcmd) > 0);
 
 	return COMMAND_ACCESSED;
 }
 
-eBotCommandResult CDebugEdictsCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
+eBotCommandResult CDebugUtilCommand::Execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
 {
-	if ( !pcmd || !*pcmd )
+	if (!pcmd || !*pcmd)
 		return COMMAND_ERROR;
 
-	pClient->setDebug(BOT_DEBUG_EDICTS,atoi(pcmd)>0);
+	pClient->SetDebug(BOT_DEBUG_UTIL, atoi(pcmd) > 0);
 
 	return COMMAND_ACCESSED;
 }
 
-eBotCommandResult CDebugSpeedCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
+eBotCommandResult CDebugEdictsCommand::Execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
 {
-	if ( !pcmd || !*pcmd )
+	if (!pcmd || !*pcmd)
 		return COMMAND_ERROR;
 
-	pClient->setDebug(BOT_DEBUG_SPEED,atoi(pcmd)>0);
+	pClient->SetDebug(BOT_DEBUG_EDICTS, atoi(pcmd) > 0);
 
 	return COMMAND_ACCESSED;
 }
 
-eBotCommandResult CDebugUsercmdCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
+eBotCommandResult CDebugSpeedCommand::Execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
 {
-	if ( !pcmd || !*pcmd )
+	if (!pcmd || !*pcmd)
 		return COMMAND_ERROR;
 
-	pClient->setDebug(BOT_DEBUG_USERCMD,atoi(pcmd)>0);
+	pClient->SetDebug(BOT_DEBUG_SPEED, atoi(pcmd) > 0);
+
+	return COMMAND_ACCESSED;
+}
+
+eBotCommandResult CDebugUsercmdCommand::Execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
+{
+	if (!pcmd || !*pcmd)
+		return COMMAND_ERROR;
+
+	pClient->SetDebug(BOT_DEBUG_USERCMD, atoi(pcmd) > 0);
 
 	return COMMAND_ACCESSED;
 }
 
 
-eBotCommandResult CDebugButtonsCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
+eBotCommandResult CDebugButtonsCommand::Execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
 {
-	if ( !pcmd || !*pcmd )
+	if (!pcmd || !*pcmd)
 		return COMMAND_ERROR;
 
-	pClient->setDebug(BOT_DEBUG_BUTTONS,atoi(pcmd)>0);
+	pClient->SetDebug(BOT_DEBUG_BUTTONS, atoi(pcmd) > 0);
 
 	return COMMAND_ACCESSED;
 }
 
 
 // kickbot
-eBotCommandResult CKickBotCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
+/*eBotCommandResult CKickBotCommand::Execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
 {
-	if ( !pcmd || !*pcmd )
+	if (!pcmd || !*pcmd)
 	{
 		//remove random bot
-		CBots::kickRandomBot();
+		CBots::KickRandomBot();
 	}
 	else
 	{
 		int team = atoi(pcmd);
 
-		CBots::kickRandomBotOnTeam(team);
+		CBots::KickRandomBotOnTeam(team);
 	}
 
-	
-	return COMMAND_ACCESSED;
-}
 
-eBotCommandResult CSearchCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
+	return COMMAND_ACCESSED;
+}*/
+
+eBotCommandResult CSearchCommand::Execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
 {
 	int i = 0;
 
-	edict_t *pPlayer = pClient->getPlayer();
+	edict_t *pPlayer = pClient->GetPlayer();
 	edict_t *pEdict;
 	float fDistance;
 	string_t model;
 
-	for ( i = 0; i < gpGlobals->maxEntities; i ++ )
+	for (i = 0; i < gpGlobals->maxEntities; i++)
 	{
 		pEdict = INDEXENT(i);
 
-		if ( pEdict )
+		if (pEdict)
 		{
-			if ( !pEdict->IsFree() )
+			if (!pEdict->IsFree())
 			{
-				if ( pEdict->m_pNetworkable && pEdict->GetIServerEntity() )
-				{				
-					if ( (fDistance=(CBotGlobals::entityOrigin(pEdict) - CBotGlobals::entityOrigin(pPlayer)).Length()) < 128 )
+				if (pEdict->m_pNetworkable && pEdict->GetIServerEntity())
+				{
+					if ((fDistance = (CBotGlobals::EntityOrigin(pEdict) - CBotGlobals::EntityOrigin(pPlayer)).Length()) < 128)
 					{
 						float fVelocity;
 						Vector v;
 
-						if ( CClassInterface::getVelocity(pEdict,&v) )
+						if (CClassInterface::GetVelocity(pEdict, &v))
 							fVelocity = v.Length();
 						else
 							fVelocity = 0;
 
 						model = pEdict->GetIServerEntity()->GetModelName();
-				
-						CBotGlobals::botMessage(pPlayer,0,"(%d) D:%0.2f C:'%s', Mid:%d, Mn:'%s' Health=%d, Tm:%d, Fl:%d, Spd=%0.2f",i,fDistance,pEdict->GetClassName(),pEdict->GetIServerEntity()->GetModelIndex(),model.ToCStr(),(int)CClassInterface::getPlayerHealth(pEdict),(int)CClassInterface::getTeam(pEdict),pEdict->m_fStateFlags,fVelocity );
+
+						CBotGlobals::BotMessage(pPlayer, 0, "(%d) D:%0.2f C:'%s', Mid:%d, Mn:'%s' Health=%d, Tm:%d, Fl:%d, Spd=%0.2f", i, fDistance, pEdict->GetClassName(), pEdict->GetIServerEntity()->GetModelIndex(), model.ToCStr(), (int)CClassInterface::GetPlayerHealth(pEdict), (int)CClassInterface::GetTeam(pEdict), pEdict->m_fStateFlags, fVelocity);
 					}
 				}
 			}
@@ -1830,43 +667,43 @@ eBotCommandResult CSearchCommand :: execute ( CClient *pClient, const char *pcmd
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////
-void CBotCommand :: setName ( char *szName )
+void CBotCommand::SetName(char *szName)
 {
-	m_szCommand = CStrings::getString(szName);
+	m_szCommand = CStrings::GetString(szName);
 }
 
-void CBotCommand :: setHelp ( char *szHelp )
+void CBotCommand::SetHelp(char *szHelp)
 {
-	m_szHelp = CStrings::getString(szHelp);
+	m_szHelp = CStrings::GetString(szHelp);
 }
 
-void CBotCommand :: setAccessLevel ( int iAccessLevel )
+void CBotCommand::SetAccessLevel(int iAccessLevel)
 {
 	m_iAccessLevel = iAccessLevel;
 }
 
-CBotCommand :: CBotCommand ( char *szCommand, int iAccessLevel )
+CBotCommand::CBotCommand(char *szCommand, int iAccessLevel)
 {
-	m_szCommand = CStrings::getString(szCommand);
+	m_szCommand = CStrings::GetString(szCommand);
 	m_iAccessLevel = iAccessLevel;
 }
 
-void CBotCommand :: freeMemory ()
+void CBotCommand::FreeMemory()
 {
 	// nothing to free -- done in CStrings
 }
 
 /*bool CBotCommand :: hasAccess ( CClient *pClient )
 {
-	return (m_iAccessLevel & pClient->accessLevel()) == m_iAccessLevel;
+return (m_iAccessLevel & pClient->accessLevel()) == m_iAccessLevel;
 }*/
 
-bool CBotCommand :: isCommand ( const char *szCommand )
+bool CBotCommand::IsCommand(const char *szCommand)
 {
-	return FStrEq(szCommand,m_szCommand);
+	return FStrEq(szCommand, m_szCommand);
 }
 
-eBotCommandResult CBotCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
+eBotCommandResult CBotCommand::Execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
 {
 	return COMMAND_NOT_FOUND;
 }
@@ -1874,49 +711,49 @@ eBotCommandResult CBotCommand :: execute ( CClient *pClient, const char *pcmd, c
 
 ////////////////////////////
 // container of commands
-eBotCommandResult CBotCommandContainer :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
+eBotCommandResult CBotCommandContainer::Execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
 {
-	for ( unsigned int i = 0; i < m_theCommands.size(); i ++ )
+	for (unsigned int i = 0; i < m_theCommands.size(); i++)
 	{
 		CBotCommand *pCommand = m_theCommands[i];
 
-		if ( pCommand->isCommand(pcmd) )
-		{			
-			/*if ( pClient && !pCommand->hasAccess(pClient) )
+		if (pCommand->IsCommand(pcmd))
+		{
+			/*if (pClient && !pCommand->HasAccess(pClient))
 				return COMMAND_REQUIRE_ACCESS;*/
-			if ( !pClient && !canbeUsedDedicated() )
+			if (!pClient && !CanbeUsedDedicated())
 			{
-				CBotGlobals::botMessage(NULL,0,"Sorry, this command cannot be used on a dedicated server");
+				CBotGlobals::BotMessage(NULL, 0, "Sorry, this command cannot be used on a dedicated server");
 				return COMMAND_ERROR;
 			}
 			// move arguments
-			eBotCommandResult iResult = pCommand->execute(pClient,arg1,arg2,arg3,arg4,arg5,NULL);
+			eBotCommandResult iResult = pCommand->Execute(pClient, arg1, arg2, arg3, arg4, arg5, NULL);
 
-			if ( iResult == COMMAND_ERROR )
+			if (iResult == COMMAND_ERROR)
 			{
-				if ( pClient )
-					pCommand->printHelp(pClient->getPlayer());
+				if (pClient)
+					pCommand->PrintHelp(pClient->GetPlayer());
 				else
-					pCommand->printHelp(NULL);
+					pCommand->PrintHelp(NULL);
 			}
-			
+
 			return COMMAND_ACCESSED;
 		}
 	}
 
-	if ( pClient )
-		printHelp(pClient->getPlayer());
+	if (pClient)
+		PrintHelp(pClient->GetPlayer());
 	else
-		printHelp(NULL);
+		PrintHelp(NULL);
 
 	return COMMAND_NOT_FOUND;
 }
 
-void CBotCommandContainer :: freeMemory ()
+void CBotCommandContainer::FreeMemory()
 {
-	for ( unsigned int i = 0; i < m_theCommands.size(); i ++ )
+	for (unsigned int i = 0; i < m_theCommands.size(); i++)
 	{
-		m_theCommands[i]->freeMemory();
+		m_theCommands[i]->FreeMemory();
 		delete m_theCommands[i];
 		m_theCommands[i] = NULL;
 	}
@@ -1925,17 +762,17 @@ void CBotCommandContainer :: freeMemory ()
 }
 //////////////////////////////////////////
 
-eBotCommandResult CPrintCommands ::execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
+eBotCommandResult CPrintCommands::Execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
 {
-	if ( pClient != NULL )
+	if (pClient != NULL)
 	{
-		CBotGlobals::botMessage(pClient->getPlayer(),0,"All bot commands:");
-		CBotGlobals::m_pCommands->printCommand(pClient->getPlayer());
+		CBotGlobals::BotMessage(pClient->GetPlayer(), 0, "All bot commands:");
+		CBotGlobals::m_pCommands->PrintCommand(pClient->GetPlayer());
 	}
 	else
 	{
-		CBotGlobals::botMessage(NULL,0,"All bot commands:");
-		CBotGlobals::m_pCommands->printCommand(NULL);
+		CBotGlobals::BotMessage(NULL, 0, "All bot commands:");
+		CBotGlobals::m_pCommands->PrintCommand(NULL);
 	}
 
 	return COMMAND_ACCESSED;
@@ -1943,45 +780,45 @@ eBotCommandResult CPrintCommands ::execute ( CClient *pClient, const char *pcmd,
 
 ///////////////////////////////////////////
 
-void CBotCommand :: printCommand ( edict_t *pPrintTo, int indent )
+void CBotCommand::PrintCommand(edict_t *pPrintTo, int indent)
 {
-	if ( indent )
+	if (indent)
 	{
 		const int maxIndent = 64;
 		char szIndent[maxIndent];
 		int i;
 
-		for ( i = 0; (i < (indent*2)) && (i < maxIndent-1); i ++ )
+		for (i = 0; (i < (indent * 2)) && (i < maxIndent - 1); i++)
 			szIndent[i] = ' ';
 
-		szIndent[maxIndent-1] = 0;
-		szIndent[i]=0;
+		szIndent[maxIndent - 1] = 0;
+		szIndent[i] = 0;
 
-		if ( !pPrintTo && !canbeUsedDedicated() )
-			CBotGlobals::botMessage(pPrintTo,0,"%s%s [can't use]",szIndent,m_szCommand);
+		if (!pPrintTo && !CanbeUsedDedicated())
+			CBotGlobals::BotMessage(pPrintTo, 0, "%s%s [can't use]", szIndent, m_szCommand);
 		else
-			CBotGlobals::botMessage(pPrintTo,0,"%s%s",szIndent,m_szCommand);
+			CBotGlobals::BotMessage(pPrintTo, 0, "%s%s", szIndent, m_szCommand);
 	}
 	else
 	{
-		if ( !pPrintTo && !canbeUsedDedicated() )
-			CBotGlobals::botMessage(pPrintTo,0,"%s [can't use]",m_szCommand);
+		if (!pPrintTo && !CanbeUsedDedicated())
+			CBotGlobals::BotMessage(pPrintTo, 0, "%s [can't use]", m_szCommand);
 		else
-			CBotGlobals::botMessage(pPrintTo,0,m_szCommand);
+			CBotGlobals::BotMessage(pPrintTo, 0, m_szCommand);
 	}
 }
 
-void CBotCommand :: printHelp ( edict_t *pPrintTo )
+void CBotCommand::PrintHelp(edict_t *pPrintTo)
 {
-	if ( m_szHelp )
-		CBotGlobals::botMessage(pPrintTo,0,m_szHelp);
+	if (m_szHelp)
+		CBotGlobals::BotMessage(pPrintTo, 0, m_szHelp);
 	else
-		CBotGlobals::botMessage(pPrintTo,0,"Sorry, no help for this command (yet)");
+		CBotGlobals::BotMessage(pPrintTo, 0, "Sorry, no help for this command (yet)");
 
 	return;
 }
 
-void CBotCommandContainer :: printCommand ( edict_t *pPrintTo, int indent )
+void CBotCommandContainer::PrintCommand(edict_t *pPrintTo, int indent)
 {
 	//char cmd1[512];
 	//char cmd2[512];
@@ -1989,38 +826,38 @@ void CBotCommandContainer :: printCommand ( edict_t *pPrintTo, int indent )
 	//sprintf(cmd1,"%%%ds",indent);
 	//sprintf(cmd2,cmd1,m_szCommand);
 
-	if ( indent )
+	if (indent)
 	{
 		const int maxIndent = 64;
 		char szIndent[maxIndent];
 
 		int i;
 
-		for ( i = 0; (i < (indent*2)) && (i < maxIndent-1); i ++ )
+		for (i = 0; (i < (indent * 2)) && (i < maxIndent - 1); i++)
 			szIndent[i] = ' ';
 
-		szIndent[maxIndent-1] = 0;
-		szIndent[i]=0;
+		szIndent[maxIndent - 1] = 0;
+		szIndent[i] = 0;
 
-		CBotGlobals::botMessage(pPrintTo,0,"%s[%s]",szIndent,m_szCommand);
+		CBotGlobals::BotMessage(pPrintTo, 0, "%s[%s]", szIndent, m_szCommand);
 	}
 	else
-		CBotGlobals::botMessage(pPrintTo,0,"[%s]",m_szCommand);
+		CBotGlobals::BotMessage(pPrintTo, 0, "[%s]", m_szCommand);
 
-	for ( unsigned int i = 0; i < m_theCommands.size(); i ++ )
+	for (unsigned int i = 0; i < m_theCommands.size(); i++)
 	{
-		m_theCommands[i]->printCommand(pPrintTo,indent+1);
+		m_theCommands[i]->PrintCommand(pPrintTo, indent + 1);
 	}
 }
 
-void CBotCommandContainer :: printHelp ( edict_t *pPrintTo )
+void CBotCommandContainer::PrintHelp(edict_t *pPrintTo)
 {
-	printCommand(pPrintTo);
+	PrintCommand(pPrintTo);
 	return;
 }
 
 
-eBotCommandResult CTestCommand :: execute ( CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5 )
+eBotCommandResult CTestCommand::Execute(CClient *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
 {
 	// for developers
 	return COMMAND_NOT_FOUND;

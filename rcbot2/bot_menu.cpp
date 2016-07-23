@@ -20,10 +20,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game g_pEngine ("HL
- *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game engine ("HL
+ *    engine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL g_pEngine and MODs
+ *    respects for all of the code used other than the HL engine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -40,65 +40,63 @@
 #include "bot_globals.h"
 #include "bot_client.h"
 
-extern IVDebugOverlay *debugoverlay;
+CBotMenu *CBotMenuList::m_MenuList[BOT_MENU_MAX];
 
-CBotMenu *CBotMenuList :: m_MenuList[BOT_MENU_MAX];
-
-void CWaypointFlagMenuItem :: activate ( CClient *pClient )
+void CWaypointFlagMenuItem::Activate(CClient *pClient)
 {
-	int iWpt = pClient->currentWaypoint();
-	CWaypoint *pWpt = CWaypoints::getWaypoint(iWpt);
-	CWaypointType *type = CWaypointTypes::getTypeByIndex(m_iFlag);
+	int iWpt = pClient->CurrentWaypoint();
+	CWaypoint *pWpt = CWaypoints::GetWaypoint(iWpt);
+	CWaypointType *type = CWaypointTypes::GetTypeByIndex(m_iFlag);
 
-	if ( pWpt )
+	if (pWpt)
 	{
-		if ( pWpt->hasFlag(type->getBits()) )
-			pWpt->removeFlag(type->getBits());
+		if (pWpt->HasFlag(type->GetBits()))
+			pWpt->RemoveFlag(type->GetBits());
 		else
-			pWpt->addFlag(type->getBits());
+			pWpt->AddFlag(type->GetBits());
 	}
 }
 
-const char *CWaypointFlagMenu :: getCaption(CClient *pClient,WptColor &color )
+const char *CWaypointFlagMenu::GetCaption(CClient *pClient, WptColor &color)
 {
-	pClient->updateCurrentWaypoint();
+	pClient->UpdateCurrentWaypoint();
 
-	int iWpt = pClient->currentWaypoint();
-	CWaypoint *pWpt = CWaypoints::getWaypoint(iWpt);
+	int iWpt = pClient->CurrentWaypoint();
+	CWaypoint *pWpt = CWaypoints::GetWaypoint(iWpt);
 
-	if ( pWpt )
+	if (pWpt)
 	{
-		color = CWaypointTypes::getColour(pWpt->getFlags());
-		sprintf(m_szCaption,"Waypoint Flags ID = [%d]",iWpt);
+		color = CWaypointTypes::GetColour(pWpt->GetFlags());
+		sprintf(m_szCaption, "Waypoint Flags ID = [%d]", iWpt);
 	}
 	else
 	{
 		color = WptColor::white;
-		sprintf(m_szCaption,"No Waypoint");
+		sprintf(m_szCaption, "No Waypoint");
 	}
 
 	return m_szCaption;
 }
 
-const char *CWaypointFlagMenuItem :: getCaption ( CClient *pClient, WptColor &color )
+const char *CWaypointFlagMenuItem::GetCaption(CClient *pClient, WptColor &color)
 {
-	pClient->updateCurrentWaypoint();
+	pClient->UpdateCurrentWaypoint();
 
-	int iWpt = pClient->currentWaypoint();
-	CWaypoint * pWpt = CWaypoints::getWaypoint(iWpt);
+	int iWpt = pClient->CurrentWaypoint();
+	CWaypoint * pWpt = CWaypoints::GetWaypoint(iWpt);
 
-	CWaypointType *type = CWaypointTypes::getTypeByIndex(m_iFlag);
+	CWaypointType *type = CWaypointTypes::GetTypeByIndex(m_iFlag);
 
-	color = type->getColour();
+	color = type->GetColour();
 
-	sprintf(m_szCaption,"[%s] %s",(pWpt!=NULL)?(pWpt->hasFlag(type->getBits())?"x":" "):"No Waypoint",type->getName());
+	sprintf(m_szCaption, "[%s] %s", (pWpt != NULL) ? (pWpt->HasFlag(type->GetBits()) ? "x" : " ") : "No Waypoint", type->GetName());
 
 	return m_szCaption;
 }
 
-CWaypointFlagMenu :: CWaypointFlagMenu ( CBotMenu *pPrev )
+CWaypointFlagMenu::CWaypointFlagMenu(CBotMenu *pPrev)
 {
-	int iMod = CBotGlobals::getCurrentMod()->getModId();
+	int iMod = CBotGlobals::GetCurrentMod()->GetModId();
 	// check the number of waypoint types available
 	// caption
 	// 1.
@@ -111,7 +109,7 @@ CWaypointFlagMenu :: CWaypointFlagMenu ( CBotMenu *pPrev )
 	// 8. More...
 	// 9. Go Back
 
-	int iNumTypes = CWaypointTypes::getNumTypes();
+	int iNumTypes = CWaypointTypes::GetNumTypes();
 
 	int iNumAdded = 0;
 	CBotMenu *pParent;
@@ -122,30 +120,30 @@ CWaypointFlagMenu :: CWaypointFlagMenu ( CBotMenu *pPrev )
 	pCurrent = this;
 	pParent = pPrev;
 
-	for ( i = 0; i < iNumTypes; i ++ )
+	for (i = 0; i < iNumTypes; i++)
 	{
-		if ( !CWaypointTypes::getTypeByIndex(i)->forMod(iMod) )
+		if (!CWaypointTypes::GetTypeByIndex(i)->ForMod(iMod))
 			continue;
 
-		pCurrent->addMenuItem(new CWaypointFlagMenuItem(i));
+		pCurrent->AddMenuItem(new CWaypointFlagMenuItem(i));
 		iNumAdded++;
 
-		if ( (iNumAdded > 7) || (i == (iNumTypes-1)) )
+		if ((iNumAdded > 7) || (i == (iNumTypes - 1)))
 		{
-			CBotMenuItem *back = new CBotGotoMenuItem("Back...",pParent);
+			CBotMenuItem *back = new CBotGotoMenuItem("Back...", pParent);
 
 			pParent = pCurrent;
 
-			if ( (iNumAdded > 7) && (i < (iNumTypes-1)) )
+			if ((iNumAdded > 7) && (i < (iNumTypes - 1)))
 			{
 				pCurrent = new CBotMenu();
-				pCurrent->setCaption("Waypoint Flags (More)");
-				pParent->addMenuItem(new CBotGotoMenuItem("More...",pCurrent));
+				pCurrent->SetCaption("Waypoint Flags (More)");
+				pParent->AddMenuItem(new CBotGotoMenuItem("More...", pCurrent));
 			}
 
-			pParent->addMenuItem(back);
+			pParent->AddMenuItem(back);
 
-		//	make a new menu
+			//	make a new menu
 
 			iNumAdded = 0; // reset
 
@@ -154,189 +152,189 @@ CWaypointFlagMenu :: CWaypointFlagMenu ( CBotMenu *pPrev )
 
 }
 
-void CBotMenuList :: setupMenus ()
+void CBotMenuList::SetupMenus()
 {
 	m_MenuList[BOT_MENU_WPT] = new CWaypointMenu(); //new CWaypointFlagMenu(NULL);
 }
 
-const char *CWaypointRadiusMenu :: getCaption ( CClient *pClient, WptColor &color )
+const char *CWaypointRadiusMenu::GetCaption(CClient *pClient, WptColor &color)
 {
-	int iWpt = pClient->currentWaypoint();
-	CWaypoint *pWpt = CWaypoints::getWaypoint(iWpt);
+	int iWpt = pClient->CurrentWaypoint();
+	CWaypoint *pWpt = CWaypoints::GetWaypoint(iWpt);
 	float fRadius = 0;
 
-	if ( pWpt )
+	if (pWpt)
 	{
-		fRadius = pWpt->getRadius();
+		fRadius = pWpt->GetRadius();
 	}
 
-	sprintf(m_szCaption,"Waypoint Radius (%0.1f)",fRadius);
+	sprintf(m_szCaption, "Waypoint Radius (%0.1f)", fRadius);
 	color = WptColor::white;
 
 	return m_szCaption;
 }
 
-const char *CWaypointAreaMenu :: getCaption ( CClient *pClient, WptColor &color )
+const char *CWaypointAreaMenu::GetCaption(CClient *pClient, WptColor &color)
 {
-	int iWpt = pClient->currentWaypoint();
-	CWaypoint *pWpt = CWaypoints::getWaypoint(iWpt);
+	int iWpt = pClient->CurrentWaypoint();
+	CWaypoint *pWpt = CWaypoints::GetWaypoint(iWpt);
 	int iArea = 0;
 
-	if ( pWpt )
+	if (pWpt)
 	{
-		iArea = pWpt->getArea();
+		iArea = pWpt->GetArea();
 	}
 
-	sprintf(m_szCaption,"Waypoint Area (%d)",iArea);
+	sprintf(m_szCaption, "Waypoint Area (%d)", iArea);
 	color = WptColor::white;
 
 	return m_szCaption;
 }
 
-const char *CWaypointMenu::getCaption(CClient *pClient,WptColor &color )
+const char *CWaypointMenu::GetCaption(CClient *pClient, WptColor &color)
 {
-	int iWpt = pClient->currentWaypoint();
-	
-	if ( iWpt == -1 )
-		sprintf(m_szCaption,"Waypoint Menu - No waypoint - Walk towards a waypoint");
+	int iWpt = pClient->CurrentWaypoint();
+
+	if (iWpt == -1)
+		sprintf(m_szCaption, "Waypoint Menu - No waypoint - Walk towards a waypoint");
 	else
-		sprintf(m_szCaption,"Waypoint Menu [%d]",iWpt);
+		sprintf(m_szCaption, "Waypoint Menu [%d]", iWpt);
 
 	color = WptColor::white;
 
 	return m_szCaption;
 }
 
-const char *CWaypointYawMenuItem :: getCaption ( CClient *pClient, WptColor &color )
+const char *CWaypointYawMenuItem::GetCaption(CClient *pClient, WptColor &color)
 {
-	CWaypoint *pWpt = CWaypoints::getWaypoint(pClient->currentWaypoint());
+	CWaypoint *pWpt = CWaypoints::GetWaypoint(pClient->CurrentWaypoint());
 
-	if ( pWpt )
-		sprintf(m_szCaption,"Yaw = %d degrees (press to update)",(int)pWpt->getAimYaw());
+	if (pWpt)
+		sprintf(m_szCaption, "Yaw = %d degrees (press to update)", (int)pWpt->GetAimYaw());
 	else
-		sprintf(m_szCaption,"No Waypoint");
+		sprintf(m_szCaption, "No Waypoint");
 
 	return m_szCaption;
 }
 
-void CWaypointYawMenuItem :: activate ( CClient *pClient )
+void CWaypointYawMenuItem::Activate(CClient *pClient)
 {
-	CWaypoint *pWpt = CWaypoints::getWaypoint(pClient->currentWaypoint());
+	CWaypoint *pWpt = CWaypoints::GetWaypoint(pClient->CurrentWaypoint());
 
-	if ( pWpt )
-		pWpt->setAim(CBotGlobals::playerAngles(pClient->getPlayer()).y);
+	if (pWpt)
+		pWpt->SetAim(CBotGlobals::PlayerAngles(pClient->GetPlayer()).y);
 }
 
-void CWaypointAreaIncrease :: activate ( CClient *pClient )
+void CWaypointAreaIncrease::Activate(CClient *pClient)
 {
-	int iWpt = pClient->currentWaypoint();
-	CWaypoint *pWpt = CWaypoints::getWaypoint(iWpt);
+	int iWpt = pClient->CurrentWaypoint();
+	CWaypoint *pWpt = CWaypoints::GetWaypoint(iWpt);
 
-	if ( pWpt )
+	if (pWpt)
 	{
-		pWpt->setArea(pWpt->getArea()+1);
+		pWpt->SetArea(pWpt->GetArea() + 1);
 	}
 }
 
-void CWaypointAreaDecrease :: activate ( CClient *pClient )
+void CWaypointAreaDecrease::Activate(CClient *pClient)
 {
-	int iWpt = pClient->currentWaypoint();
-	CWaypoint *pWpt = CWaypoints::getWaypoint(iWpt);
+	int iWpt = pClient->CurrentWaypoint();
+	CWaypoint *pWpt = CWaypoints::GetWaypoint(iWpt);
 
-	if ( pWpt )
+	if (pWpt)
 	{
-		pWpt->setArea(pWpt->getArea()-1);
+		pWpt->SetArea(pWpt->GetArea() - 1);
 	}
 }
 
-void CWaypointRadiusIncrease :: activate ( CClient *pClient )
+void CWaypointRadiusIncrease::Activate(CClient *pClient)
 {
-	int iWpt = pClient->currentWaypoint();
-	CWaypoint *pWpt = CWaypoints::getWaypoint(iWpt);
+	int iWpt = pClient->CurrentWaypoint();
+	CWaypoint *pWpt = CWaypoints::GetWaypoint(iWpt);
 
-	if ( pWpt )
+	if (pWpt)
 	{
-		float fRadius = pWpt->getRadius();
+		float fRadius = pWpt->GetRadius();
 
-		if ( fRadius < 200.0f )
-			pWpt->setRadius(fRadius+32.0f);
+		if (fRadius < 200.0f)
+			pWpt->SetRadius(fRadius + 32.0f);
 		else
-			pWpt->setRadius(200.0f);
+			pWpt->SetRadius(200.0f);
 	}
 }
 
-void CWaypointRadiusDecrease :: activate ( CClient *pClient )
+void CWaypointRadiusDecrease::Activate(CClient *pClient)
 {
-	int iWpt = pClient->currentWaypoint();
-	CWaypoint *pWpt = CWaypoints::getWaypoint(iWpt);
+	int iWpt = pClient->CurrentWaypoint();
+	CWaypoint *pWpt = CWaypoints::GetWaypoint(iWpt);
 
-	if ( pWpt )
+	if (pWpt)
 	{
-		float fRadius = pWpt->getRadius();
+		float fRadius = pWpt->GetRadius();
 
-		if ( fRadius > 32.0f )
-			pWpt->setRadius(fRadius-32.0f);
+		if (fRadius > 32.0f)
+			pWpt->SetRadius(fRadius - 32.0f);
 		else
-			pWpt->setRadius(0.0f);
+			pWpt->SetRadius(0.0f);
 	}
 }
 
 
-const char *CWaypointCutMenuItem :: getCaption ( CClient *pClient, WptColor &color )
+const char *CWaypointCutMenuItem::GetCaption(CClient *pClient, WptColor &color)
 {
-	sprintf(m_szCaption,"Cut Waypoint");
+	sprintf(m_szCaption, "Cut Waypoint");
 	color = WptColor::white;
 
 	return m_szCaption;
 }
 
-void CWaypointCutMenuItem :: activate ( CClient *pClient )
+void CWaypointCutMenuItem::Activate(CClient *pClient)
 {
-	pClient->updateCurrentWaypoint();
+	pClient->UpdateCurrentWaypoint();
 
-	CWaypoint *pwpt = CWaypoints::getWaypoint(pClient->currentWaypoint());
+	CWaypoint *pwpt = CWaypoints::GetWaypoint(pClient->CurrentWaypoint());
 
-	if ( pwpt )
+	if (pwpt)
 	{
-		pClient->setWaypointCut(pwpt);
-		CWaypoints::deleteWaypoint(pClient->currentWaypoint());
+		pClient->SetWaypointCut(pwpt);
+		CWaypoints::DeleteWaypoint(pClient->CurrentWaypoint());
 	}
 }
 
-const char *CWaypointCopyMenuItem :: getCaption ( CClient *pClient, WptColor &color )
+const char *CWaypointCopyMenuItem::GetCaption(CClient *pClient, WptColor &color)
 {
-	sprintf(m_szCaption,"Copy Waypoint");
+	sprintf(m_szCaption, "Copy Waypoint");
 	color = WptColor::white;
 
 	return m_szCaption;
 }
 
-void CWaypointCopyMenuItem :: activate ( CClient *pClient )
+void CWaypointCopyMenuItem::Activate(CClient *pClient)
 {
-		pClient->updateCurrentWaypoint();
+	pClient->UpdateCurrentWaypoint();
 
-		CWaypoint *pwpt = CWaypoints::getWaypoint(pClient->currentWaypoint());
+	CWaypoint *pwpt = CWaypoints::GetWaypoint(pClient->CurrentWaypoint());
 
-		if ( pwpt )
-		{
-			pClient->setWaypointCopy(pwpt);
-		}
+	if (pwpt)
+	{
+		pClient->SetWaypointCopy(pwpt);
+	}
 }
 
-const char *CWaypointPasteMenuItem :: getCaption ( CClient *pClient, WptColor &color )
+const char *CWaypointPasteMenuItem::GetCaption(CClient *pClient, WptColor &color)
 {
-	sprintf(m_szCaption,"Paste Waypoint");
+	sprintf(m_szCaption, "Paste Waypoint");
 	color = WptColor::white;
 
 	return m_szCaption;
 }
 
-void CWaypointPasteMenuItem :: activate ( CClient *pClient )
+void CWaypointPasteMenuItem::Activate(CClient *pClient)
 {
-	CWaypoints::addWaypoint(pClient,NULL,NULL,NULL,NULL,true);
+	CWaypoints::AddWaypoint(pClient, NULL, NULL, NULL, NULL, true);
 }
 
-void CBotMenu ::render (CClient *pClient)
+void CBotMenu::Render(CClient *pClient)
 {
 	CBotMenuItem *item;
 	WptColor color;
@@ -344,48 +342,45 @@ void CBotMenu ::render (CClient *pClient)
 	Vector vOrigin;
 	Vector vForward;
 	Vector vRight;
-	QAngle angles;
+	QAngle angles = CBotGlobals::PlayerAngles(pClient->GetPlayer());
 	const char *pszCaption;
-	IPlayerInfo *pPlayerInfo = playerinfomanager->GetPlayerInfo(pClient->getPlayer());
-	CBotCmd lastCmd = pPlayerInfo->GetLastUserCommand();
-	extern ConVar rcbot_menu_update_time1;
-	float fUpdateTime = rcbot_menu_update_time1.GetFloat();
-
-	angles = lastCmd.viewangles;
+	IPlayerInfo *pPlayerInfo = playerinfomanager->GetPlayerInfo(pClient->GetPlayer());
+	extern ConVar bot_menu_update_time1;
+	float fUpdateTime = bot_menu_update_time1.GetFloat();
 
 	vOrigin = pPlayerInfo->GetAbsOrigin();
 
-	AngleVectors(angles,&vForward);
+	AngleVectors(angles, &vForward);
 
 	vForward = vForward / vForward.Length();
 
-	vRight = vForward.Cross(Vector(0,0,1));
+	vRight = vForward.Cross(Vector(0, 0, 1));
 
 	vOrigin = vOrigin + (vForward * 100) - (vRight * 100);
 	vOrigin.z += 72.0f;
 
-	pszCaption = getCaption(pClient,color);
+	pszCaption = GetCaption(pClient, color);
 
-	debugoverlay->AddTextOverlayRGB(vOrigin,0,fUpdateTime,color.r,color.g,color.b,color.a,pszCaption);
-	debugoverlay->AddTextOverlayRGB(vOrigin,1,fUpdateTime,color.r,color.g,color.b,color.a,"----------------");
-/*
-	Vector screen;
-	Vector point = Vector(0,0,0);
+	debugoverlay->AddTextOverlayRGB(vOrigin, 0, fUpdateTime, color.r, color.g, color.b, color.a, pszCaption);
+	debugoverlay->AddTextOverlayRGB(vOrigin, 1, fUpdateTime, color.r, color.g, color.b, color.a, "----------------");
+	/*
+		Vector screen;
+		Vector point = Vector(0,0,0);
 
-	debugoverlay->ScreenPosition(0.5f, 0.5f, screen);
-	debugoverlay->ScreenPosition(point,screen);*/
+		debugoverlay->ScreenPosition(0.5f, 0.5f, screen);
+		debugoverlay->ScreenPosition(point,screen);*/
 
-	for ( i = 0; i < m_MenuItems.size(); i ++ )
+	for (i = 0; i < m_MenuItems.size(); i++)
 	{
 		item = m_MenuItems[i];
 
-		pszCaption = item->getCaption(pClient,color);
+		pszCaption = item->GetCaption(pClient, color);
 
-		debugoverlay->AddTextOverlayRGB(vOrigin,i+2,fUpdateTime,color.r,color.g,color.b,color.a,"%d. %s",(i==9)?(0):(i+1),pszCaption);
+		debugoverlay->AddTextOverlayRGB(vOrigin, i + 2, fUpdateTime, color.r, color.g, color.b, color.a, "%d. %s", (i == 9) ? (0) : (i + 1), pszCaption);
 	}
 }
 
-const char *CBotMenuItem :: getCaption ( CClient *pClient, WptColor &color )
+const char *CBotMenuItem::GetCaption(CClient *pClient, WptColor &color)
 {
 	color.r = 255;
 	color.g = 255;
@@ -395,35 +390,35 @@ const char *CBotMenuItem :: getCaption ( CClient *pClient, WptColor &color )
 	return m_szCaption;
 }
 
-void CBotMenuList :: render ( CClient *pClient ) // render
+void CBotMenuList::Render(CClient *pClient) // render
 {
-	CBotMenu *pMenu = pClient->getCurrentMenu();
+	CBotMenu *pMenu = pClient->GetCurrentMenu();
 
-	pMenu->render(pClient);
+	pMenu->Render(pClient);
 	//m_MenuList[iMenu]->render(pClient);
 }
 
-void CBotMenuList :: selectedMenu ( CClient *pClient, unsigned int iMenu )
+void CBotMenuList::SelectedMenu(CClient *pClient, unsigned int iMenu)
 {
-	CBotMenu *pMenu = pClient->getCurrentMenu();
+	CBotMenu *pMenu = pClient->GetCurrentMenu();
 
-	pMenu->selectedMenu(pClient, iMenu);
+	pMenu->SelectedMenu(pClient, iMenu);
 }
 
-void CBotMenu :: activate ( CClient *pClient )
+void CBotMenu::Activate(CClient *pClient)
 {
-	pClient->setCurrentMenu(this);
+	pClient->SetCurrentMenu(this);
 }
 
-void CBotMenu :: selectedMenu ( CClient *pClient, unsigned int iMenu )
+void CBotMenu::SelectedMenu(CClient *pClient, unsigned int iMenu)
 {
-	if ( iMenu < m_MenuItems.size() )
-		m_MenuItems[iMenu]->activate(pClient);
+	if (iMenu < m_MenuItems.size())
+		m_MenuItems[iMenu]->Activate(pClient);
 }
 
-CWaypointFlagShowMenu :: CWaypointFlagShowMenu (CBotMenu *pParent)
+CWaypointFlagShowMenu::CWaypointFlagShowMenu(CBotMenu *pParent)
 {
-	int iMod = CBotGlobals::getCurrentMod()->getModId();
+	int iMod = CBotGlobals::GetCurrentMod()->GetModId();
 	// check the number of waypoint types available
 	// caption
 	// 1.
@@ -436,7 +431,7 @@ CWaypointFlagShowMenu :: CWaypointFlagShowMenu (CBotMenu *pParent)
 	// 8. More...
 	// 9. Go Back
 
-	int iNumTypes = CWaypointTypes::getNumTypes();
+	int iNumTypes = CWaypointTypes::GetNumTypes();
 	int iNumAdded = 0;
 	CBotMenu *pCurrent;
 
@@ -444,29 +439,29 @@ CWaypointFlagShowMenu :: CWaypointFlagShowMenu (CBotMenu *pParent)
 
 	pCurrent = this;
 
-	for ( i = 0; i < iNumTypes; i ++ )
+	for (i = 0; i < iNumTypes; i++)
 	{
-		if ( !CWaypointTypes::getTypeByIndex(i)->forMod(iMod) )
+		if (!CWaypointTypes::GetTypeByIndex(i)->ForMod(iMod))
 			continue;
 
-		pCurrent->addMenuItem(new CWaypointFlagShowMenuItem(i));
+		pCurrent->AddMenuItem(new CWaypointFlagShowMenuItem(i));
 		iNumAdded++;
 
-		if ( (iNumAdded > 7) || (i == (iNumTypes-1)) )
+		if ((iNumAdded > 7) || (i == (iNumTypes - 1)))
 		{
-			CBotMenuItem *back = new CBotGotoMenuItem("Back...",pParent);
-		//	make a new menu
+			CBotMenuItem *back = new CBotGotoMenuItem("Back...", pParent);
+			//	make a new menu
 			pParent = pCurrent;
 
-			if ( (iNumAdded > 7) && (i < (iNumTypes-1)) )
+			if ((iNumAdded > 7) && (i < (iNumTypes - 1)))
 			{
 				pCurrent = new CBotMenu();
-				pCurrent->setCaption("Show Waypoint Flags (More)");
-				pParent->addMenuItem(new CBotGotoMenuItem("More...",pCurrent));
-				
+				pCurrent->SetCaption("Show Waypoint Flags (More)");
+				pParent->AddMenuItem(new CBotGotoMenuItem("More...", pCurrent));
+
 			}
 
-			pParent->addMenuItem(back);
+			pParent->AddMenuItem(back);
 
 			iNumAdded = 0; // reset
 
@@ -474,122 +469,122 @@ CWaypointFlagShowMenu :: CWaypointFlagShowMenu (CBotMenu *pParent)
 	}
 }
 
-const char *CWaypointFlagShowMenu::getCaption(CClient *pClient,WptColor &color )
+const char *CWaypointFlagShowMenu::GetCaption(CClient *pClient, WptColor &color)
 {
-	if ( pClient->isShowingAllWaypoints() )
+	if (pClient->IsShowingAllWaypoints())
 	{
-		sprintf(m_szCaption,"Showing All Waypoints (change)");
+		sprintf(m_szCaption, "Showing All Waypoints (change)");
 		color = WptColor::white;
 	}
 	else
 	{
-		sprintf(m_szCaption,"Showing Only Some Waypoints (change)");
-		color = CWaypointTypes::getColour(pClient->getShowWaypointFlags());
+		sprintf(m_szCaption, "Showing Only Some Waypoints (change)");
+		color = CWaypointTypes::GetColour(pClient->GetShowWaypointFlags());
 	}
 
 	return m_szCaption;
 }
 
 
-const char *CWaypointFlagShowMenuItem :: getCaption ( CClient *pClient, WptColor &color )
+const char *CWaypointFlagShowMenuItem::GetCaption(CClient *pClient, WptColor &color)
 {
-	CWaypointType *type = CWaypointTypes::getTypeByIndex(m_iFlag);
+	CWaypointType *type = CWaypointTypes::GetTypeByIndex(m_iFlag);
 
-	color = type->getColour();
+	color = type->GetColour();
 
-	sprintf(m_szCaption,"[%s] %s",(pClient->isShowingAllWaypoints()||pClient->isShowingWaypoint(type->getBits()))?"showing":"hiding",type->getName());
+	sprintf(m_szCaption, "[%s] %s", (pClient->IsShowingAllWaypoints() || pClient->IsShowingWaypoint(type->GetBits())) ? "showing" : "hiding", type->GetName());
 
 	return m_szCaption;
 }
 
-void CWaypointFlagShowMenuItem::activate ( CClient *pClient )
+void CWaypointFlagShowMenuItem::Activate(CClient *pClient)
 {
-	CWaypointType *type = CWaypointTypes::getTypeByIndex(m_iFlag);
+	CWaypointType *type = CWaypointTypes::GetTypeByIndex(m_iFlag);
 
 	// toggle
-	if ( pClient->isShowingWaypoint(type->getBits()) )
-		pClient->dontShowWaypoints(type->getBits());
+	if (pClient->IsShowingWaypoint(type->GetBits()))
+		pClient->DontShowWaypoints(type->GetBits());
 	else
-		pClient->showWaypoints(type->getBits());
+		pClient->ShowWaypoints(type->GetBits());
 }
 
-void CBotMenuItem :: freeMemory ()
+void CBotMenuItem::FreeMemory()
 {
 	// do nothing
 }
 
-void CBotMenu :: freeMemory ()
+void CBotMenu::FreeMemory()
 {
-	for ( unsigned int i = 0; i < m_MenuItems.size(); i ++ )
+	for (unsigned int i = 0; i < m_MenuItems.size(); i++)
 	{
 		CBotMenuItem *temp = m_MenuItems[i];
 
-		temp->freeMemory();
+		temp->FreeMemory();
 
 		delete temp;
 	}
 }
 
-void CBotMenuList :: freeMemory ()
+void CBotMenuList::FreeMemory()
 {
-	for ( unsigned int i = 0; i < BOT_MENU_MAX; i ++ )
+	for (unsigned int i = 0; i < BOT_MENU_MAX; i++)
 	{
 		CBotMenu *temp = m_MenuList[i];
 
-		temp->freeMemory();
+		temp->FreeMemory();
 
 		delete temp;
 	}
 }
 
-const char *CPathWaypointDeleteToMenuItem :: getCaption ( CClient *pClient, WptColor &color )
+const char *CPathWaypointDeleteToMenuItem::GetCaption(CClient *pClient, WptColor &color)
 {
-	int iWpt = pClient->currentWaypoint();
+	int iWpt = pClient->CurrentWaypoint();
 
 	color = WptColor::white;
 
-	if ( iWpt == -1 )
+	if (iWpt == -1)
 	{
-		strcpy(m_szCaption,"No Waypoint");
+		strcpy(m_szCaption, "No Waypoint");
 		return m_szCaption;
 	}
 
-	CWaypoint *pWaypoint = CWaypoints::getWaypoint(iWpt);
+	CWaypoint *pWaypoint = CWaypoints::GetWaypoint(iWpt);
 
-	sprintf(m_szCaption,"Delete Paths To This Waypoint (%d)", pWaypoint->numPathsToThisWaypoint());
+	sprintf(m_szCaption, "Delete Paths To This Waypoint (%d)", pWaypoint->NumPathsToThisWaypoint());
 
 	return m_szCaption;
 }
 
-void CPathWaypointDeleteToMenuItem :: activate ( CClient *pClient )
+void CPathWaypointDeleteToMenuItem::Activate(CClient *pClient)
 {
-	if ( pClient->currentWaypoint() != -1 )
-		CWaypoints::deletePathsTo(pClient->currentWaypoint());
+	if (pClient->CurrentWaypoint() != -1)
+		CWaypoints::DeletePathsTo(pClient->CurrentWaypoint());
 }
 
 
-const char *CPathWaypointDeleteFromMenuItem :: getCaption ( CClient *pClient, WptColor &color )
+const char *CPathWaypointDeleteFromMenuItem::GetCaption(CClient *pClient, WptColor &color)
 {
-	int iWpt = pClient->currentWaypoint();
+	int iWpt = pClient->CurrentWaypoint();
 
 	color = WptColor::white;
 
-	if ( iWpt == -1 )
+	if (iWpt == -1)
 	{
-		strcpy(m_szCaption,"No Waypoint");
+		strcpy(m_szCaption, "No Waypoint");
 		return m_szCaption;
 	}
 
-	CWaypoint *pWaypoint = CWaypoints::getWaypoint(iWpt);
+	CWaypoint *pWaypoint = CWaypoints::GetWaypoint(iWpt);
 
-	sprintf(m_szCaption,"Delete Paths From This Waypoint (%d)", pWaypoint->numPaths());
+	sprintf(m_szCaption, "Delete Paths From This Waypoint (%d)", pWaypoint->NumPaths());
 
 	return m_szCaption;
 }
 
-void CPathWaypointDeleteFromMenuItem :: activate ( CClient *pClient )
+void CPathWaypointDeleteFromMenuItem::Activate(CClient *pClient)
 {
-	if ( pClient->currentWaypoint() != -1 )
-		CWaypoints::deletePathsFrom(pClient->currentWaypoint());
+	if (pClient->CurrentWaypoint() != -1)
+		CWaypoints::DeletePathsFrom(pClient->CurrentWaypoint());
 }
 

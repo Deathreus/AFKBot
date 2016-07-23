@@ -13,37 +13,30 @@
 #include <unistd.h>
 #endif
 
-//#include "cbase.h"
-//#include "baseentity.h"
-#include "filesystem.h"
+#include "bot.h"
+/*#include "filesystem.h"
 #include "interface.h"
 #include "engine/iserverplugin.h"
 #include "tier2/tier2.h"
-#ifdef __linux__
-#include "shake.h"    //bir3yk
-#endif
 #include "eiface.h"
 #include "bot_const.h"
-#include "bot.h"
 #include "bot_fortress.h"
 #include "bot_kv.h"
 #include "bot_getprop.h"
 #include "bot_sigscan.h"
+#include "bot_mods.h"*/
 
-CGameRulesObject *g_pGameRules_Obj = NULL;
-CCreateGameRulesObject *g_pGameRules_Create_Obj = NULL;
-
-void **g_pGameRules = NULL;
+void *g_pGameRules = NULL;
 
 void *GetGameRules()
 {
 	if (!g_pGameRules)
 		return NULL;
 
-	return *g_pGameRules;
+	return g_pGameRules;
 }
 
-size_t CSignatureFunction :: decodeHexString(unsigned char *buffer, size_t maxlength, const char *hexstr)
+/*size_t CSignatureFunction::DecodeHexString(unsigned char *buffer, size_t maxlength, const char *hexstr)
 {
 	size_t written = 0;
 	size_t length = strlen(hexstr);
@@ -64,7 +57,7 @@ size_t CSignatureFunction :: decodeHexString(unsigned char *buffer, size_t maxle
 			s_byte[1] = hexstr[i + 3];
 			s_byte[2] = '\0';
 			// Read it as an integer 
-			sscanf(s_byte, "%x", &r_byte);
+			sscanf_s(s_byte, "%x", &r_byte);
 			// Save the value 
 			buffer[written - 1] = r_byte;
 			// Adjust index 
@@ -75,7 +68,7 @@ size_t CSignatureFunction :: decodeHexString(unsigned char *buffer, size_t maxle
 	return written;
 }
 
-bool CSignatureFunction::getLibraryInfo(const void *libPtr, DynLibInfo &lib)
+bool CSignatureFunction::GetLibraryInfo(const void *libPtr, DynLibInfo &lib)
 {
 	uintptr_t baseAddr;
 
@@ -113,8 +106,8 @@ bool CSignatureFunction::getLibraryInfo(const void *libPtr, DynLibInfo &lib)
 	}
 
 	// Check architecture, which is 32-bit/x86 right now
-		// Should change this for 64-bit if Valve gets their act together
-	
+	// Should change this for 64-bit if Valve gets their act together
+
 	if (file->Machine != IMAGE_FILE_MACHINE_I386)
 	{
 		return false;
@@ -162,8 +155,8 @@ bool CSignatureFunction::getLibraryInfo(const void *libPtr, DynLibInfo &lib)
 	}
 
 	// Check ELF architecture, which is 32-bit/x86 right now
-		// Should change this for 64-bit if Valve gets their act together
-		
+	// Should change this for 64-bit if Valve gets their act together
+
 	if (file->e_ident[EI_CLASS] != ELFCLASS32 || file->e_machine != EM_386 || file->e_ident[EI_DATA] != ELFDATA2LSB)
 	{
 		return false;
@@ -191,7 +184,7 @@ bool CSignatureFunction::getLibraryInfo(const void *libPtr, DynLibInfo &lib)
 			//
 			// In glibc, the segment file size is aligned up to the nearest page size and
 			// added to the virtual address of the segment. We just want the size here.
-			
+
 			lib.memorySize = PAGE_ALIGN_UP(hdr.p_filesz);
 			break;
 		}
@@ -203,7 +196,7 @@ bool CSignatureFunction::getLibraryInfo(const void *libPtr, DynLibInfo &lib)
 	return true;
 }
 
-void *CSignatureFunction::findPattern(const void *libPtr, const char *pattern, size_t len)
+void *CSignatureFunction::FindPattern(const void *libPtr, const char *pattern, size_t len)
 {
 	DynLibInfo lib;
 	bool found;
@@ -211,7 +204,7 @@ void *CSignatureFunction::findPattern(const void *libPtr, const char *pattern, s
 
 	memset(&lib, 0, sizeof(DynLibInfo));
 
-	if (!getLibraryInfo(libPtr, lib))
+	if (!GetLibraryInfo(libPtr, lib))
 	{
 		return NULL;
 	}
@@ -239,33 +232,35 @@ void *CSignatureFunction::findPattern(const void *libPtr, const char *pattern, s
 
 	return NULL;
 }
+
 // Sourcemod - Metamod - Allied Modders.net
-void *CSignatureFunction::findSignature ( void *addrInBase, const char *signature )
+
+void *CSignatureFunction::FindSignature(void *addrInBase, const char *signature)
 {
 	// First, preprocess the signature 
 	unsigned char real_sig[511];
 
 	size_t real_bytes;
 
-	real_bytes = decodeHexString(real_sig, sizeof(real_sig), signature);
+	real_bytes = DecodeHexString(real_sig, sizeof(real_sig), signature);
 
 	if (real_bytes >= 1)
 	{
-		return findPattern(addrInBase, (char*) real_sig, real_bytes);
+		return FindPattern(addrInBase, (char*)real_sig, real_bytes);
 	}
 
 	return NULL;
 }
 
 
-void CSignatureFunction :: findFunc ( CAFKBotKeyValueList *kv, const char*pKey, void *pAddrBase, const char *defaultsig )
+void CSignatureFunction::FindFunc(CAFKBotKeyValueList *kv, const char*pKey, void *pAddrBase, const char *defaultsig)
 {
 	char *sig = NULL;
 
-	if ( kv->getString(pKey,&sig) && sig )
-		m_func = findSignature(pAddrBase,sig);
+	if (kv->GetString(pKey, &sig) && sig)
+		m_func = FindSignature(pAddrBase, sig);
 	else
-		m_func = findSignature(pAddrBase,defaultsig);
+		m_func = FindSignature(pAddrBase, defaultsig);
 }
 
 CGameRulesObject::CGameRulesObject(CAFKBotKeyValueList *list, void *pAddrBase)
@@ -273,23 +268,23 @@ CGameRulesObject::CGameRulesObject(CAFKBotKeyValueList *list, void *pAddrBase)
 #ifdef _WIN32
 	m_func = NULL;
 #else
-	findFunc(list, "g_pGameRules", pAddrBase, "@g_pGameRules");
+	FindFunc(list, "g_pGameRules", pAddrBase, "@g_pGameRules");
 #endif
 }
 
 CCreateGameRulesObject::CCreateGameRulesObject(CAFKBotKeyValueList *list, void *pAddrBase)
 {
 #ifdef _WIN32
-	findFunc(list, "create_gamerules_object_win", pAddrBase, "\\x55\\x8B\\xEC\\x8B\\x0D\\x2A\\x2A\\x2A\\x2A\\x85\\xC9\\x74\\x07");
+	FindFunc(list, "create_gamerules_object_win", pAddrBase, "\\x55\\x8B\\xEC\\x8B\\x0D\\x2A\\x2A\\x2A\\x2A\\x85\\xC9\\x74\\x07");
 #else
 	m_func = NULL;
 #endif
 }
 
-void **CCreateGameRulesObject::getGameRules()
+void *CCreateGameRulesObject::GetGameRules()
 {
 	char *addr = reinterpret_cast<char*>(m_func);
-	extern ConVar rcbot_gamerules_offset;
+	extern ConVar bot_gamerules_offset;
 
-	return *reinterpret_cast<void ***>(addr + rcbot_gamerules_offset.GetInt());
-}
+	return *reinterpret_cast<void **>(addr + bot_gamerules_offset.GetInt());
+}*/

@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game g_pEngine ("HL
- *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game engine ("HL
+ *    engine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL g_pEngine and MODs
+ *    respects for all of the code used other than the HL engine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -38,25 +38,25 @@
 class CVisibleFunc
 {
 public:
-	virtual void execute ( edict_t *pEntity ) { return; }
+	virtual void Execute(edict_t *pEntity) { return; }
 };
 
 class CTF2FindFlagFunc : public CVisibleFunc
 {
 public:
-	CTF2FindFlagFunc ( CBot *pBot ) 
-	{ 
+	CTF2FindFlagFunc(CBot *pBot)
+	{
 		m_pFlag = NULL;
 	}
 
-	edict_t *getFlag ( Vector &vOrigin )
+	edict_t *GetFlag(Vector &vOrigin)
 	{
 		return m_pFlag;
 	}
 
-	void init ();
+	void Init();
 
-	void execute ( edict_t *pEntity );
+	void Execute(edict_t *pEntity);
 private:
 	CBot *m_pBot;
 	edict_t *m_pFlag;
@@ -66,23 +66,23 @@ private:
 class CFindEnemyFunc : public CVisibleFunc
 {
 public:
-	CFindEnemyFunc ( CBot *pBot ) 
-	{ 
-		m_pBot = pBot; 
+	CFindEnemyFunc(CBot *pBot)
+	{
+		m_pBot = pBot;
 		m_fBestFactor = 0;
 		m_pBest = NULL;
 	}
 
-	edict_t *getBestEnemy ()
+	edict_t *GetBestEnemy()
 	{
 		return m_pBest;
 	}
 
-	float getFactor ( edict_t *pEntity );
-	void setOldEnemy ( edict_t *pEntity );
-	void init ();
+	float GetFactor(edict_t *pEntity);
+	void SetOldEnemy(edict_t *pEntity);
+	void Init();
 
-	void execute ( edict_t *pEntity );
+	void Execute(edict_t *pEntity);
 private:
 	CBot *m_pBot;
 	float m_fBestFactor;
@@ -90,30 +90,30 @@ private:
 };
 
 class CBotVisibles
-{	
+{
 public:
-	CBotVisibles ( CBot *pBot );
-	~CBotVisibles ();
+	CBotVisibles(CBot *pBot);
+	~CBotVisibles();
 
-	void reset ();
-	void updateVisibles ();
+	void Reset();
+	void UpdateVisibles();
 
-	bool isVisible ( edict_t *pEdict );
-	void setVisible ( edict_t *pEdict, bool bVisible );
+	bool IsVisible(edict_t *pEdict);
+	void SetVisible(edict_t *pEdict, bool bVisible);
 
-	void eachVisible ( CVisibleFunc *pFunc );
+	void EachVisible(CVisibleFunc *pFunc);
 
-	void checkVisible ( edict_t *pEntity, int *iTicks, bool *bVisible, int &iIndex, bool bCheckHead = false );
+	void CheckVisible(edict_t *pEntity, int *iTicks, bool *bVisible, int &iIndex, bool bCheckHead = false);
 
-	void debugString ( char *string );
+	void DebugString(char *string);
 
 	static const int DEFAULT_MAX_TICKS = 10; // max number of PVS checks fired every visible check
 
 private:
 	//static const int NUM_BYTES = 4; // 32 entities
 	//static const int MAX_INDEX = NUM_BYTES*8;
-	
-	static byte m_bPvs[MAX_MAP_CLUSTERS/8];
+
+	static byte m_bPvs[MAX_MAP_CLUSTERS / 8];
 
 	CBot *m_pBot;
 	// current entity index we are checking

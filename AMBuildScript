@@ -489,9 +489,9 @@ BuildScripts = [
   'AMBuilder',
 ]
 
-if builder.backend == 'amb2':
-  BuildScripts += [
-    'PackageScript',
-  ]
+#if builder.backend == 'amb2':
+#  BuildScripts += [
+#    'PackageScript',
+#  ]
 
 builder.Build(BuildScripts, {'Extension': Extension})

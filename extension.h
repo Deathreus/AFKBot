@@ -22,180 +22,46 @@
 #define _INCLUDE_SOURCEMOD_EXTENSION_PROPER_H_
 
 /**
- * @file extension.hpp
- * @brief TF2Items extension code header.
+ * @file extension.h
+ * @brief AFKBot extension code header.
  */
 
 #include "smsdk_ext.h"
 
-//#include "iplayerinfo.h"
-//#include "convar.h"
+#include <ISmmPlugin.h>
+#include <sh_vector.h>
+#include "rcbot2/engine_wrappers.h"
+#include <shareddefs.h>
 
-#define OVERRIDE_CLASSNAME		(1 << 0)
-#define OVERRIDE_ITEM_DEF		(1 << 1)
-#define OVERRIDE_ITEM_LEVEL		(1 << 2)
-#define OVERRIDE_ITEM_QUALITY	(1 << 3)
-#define OVERRIDE_ATTRIBUTES		(1 << 4)
+#include <convar.h>
 
-#define PRESERVE_ATTRIBUTES		(1 << 5)
-#define FORCE_GENERATION		(1 << 6)
+#include <iplayerinfo.h>
+#include <IEngineTrace.h>
+#include <filesystem.h>
+#include <IEffects.h>
+#include <igameevents.h>
+#include <engine/ivdebugoverlay.h>
+#include <irecipientfilter.h>
 
-class CBasePlayer;
-class CEconItem;
-class ITexture;
-class ITextureCompositor;
+#include <IPlayerHelpers.h>
+#include <IGameHelpers.h>
 
-template< class T, class I = int >
-class CUtlMemoryTF2Items : public CUtlMemory< T, I >
-{
-public:
-	CUtlMemoryTF2Items( int nGrowSize = 0, int nInitSize = 0 ) { CUtlMemory< T, I >( nGrowSize, nInitSize ); }
-    CUtlMemoryTF2Items( T* pMemory, int numElements ) { CUtlMemory< T, I >( pMemory, numElements ); }
-    CUtlMemoryTF2Items( const T* pMemory, int numElements ) { CUtlMemory< T, I >( pMemory, numElements ); }
-    //~CUtlMemoryTF2Items() { ~CUtlMemory< T, I >(); }
-    
-	void Purge()
-	{
-		if ( !CUtlMemory< T, I >::IsExternallyAllocated() )
-		{
-			if (CUtlMemory< T, I >::m_pMemory)
-			{
-				UTLMEMORY_TRACK_FREE();
-				//free( (void*)m_pMemory );
-#ifdef TF2ITEMS_DEBUG_ITEMS
-				META_CONPRINTF("CUtlMemory tried to be freed!\n");
+#include "ISDKTools.h"
+
+class CUserCmd;
+class IMoveHelper;
+
+#if defined WIN32 && !defined snprintf
+#define snprintf _snprintf
 #endif
-				CUtlMemory< T, I >::m_pMemory = 0;
-			}
-			CUtlMemory< T, I >::m_nAllocationCount = 0;
-		}
-	}
-};
-
-class CEconItemAttribute
-{
-public:
-	void *m_pVTable; //0
-
-	uint16 m_iAttributeDefinitionIndex; //4
-	float m_flValue; //8
-	int32 m_nRefundableCurrency; //12
-};
-
-#pragma pack(push, 4)
-
-
-class CEconItemHandle
-{
-public:
-	void *m_pVTable;
-
-	CEconItem *m_pItem;
-
-	int64 m_ulItemID;
-	uint64 m_SteamID;
-};
-
-class CAttributeList
-{
-public:
-	void *m_pVTable;
-
-	CUtlVector<CEconItemAttribute, CUtlMemoryTF2Items<CEconItemAttribute> > m_Attributes;
-	void *m_pAttributeManager;
-
-
-public:
-	CAttributeList& operator=( const CAttributeList &other )
-	{
-		m_pVTable = other.m_pVTable;
-
-		m_Attributes = other.m_Attributes;
-		m_pAttributeManager = other.m_pAttributeManager;
-
-
-		return *this;
-	}
-};
-
-class CEconItemView
-{
-public:
-	void *m_pVTable; //0
-
-	uint16 m_iItemDefinitionIndex; //4
-	
-	int32 m_iEntityQuality; //8
-	uint32 m_iEntityLevel; //12
-
-	uint64 m_iItemID; //16
-	uint32 m_iItemIDHigh; //24
-	uint32 m_iItemIDLow; //28
-	uint32 m_iAccountID; //32
-	uint32 m_iInventoryPosition; //36
-	
-	CEconItemHandle m_ItemHandle; //40 (44, 48, 52, 56, 60)
-
-	bool	m_bColorInit; //64
-	uint32	m_unHalloweenRGB; //68
-	uint32	m_unHalloweenAltRGB; //72
-	uint32	m_unRGB; //76
-	uint32	m_unAltRGB; //80
-
-	ITexture *m_pWeaponSkinBase; //84
-	ITextureCompositor *m_pWeaponSkinBaseCompositor; //88
-
-	// no love given here
-	uint32 m_Unk1; //92
-	uint32 m_Unk2; //94
-	uint32 m_Unk3; //100
-
-	int32 m_iTeamNumber; //104
-
-	bool m_bInitialized; //108
-
-	CAttributeList m_AttributeList; //112 (116, 120, 124, 128, 132, 136)
-	CAttributeList m_NetworkedDynamicAttributesForDemos; //140 (144, 148, 152, 156, 160, 164)
-
-	bool m_bDoNotIterateStaticAttributes; //168
-};
-
-#pragma pack(pop)
-
-static_assert(sizeof(CEconItemView) == 172, "CEconItemView - incorrect size on this compiler");
-static_assert(sizeof(CEconItemHandle) == 24, "CEconItemHandle - incorrect size on this compiler");
-static_assert(sizeof(CAttributeList) == 28, "CAttributeList - incorrect size on this compiler");
-
-// enable to debug memory layout issues
-#if 0
-template<int s> struct Sizer;
-Sizer<sizeof(CEconItemView)> CEconItemViewSize;
-Sizer<sizeof(CEconItemHandle)> CEconItemHandleSize;
-Sizer<sizeof(CAttributeList)> CAttributeListSize;
-#endif
-
-struct TScriptedItemOverride
-{
-	uint8 m_bFlags;									// Flags to what we should override.
-	char m_strWeaponClassname[256];					// Classname to override the GiveNamedItem call with.
-	uint32 m_iItemDefinitionIndex;					// New Item Def. Index.
-	uint8 m_iEntityQuality;							// New Item Quality Level.
-	uint8 m_iEntityLevel;							// New Item Level.
-	uint8 m_iCount;									// Count of Attributes.
-	CEconItemAttribute m_Attributes[16];			// The actual attributes.
-};
-
-class TScriptedItemOverrideTypeHandler : public IHandleTypeDispatch
-{
-public:
-	void OnHandleDestroy(HandleType_t type, void *object);
-};
 
 /**
  * @brief Sample implementation of the SDK Extension.
  * Note: Uncomment one of the pre-defined virtual functions in order to use it.
  */
-class TF2Items : public SDKExtension, public IConCommandBaseAccessor
+class AFKBot : public SDKExtension,
+	           public IConCommandBaseAccessor,
+			   public IMetamodListener
 {
 public:
 	/**
@@ -214,6 +80,12 @@ public:
 	virtual void SDK_OnUnload();
 
 	/**
+	* @brief This is called once all known extensions have been loaded.
+	* Note: It is is a good idea to add natives here, if any are provided.
+	*/
+	virtual void SDK_OnAllLoaded();
+
+	/**
 	 * @brief Called when the pause state is changed.
 	 */
 	//virtual void SDK_OnPauseChange(bool paused);
@@ -225,7 +97,7 @@ public:
 	 * @param maxlength	Size of error message buffer.
 	 * @return			True if working, false otherwise.
 	 */
-	//virtual bool QueryRunning(char *error, size_t maxlen);
+	virtual bool QueryRunning(char *error, size_t maxlen);
 public:
 #if defined SMEXT_CONF_METAMOD
 	/**
@@ -261,38 +133,79 @@ public:
 #endif
 public: //IConCommandBaseAccessor
 	bool RegisterConCommandBase(ConCommandBase *pCommand);
+
+public:
+	static CBaseEntity *TF2_GetPlayerWeaponSlot(edict_t *pPlayer, int iSlot);
+	static void TF2_EquipWeapon(edict_t *pPlayer, CBaseEntity *pWeapon);
+
+	static void HudTextMessage(edict_t *pEntity, const char *szMessage);
+	static void BroadcastTextMessage(const char *szMessage);
+
+public:
+	bool LevelInit(char const *pMapName, char const *pMapEntities, char const *pOldLevel, char const *pLandmarkName, bool loadGame, bool background);
+	void LevelShutdown();
+
+	void ServerActivate(edict_t *pEdictList, int edictCount, int clientMax);
+
+	void GameFrame(bool simulating);
+
+	void PlayerRunCmd(CUserCmd *ucmd, IMoveHelper *moveHelper);
+
+	bool ClientConnect(edict_t *pEntity, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen);
+	void ClientPutInServer(edict_t *pEntity, char const *playername);
+	void ClientDisconnect(edict_t *pEntity);
+	void ClientSettingsChanged(edict_t *pEdict);
+	void ClientActive(edict_t *pEntity, bool bLoadGame);
+
+#if SOURCE_ENGINE >= SE_ORANGEBOX
+	void ClientCommand(edict_t *pEntity, const CCommand &args);
+#else
+	void ClientCommand(edict_t *pEntity);
+#endif
+
+	void SetCommandClient(int index);
+
+	bool FireGameEvent(IGameEvent *pEvent, bool bDontBroadcast);
+
+public:
+#if SOURCE_ENGINE == SE_DOTA
+	void OnClientCommand(CEntityIndex index, const CCommand &args);
+#elif SOURCE_ENGINE >= SE_ORANGEBOX
+	void OnClientCommand(edict_t *pEntity, const CCommand &args);
+#else
+	void OnClientCommand(edict_t *pEntity);
+#endif
+#if SOURCE_ENGINE == SE_CSS || SOURCE_ENGINE == SE_CSGO
+	void OnSendClientCommand(edict_t *pPlayer, const char *szFormat);
+#endif
 };
 
-void CSCICopy(CEconItemView *olditem, CEconItemView *newitem);
+extern AFKBot g_AFKBot;
 
-static cell_t TF2Items_GiveNamedItem(IPluginContext *pContext, const cell_t *params);
-static cell_t TF2Items_CreateItem(IPluginContext *pContext, const cell_t *params);
+extern CGlobalVars *gpGlobals;
 
-static cell_t TF2Items_SetFlags(IPluginContext *pContext, const cell_t *params);
-static cell_t TF2Items_GetFlags(IPluginContext *pContext, const cell_t *params);
-static cell_t TF2Items_SetClassname(IPluginContext *pContext, const cell_t *params);
-static cell_t TF2Items_GetClassname(IPluginContext *pContext, const cell_t *params);
-static cell_t TF2Items_SetItemIndex(IPluginContext *pContext, const cell_t *params);
-static cell_t TF2Items_GetItemIndex(IPluginContext *pContext, const cell_t *params);
-static cell_t TF2Items_SetQuality(IPluginContext *pContext, const cell_t *params);
-static cell_t TF2Items_GetQuality(IPluginContext *pContext, const cell_t *params);
-static cell_t TF2Items_SetLevel(IPluginContext *pContext, const cell_t *params);
-static cell_t TF2Items_GetLevel(IPluginContext *pContext, const cell_t *params);
-static cell_t TF2Items_SetNumAttributes(IPluginContext *pContext, const cell_t *params);
-static cell_t TF2Items_GetNumAttributes(IPluginContext *pContext, const cell_t *params);
-static cell_t TF2Items_SetAttribute(IPluginContext *pContext, const cell_t *params);
-static cell_t TF2Items_GetAttributeId(IPluginContext *pContext, const cell_t *params);
-static cell_t TF2Items_GetAttributeValue(IPluginContext *pContext, const cell_t *params);
-static cell_t TF2Items_GetCurrentSlot(IPluginContext *pContext, const cell_t *params);
+extern IGameEventManager2 *gameevents;
+extern IServerPluginCallbacks *vsp_callback;
+extern ICvar *icvar;
+extern IFileSystem *filesystem;
+extern IGameEventManager2 *gameeventmanager2;
+extern IGameEventManager *gameeventmanager;
+extern IPlayerInfoManager *playerinfomanager;
+extern IServerPluginHelpers *helpers;
+extern IServerGameClients* gameclients;
+extern IEngineTrace *enginetrace;
+extern IEffects *effects;
+extern IServerGameEnts *servergameents;
+extern IVDebugOverlay *debugoverlay;
 
-CBaseEntity * GetCBaseEntityFromIndex(int p_iEntity, bool p_bOnlyPlayers);
-int GetIndexFromCBaseEntity(CBaseEntity * p_hEntity);
-TScriptedItemOverride * GetScriptedItemOverrideFromHandle(cell_t cellHandle, IPluginContext *pContext=NULL);
-
-extern HandleType_t g_ScriptedItemOverrideHandleType;
-extern TScriptedItemOverrideTypeHandler g_ScriptedItemOverrideHandler;
 extern sp_nativeinfo_t g_ExtensionNatives[];
-extern IForward *g_pForwardGiveItem;
-extern IForward *g_pForwardGiveItem_Post;
+
+extern ConVar bot_version;
+extern ConVar bot_enabled;
+
+static cell_t SetClientAFKBot(IPluginContext *pContext, const cell_t *params);
+static cell_t IsClientAFKBot(IPluginContext *pContext, const cell_t *params);
+
+PLUGIN_GLOBALVARS();
 
 #endif // _INCLUDE_SOURCEMOD_EXTENSION_PROPER_H_

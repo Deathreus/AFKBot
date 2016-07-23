@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game g_pEngine ("HL
- *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game engine ("HL
+ *    engine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL g_pEngine and MODs
+ *    respects for all of the code used other than the HL engine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -70,12 +70,12 @@ typedef struct
 
 enum
 {
- DRAWTYPE_EFFECTS = 0,
- DRAWTYPE_DEBUGENGINE,
- DRAWTYPE_DEBUGENGINE2,
- DRAWTYPE_DEBUGENGINE3,
- DRAWTYPE_BELIEF,
- DRAWTYPE_MAX
+	DRAWTYPE_EFFECTS = 0,
+	DRAWTYPE_DEBUGENGINE,
+	DRAWTYPE_DEBUGENGINE2,
+	DRAWTYPE_DEBUGENGINE3,
+	DRAWTYPE_BELIEF,
+	DRAWTYPE_MAX
 };
 
 class CWaypoint;
@@ -85,21 +85,21 @@ class CWaypointType
 {
 public:
 
-	CWaypointType ( int iBit, const char *szName, const char *szDescription, WptColor vColour, int iModBits = BITS_MOD_ALL, int iImportance = 0 );
+	CWaypointType(int iBit, const char *szName, const char *szDescription, WptColor vColour, int iModBits = BITS_MOD_ALL, int iImportance = 0);
 
-	inline const char *getName () { return m_szName; }
-	inline const char *getDescription () { return m_szDescription; }
+	inline const char *GetName() { return m_szName; }
+	inline const char *GetDescription() { return m_szDescription; }
 
-	inline bool isBitsInFlags ( int iFlags ) { return (iFlags & m_iBit)==m_iBit; }
-	inline int getBits () { return m_iBit; }
-	inline void setMods ( int iMods ){ m_iMods = iMods; }// input bitmask of mods (32 max)
-	inline bool forMod ( int iMod ) { return ((1<<iMod)&m_iMods)==(1<<iMod); }
-	inline WptColor getColour () { return m_vColour; }
-	inline int getImportance () { return m_iImportance; }
+	inline bool IsBitsInFlags(int iFlags) { return (iFlags & m_iBit) == m_iBit; }
+	inline int GetBits() { return m_iBit; }
+	inline void SetMods(int iMods){ m_iMods = iMods; }// input bitmask of mods (32 max)
+	inline bool ForMod(int iMod) { return ((1 << iMod)&m_iMods) == (1 << iMod); }
+	inline WptColor GetColour() { return m_vColour; }
+	inline int GetImportance() { return m_iImportance; }
 
-	bool operator < ( CWaypointType *other )
+	bool operator < (CWaypointType *other)
 	{
-		return m_iImportance < other->getImportance();
+		return m_iImportance < other->GetImportance();
 	}
 
 	//virtual void giveTypeToWaypoint ( CWaypoint *pWaypoint );
@@ -120,7 +120,7 @@ class CCrouchWaypointType : public CWaypointType
 {
 public:
 	CCrouchWaypointType();
-    
+
 	void giveTypeToWaypoint ( CWaypoint *pWaypoint );
 	void removeTypeFromWaypoint ( CWaypoint *pWaypoint );
 };*/
@@ -152,7 +152,7 @@ public:
 	static const int W_FL_MACHINEGUN = 16384;
 	static const int W_FL_DOUBLEJUMP = 32768;
 	static const int W_FL_PRONE = 32768;
-	static const int W_FL_TELE_ENTRANCE = 65536;	
+	static const int W_FL_TELE_ENTRANCE = 65536;
 	static const int W_FL_TELE_EXIT = 131072;
 	static const int W_FL_DEFEND = 262144;
 	static const int W_FL_AREAONLY = 524288;
@@ -164,34 +164,34 @@ public:
 	static const int W_FL_FLAGONLY = 16777216;
 	static const int W_FL_FALL = 33554432;
 	static const int W_FL_BREAKABLE = 67108864;
-	static const int W_FL_SPRINT = 134217728; 
+	static const int W_FL_SPRINT = 134217728;
 	static const int W_FL_TELEPORT_CHEAT = 268435456; // teleports bots to the next waypoint (cheat)
 	static const int W_FL_OWNER_ONLY = 536870912; // Only owners of this area can use the waypoint
 	//static const int W_FL_ATTACKPOINT = 1073741824; // Tactical waypoint -- each squad will go to different attack points and signal others to go
 
-	static void setup ();
+	static void Setup();
 
-	static void addType ( CWaypointType *type );
+	static void AddType(CWaypointType *type);
 
-	static void printInfo ( CWaypoint *pWpt, edict_t *pPrintTo, float duration = 6.0f );
+	static void PrintInfo(CWaypoint *pWpt, edict_t *pPrintTo, float duration = 6.0f);
 
-	static void displayTypesMenu ( edict_t *pPrintTo );
-	
-	static CWaypointType *getType( const char *szType );
+	static void DisplayTypesMenu(edict_t *pPrintTo);
 
-	static void showTypesOnConsole( edict_t *pPrintTo );
+	static CWaypointType *GetType(const char *szType);
 
-	static void selectedType ( CClient *pClient );
+	static void ShowTypesOnConsole(edict_t *pPrintTo);
 
-	static void freeMemory ();
+	static void SelectedType(CClient *pClient);
 
-	static WptColor getColour ( int iFlags );
+	static void FreeMemory();
 
-	static CWaypointType *getTypeByIndex ( unsigned int iIndex );
+	static WptColor GetColour(int iFlags);
 
-	static unsigned int getNumTypes ();
+	static CWaypointType *GetTypeByIndex(unsigned int iIndex);
 
-	static CWaypointType *getTypeByFlags ( int iFlags );
+	static unsigned int GetNumTypes();
+
+	static CWaypointType *GetTypeByFlags(int iFlags);
 
 private:
 	static vector<CWaypointType*> m_Types;
@@ -200,7 +200,7 @@ private:
 class CWaypointTest
 {
 public:
-	void go ( edict_t *pPlayer );
+	void Go(edict_t *pPlayer);
 };
 
 typedef struct
@@ -221,156 +221,156 @@ public:
 	static const int WAYPOINT_WIDTH = 8;
 	static const int PATHWAYPOINT_WIDTH = 4;
 
-	CWaypoint ()
+	CWaypoint()
 	{
 		m_thePaths.Init();
-		init();
-//		m_iId = -1;
+		Init();
+		//		m_iId = -1;
 	}
 
-	CWaypoint ( Vector vOrigin, int iFlags = 0, int iYaw = 0, int m_fRadius = 0 )
+	CWaypoint(Vector vOrigin, int iFlags = 0, int iYaw = 0, int m_fRadius = 0)
 	{
 		m_thePaths.Clear();
-		init();
+		Init();
 		m_iFlags = iFlags;
-		m_vOrigin = vOrigin;		
+		m_vOrigin = vOrigin;
 		m_bUsed = true;
-		setAim(iYaw);
+		SetAim(iYaw);
 		m_fNextCheckGroundTime = 0;
 		m_bHasGround = false;
 		m_fRadius = 0;
 		m_OpensLaterInfo.Clear();
-		m_bIsReachable = true; 
+		m_bIsReachable = true;
 		m_fCheckReachableTime = 0;
-//		m_iId = iId;
+		//		m_iId = iId;
 	}
 
-	bool checkGround ();
+	bool CheckGround();
 
-	inline void setAim ( int iYaw )
+	inline void SetAim(int iYaw)
 	{
 		m_iAimYaw = iYaw;
 	}
 
-	inline float getAimYaw ()
+	inline float GetAimYaw()
 	{
 		return (float)m_iAimYaw;
 	}
 
-	inline Vector getOrigin ()
+	inline Vector GetOrigin()
 	{
 		return m_vOrigin;
 	}
 
-	void init ();
+	void Init();
 
-	inline void addFlag ( int iFlag )
+	inline void AddFlag(int iFlag)
 	{
 		m_iFlags |= iFlag;
 	}
 
-	inline void removeFlag ( int iFlag )
+	inline void RemoveFlag(int iFlag)
 	{
 		m_iFlags &= ~iFlag;
 	}
 
 	// removes all waypoint flags
-	inline void removeFlags ()
+	inline void RemoveFlags()
 	{
 		m_iFlags = 0;
 	}
 
-	inline bool hasFlag ( int iFlag )
+	inline bool HasFlag(int iFlag)
 	{
 		return (m_iFlags & iFlag) == iFlag;
 	}
 
-	inline bool hasSomeFlags ( int iFlag )
+	inline bool HasSomeFlags(int iFlag)
 	{
 		return (m_iFlags & iFlag) > 0;
 	}
 
-	inline void move ( Vector origin )
+	inline void Move(Vector origin)
 	{
 		// move to new origin
 		m_vOrigin = origin;
 	}
 
-	void checkAreas ( edict_t *pActivator );
+	void CheckAreas(edict_t *pActivator);
 
 	// show info to player
-	void info ( edict_t *pEdict );
+	void Info(edict_t *pEdict);
 
 	// methods
-    void touched ();
+	void Touched();
 
-	void draw ( edict_t *pEdict, bool bDrawPaths, unsigned short int iDrawType );
+	void Draw(edict_t *pEdict, bool bDrawPaths, unsigned short int iDrawType);
 
-	bool addPathTo ( int iWaypointIndex );
-	void removePathTo ( int iWaypointIndex );
-	
-	void addPathFrom ( int iWaypointIndex );
-	void removePathFrom ( int iWaypointIndex );
+	bool AddPathTo(int iWaypointIndex);
+	void RemovePathTo(int iWaypointIndex);
 
-	bool checkReachable ();
+	void AddPathFrom(int iWaypointIndex);
+	void RemovePathFrom(int iWaypointIndex);
 
-	bool isPathOpened ( Vector vPath );
+	bool CheckReachable();
 
-	inline bool isUsed ()
+	bool IsPathOpened(Vector vPath);
+
+	inline bool IsUsed()
 	{
 		return m_bUsed;
 	}
 
 	//bool touched ( edict_t *pEdict );
-	bool touched ( Vector vOrigin, Vector vOffset, float fTouchDist, bool onground = true );
+	bool Touched(Vector vOrigin, Vector vOffset, float fTouchDist, bool onground = true);
 
-	void botTouch ( CBot *pBot );
+	void BotTouch(CBot *pBot);
 
-	inline void freeMapMemory ()
+	inline void FreeMapMemory()
 	{
 		m_thePaths.Clear();//Destroy();
 	}
 
-	inline int getArea () { return m_iArea; }
-	inline void setArea (int area) { m_iArea = area; }
+	inline int GetArea() { return m_iArea; }
+	inline void SetArea(int area) { m_iArea = area; }
 
-	void drawPaths ( edict_t *pEdict, unsigned short int iDrawType );
+	void DrawPaths(edict_t *pEdict, unsigned short int iDrawType);
 
-	void drawPathBeam ( CWaypoint *to, unsigned short int iDrawType );
+	void DrawPathBeam(CWaypoint *to, unsigned short int iDrawType);
 
-	inline void setUsed ( bool bUsed ){	m_bUsed = bUsed;}
+	inline void SetUsed(bool bUsed){ m_bUsed = bUsed; }
 
-	inline void clearPaths ();
+	inline void ClearPaths();
 
-	inline float distanceFrom ( CWaypoint *other )
+	inline float DistanceFrom(CWaypoint *other)
 	{
-		return distanceFrom(other->getOrigin());
+		return DistanceFrom(other->GetOrigin());
 	}
 
-	float distanceFrom ( Vector vOrigin );
+	float DistanceFrom(Vector vOrigin);
 
-	int numPaths ();
+	int NumPaths();
 
-	int numPathsToThisWaypoint ();
-	int getPathToThisWaypoint ( int i );
+	int NumPathsToThisWaypoint();
+	int GetPathToThisWaypoint(int i);
 
-	int getPath ( int i );
+	int GetPath(int i);
 
-	void load ( FILE *bfp, int iVersion );
+	void Load(FILE *bfp, int iVersion);
 
-	void save ( FILE *bfp );
+	void Save(FILE *bfp);
 
-	inline int getFlags (){return m_iFlags;}
+	inline int GetFlags(){ return m_iFlags; }
 
-	bool forTeam ( int iTeam );
+	bool ForTeam(int iTeam);
 
-	inline float getRadius () { return m_fRadius; }
+	inline float GetRadius() { return m_fRadius; }
 
-	inline void setRadius ( float fRad ) { m_fRadius = fRad; }
+	inline void SetRadius(float fRad) { m_fRadius = fRad; }
 
-	Vector applyRadius ();
+	Vector ApplyRadius();
 
-	bool isAiming ( void );
+	bool IsAiming(void);
 
 private:
 	Vector m_vOrigin;
@@ -387,7 +387,7 @@ private:
 	float m_fNextCheckGroundTime;
 	bool m_bHasGround;
 	// Update m_iNumPathsTo (For display)
-	bool m_bIsReachable; 
+	bool m_bIsReachable;
 	float m_fCheckReachableTime;
 	dataUnconstArray<int> m_PathsTo; // paths to this waypoint from other waypoints
 
@@ -402,93 +402,93 @@ public:
 
 	static const int W_FILE_FL_VISIBILITY = 1;
 
-	static void init (const char *pszAuthor = NULL, const char *pszModifiedBy = NULL);
+	static void Init(const char *pszAuthor = NULL, const char *pszModifiedBy = NULL);
 
-	static inline int getWaypointIndex ( CWaypoint *pWpt )
+	static inline int GetWaypointIndex(CWaypoint *pWpt)
 	{
-		if ( pWpt == NULL )
+		if (pWpt == NULL)
 			return -1;
 
-		return ((int)pWpt - (int)m_theWaypoints)/sizeof(CWaypoint);
+		return ((int)pWpt - (int)m_theWaypoints) / sizeof(CWaypoint);
 	}
 
-	static void autoFix ( bool bAutoFixNonArea );
+	static void AutoFix(bool bAutoFixNonArea);
 
-	static void checkAreas ( edict_t *pActivator );
+	static void CheckAreas(edict_t *pActivator);
 
-	static void shiftVisibleAreas ( edict_t *pPlayer, int from, int to );
+	static void ShiftVisibleAreas(edict_t *pPlayer, int from, int to);
 
-	static void drawWaypoints ( CClient *pClient );
+	static void DrawWaypoints(CClient *pClient);
 
-	static int addWaypoint ( CClient *pClient, const char *type1, const char *type2,const char *type3,const char *type4, bool bUseTemplate = false );
+	static int AddWaypoint(CClient *pClient, const char *type1, const char *type2, const char *type3, const char *type4, bool bUseTemplate = false);
 
-	static int addWaypoint ( edict_t *pPlayer, Vector vOrigin, int iFlags = CWaypointTypes::W_FL_NONE, bool bAutoPath = false, int iYaw = 0, int iArea = 0, float fRadius = 0 );
+	static int AddWaypoint(edict_t *pPlayer, Vector vOrigin, int iFlags = CWaypointTypes::W_FL_NONE, bool bAutoPath = false, int iYaw = 0, int iArea = 0, float fRadius = 0);
 
-	static void removeWaypoint ( int iIndex );
+	static void RemoveWaypoint(int iIndex);
 
-	static int numWaypoints ();
+	static int NumWaypoints();
 
-	static bool checkReachable ( CWaypoint *pWaypoint, int iStart );
+	static bool CheckReachable(CWaypoint *pWaypoint, int iStart);
 
-	static CWaypoint *nearestPipeWaypoint ( Vector vTarget, Vector vOrigin, int *iAiming );
+	static CWaypoint *NearestPipeWaypoint(Vector vTarget, Vector vOrigin, int *iAiming);
 
-	static int freeWaypointIndex ();
+	static int FreeWaypointIndex();
 
-	static void deletePathsTo ( int iWpt );
-	static void deletePathsFrom ( int iWpt );
+	static void DeletePathsTo(int iWpt);
+	static void DeletePathsFrom(int iWpt);
 
-	static void shiftAreas (int val);
+	static void ShiftAreas(int val);
 
-	static inline CWaypoint *getWaypoint ( int iIndex )
+	static inline CWaypoint *GetWaypoint(int iIndex)
 	{
-		if ( !validWaypointIndex(iIndex) )
+		if (!ValidWaypointIndex(iIndex))
 			return NULL;
 
 		return &m_theWaypoints[iIndex];
 	}
 
-	static CWaypoint *getNextCoverPoint ( CBot *pBot, CWaypoint *pCurrent, CWaypoint *pBlocking );
+	static CWaypoint *GetNextCoverPoint(CBot *pBot, CWaypoint *pCurrent, CWaypoint *pBlocking);
 
 	// save waypoints
-	static bool save ( bool bVisiblityMade, edict_t *pPlayer = NULL, const char *pszAuthor = NULL, const char *pszModifier = NULL );
+	static bool Save(bool bVisiblityMade, edict_t *pPlayer = NULL, const char *pszAuthor = NULL, const char *pszModifier = NULL);
 	// load waypoints
-	static bool load (const char *szMapName = NULL);
+	static bool Load(const char *szMapName = NULL);
 
-	static inline bool validWaypointIndex ( int iIndex )
+	static inline bool ValidWaypointIndex(int iIndex)
 	{
 		return ((iIndex >= 0) && (iIndex < m_iNumWaypoints));
 	}
 
-	static void precacheWaypointTexture ();
+	static void PrecacheWaypointTexture();
 
-	static int waypointTexture () { return m_iWaypointTexture; }
+	static int WaypointTexture() { return m_iWaypointTexture; }
 
-	static void deleteWaypoint ( int iIndex );
+	static void DeleteWaypoint(int iIndex);
 
-	static void freeMemory ();
+	static void FreeMemory();
 
-	static int getClosestFlagged ( int iFlags, Vector &vOrigin, int iTeam,float *fReturnDist =NULL, unsigned char *failedwpts = NULL );
+	static int GetClosestFlagged(int iFlags, Vector &vOrigin, int iTeam, float *fReturnDist = NULL, unsigned char *failedwpts = NULL);
 
-	static int nearestWaypointGoal ( int iFlags, Vector &origin, float fDist, int iTeam = 0 );
-	static CWaypoint *randomRouteWaypoint ( CBot *pBot, Vector vOrigin, Vector vGoal, int iTeam, int iArea );
-	static CWaypoint *randomWaypointGoal ( int iFlags, int iTeam = 0, int iArea = 0, bool bForceArea = false, CBot *pBot = NULL, bool bHighDanger = false, int iSearchFlags = 0, int iIgnore = -1 );
-	static CWaypoint *randomWaypointGoalBetweenArea ( int iFlags, int iTeam, int iArea, bool bForceArea, CBot *pBot, bool bHighDanger, Vector *org1, Vector *org2, bool bIgnoreBelief = false, int iWpt1 = -1, int iWpt2 = -1 );
-	static CWaypoint *randomWaypointGoalNearestArea ( int iFlags, int iTeam, int iArea, bool bForceArea, CBot *pBot, bool bHighDanger, Vector *origin, int iIgnore = -1, bool bIgnoreBelief = false, int iWpt1 = -1 );
-	static int randomFlaggedWaypoint (int iTeam = 0);
+	static int NearestWaypointGoal(int iFlags, Vector &origin, float fDist, int iTeam = 0);
+	static CWaypoint *RandomRouteWaypoint(CBot *pBot, Vector vOrigin, Vector vGoal, int iTeam, int iArea);
+	static CWaypoint *RandomWaypointGoal(int iFlags, int iTeam = 0, int iArea = 0, bool bForceArea = false, CBot *pBot = NULL, bool bHighDanger = false, int iSearchFlags = 0, int iIgnore = -1);
+	static CWaypoint *RandomWaypointGoalBetweenArea(int iFlags, int iTeam, int iArea, bool bForceArea, CBot *pBot, bool bHighDanger, Vector *org1, Vector *org2, bool bIgnoreBelief = false, int iWpt1 = -1, int iWpt2 = -1);
+	static CWaypoint *RandomWaypointGoalNearestArea(int iFlags, int iTeam, int iArea, bool bForceArea, CBot *pBot, bool bHighDanger, Vector *origin, int iIgnore = -1, bool bIgnoreBelief = false, int iWpt1 = -1);
+	static int RandomFlaggedWaypoint(int iTeam = 0);
 
-	static CWaypointVisibilityTable *getVisiblity () { return m_pVisibilityTable; }
-	static void setupVisibility ();
-	static CWaypoint *getPinchPointFromWaypoint ( Vector vPlayerOrigin, Vector vPinchOrigin );
-	static CWaypoint *getNestWaypoint ( int iTeam, int iArea, bool bForceArea = false, CBot *pBot = NULL );
+	static CWaypointVisibilityTable *GetVisiblity() { return m_pVisibilityTable; }
+	static void SetupVisibility();
+	static CWaypoint *GetPinchPointFromWaypoint(Vector vPlayerOrigin, Vector vPinchOrigin);
+	static CWaypoint *GetNestWaypoint(int iTeam, int iArea, bool bForceArea = false, CBot *pBot = NULL);
 
-	static void updateWaypointPairs ( vector<edict_wpt_pair_t> *pPairs, int iWptFlag, const char *szClassname );
-	static bool hasAuthor () { return (m_szAuthor[0]!=0); }
-	static const char *getAuthor() { return m_szAuthor; }
-	static bool isModified () { return (m_szModifiedBy[0]!=0); }
-	static const char *getModifier() { return m_szModifiedBy; }
-	static const char *getWelcomeMessage () { return m_szWelcomeMessage; }
+	static void UpdateWaypointPairs(vector<edict_wpt_pair_t> *pPairs, int iWptFlag, const char *szClassname);
+	static bool HasAuthor() { return (m_szAuthor[0] != 0); }
+	static const char *GetAuthor() { return m_szAuthor; }
+	static bool IsModified() { return (m_szModifiedBy[0] != 0); }
+	static const char *GetModifier() { return m_szModifiedBy; }
+	static const char *GetWelcomeMessage() { return m_szWelcomeMessage; }
 private:
-	static CWaypoint m_theWaypoints[MAX_WAYPOINTS];	
+	static CWaypoint m_theWaypoints[MAX_WAYPOINTS];
 	static int m_iNumWaypoints;
 	static float m_fNextDrawWaypoints;
 	static int m_iWaypointTexture;

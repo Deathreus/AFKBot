@@ -1,0 +1,39 @@
+"Games"
+{
+	"tf"
+	{
+		"Offsets"
+		{
+			"g_pGameRules"
+			{
+				"windows"	"5"
+			}
+			"Weapon_Equip"
+			{
+				"linux"		"263"
+				"mac"		"263"
+				"windows"	"262"
+			}
+			"Weapon_GetSlot"
+			{
+				"linux"		"270"
+				"mac"		"270"
+				"windows"	"269"
+			}
+			"PlayerRunCommand"
+			{
+				"linux"		"420"
+				"mac"		"420"
+				"windows"	"419"
+			}
+		}
+		"Signatures"
+		{
+			"CreateGameRulesObject"
+			{
+				"library"	"server"
+				"windows"	"\x55\x8B\xEC\x8B\x0D\x2A\x2A\x2A\x2A\x85\xC9\x74\x07"
+			}
+		}
+	}
+}

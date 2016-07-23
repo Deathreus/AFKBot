@@ -9,11 +9,11 @@
       <UniqueIdentifier>{16586188-ff32-4199-a515-f5a8fb020e68}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl</Extensions>
     </Filter>
+    <Filter Include="Extension">
+      <UniqueIdentifier>{e156eb5b-3411-428c-915a-392e6eeaa877}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\rcbot2\bot_plugin_meta.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\rcbot2\bot.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -38,12 +38,6 @@
     <ClCompile Include="..\rcbot2\bot_fortress.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\rcbot2\bot_ga.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\rcbot2\bot_ga_ind.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\rcbot2\bot_getprop.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -59,28 +53,13 @@
     <ClCompile Include="..\rcbot2\bot_mods.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\rcbot2\bot_mtrand.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\rcbot2\bot_navmesh.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\rcbot2\bot_perceptron.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\rcbot2\bot_profile.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\rcbot2\bot_profiling.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\rcbot2\bot_schedule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\rcbot2\bot_sigscan.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\rcbot2\bot_som.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\rcbot2\bot_squads.cpp">
@@ -96,9 +75,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\rcbot2\bot_tf2_points.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\rcbot2\bot_usercmd.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\rcbot2\bot_utility.cpp">
@@ -122,6 +98,12 @@
     <ClCompile Include="..\rcbot2\bot_wpt_dist.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\extension.cpp">
+      <Filter>Extension</Filter>
+    </ClCompile>
+    <ClCompile Include="..\sdk\smsdk_ext.cpp">
+      <Filter>Extension</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\rcbot2\bot.h">
@@ -137,9 +119,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\rcbot2\bot_commands.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\rcbot2\bot_config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\rcbot2\bot_configfile.h">
@@ -160,12 +139,6 @@
     <ClInclude Include="..\rcbot2\bot_fortress.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\rcbot2\bot_ga.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\rcbot2\bot_ga_ind.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\rcbot2\bot_genclass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -173,9 +146,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\rcbot2\bot_globals.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\rcbot2\bot_hooks.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\rcbot2\bot_kv.h">
@@ -187,37 +157,16 @@
     <ClInclude Include="..\rcbot2\bot_mods.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\rcbot2\bot_mtrand.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\rcbot2\bot_navigator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\rcbot2\bot_perceptron.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\rcbot2\bot_plugin_meta.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\rcbot2\bot_profile.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\rcbot2\bot_profiling.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\rcbot2\bot_rb.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\rcbot2\bot_recipients.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\rcbot2\bot_schedule.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\rcbot2\bot_sigscan.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\rcbot2\bot_som.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\rcbot2\bot_squads.h">
@@ -255,6 +204,27 @@
     </ClInclude>
     <ClInclude Include="..\rcbot2\bot_wpt_dist.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_accessclient.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_ga_nn_const.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_perceptron.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extension.h">
+      <Filter>Extension</Filter>
+    </ClInclude>
+    <ClInclude Include="..\version.h">
+      <Filter>Extension</Filter>
+    </ClInclude>
+    <ClInclude Include="..\sdk\smsdk_config.h">
+      <Filter>Extension</Filter>
+    </ClInclude>
+    <ClInclude Include="..\sdk\smsdk_ext.h">
+      <Filter>Extension</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

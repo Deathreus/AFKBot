@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game g_pEngine ("HL
- *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game engine ("HL
+ *    engine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL g_pEngine and MODs
+ *    respects for all of the code used other than the HL engine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -42,27 +42,24 @@
 #include "bot_waypoint_locations.h"
 //#include "bot_hooks.h"
 #include "in_buttons.h"
-#include "bot_plugin_meta.h"
+#include "../extension.h"
 
 // setup static client array
 CClient CClients::m_Clients[MAX_PLAYERS];
 CClient *CClients::m_pListenServerClient = NULL;
 bool CClients::m_bClientsDebugging = false;
 
-extern IVDebugOverlay *debugoverlay;
-
-
-void CToolTip::send(edict_t *pPlayer)
+void CToolTip::Send(edict_t *pPlayer)
 {
 	//CRCBotPlugin::HudTextMessage(pPlayer,m_pszMessage);
 
 	AFKBot::HudTextMessage(pPlayer, m_pszMessage);
 
-	if ( m_pszSound )
-		g_pEngine->ClientCommand(pPlayer,"play %s",m_pszSound);
+	if (m_pszSound)
+		engine->ClientCommand(pPlayer, "play %s", m_pszSound);
 }
 
-void CClient :: init ()
+void CClient::Init()
 {
 	m_iWaypointShowFlags = 0;
 	m_fMonitorHighFiveTime = 0;
@@ -90,7 +87,7 @@ void CClient :: init ()
 	m_iMenuCommand = -1;
 	m_fNextUpdateMenuTime = 0.0f;
 
-	while ( !m_NextTooltip.empty() )
+	while (!m_NextTooltip.empty())
 		m_NextTooltip.pop();
 
 	m_fNextBotServerMessage = 0;
@@ -99,103 +96,103 @@ void CClient :: init ()
 	m_fUpdatePos = 0;
 }
 
-bool CClient :: needToRenderMenu () 
-{ 
-	return m_fNextUpdateMenuTime < g_pEngine->Time(); 
+bool CClient::NeedToRenderMenu()
+{
+	return m_fNextUpdateMenuTime < engine->Time();
 }
 
-void CClient :: updateRenderMenuTime () 
-{ 
-	extern ConVar rcbot_menu_update_time2;
-	m_fNextUpdateMenuTime = g_pEngine->Time() + rcbot_menu_update_time2.GetFloat(); 
+void CClient::UpdateRenderMenuTime()
+{
+	extern ConVar bot_menu_update_time2;
+	m_fNextUpdateMenuTime = engine->Time() + bot_menu_update_time2.GetFloat();
 }
 
-void CClient :: setEdict ( edict_t *pPlayer )
+void CClient::SetEdict(edict_t *pPlayer)
 {
 	m_pPlayer = pPlayer;
 	m_pPlayerInfo = playerinfomanager->GetPlayerInfo(pPlayer);
 }
-	
-void CClient :: setupMenuCommands ()
+
+void CClient::SetupMenuCommands()
 {
-	/*g_pEngine->ClientCommand(m_pPlayer,"alias \"rcbot_setup\" \"bind 0 menuselect0\"");
-	g_pEngine->ClientCommand(m_pPlayer,"rcbot_setup");bind 2 \"menuselect 2\"");*/
-	g_pEngine->ClientCommand(m_pPlayer,"bind 1 \"menuselect 1\"");
-	g_pEngine->ClientCommand(m_pPlayer,"bind 2 \"menuselect 2\"");
-	g_pEngine->ClientCommand(m_pPlayer,"bind 3 \"menuselect 3\"");
-	g_pEngine->ClientCommand(m_pPlayer,"bind 4 \"menuselect 4\"");
-	g_pEngine->ClientCommand(m_pPlayer,"bind 5 \"menuselect 5\"");
-	g_pEngine->ClientCommand(m_pPlayer,"bind 6 \"menuselect 6\"");
-	g_pEngine->ClientCommand(m_pPlayer,"bind 7 \"menuselect 7\"");
-	g_pEngine->ClientCommand(m_pPlayer,"bind 8 \"menuselect 8\"");
-	g_pEngine->ClientCommand(m_pPlayer,"bind 9 \"menuselect 9\"");
-	g_pEngine->ClientCommand(m_pPlayer,"bind 0 \"menuselect 0\"");
-}
-	
-void CClient :: resetMenuCommands ()
-{
-	/*g_pEngine->ClientCommand(m_pPlayer,"alias \"rcbot_reset\" \"bind 0 slot10\"");
-	g_pEngine->ClientCommand(m_pPlayer,"rcbot_reset");bind 2 \"menuselect 2\"");*/
-	g_pEngine->ClientCommand(m_pPlayer,"bind 1 \"slot1\"");
-	g_pEngine->ClientCommand(m_pPlayer,"bind 2 \"slot2\"");
-	g_pEngine->ClientCommand(m_pPlayer,"bind 3 \"slot3\"");
-	g_pEngine->ClientCommand(m_pPlayer,"bind 4 \"slot4\"");
-	g_pEngine->ClientCommand(m_pPlayer,"bind 5 \"slot5\"");
-	g_pEngine->ClientCommand(m_pPlayer,"bind 6 \"slot6\"");
-	g_pEngine->ClientCommand(m_pPlayer,"bind 7 \"slot7\"");
-	g_pEngine->ClientCommand(m_pPlayer,"bind 8 \"slot8\"");
-	g_pEngine->ClientCommand(m_pPlayer,"bind 9 \"slot9\"");
-	g_pEngine->ClientCommand(m_pPlayer,"bind 0 \"slot10\"");
+	/*engine->ClientCommand(m_pPlayer,"alias \"rcbot_setup\" \"bind 0 menuselect0\"");
+	engine->ClientCommand(m_pPlayer,"rcbot_setup");bind 2 \"menuselect 2\"");*/
+	engine->ClientCommand(m_pPlayer, "bind 1 \"menuselect 1\"");
+	engine->ClientCommand(m_pPlayer, "bind 2 \"menuselect 2\"");
+	engine->ClientCommand(m_pPlayer, "bind 3 \"menuselect 3\"");
+	engine->ClientCommand(m_pPlayer, "bind 4 \"menuselect 4\"");
+	engine->ClientCommand(m_pPlayer, "bind 5 \"menuselect 5\"");
+	engine->ClientCommand(m_pPlayer, "bind 6 \"menuselect 6\"");
+	engine->ClientCommand(m_pPlayer, "bind 7 \"menuselect 7\"");
+	engine->ClientCommand(m_pPlayer, "bind 8 \"menuselect 8\"");
+	engine->ClientCommand(m_pPlayer, "bind 9 \"menuselect 9\"");
+	engine->ClientCommand(m_pPlayer, "bind 0 \"menuselect 0\"");
 }
 
-void CClient :: playSound ( const char *pszSound )
+void CClient::ResetMenuCommands()
+{
+	/*engine->ClientCommand(m_pPlayer,"alias \"rcbot_reset\" \"bind 0 slot10\"");
+	engine->ClientCommand(m_pPlayer,"rcbot_reset");bind 2 \"menuselect 2\"");*/
+	engine->ClientCommand(m_pPlayer, "bind 1 \"slot1\"");
+	engine->ClientCommand(m_pPlayer, "bind 2 \"slot2\"");
+	engine->ClientCommand(m_pPlayer, "bind 3 \"slot3\"");
+	engine->ClientCommand(m_pPlayer, "bind 4 \"slot4\"");
+	engine->ClientCommand(m_pPlayer, "bind 5 \"slot5\"");
+	engine->ClientCommand(m_pPlayer, "bind 6 \"slot6\"");
+	engine->ClientCommand(m_pPlayer, "bind 7 \"slot7\"");
+	engine->ClientCommand(m_pPlayer, "bind 8 \"slot8\"");
+	engine->ClientCommand(m_pPlayer, "bind 9 \"slot9\"");
+	engine->ClientCommand(m_pPlayer, "bind 0 \"slot10\"");
+}
+
+void CClient::PlaySound(const char *pszSound)
 {
 	extern ConVar bot_cmd_enable_wpt_sounds;
 
-	if ( isWaypointOn() )
+	if (IsWaypointOn())
 	{
-		if ( bot_cmd_enable_wpt_sounds.GetBool() )
-			sprintf(m_szSoundToPlay,"play \"%s\"",pszSound);
+		if (bot_cmd_enable_wpt_sounds.GetBool())
+			sprintf(m_szSoundToPlay, "play \"%s\"", pszSound);
 	}
 }
 
-void CClient :: autoEventWaypoint ( int iType, float fRadius, bool bAtOtherOrigin, int iTeam, Vector vOrigin, bool bIgnoreTeam, bool bAutoType )
+void CClient::AutoEventWaypoint(int iType, float fRadius, bool bAtOtherOrigin, int iTeam, Vector vOrigin, bool bIgnoreTeam, bool bAutoType)
 {
 	m_iAutoEventWaypoint = iType;
 	m_fAutoEventWaypointRadius = fRadius;
 
-	CBotMod *pMod = CBotGlobals::getCurrentMod();
+	CBotMod *pMod = CBotGlobals::GetCurrentMod();
 
 	m_bAutoEventWaypointAutoType = bAutoType;
 
-	if ( bAtOtherOrigin )
+	if (bAtOtherOrigin)
 	{
 		m_vAutoEventWaypointOrigin = vOrigin;
 	}
 	else
 	{
-		m_vAutoEventWaypointOrigin = getOrigin();
-		iTeam = CClassInterface::getTeam(m_pPlayer);
+		m_vAutoEventWaypointOrigin = GetOrigin();
+		iTeam = CClassInterface::GetTeam(m_pPlayer);
 	}
 
-	if ( bIgnoreTeam )
+	if (bIgnoreTeam)
 		m_iAutoEventWaypointTeam = 0;
 	else
 	{
-		pMod->getTeamOnlyWaypointFlags(iTeam,&m_iAutoEventWaypointTeamOn,&m_iAutoEventWaypointTeamOff);
+		pMod->GetTeamOnlyWaypointFlags(iTeam, &m_iAutoEventWaypointTeamOn, &m_iAutoEventWaypointTeamOff);
 		m_iAutoEventWaypointTeam = iTeam;
-	}	
+	}
 }
 
-void CClient :: teleportTo (Vector vOrigin)
+void CClient::TeleportTo(Vector vOrigin)
 {
 	m_bIsTeleporting = true;
-	m_fTeleportTime = g_pEngine->Time()+0.1f;
+	m_fTeleportTime = engine->Time() + 0.1f;
 
-	Vector *v_origin = CClassInterface::getOrigin(m_pPlayer);
+	Vector *v_origin = CClassInterface::GetOrigin(m_pPlayer);
 
-	byte *pMoveType = CClassInterface::getMoveTypePointer(m_pPlayer);
-	int *pPlayerFlags = CClassInterface::getPlayerFlagsPointer(m_pPlayer);
+	byte *pMoveType = CClassInterface::GetMoveTypePointer(m_pPlayer);
+	int *pPlayerFlags = CClassInterface::GetPlayerFlagsPointer(m_pPlayer);
 
 	*pMoveType &= ~15;
 	*pMoveType |= MOVETYPE_FLYGRAVITY;
@@ -209,7 +206,7 @@ void CClient :: teleportTo (Vector vOrigin)
 class CBotFunc_HighFiveSearch : public IBotFunction
 {
 public:
-	CBotFunc_HighFiveSearch ( edict_t *pPlayer, int iTeam )
+	CBotFunc_HighFiveSearch(edict_t *pPlayer, int iTeam)
 	{
 		m_pPlayer = pPlayer;
 		m_iTeam = iTeam;
@@ -217,13 +214,13 @@ public:
 		m_fNearestDist = 0;
 	}
 
-	void execute ( CBot *pBot )
+	void Execute(CBot *pBot)
 	{
-		if ( (pBot->getEdict() != m_pPlayer) && (pBot->getTeam() == m_iTeam) && pBot->isVisible(m_pPlayer) )
+		if ((pBot->GetEdict() != m_pPlayer) && (pBot->GetTeam() == m_iTeam) && pBot->IsVisible(m_pPlayer))
 		{
-			float fDist = pBot->distanceFrom(m_pPlayer);
+			float fDist = pBot->DistanceFrom(m_pPlayer);
 
-			if ( !m_pNearestBot || (fDist < m_fNearestDist) )
+			if (!m_pNearestBot || (fDist < m_fNearestDist))
 			{
 				m_pNearestBot = pBot;
 				m_fNearestDist = fDist;
@@ -231,7 +228,7 @@ public:
 		}
 	}
 
-	CBot *getNearestBot ()
+	CBot *GetNearestBot()
 	{
 		return m_pNearestBot;
 	}
@@ -244,7 +241,7 @@ private:
 };
 
 // called each frame
-void CClient :: think ()
+void CClient::Think()
 {
 	extern ConVar bot_cmd_enable_wpt_sounds;
 
@@ -253,65 +250,65 @@ void CClient :: think ()
 
 	/*if ( m_pPlayer.get() == NULL )
 	{
-		clientDisconnected();
-		return;
+	clientDisconnected();
+	return;
 	}
 	*/
 
-	//if ( m_fMonitorHighFiveTime > g_pEngine->Time() )
+	//if ( m_fMonitorHighFiveTime > engine->Time() )
 	//{
 
-	if ( (m_pPlayer != NULL) && (m_pPlayerInfo == NULL) )
+	if ((m_pPlayer != NULL) && (m_pPlayerInfo == NULL))
 	{
 		m_pPlayerInfo = playerinfomanager->GetPlayerInfo(m_pPlayer);
 	}
 
-	if ( CBotGlobals::isMod(MOD_TF2) )
+	if (CBotGlobals::IsMod(MOD_TF2))
 	{
-		if ( (m_fMonitorHighFiveTime < g_pEngine->Time()) && (m_pPlayer != NULL) && (m_pPlayerInfo != NULL) && m_pPlayerInfo->IsConnected() && 
-			!m_pPlayerInfo->IsDead() && m_pPlayerInfo->IsPlayer() && !m_pPlayerInfo->IsObserver() && 
-			CClassInterface::getTF2HighFiveReady(m_pPlayer) )
+		if ((m_fMonitorHighFiveTime < engine->Time()) && (m_pPlayer != NULL) && (m_pPlayerInfo != NULL) && m_pPlayerInfo->IsConnected() &&
+			!m_pPlayerInfo->IsDead() && m_pPlayerInfo->IsPlayer() && !m_pPlayerInfo->IsObserver() &&
+			CClassInterface::GetTF2HighFiveReady(m_pPlayer))
 		{
-			m_fMonitorHighFiveTime = g_pEngine->Time() + 0.25f;
+			m_fMonitorHighFiveTime = engine->Time() + 0.25f;
 
-			if ( CClassInterface::getHighFivePartner(m_pPlayer) == NULL )
+			if (CClassInterface::GetHighFivePartner(m_pPlayer) == NULL)
 			{
 				// wanting high five partner
 				// search for bots nearby who can see this player
-				CBotFunc_HighFiveSearch *newFunc = new CBotFunc_HighFiveSearch(m_pPlayer,CClassInterface::getTeam(m_pPlayer));
+				CBotFunc_HighFiveSearch *newFunc = new CBotFunc_HighFiveSearch(m_pPlayer, CClassInterface::GetTeam(m_pPlayer));
 
-				CBots::botFunction(newFunc);
+				CBots::BotFunction(newFunc);
 
-				CBot *pBot = newFunc->getNearestBot();
+				CBot *pBot = newFunc->GetNearestBot();
 
-				if ( pBot != NULL )
+				if (pBot != NULL)
 				{
-					((CBotTF2*)pBot)->highFivePlayer(m_pPlayer,CClassInterface::getTF2TauntYaw(m_pPlayer));
-					m_fMonitorHighFiveTime = g_pEngine->Time() + 3.0f;
-				}				
+					((CBotTF2*)pBot)->HighFivePlayer(m_pPlayer, CClassInterface::GetTF2TauntYaw(m_pPlayer));
+					m_fMonitorHighFiveTime = engine->Time() + 3.0f;
+				}
 
 				delete newFunc;
 			}
 		}
 	}
 
-	if ( m_szSoundToPlay[0] != 0 )
+	if (m_szSoundToPlay[0] != 0)
 	{
-		if ( bot_cmd_enable_wpt_sounds.GetBool() )
-			g_pEngine->ClientCommand(m_pPlayer,m_szSoundToPlay);
+		if (bot_cmd_enable_wpt_sounds.GetBool())
+			engine->ClientCommand(m_pPlayer, m_szSoundToPlay);
 
 		m_szSoundToPlay[0] = 0;
 	}
 
-	if ( m_bIsTeleporting )
+	if (m_bIsTeleporting)
 	{
-		if ( m_fTeleportTime < g_pEngine->Time() )
+		if (m_fTeleportTime < engine->Time())
 		{
 			m_bIsTeleporting = false;
 			m_fTeleportTime = 0;
 			//reset movetypes
-			byte *pMoveType = CClassInterface::getMoveTypePointer(m_pPlayer);
-			int *pPlayerFlags = CClassInterface::getPlayerFlagsPointer(m_pPlayer);
+			byte *pMoveType = CClassInterface::GetMoveTypePointer(m_pPlayer);
+			int *pPlayerFlags = CClassInterface::GetPlayerFlagsPointer(m_pPlayer);
 
 			*pMoveType &= ~15;
 			*pMoveType |= MOVETYPE_WALK;
@@ -321,78 +318,78 @@ void CClient :: think ()
 		}
 	}
 
-	if ( m_bShowMenu )
+	if (m_bShowMenu)
 	{
 		m_bShowMenu = false;
-		g_pEngine->ClientCommand(m_pPlayer,"cancelselect");
+		engine->ClientCommand(m_pPlayer, "cancelselect");
 	}
 
-	if ( m_pMenu != NULL )
+	if (m_pMenu != NULL)
 	{
-		if ( needToRenderMenu() )
-			m_pMenu->render(this);
+		if (NeedToRenderMenu())
+			m_pMenu->Render(this);
 		//CBotMenuList::render(pClient);
 	}
 
-	if ( isWaypointOn() )
-		CWaypoints::drawWaypoints(this);
+	if (IsWaypointOn())
+		CWaypoints::DrawWaypoints(this);
 
-	if ( m_fUpdatePos < g_pEngine->Time() )
+	if (m_fUpdatePos < engine->Time())
 	{
-		m_vVelocity = (getOrigin()-m_vLastPos);
+		m_vVelocity = (GetOrigin() - m_vLastPos);
 		m_fSpeed = m_vVelocity.Length();
-		m_vLastPos = getOrigin();
+		m_vLastPos = GetOrigin();
 
-		m_fUpdatePos = g_pEngine->Time() + 1.0f;
+		m_fUpdatePos = engine->Time() + 1.0f;
 	}
 
-	if ( isDebugging() )
+	if (IsDebugging())
 	{
 		IPlayerInfo *p = playerinfomanager->GetPlayerInfo(m_pPlayer);
 
 
-		if ( isDebugOn(BOT_DEBUG_SPEED) )
+		if (IsDebugOn(BOT_DEBUG_SPEED))
 		{
-			CBotGlobals::botMessage(m_pPlayer,0,"speed = %0.0f",m_fSpeed);
+			CBotGlobals::BotMessage(m_pPlayer, 0, "speed = %0.0f", m_fSpeed);
 		}
 
-		if ( isDebugOn(BOT_DEBUG_USERCMD) )
+		if (IsDebugOn(BOT_DEBUG_USERCMD))
 		{
 
-			if ( p )
+			if (p)
 			{
-				CBotCmd cmd = p->GetLastUserCommand();
+				CUserCmd cmd = *CBots::GetBotPointer(m_pDebugBot)->GetUserCMD();
 
-				CBotGlobals::botMessage(m_pPlayer,0,"Btns = %d, cmd_no = %d, impulse = %d, weapselect = %d, weapsub = %d",cmd.buttons,cmd.command_number,cmd.impulse,cmd.weaponselect,cmd.weaponsubtype);
+				CBotGlobals::BotMessage(m_pPlayer, 0, "Btns = %d, cmd_no = %d, impulse = %d, weapselect = %d, weapsub = %d", cmd.buttons, cmd.command_number, cmd.impulse, cmd.weaponselect, cmd.weaponsubtype);
 
 			}
 		}
 
 
-		if ( (m_pDebugBot!=NULL) && isDebugOn(BOT_DEBUG_HUD) )
+		if ((m_pDebugBot != NULL) && IsDebugOn(BOT_DEBUG_HUD))
 		{
-			if ( m_fNextPrintDebugInfo < g_pEngine->Time() )
+			if (m_fNextPrintDebugInfo < engine->Time())
 			{
 				char msg[1024];
-				CBot *pBot = CBots::getBotPointer(m_pDebugBot);
+				CBot *pBot = CBots::GetBotPointer(m_pDebugBot);
 
-				QAngle eyes = p->GetLastUserCommand().viewangles;
+				QAngle eyes = CBotGlobals::PlayerAngles(m_pDebugBot);
 				Vector vForward;
 				// in fov? Check angle to edict
-				AngleVectors(eyes,&vForward);
+				AngleVectors(eyes, &vForward);
 
 				vForward = vForward / vForward.Length(); // normalize
-				Vector vLeft = (vForward-p->GetAbsOrigin()).Cross(Vector(0,0,1));
-				vLeft = vLeft/vLeft.Length();
-				
-				Vector vDisplay = p->GetAbsOrigin() + vForward*300.0f; 
+				Vector vLeft = (vForward - p->GetAbsOrigin()).Cross(Vector(0, 0, 1));
+				vLeft = vLeft / vLeft.Length();
+
+				Vector vDisplay = p->GetAbsOrigin() + vForward*300.0f;
 				vDisplay = vDisplay - vLeft*300.0f;
 
 				// get debug message
-				pBot->debugBot(msg);
+				pBot->DebugBot(msg);
 
 #ifndef __linux__
-				int i = 0; 
+				int i = 0;
 				int n = 0;
 				char line[256];
 				int linenum = 0;
@@ -400,73 +397,73 @@ void CClient :: think ()
 
 				do
 				{
-					while ( (msg[i]!=0) && (msg[i]!='\n') ) 
+					while ((msg[i] != 0) && (msg[i] != '\n'))
 						line[n++] = msg[i++];
 
-					line[n]=0;
-					debugoverlay->AddEntityTextOverlay(iIndex,linenum++,1.0f,255,255,255,255,line);
+					line[n] = 0;
+					debugoverlay->AddEntityTextOverlay(iIndex, linenum++, 1.0f, 255, 255, 255, 255, line);
 					n = 0;
 
-					if ( msg[i] == 0 )
+					if (msg[i] == 0)
 						break;
 					i++;
-				}while ( 1 ) ;
+				} while (1);
 				//int ent_index, int line_offset, float duration, int r, int g, int b, int a, const char *format, ...
-			//	debugoverlay->AddEntityTextOverlay();
+				//	debugoverlay->AddEntityTextOverlay();
 #endif
-				m_fNextPrintDebugInfo = g_pEngine->Time() + 1.0f;
+				m_fNextPrintDebugInfo = engine->Time() + 1.0f;
 			}
 		}
-			//this->cm_pDebugBot->getTaskDebug();
+		//this->cm_pDebugBot->getTaskDebug();
 		//m_pDebugBot->canAvoid();
 	}
 
-	if ( m_fNextBotServerMessage < g_pEngine->Time() )
+	if (m_fNextBotServerMessage < engine->Time())
 	{
-		if ( !m_NextTooltip.empty() )
+		if (!m_NextTooltip.empty())
 		{
 			CToolTip *pTooltip = m_NextTooltip.front();
-			
-			pTooltip->send(m_pPlayer);
+
+			pTooltip->Send(m_pPlayer);
 
 			m_NextTooltip.pop();
 
 			delete pTooltip;
 
-			m_fNextBotServerMessage = g_pEngine->Time() + 11.0f;
+			m_fNextBotServerMessage = engine->Time() + 11.0f;
 		}
 		else
-			m_fNextBotServerMessage = g_pEngine->Time() + 1.0f;
+			m_fNextBotServerMessage = engine->Time() + 1.0f;
 	}
 
 
 	/***** Autowaypoint stuff below borrowed and converted from RCBot1 *****/
-	
-	if ( m_bAutoWaypoint )
+
+	if (m_bAutoWaypoint)
 	{
-		if ( !m_pPlayerInfo )
+		if (!m_pPlayerInfo)
 			m_pPlayerInfo = playerinfomanager->GetPlayerInfo(m_pPlayer);
 
-		if ( !m_bSetUpAutoWaypoint || !m_pPlayerInfo || m_pPlayerInfo->IsDead() )
+		if (!m_bSetUpAutoWaypoint || !m_pPlayerInfo || m_pPlayerInfo->IsDead())
 		{
 			int i;
 			int start = 0;
 
-			if ( !m_pPlayerInfo->IsDead() )
+			if (!m_pPlayerInfo->IsDead())
 				start = 1; // grab one location
 
 
-			m_fLastAutoWaypointCheckTime = g_pEngine->Time() + 0.5f;
+			m_fLastAutoWaypointCheckTime = engine->Time() + 0.5f;
 
-			if ( !m_pPlayerInfo->IsDead() )
-				m_vLastAutoWaypointCheckPos[0].SetVector(getOrigin());
+			if (!m_pPlayerInfo->IsDead())
+				m_vLastAutoWaypointCheckPos[0].SetVector(GetOrigin());
 
-			for ( i = start; i < MAX_STORED_AUTOWAYPOINT; i++ )
+			for (i = start; i < MAX_STORED_AUTOWAYPOINT; i++)
 			{
 				m_vLastAutoWaypointCheckPos[i].UnSetPoint();
 			}
 
-			m_vLastAutoWaypointPlacePos = getOrigin();
+			m_vLastAutoWaypointPlacePos = GetOrigin();
 			m_bSetUpAutoWaypoint = TRUE;
 			m_fCanPlaceJump = 0;
 			m_iLastButtons = 0;
@@ -478,12 +475,12 @@ void CClient :: think ()
 			m_iJoinLadderWaypointIndex = -1;
 		}
 		else
-		{			
-			int iMoveType = CClassInterface::getMoveType(m_pPlayer);
-			int iPlayerFlags = CClassInterface::getPlayerFlags(m_pPlayer);
-			CBotCmd cmd = m_pPlayerInfo->GetLastUserCommand();
+		{
+			int iMoveType = CClassInterface::GetMoveType(m_pPlayer);
+			int iPlayerFlags = CClassInterface::GetPlayerFlags(m_pPlayer);
+			CUserCmd cmd = *CBots::GetBotPointer(m_pPlayer)->GetUserCMD();
 
-			Vector vPlayerOrigin = getOrigin();
+			Vector vPlayerOrigin = GetOrigin();
 
 			// ****************************************************
 			// Jump waypoint
@@ -493,36 +490,36 @@ void CClient :: think ()
 			// 
 			// ****************************************************
 
-			if ( m_iAutoEventWaypoint != 0 )
+			if (m_iAutoEventWaypoint != 0)
 			{
-				int iWpt = CWaypointLocations::NearestWaypoint(m_vAutoEventWaypointOrigin,m_fAutoEventWaypointRadius,-1,false,false,false,NULL,false,m_iAutoEventWaypointTeam,false,false,Vector(0,0,0),m_iAutoEventWaypoint);
+				int iWpt = CWaypointLocations::NearestWaypoint(m_vAutoEventWaypointOrigin, m_fAutoEventWaypointRadius, -1, false, false, false, NULL, false, m_iAutoEventWaypointTeam, false, false, Vector(0, 0, 0), m_iAutoEventWaypoint);
 
-				CWaypoint *pWpt = CWaypoints::getWaypoint(iWpt);
+				CWaypoint *pWpt = CWaypoints::GetWaypoint(iWpt);
 
-				if ( !pWpt )
+				if (!pWpt)
 				{
 					//updateCurrentWaypoint();
 
 					//pWpt = CWaypoints::getWaypoint(currentWaypoint());
-					
+
 					//if ( !pWpt || pWpt->distanceFrom(m_vAutoEventWaypointOrigin) > 32.0f )
 					//{
 
-					if ( m_bAutoEventWaypointAutoType )
+					if (m_bAutoEventWaypointAutoType)
 					{
-						CWaypointType *pMainType = CWaypointTypes::getTypeByFlags(m_iAutoEventWaypoint);
+						CWaypointType *pMainType = CWaypointTypes::GetTypeByFlags(m_iAutoEventWaypoint);
 
-						if ( pMainType )
-							CWaypoints::addWaypoint(this,pMainType->getName(),"","","");
+						if (pMainType)
+							CWaypoints::AddWaypoint(this, pMainType->GetName(), "", "", "");
 						else
-							CWaypoints::addWaypoint(m_pPlayer,m_vAutoEventWaypointOrigin,(m_iAutoEventWaypointTeam==0)?(m_iAutoEventWaypoint):((m_iAutoEventWaypoint|m_iAutoEventWaypointTeamOn)&~m_iAutoEventWaypointTeamOff),true,cmd.viewangles.y,0,32.0f);
+							CWaypoints::AddWaypoint(m_pPlayer, m_vAutoEventWaypointOrigin, (m_iAutoEventWaypointTeam == 0) ? (m_iAutoEventWaypoint) : ((m_iAutoEventWaypoint | m_iAutoEventWaypointTeamOn)&~m_iAutoEventWaypointTeamOff), true, cmd.viewangles.y, 0, 32.0f);
 					}
 					else
-						CWaypoints::addWaypoint(m_pPlayer,m_vAutoEventWaypointOrigin,(m_iAutoEventWaypointTeam==0)?(m_iAutoEventWaypoint):((m_iAutoEventWaypoint|m_iAutoEventWaypointTeamOn)&~m_iAutoEventWaypointTeamOff),true,cmd.viewangles.y,0,32.0f);
+						CWaypoints::AddWaypoint(m_pPlayer, m_vAutoEventWaypointOrigin, (m_iAutoEventWaypointTeam == 0) ? (m_iAutoEventWaypoint) : ((m_iAutoEventWaypoint | m_iAutoEventWaypointTeamOn)&~m_iAutoEventWaypointTeamOff), true, cmd.viewangles.y, 0, 32.0f);
 					//}
 					/*else
 					{
-						pWpt->addFlag(m_iAutoEventWaypoint);
+					pWpt->addFlag(m_iAutoEventWaypoint);
 					}*/
 				}
 
@@ -530,23 +527,23 @@ void CClient :: think ()
 			}
 			//g_pBotManager->GetBotController(m_pPlayer)->IsEFlagSet();
 
-			if ( /*(pev->waterlevel < 3) &&*/ (m_fCanPlaceJump < g_pEngine->Time()) )
-			{	
+			if ( /*(pev->waterlevel < 3) &&*/ (m_fCanPlaceJump < engine->Time()))
+			{
 				Vector v_floor;
 
-				if ( (m_fCanPlaceJump != -1) && (m_iLastButtons & IN_JUMP) && !(iPlayerFlags & FL_ONGROUND) )
+				if ((m_fCanPlaceJump != -1) && (m_iLastButtons & IN_JUMP) && !(iPlayerFlags & FL_ONGROUND))
 				{
 					int iNearestWpt = CWaypointLocations::NearestWaypoint(vPlayerOrigin, 80.0, -1, true, false, false, NULL);
 
 					m_iLastJumpWaypointIndex = -1;
-					
-					if ( iNearestWpt == -1 )
+
+					if (iNearestWpt == -1)
 					{
-						m_iLastJumpWaypointIndex = CWaypoints::addWaypoint(m_pPlayer,vPlayerOrigin,CWaypointTypes::W_FL_JUMP,true);
+						m_iLastJumpWaypointIndex = CWaypoints::AddWaypoint(m_pPlayer, vPlayerOrigin, CWaypointTypes::W_FL_JUMP, true);
 					}
 					else
 						m_iLastJumpWaypointIndex = iNearestWpt; // can still update a current waypoint for land position
-					
+
 					m_vLastAutoWaypointPlacePos = vPlayerOrigin;
 
 					m_fCanPlaceJump = -1;
@@ -554,66 +551,66 @@ void CClient :: think ()
 				// ****************************************************
 				// Join jump waypoint to the landed waypoint
 				// ****************************************************
-				else if ( (m_fCanPlaceJump == -1) && (iPlayerFlags & FL_ONGROUND) )
+				else if ((m_fCanPlaceJump == -1) && (iPlayerFlags & FL_ONGROUND))
 				{
-					if ( m_iLastJumpWaypointIndex != -1 )
+					if (m_iLastJumpWaypointIndex != -1)
 					{
 						int iNearestWpt = CWaypointLocations::NearestWaypoint(vPlayerOrigin, 80.0, -1, true, false, false, NULL);
-						
-						if ( iNearestWpt == -1 )
+
+						if (iNearestWpt == -1)
 						{
-							int iNewWpt = CWaypoints::addWaypoint(m_pPlayer,vPlayerOrigin,0,true);
+							int iNewWpt = CWaypoints::AddWaypoint(m_pPlayer, vPlayerOrigin, 0, true);
 
-							if ( iNewWpt != -1 )
+							if (iNewWpt != -1)
 							{
-								CWaypoint *pWpt = CWaypoints::getWaypoint(iNewWpt);
-								CWaypoint *pJumpWpt = CWaypoints::getWaypoint(m_iLastJumpWaypointIndex);
+								CWaypoint *pWpt = CWaypoints::GetWaypoint(iNewWpt);
+								CWaypoint *pJumpWpt = CWaypoints::GetWaypoint(m_iLastJumpWaypointIndex);
 
-								pJumpWpt->addPathTo(iNewWpt);
-				
-								pJumpWpt->addFlag(CWaypointTypes::W_FL_JUMP);
-								
+								pJumpWpt->AddPathTo(iNewWpt);
+
+								pJumpWpt->AddFlag(CWaypointTypes::W_FL_JUMP);
+
 								trace_t *tr;
-								
-								Vector v_src = pWpt->getOrigin();
 
-								CBotGlobals::quickTraceline(m_pPlayer,v_src,v_src-Vector(0,0,144));
-								
-								tr = CBotGlobals::getTraceResult();
+								Vector v_src = pWpt->GetOrigin();
+
+								CBotGlobals::QuickTraceline(m_pPlayer, v_src, v_src - Vector(0, 0, 144));
+
+								tr = CBotGlobals::GetTraceResult();
 
 								v_floor = tr->endpos;
-								float len = v_src.z-tr->endpos.z;
-								
-								CBotGlobals::quickTraceline(m_pPlayer,v_src,v_src+Vector(0,0,144));
-								
-								len += (tr->endpos.z-v_src.z);
-								
-								if ( len > 72 )
+								float len = v_src.z - tr->endpos.z;
+
+								CBotGlobals::QuickTraceline(m_pPlayer, v_src, v_src + Vector(0, 0, 144));
+
+								len += (tr->endpos.z - v_src.z);
+
+								if (len > 72)
 								{
-									pWpt->removeFlag(CWaypointTypes::W_FL_CROUCH);
-									pWpt->move(v_floor+Vector(0,0,36));
+									pWpt->RemoveFlag(CWaypointTypes::W_FL_CROUCH);
+									pWpt->Move(v_floor + Vector(0, 0, 36));
 								}
-								else if ( len > 32 )
+								else if (len > 32)
 								{
-									pWpt->addFlag(CWaypointTypes::W_FL_CROUCH);
-									pWpt->move(v_floor+Vector(0,0,12));
+									pWpt->AddFlag(CWaypointTypes::W_FL_CROUCH);
+									pWpt->Move(v_floor + Vector(0, 0, 12));
 								}
 							}
 						}
-						else if ( iNearestWpt != m_iLastJumpWaypointIndex )
+						else if (iNearestWpt != m_iLastJumpWaypointIndex)
 						{
-							CWaypoint *pJumpWpt = CWaypoints::getWaypoint(m_iLastJumpWaypointIndex);
+							CWaypoint *pJumpWpt = CWaypoints::GetWaypoint(m_iLastJumpWaypointIndex);
 
-							pJumpWpt->addPathTo(iNearestWpt);
-							pJumpWpt->addFlag(CWaypointTypes::W_FL_JUMP);
+							pJumpWpt->AddPathTo(iNearestWpt);
+							pJumpWpt->AddFlag(CWaypointTypes::W_FL_JUMP);
 						}
 					}
 
 					m_iLastJumpWaypointIndex = -1;
 
 					// wait a sec after player lands before checking jump again
-					m_fCanPlaceJump = g_pEngine->Time() + 0.5;
-				}				
+					m_fCanPlaceJump = engine->Time() + 0.5;
+				}
 			}
 
 			bool bCheckDistance = (iMoveType != MOVETYPE_FLY) && (m_fCanPlaceLadder == 0); // always check distance unless ladder climbing
@@ -622,25 +619,25 @@ void CClient :: think ()
 			// Ladder waypoint
 			// make the frist waypoint (e.g. bottom waypoint)
 			// ****************************************************
-			if ( (iMoveType == MOVETYPE_FLY) && !(m_iLastMoveType == MOVETYPE_FLY) )
+			if ((iMoveType == MOVETYPE_FLY) && !(m_iLastMoveType == MOVETYPE_FLY))
 			{
 				// went ON to a ladder
 
 				int iNearestWpt = CWaypointLocations::NearestWaypoint(vPlayerOrigin, 80.0, -1, true, false, false, NULL);
 
 				m_iLastLadderWaypointIndex = -1;
-					
-				if ( iNearestWpt == -1 )
-					m_iLastLadderWaypointIndex = CWaypoints::addWaypoint(m_pPlayer,vPlayerOrigin,CWaypointTypes::W_FL_LADDER,true);
+
+				if (iNearestWpt == -1)
+					m_iLastLadderWaypointIndex = CWaypoints::AddWaypoint(m_pPlayer, vPlayerOrigin, CWaypointTypes::W_FL_LADDER, true);
 				else
 				{
 					m_iLastLadderWaypointIndex = iNearestWpt; // can still update a current waypoint for land position
 
-					CWaypoint *pLadderWpt = CWaypoints::getWaypoint(m_iLastLadderWaypointIndex);
+					CWaypoint *pLadderWpt = CWaypoints::GetWaypoint(m_iLastLadderWaypointIndex);
 
-					pLadderWpt->addFlag(CWaypointTypes::W_FL_LADDER); // update flags
+					pLadderWpt->AddFlag(CWaypointTypes::W_FL_LADDER); // update flags
 				}
-					
+
 				m_vLastAutoWaypointPlacePos = vPlayerOrigin;
 
 				bCheckDistance = false;
@@ -648,81 +645,81 @@ void CClient :: think ()
 				m_fCanPlaceLadder = 0;
 
 				// need to unset every check point when going on ladder first time
-				for ( int i = 0; i < MAX_STORED_AUTOWAYPOINT; i ++ )
+				for (int i = 0; i < MAX_STORED_AUTOWAYPOINT; i++)
 				{
-						m_vLastAutoWaypointCheckPos[i].UnSetPoint();					
+					m_vLastAutoWaypointCheckPos[i].UnSetPoint();
 				}
 			}
-			else if ( !(iMoveType == MOVETYPE_FLY) && (m_iLastMoveType == MOVETYPE_FLY) )
+			else if (!(iMoveType == MOVETYPE_FLY) && (m_iLastMoveType == MOVETYPE_FLY))
 			{
 				// went OFF a ladder
-				m_fCanPlaceLadder = g_pEngine->Time() + 0.2f;
+				m_fCanPlaceLadder = engine->Time() + 0.2f;
 			}
-			
+
 			// ****************************************************
 			// If we have walked off a ladder for a small amount of time
 			// Make the top/bottom ladder waypoint
 			// ****************************************************
-			if ( m_fCanPlaceLadder && (m_fCanPlaceLadder < g_pEngine->Time() ) )
+			if (m_fCanPlaceLadder && (m_fCanPlaceLadder < engine->Time()))
 			{
-				if ( m_iLastLadderWaypointIndex != -1 )
+				if (m_iLastLadderWaypointIndex != -1)
 					// place a ladder waypoint before jumping off
 				{
 					int iNearestWpt = CWaypointLocations::NearestWaypoint(vPlayerOrigin, 80.0, -1, true, false, false, NULL);
-					
-					if ( iNearestWpt == -1 )
+
+					if (iNearestWpt == -1)
 					{
-						int iNewWpt = CWaypoints::addWaypoint(m_pPlayer,vPlayerOrigin,CWaypointTypes::W_FL_LADDER,true);
-						
-						if ( iNewWpt != -1 )
+						int iNewWpt = CWaypoints::AddWaypoint(m_pPlayer, vPlayerOrigin, CWaypointTypes::W_FL_LADDER, true);
+
+						if (iNewWpt != -1)
 						{
-							CWaypoint *pLadderWpt = CWaypoints::getWaypoint(m_iLastLadderWaypointIndex);
+							CWaypoint *pLadderWpt = CWaypoints::GetWaypoint(m_iLastLadderWaypointIndex);
 
 							m_iJoinLadderWaypointIndex = iNewWpt;
 
-							pLadderWpt->addPathTo(iNewWpt);
+							pLadderWpt->AddPathTo(iNewWpt);
 						}
 					}
-					else if ( iNearestWpt != m_iLastLadderWaypointIndex )
+					else if (iNearestWpt != m_iLastLadderWaypointIndex)
 					{
-						CWaypoint *pLadderWpt = CWaypoints::getWaypoint(m_iJoinLadderWaypointIndex);
+						CWaypoint *pLadderWpt = CWaypoints::GetWaypoint(m_iJoinLadderWaypointIndex);
 
 						m_iJoinLadderWaypointIndex = iNearestWpt;
 
-						pLadderWpt->addPathTo(iNearestWpt);
-					}				
+						pLadderWpt->AddPathTo(iNearestWpt);
+					}
 				}
-				
+
 				m_iLastLadderWaypointIndex = -1;
-				
+
 				bCheckDistance = false;
 
 				m_fCanPlaceLadder = 0;
 			}
-			
+
 			// ****************************************************
 			// Join top ladder waypoint to a ground waypoint
 			// ****************************************************
-			if ( (m_iJoinLadderWaypointIndex != -1) && (iPlayerFlags & FL_ONGROUND) && (iMoveType == MOVETYPE_WALK) )
+			if ((m_iJoinLadderWaypointIndex != -1) && (iPlayerFlags & FL_ONGROUND) && (iMoveType == MOVETYPE_WALK))
 			{
 				int iNearestWpt = CWaypointLocations::NearestWaypoint(vPlayerOrigin, 40.0, m_iJoinLadderWaypointIndex, true, false, false, NULL);
-				
-				if ( iNearestWpt == -1 )
-				{
-					int iNewWpt = CWaypoints::addWaypoint(m_pPlayer,vPlayerOrigin,0,true);
-					
-					if ( iNewWpt != -1 )
-					{
-						CWaypoint *pLadderWpt = CWaypoints::getWaypoint(m_iJoinLadderWaypointIndex);
 
-						pLadderWpt->addPathTo(iNewWpt);
+				if (iNearestWpt == -1)
+				{
+					int iNewWpt = CWaypoints::AddWaypoint(m_pPlayer, vPlayerOrigin, 0, true);
+
+					if (iNewWpt != -1)
+					{
+						CWaypoint *pLadderWpt = CWaypoints::GetWaypoint(m_iJoinLadderWaypointIndex);
+
+						pLadderWpt->AddPathTo(iNewWpt);
 					}
 				}
-				else if ( iNearestWpt != m_iJoinLadderWaypointIndex )
+				else if (iNearestWpt != m_iJoinLadderWaypointIndex)
 				{
-					CWaypoint *pLadderWpt = CWaypoints::getWaypoint(m_iJoinLadderWaypointIndex);
+					CWaypoint *pLadderWpt = CWaypoints::GetWaypoint(m_iJoinLadderWaypointIndex);
 
-					pLadderWpt->addPathTo(iNearestWpt);
+					pLadderWpt->AddPathTo(iNearestWpt);
 				}
 
 				m_iJoinLadderWaypointIndex = -1;
@@ -731,7 +728,7 @@ void CClient :: think ()
 			m_iLastButtons = cmd.buttons;
 			m_iLastMoveType = iMoveType;
 
-			if ( m_fLastAutoWaypointCheckTime < g_pEngine->Time() )
+			if (m_fLastAutoWaypointCheckTime < engine->Time())
 			{
 				// ****************************************
 				// Corner - Check
@@ -740,13 +737,13 @@ void CClient :: think ()
 				// place a "Check - point" at player origin
 				//
 
-				CAutoWaypointCheck *vCurVector;				
+				CAutoWaypointCheck *vCurVector;
 				Vector vCheckOrigin;
 
 				Vector vPlacePosition;
 				int iFlags = 0;
 				bool bPlace = false;
-				
+
 				int i;
 				int n;
 
@@ -755,26 +752,26 @@ void CClient :: think ()
 				int numset = 0;
 				int last = 0;
 
-				for ( n = 0; n < MAX_STORED_AUTOWAYPOINT; n ++ )
+				for (n = 0; n < MAX_STORED_AUTOWAYPOINT; n++)
 				{
-					if ( m_vLastAutoWaypointCheckPos[n].IsVectorSet() )
+					if (m_vLastAutoWaypointCheckPos[n].IsVectorSet())
 					{
 						numset++;
 					}
 				}
 
-				if ( numset == MAX_STORED_AUTOWAYPOINT )
+				if (numset == MAX_STORED_AUTOWAYPOINT)
 				{
 					// move check points down
-					for ( n = 0; n < (MAX_STORED_AUTOWAYPOINT-1); n ++ )
+					for (n = 0; n < (MAX_STORED_AUTOWAYPOINT - 1); n++)
 					{
-						m_vLastAutoWaypointCheckPos[n] = m_vLastAutoWaypointCheckPos[n+1];						
+						m_vLastAutoWaypointCheckPos[n] = m_vLastAutoWaypointCheckPos[n + 1];
 					}
-					
-					last = MAX_STORED_AUTOWAYPOINT-1;
+
+					last = MAX_STORED_AUTOWAYPOINT - 1;
 				}
 				else
-				{					
+				{
 					last = numset;
 				}
 
@@ -785,124 +782,124 @@ void CClient :: think ()
 				{
 					iFlags |= CWaypointTypes::W_FL_CROUCH;  // crouching waypoint
 				}
-				
+
 				if (iMoveType == MOVETYPE_LADDER)
 					iFlags |= CWaypointTypes::W_FL_LADDER;  // waypoint on a ladder
 
-				m_vLastAutoWaypointCheckPos[last].SetPoint(vPlayerOrigin,iFlags);
-				
-				if ( (m_iLastJumpWaypointIndex==-1) && bCheckDistance && ((vPlayerOrigin - m_vLastAutoWaypointPlacePos).Length() > 200) )
+				m_vLastAutoWaypointCheckPos[last].SetPoint(vPlayerOrigin, iFlags);
+
+				if ((m_iLastJumpWaypointIndex == -1) && bCheckDistance && ((vPlayerOrigin - m_vLastAutoWaypointPlacePos).Length() > 200))
 				{
-					extern ConVar rcbot_autowaypoint_dist;
-					int iNearestWpt = CWaypointLocations::NearestWaypoint(vPlayerOrigin, rcbot_autowaypoint_dist.GetFloat(), -1, true, false, false, NULL);
-					
-					if ( iNearestWpt == -1 )
-						CWaypoints::addWaypoint(this,"","","","");
-					
+					extern ConVar bot_autowaypoint_dist;
+					int iNearestWpt = CWaypointLocations::NearestWaypoint(vPlayerOrigin, bot_autowaypoint_dist.GetFloat(), -1, true, false, false, NULL);
+
+					if (iNearestWpt == -1)
+						CWaypoints::AddWaypoint(this, "", "", "", "");
+
 					// set regardless
 					m_vLastAutoWaypointPlacePos = vPlayerOrigin;
 				}
 
 				// search for occluded check points from player
-				for ( i = 0; i < MAX_STORED_AUTOWAYPOINT; i++ )
+				for (i = 0; i < MAX_STORED_AUTOWAYPOINT; i++)
 				{
 					vCurVector = &m_vLastAutoWaypointCheckPos[i];
 
-					if ( !vCurVector->IsVectorSet() )
+					if (!vCurVector->IsVectorSet())
 						continue;
 
 					vCheckOrigin = vCurVector->GetVector();
 
-					CBotGlobals::quickTraceline(m_pPlayer,vPlayerOrigin,vCheckOrigin);
-					tr = CBotGlobals::getTraceResult();
+					CBotGlobals::QuickTraceline(m_pPlayer, vPlayerOrigin, vCheckOrigin);
+					tr = CBotGlobals::GetTraceResult();
 
 #ifndef __linux__
-					if ( m_bDebugAutoWaypoint && !g_pEngine->IsDedicatedServer() )
+					if (m_bDebugAutoWaypoint && !engine->IsDedicatedServer())
 					{
-						debugoverlay->AddLineOverlay(vCheckOrigin+Vector(0,0,16),vCheckOrigin-Vector(0,0,16),255,255,255,0,2);
-						debugoverlay->AddLineOverlay(vPlayerOrigin,vCheckOrigin,255,255,255,0,2);
+						debugoverlay->AddLineOverlay(vCheckOrigin + Vector(0, 0, 16), vCheckOrigin - Vector(0, 0, 16), 255, 255, 255, 0, 2);
+						debugoverlay->AddLineOverlay(vPlayerOrigin, vCheckOrigin, 255, 255, 255, 0, 2);
 					}
 #endif					
-					if ( tr->fraction < 1.0 )
+					if (tr->fraction < 1.0)
 					{
-						if ( tr->m_pEnt )
+						if (tr->m_pEnt)
 						{
 							Vector vel;
 							extern IServerGameEnts *servergameents;
 							edict_t *pEdict = servergameents->BaseEntityToEdict(tr->m_pEnt);
 
-							if ( CClassInterface::getVelocity(pEdict,&vel) )
+							if (CClassInterface::GetVelocity(pEdict, &vel))
 							{
 								// on a lift/train moving "fast"
-								if ( vel.Length() > 20.0 )
+								if (vel.Length() > 20.0)
 									continue;
 							}
 						}
 						// find next which is visible
-						for ( n = i+1; n < MAX_STORED_AUTOWAYPOINT; n++ )
+						for (n = i + 1; n < MAX_STORED_AUTOWAYPOINT; n++)
 						{
 							vCurVector = &m_vLastAutoWaypointCheckPos[n];
-							
-							if ( !vCurVector->IsVectorSet() )
+
+							if (!vCurVector->IsVectorSet())
 								continue;
-							
+
 							vCheckOrigin = vCurVector->GetVector();
 
-							CBotGlobals::quickTraceline(m_pPlayer,vPlayerOrigin,vCheckOrigin);
-			
+							CBotGlobals::QuickTraceline(m_pPlayer, vPlayerOrigin, vCheckOrigin);
+
 #ifndef __linux__
-							if ( m_bDebugAutoWaypoint )
-								debugoverlay->AddLineOverlay(vPlayerOrigin,vCheckOrigin,255,255,255,false,2);
+							if (m_bDebugAutoWaypoint)
+								debugoverlay->AddLineOverlay(vPlayerOrigin, vCheckOrigin, 255, 255, 255, false, 2);
 #endif							
-							if ( tr->fraction >= 1.0 )
+							if (tr->fraction >= 1.0)
 							{
 								int iNearestWpt = CWaypointLocations::NearestWaypoint(vCheckOrigin, 100.0, -1, true, false, false, NULL);
-								
-								if ( iNearestWpt == -1 )
+
+								if (iNearestWpt == -1)
 								{
-									bPlace = true;		
+									bPlace = true;
 									vPlacePosition = vCheckOrigin;
-									iFlags = vCurVector->getFlags();
-									
+									iFlags = vCurVector->GetFlags();
+
 									break;
 								}
 								else
 									continue;
 							}
 						}
-						
+
 					}
 				}
 
-				if ( bPlace )
+				if (bPlace)
 				{
-					int inewwpt = CWaypoints::addWaypoint(m_pPlayer,vPlacePosition,iFlags,true);
-					CWaypoint *pWpt = CWaypoints::getWaypoint(inewwpt);
+					int inewwpt = CWaypoints::AddWaypoint(m_pPlayer, vPlacePosition, iFlags, true);
+					CWaypoint *pWpt = CWaypoints::GetWaypoint(inewwpt);
 					Vector v_floor;
 
 					m_vLastAutoWaypointPlacePos = vPlacePosition;
 					bool bCanStand;
 
 					trace_t *tr;
-					
+
 					Vector v_src = vPlacePosition;
 
-					CBotGlobals::quickTraceline(m_pPlayer,v_src,v_src-Vector(0,0,144));
-					
-					tr = CBotGlobals::getTraceResult();
+					CBotGlobals::QuickTraceline(m_pPlayer, v_src, v_src - Vector(0, 0, 144));
+
+					tr = CBotGlobals::GetTraceResult();
 
 					v_floor = tr->endpos;
-					float len = v_src.z-tr->endpos.z;
-					
-					CBotGlobals::quickTraceline(m_pPlayer,v_src,v_src+Vector(0,0,144));
-					
-					len += (tr->endpos.z-v_src.z);
-					
-					bCanStand = ( len > 72 );
+					float len = v_src.z - tr->endpos.z;
 
-					if ( (m_iLastJumpWaypointIndex != -1) && bCanStand )
+					CBotGlobals::QuickTraceline(m_pPlayer, v_src, v_src + Vector(0, 0, 144));
+
+					len += (tr->endpos.z - v_src.z);
+
+					bCanStand = (len > 72);
+
+					if ((m_iLastJumpWaypointIndex != -1) && bCanStand)
 					{
-						pWpt->removeFlag(CWaypointTypes::W_FL_CROUCH);
+						pWpt->RemoveFlag(CWaypointTypes::W_FL_CROUCH);
 						//waypoints[inewwpt].origin = v_floor+Vector(0,0,36);
 					}
 					//clear from i
@@ -910,181 +907,174 @@ void CClient :: think ()
 					int pos = n;
 					int n = 0;
 
-					for ( n = 0; pos < MAX_STORED_AUTOWAYPOINT; n ++ )
+					for (n = 0; pos < MAX_STORED_AUTOWAYPOINT; n++)
 					{
 						m_vLastAutoWaypointCheckPos[n] = m_vLastAutoWaypointCheckPos[pos];
 
 						pos++;
 					}
 
-					for ( n = n; n < MAX_STORED_AUTOWAYPOINT; n ++ )
+					for (n = n; n < MAX_STORED_AUTOWAYPOINT; n++)
 					{
-						m_vLastAutoWaypointCheckPos[n].UnSetPoint();					
+						m_vLastAutoWaypointCheckPos[n].UnSetPoint();
 					}
 				}
 
-				m_fLastAutoWaypointCheckTime = g_pEngine->Time() + 0.5f;
+				m_fLastAutoWaypointCheckTime = engine->Time() + 0.5f;
 			}
 		}
 	}
 }
 
-void CClient::giveMessage(char *msg,float fTime)
+void CClient::GiveMessage(char *msg, float fTime)
 {
-	extern ConVar rcbot_tooltips;
+	extern ConVar bot_tooltips;
 
-	if ( rcbot_tooltips.GetBool() )
+	if (bot_tooltips.GetBool())
 	{
-		m_NextTooltip.push(new CToolTip(msg,NULL));
-		m_fNextBotServerMessage = g_pEngine->Time() + fTime;
+		m_NextTooltip.push(new CToolTip(msg, NULL));
+		m_fNextBotServerMessage = engine->Time() + fTime;
 	}
 }
 
-void CClients::giveMessage(char *msg,float fTime, edict_t *pPlayer )
+void CClients::GiveMessage(char *msg, float fTime, edict_t *pPlayer)
 {
 	CClient *pClient;
 
-	if ( pPlayer != NULL )
+	if (pPlayer != NULL)
 	{
-		pClient = get(pPlayer);
-		
-		if ( pClient )
-			pClient->giveMessage(msg,fTime);
+		pClient = Get(pPlayer);
+
+		if (pClient)
+			pClient->GiveMessage(msg, fTime);
 	}
 	else
 	{
-		for ( int i = 0; i < 32; i ++ )
+		for (int i = 0; i < 32; i++)
 		{
-			pClient = get(i);
+			pClient = Get(i);
 
-			if ( pClient )
+			if (pClient)
 			{
-				pClient->giveMessage(msg,fTime);
+				pClient->GiveMessage(msg, fTime);
 			}
 		}
 	}
 }
 
-const char *CClient :: getName ()
+const char *CClient::GetName()
 {
-	IPlayerInfo *playerinfo = playerinfomanager->GetPlayerInfo( m_pPlayer );
+	IPlayerInfo *playerinfo = playerinfomanager->GetPlayerInfo(m_pPlayer);
 
-	if ( playerinfo )
+	if (playerinfo)
 		return playerinfo->GetName();
 
 	return NULL;
 }
 
-void CClient ::setTeleportVector()
+void CClient::SetTeleportVector()
 {
-	m_vTeleportVector = getOrigin();
+	m_vTeleportVector = GetOrigin();
 	m_bTeleportVectorValid = true;
 }
 
-void CClient :: clientActive ()
+void CClient::ClientActive()
 {
 	// get steam id
-	IPlayerInfo *playerinfo = playerinfomanager->GetPlayerInfo( m_pPlayer );
+	IPlayerInfo *playerinfo = playerinfomanager->GetPlayerInfo(m_pPlayer);
 
 	m_szSteamID = NULL;
 
-	if ( playerinfo )
+	if (playerinfo)
 	{
 		// store steam id
 		m_szSteamID = (char*)playerinfo->GetNetworkIDString();
 	}
 }
 // this player joins with pPlayer edict
-void CClient :: clientConnected ( edict_t *pPlayer )
+void CClient::ClientConnected(edict_t *pPlayer)
 {
-	init();
+	Init();
 	// set player edict
-	setEdict(pPlayer);
+	SetEdict(pPlayer);
 }
 
-void CClient :: updateCurrentWaypoint ()
+void CClient::UpdateCurrentWaypoint()
 {
-	setWaypoint(CWaypointLocations::NearestWaypoint(getOrigin(),50,-1,false,true,false,NULL,false,0,false,false,Vector(0,0,0),m_iWaypointShowFlags));
+	SetWaypoint(CWaypointLocations::NearestWaypoint(GetOrigin(), 50, -1, false, true, false, NULL, false, 0, false, false, Vector(0, 0, 0), m_iWaypointShowFlags));
 }
 // this player disconnects
-void CClient :: clientDisconnected ()
+void CClient::ClientDisconnected()
 {
 	// is bot?
-	CBot *pBot = CBots::getBotPointer(m_pPlayer);
+	CBot *pBot = CBots::GetBotPointer(m_pPlayer);
 
-	if ( pBot != NULL )
+	if (pBot != NULL)
 	{
-		if ( pBot->inUse() )
+		if (pBot->InUse())
 		{
 			// free bots memory and other stuff
-			pBot->freeAllMemory();
+			pBot->FreeAllMemory();
 		}
 	}
 
-	if ( !g_pEngine->IsDedicatedServer() )
+	if (!engine->IsDedicatedServer())
 	{
-		if ( CClients::isListenServerClient(this) )
+		if (CClients::IsListenServerClient(this))
 		{
-			CClients::setListenServerClient(NULL);
+			CClients::SetListenServerClient(NULL);
 		}
 	}
 
-	/*extern IServerGameEnts *servergameents;
-
-	DWORD *baseentity = ( DWORD* )*( DWORD* )servergameents->EdictToBaseEntity(m_pPlayer);
-
-	if ( baseentity == GiveNamedItemHookedClass )
-		UnhookGiveNamedItem();
-		*/
-	init();
+	Init();
 }
 
-bool CClient :: isUsed ()
+bool CClient::IsUsed()
 {
 	return (m_pPlayer != NULL);
 }
 
-Vector CClient :: getOrigin ()
+Vector CClient::GetOrigin()
 {
-	IPlayerInfo *playerinfo = playerinfomanager->GetPlayerInfo( m_pPlayer );
+	IPlayerInfo *playerinfo = playerinfomanager->GetPlayerInfo(m_pPlayer);
 
-	if ( playerinfo )
+	if (playerinfo)
 	{
-		return  playerinfo->GetAbsOrigin() + Vector(0,0,32);
+		return  playerinfo->GetAbsOrigin() + Vector(0, 0, 32);
 	}
 
-	return CBotGlobals::entityOrigin(m_pPlayer) + Vector(0,0,32);//m_pPlayer->GetCollideable()->GetCollisionOrigin();
+	return CBotGlobals::EntityOrigin(m_pPlayer) + Vector(0, 0, 32);//m_pPlayer->GetCollideable()->GetCollisionOrigin();
 }
 
-void CClients :: clientActive ( edict_t *pPlayer )
+void CClients::ClientActive(edict_t *pPlayer)
 {
-	CClient *pClient = &m_Clients[slotOfEdict(pPlayer)];
+	CClient *pClient = &m_Clients[SlotOfEdict(pPlayer)];
 
-	pClient->clientActive();
+	pClient->ClientActive();
 }
 
-CClient *CClients :: clientConnected ( edict_t *pPlayer )
+CClient *CClients::ClientConnected(edict_t *pPlayer)
 {
-	CClient *pClient = &m_Clients[slotOfEdict(pPlayer)];
+	CClient *pClient = &m_Clients[SlotOfEdict(pPlayer)];
 
-	pClient->clientConnected(pPlayer);
+	pClient->ClientConnected(pPlayer);
 
 	return pClient;
 }
 
-void CClients :: init ( edict_t *pPlayer )
+void CClients::Init(edict_t *pPlayer)
 {
-	m_Clients[slotOfEdict(pPlayer)].init();
+	m_Clients[SlotOfEdict(pPlayer)].Init();
 }
 
-void CClients :: clientDisconnected ( edict_t *pPlayer )
+void CClients::ClientDisconnected(edict_t *pPlayer)
 {
-	CClient *pClient = &m_Clients[slotOfEdict(pPlayer)];
+	CClient *pClient = &m_Clients[SlotOfEdict(pPlayer)];
 
-	pClient->clientDisconnected();
+	pClient->ClientDisconnected();
 }
 
-void CClients :: clientThink ()
+void CClients::ClientThink()
 {
 	static CClient *pClient;
 
@@ -1092,119 +1082,119 @@ void CClients :: clientThink ()
 
 	m_bClientsDebugging = false;
 
-	for ( int i = 0; i < MAX_PLAYERS; i ++ )
+	for (int i = 0; i < MAX_PLAYERS; i++)
 	{
 		pClient = &m_Clients[i];
 
-		if ( !pClient->isUsed() )
+		if (!pClient->IsUsed())
 			continue;
-		if ( !m_bClientsDebugging && pClient->isDebugging() )
+		if (!m_bClientsDebugging && pClient->IsDebugging())
 			m_bClientsDebugging = true;
 
-		pPlayer = pClient->getPlayer();
-	
-		if ( pPlayer && pPlayer->GetIServerEntity() )
-			pClient->think();
+		pPlayer = pClient->GetPlayer();
+
+		if (pPlayer && pPlayer->GetIServerEntity())
+			pClient->Think();
 	}
 }
 
-CClient *CClients :: findClientBySteamID ( char *szSteamID )
+CClient *CClients::FindClientBySteamID(char *szSteamID)
 {
 	CClient *pClient;
 
-	for ( int i = 0; i < MAX_PLAYERS; i ++ )
+	for (int i = 0; i < MAX_PLAYERS; i++)
 	{
 		pClient = &m_Clients[i];
 
-		if ( pClient->isUsed() )
+		if (pClient->IsUsed())
 		{
-			if ( FStrEq(pClient->getSteamID(),szSteamID) )
+			if (FStrEq(pClient->GetSteamID(), szSteamID))
 				return pClient;
 		}
-	}	
+	}
 
 	return NULL;
 }
 
-void CClients::clientDebugMsg(CBot *pBot, int iLev, const char *fmt, ... )
+void CClients::ClientDebugMsg(CBot *pBot, int iLev, const char *fmt, ...)
 {
-	va_list argptr; 
+	va_list argptr;
 	static char string[1024];
 
-	va_start (argptr, fmt);
-	vsprintf (string, fmt, argptr); 
-	va_end (argptr); 
+	va_start(argptr, fmt);
+	vsprintf(string, fmt, argptr);
+	va_end(argptr);
 
-	clientDebugMsg(iLev,string,pBot);
+	ClientDebugMsg(iLev, string, pBot);
 }
 
 const char *g_szDebugTags[15] =
 {
-"GAME_EVENT",
-"NAV",
-"SPEED",
-"VIS",
-"TASK",
-"BUTTONS",
-"USERCMD",
-"UTIL",
-"PROFILE",
-"EDICTS",
-"THINK",
-"LOOK",
-"HUD",
-"AIM",
-"CHAT"
+	"GAME_EVENT",
+	"NAV",
+	"SPEED",
+	"VIS",
+	"TASK",
+	"BUTTONS",
+	"USERCMD",
+	"UTIL",
+	"PROFILE",
+	"EDICTS",
+	"THINK",
+	"LOOK",
+	"HUD",
+	"AIM",
+	"CHAT"
 };
 
 
-void CClients :: clientDebugMsg ( int iLev, const char *szMsg, CBot *pBot )
+void CClients::ClientDebugMsg(int iLev, const char *szMsg, CBot *pBot)
 {
 	CClient *pClient;
 
-	for ( int i = 0; i < MAX_PLAYERS; i ++ )
+	for (int i = 0; i < MAX_PLAYERS; i++)
 	{
 		pClient = &m_Clients[i];
 
-		if ( !pClient->isUsed() )
+		if (!pClient->IsUsed())
 			continue;
-		if ( !pClient->isDebugOn(iLev) )
+		if (!pClient->IsDebugOn(iLev))
 			continue;
-		if ( pBot && !pClient->isDebuggingBot(pBot->getEdict()) )
+		if (pBot && !pClient->IsDebuggingBot(pBot->GetEdict()))
 			continue;
 
-		if (pClient->isDebugOn(BOT_DEBUG_CHAT)) {
-			char logmsg[128] = {0};
-			snprintf(logmsg, sizeof(logmsg),"[DEBUG %s] %s",g_szDebugTags[iLev],szMsg);
-			AFKBot::HudTextMessage(pClient->getPlayer(), logmsg);
+		if (pClient->IsDebugOn(BOT_DEBUG_CHAT)) {
+			char logmsg[128] = { 0 };
+			snprintf(logmsg, sizeof(logmsg), "[DEBUG %s] %s", g_szDebugTags[iLev], szMsg);
+			AFKBot::HudTextMessage(pClient->GetPlayer(), logmsg);
 		}
 
-		CBotGlobals::botMessage(pClient->getPlayer(),0,"[DEBUG %s] %s",g_szDebugTags[iLev],szMsg);
+		CBotGlobals::BotMessage(pClient->GetPlayer(), 0, "[DEBUG %s] %s", g_szDebugTags[iLev], szMsg);
 	}
 }
 
-	// get index in array
-int CClients :: slotOfEdict ( edict_t *pPlayer )
+// get index in array
+int CClients::SlotOfEdict(edict_t *pPlayer)
 {
-	return ENTINDEX(pPlayer)-1;
+	return ENTINDEX(pPlayer) - 1;
 }
 
-bool CClients :: clientsDebugging (int iLev)
+bool CClients::ClientsDebugging(int iLev)
 {
-	if ( iLev == 0 )
+	if (iLev == 0)
 		return m_bClientsDebugging;
-	else if ( m_bClientsDebugging )
+	else if (m_bClientsDebugging)
 	{
 		int i;
 		CClient *pClient;
 
-		for ( i = 0; i < MAX_PLAYERS; i ++ )
+		for (i = 0; i < MAX_PLAYERS; i++)
 		{
-			pClient = CClients::get(i);
+			pClient = CClients::Get(i);
 
-			if ( pClient->isUsed() )
+			if (pClient->IsUsed())
 			{
-				if ( pClient->isDebugOn(iLev) )
+				if (pClient->IsDebugOn(iLev))
 					return true;
 			}
 		}
@@ -1213,32 +1203,32 @@ bool CClients :: clientsDebugging (int iLev)
 	return false;
 }
 
-void CClient :: setWaypointCut (CWaypoint *pWaypoint)
+void CClient::SetWaypointCut(CWaypoint *pWaypoint)
 {
-	if ( pWaypoint )
+	if (pWaypoint)
 	{
 		register int i = 0;
 
-		setWaypointCopy(pWaypoint);
+		SetWaypointCopy(pWaypoint);
 
 		m_WaypointCutPaths.clear();
 
-		for ( i = 0; i < pWaypoint->numPaths(); i ++ )
+		for (i = 0; i < pWaypoint->NumPaths(); i++)
 		{
-			m_WaypointCutPaths.push_back(pWaypoint->getPath(i));
+			m_WaypointCutPaths.push_back(pWaypoint->GetPath(i));
 		}
 
 		m_WaypointCopyType = WPT_COPY_CUT;
 	}
 }
 
-void CClient :: setWaypointCopy (CWaypoint *pWaypoint) 
+void CClient::SetWaypointCopy(CWaypoint *pWaypoint)
 {
-	if (pWaypoint) 
-	{ 
-		m_fCopyWptRadius = pWaypoint->getRadius();
-		m_iCopyWptFlags = pWaypoint->getFlags();
-		m_iCopyWptArea = pWaypoint->getArea();
+	if (pWaypoint)
+	{
+		m_fCopyWptRadius = pWaypoint->GetRadius();
+		m_iCopyWptFlags = pWaypoint->GetFlags();
+		m_iCopyWptArea = pWaypoint->GetArea();
 		m_WaypointCopyType = WPT_COPY_COPY;
-	} 
+	}
 }

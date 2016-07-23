@@ -20,10 +20,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game g_pEngine ("HL
- *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game engine ("HL
+ *    engine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL g_pEngine and MODs
+ *    respects for all of the code used other than the HL engine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -54,11 +54,11 @@ typedef struct
 class CRCBotTF2UtilFile
 {
 public:
-	static void addUtilPerturbation (eBotAction iAction, eTF2UtilType iUtil, float fUtility[9][2]);
+	static void AddUtilPerturbation (eBotAction iAction, eTF2UtilType iUtil, float fUtility[9][2]);
 
-	static void init ();
+	static void Init ();
 
-	static void loadConfig ();
+	static void LoadConfig ();
 	// 2 Teams / 2 Types Attack/Defend / 
 	static bot_util_t m_fUtils[UTIL_TYPE_MAX][BOT_UTIL_MAX][9];
 };
@@ -67,16 +67,16 @@ public:
 class CBotConfigFile
 {
 public:
-	static void load ();
+	static void Load ();
 
-	static void reset ()
+	static void Reset ()
 	{
 		m_iCmd = 0;
 		m_fNextCommandTime = 0.0f;
 	}
 
-	static void doNextCommand ();
-	static void executeCommands ();
+	static void DoNextCommand ();
+	static void ExecuteCommands ();
 
 private:
 	static vector <char *> m_Commands;

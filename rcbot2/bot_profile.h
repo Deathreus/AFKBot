@@ -7,21 +7,21 @@ using namespace std;
 class CBotProfile
 {
 public:
-	CBotProfile () 
+	CBotProfile()
 	{
-		memset(this,0,sizeof(CBotProfile));
+		memset(this, 0, sizeof(CBotProfile));
 	}
-	CBotProfile ( CBotProfile &other );
+	CBotProfile(CBotProfile &other);
 	// setup profile
-	CBotProfile ( 
-		const char *szModel, 
-		int iVisionTicks, 
-		int iPathTicks, 
+	CBotProfile(
+		const char *szModel,
+		int iVisionTicks,
+		int iPathTicks,
 		int iVisionTicksClients,
 		int iSensitivity,
 		float fBraveness,
 		float fAimSkill,
-		int iClass = 0 );
+		int iClass = 0);
 
 	// bot's name
 	char *m_szName;
@@ -40,15 +40,15 @@ public:
 class CBotProfiles
 {
 public:
-	static void deleteProfiles ();
+	static void DeleteProfiles();
 
 	// find profiles and setup list
-	static void setupProfiles ();
+	static void SetupProfiles();
 
 	// return a profile unused by a bot
-	static CBotProfile *getRandomFreeProfile ();
+	static CBotProfile *GetRandomFreeProfile();
 
-	static CBotProfile *getDefaultProfile ();
+	static CBotProfile *GetDefaultProfile();
 
 private:
 	static vector <CBotProfile*> m_Profiles;

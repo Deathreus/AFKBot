@@ -11,12 +11,12 @@ class CAFKBotKeyValue
 public:
 	CAFKBotKeyValue(const char *szKey, char *szValue);
 
-	char *getKey ()
+	char *GetKey()
 	{
 		return m_szKey;
 	}
 
-	char *getValue ()
+	char *GetValue()
 	{
 		return m_szValue;
 	}
@@ -31,21 +31,21 @@ class CAFKBotKeyValueList
 public:
 	~CAFKBotKeyValueList();
 
-	void parseFile ( FILE *fp );
+	void ParseFile(FILE *fp);
 
-	//unsigned int size ();
+	//unsigned int Size ();
 
-	//CAFKBotKeyValue *getKV ( unsigned int iIndex );
+	//CAFKBotKeyValue *GetKV ( unsigned int iIndex );
 
-	bool getInt ( const char *key, int *val );
+	bool GetInt(const char *key, int *val);
 
-	bool getString ( const char *key, char **val );
+	bool GetString(const char *key, char **val);
 
-	bool getFloat ( const char *key, float *val );
+	bool GetFloat(const char *key, float *val);
 
 private:
 
-	CAFKBotKeyValue *getKV ( const char *key );
+	CAFKBotKeyValue *GetKV(const char *key);
 
 	vector <CAFKBotKeyValue*> m_KVs;
 };

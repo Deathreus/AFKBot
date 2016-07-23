@@ -8,7 +8,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #endif
 
 #ifndef SM_GENERATED_BUILD
-#define BINARY_NAME "tf2items.ext.2.ep2v.dll\0"
+#define BINARY_NAME "tfdodgeball.ext.dll\0"
 #endif
 
 VS_VERSION_INFO VERSIONINFO
@@ -28,13 +28,13 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "Comments", "TF2Items Extension"
-            VALUE "FileDescription", "SourceMod TF2Items Extension"
+            VALUE "Comments", "TFDodgeball Extension"
+            VALUE "FileDescription", "SourceMod TFDodgeball Extension"
             VALUE "FileVersion", SM_BUILD_UNIQUEID
-            VALUE "InternalName", "TF2Items"
-            VALUE "LegalCopyright", "Copyright (C) 2011 Asher Baker (asherkin)"
+            VALUE "InternalName", "TFDodgeball"
+            VALUE "LegalCopyright", "Copyright (c) 2011, Asher Baker"
             VALUE "OriginalFilename", BINARY_NAME
-            VALUE "ProductName", "TF2Items Extension"
+            VALUE "ProductName", "TFDodgeball Extension"
             VALUE "ProductVersion", SM_FULL_VERSION
         END
     END

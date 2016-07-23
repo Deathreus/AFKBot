@@ -20,10 +20,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game g_pEngine ("HL
- *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game Engine ("HL
+ *    Engine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL g_pEngine and MODs
+ *    respects for all of the code used other than the HL Engine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -36,34 +36,14 @@
 //
 //============================================================================//
 
-#include <stdio.h>
-#include <math.h>
-
-//#define GAME_DLL
-
-//#include "cbase.h"
 #include "mathlib.h"
 #include "vector.h"
-#include "vplane.h"
-#include "eiface.h"
-#ifdef __linux__
-#include "shareddefs.h" //bir3yk
-#endif
-#include "usercmd.h"
 #include "bitbuf.h"
 #include "in_buttons.h"
-#include "ndebugoverlay.h"
 #include "tier0/threadtools.h" // for critical sections
 #include "vstdlib/vstdlib.h"
 #include "vstdlib/random.h" // for random functions
 #include "iservernetworkable.h" // may come in handy
-#ifdef __linux__
-#include "shake.h"    //bir3yk
-#endif
-
-//#include "cbase.h"
-//#include "basehlcombatweapon.h"
-//#include "basecombatcharacter.h"
 
 #include "bot.h"
 #include "bot_schedule.h"
@@ -87,15 +67,13 @@
 #include "bot_waypoint_locations.h"
 #include "bot_waypoint.h"
 #include "bot_squads.h"
-
-#include "bot_mtrand.h"
-//#include "vstdlib/random.h" // for random functions
-
+//#include "bot_mtrand.h"
 #include "bot_getprop.h"
-#include "bot_profiling.h"
-
 #include "bot_client.h"
-#include "bot_plugin_meta.h"
+
+#ifdef GetClassName
+#undef GetClassName
+#endif
 
 #define DEG_TO_RAD(x) (x)*0.0174533
 #define RAD_TO_DEG(x) (x)*57.29578
@@ -103,34 +81,29 @@
 // for critical sections
 CThreadMutex g_MutexAddBot;
 
-//extern void HookPlayerRunCommand ( edict_t *edict );
-
 // instantiate bots -- make different for different mods
 CBot **CBots::m_Bots = NULL;
 
-const float CBot :: m_fAttackLowestHoldTime = 0.1f;
-const float CBot :: m_fAttackHighestHoldTime = 0.6f;
-const float CBot :: m_fAttackLowestLetGoTime = 0.1f;
-const float CBot :: m_fAttackHighestLetGoTime = 0.5f;
-bool CBots :: m_bControlBotsOnly = false;
-bool CBots :: m_bControlNext = false;
-queue<edict_t*> CBots :: m_ControlQueue;
+const float CBot::m_fAttackLowestHoldTime = 0.1f;
+const float CBot::m_fAttackHighestHoldTime = 0.6f;
+const float CBot::m_fAttackLowestLetGoTime = 0.1f;
+const float CBot::m_fAttackHighestLetGoTime = 0.5f;
+bool CBots::m_bControlBotsOnly = false;
+bool CBots::m_bControlNext = false;
+queue<edict_t*> CBots::m_ControlQueue;
 
-int CBots :: m_iMaxBots = -1;
-int CBots :: m_iMinBots = -1;
-// add or kick bot time
-float  CBots :: m_flAddKickBotTime = 0;
+/*	to be used...
+int CBots::m_iMaxBots = -1;
+int CBots::m_iMinBots = -1;
+*/
 
 #define TICK_INTERVAL			(gpGlobals->interval_per_tick)
 #define TIME_TO_TICKS( dt )		( (int)( 0.5f + (float)(dt) / TICK_INTERVAL ) )
 
-extern IVDebugOverlay *debugoverlay;
-extern IServerGameEnts *servergameents;
-
 extern ConVar bot_use_vc_commands;
-extern ConVar rcbot_dont_move;
+extern ConVar bot_dont_move;
 
-const char *g_szLookTaskToString[LOOK_MAX] = 
+const char *g_szLookTaskToString[LOOK_MAX] =
 {
 	"LOOK_NONE",
 	"LOOK_VECTOR",
@@ -149,31 +122,31 @@ const char *g_szLookTaskToString[LOOK_MAX] =
 };
 
 // Borrowed from RCBot1
-bool BotFunc_BreakableIsEnemy ( edict_t *pBreakable, edict_t *pEdict )
+bool BotFunc_BreakableIsEnemy(edict_t *pBreakable, edict_t *pEdict)
 {
-	int flags = CClassInterface::getPlayerFlags(pBreakable);
+	int flags = CClassInterface::GetPlayerFlags(pBreakable);
 
 	// i. explosives required to blow breakable
 	// ii. OR is not a world brush (non breakable) and can be broken by shooting
-	if ( !(flags & FL_WORLDBRUSH) )
+	if (!(flags & FL_WORLDBRUSH))
 	{
 		Vector vSize = pBreakable->GetCollideable()->OBBMaxs() - pBreakable->GetCollideable()->OBBMins();
 		Vector vMySize = pEdict->GetCollideable()->OBBMaxs() - pEdict->GetCollideable()->OBBMins();
-		
-		if ( (vSize.x >= vMySize.x) ||
+
+		if ((vSize.x >= vMySize.x) ||
 			(vSize.y >= vMySize.y) ||
-			(vSize.z >= (vMySize.z/2)) ) // this breakable could block my path
+			(vSize.z >= (vMySize.z / 2))) // this breakable could block my path
 		{
 			// 00000000001111111111222222222233333333334
 			// 01234567890123456789012345678901234567890
 			// models/props_c17/oildrum001_explosive.mdl
 			const char *model = pBreakable->GetIServerEntity()->GetModelName().ToCStr();
 
-			if ( (model[13] == 'c') && (model[17] == 'o') && (model[20] == 'd') && (model[28]== 'e') ) // explosive
+			if ((model[13] == 'c') && (model[17] == 'o') && (model[20] == 'd') && (model[28] == 'e')) // explosive
 				return false;
 			// Only shoot breakables that are bigger than me (crouch size)
 			// or that target something...
-			return ( CClassInterface::getPlayerHealth(pBreakable)<1000 ); // breakable still visible (not broken yet)
+			return (CClassInterface::GetPlayerHealth(pBreakable) < 1000); // breakable still visible (not broken yet)
 		}
 	}
 
@@ -183,100 +156,100 @@ bool BotFunc_BreakableIsEnemy ( edict_t *pBreakable, edict_t *pEdict )
 ///////////////////////////////////////
 // voice commands
 ////////////////////////////////////////////////
-void CBroadcastVoiceCommand :: execute ( CBot *pBot )
+void CBroadcastVoiceCommand::Execute(CBot *pBot)
 {
-	if ( !m_pPlayer )
+	if (!m_pPlayer)
 		return;
 
-	if ( m_pPlayer == pBot->getEdict() )
+	if (m_pPlayer == pBot->GetEdict())
 		return;
 
-	if ( pBot->isEnemy(m_pPlayer,false) )
+	if (pBot->IsEnemy(m_pPlayer, false))
 	{
 		// listen to enemy voice commands if they are nearby
-		if ( pBot->wantToListen() && pBot->wantToListenToPlayerAttack(m_pPlayer) && (pBot->distanceFrom(m_pPlayer) < CWaypointLocations::REACHABLE_RANGE) )
-			pBot->listenToPlayer(m_pPlayer,true,false);
+		if (pBot->WantToListen() && pBot->WantToListenToPlayerAttack(m_pPlayer) && (pBot->DistanceFrom(m_pPlayer) < CWaypointLocations::REACHABLE_RANGE))
+			pBot->ListenToPlayer(m_pPlayer, true, false);
 	}
 	else
-		pBot->hearVoiceCommand(m_pPlayer,m_VoiceCmd);
+		pBot->HearVoiceCommand(m_pPlayer, m_VoiceCmd);
 }
 ///////////////////////////////////////
-void CBot :: runPlayerMove()
+void CBot::RunPlayerMove()
 {
-	extern ConVar rcbot_move_forward;
+	extern ConVar bot_move_forward;
 	extern ConVar bot_attack;
 
-	int cmdnumbr = cmd.command_number+1;
+	int cmdnumbr = m_pCmd.command_number + 1;
 
 	//////////////////////////////////
-	Q_memset( &cmd, 0, sizeof( cmd ) );
+	Q_memset(&m_pCmd, 0, sizeof(m_pCmd));
 	//////////////////////////////////
 
-	if ( rcbot_dont_move.GetBool() )
+	if (bot_dont_move.GetBool())
 	{
-		cmd.forwardmove = 0;
-		cmd.sidemove = 0;
+		m_pCmd.forwardmove = 0;
+		m_pCmd.sidemove = 0;
 	}
 	else
 	{
-		cmd.forwardmove = m_fForwardSpeed;
-		cmd.sidemove = m_fSideSpeed;
-		cmd.upmove = m_fUpSpeed;
+		m_pCmd.forwardmove = m_fForwardSpeed;
+		m_pCmd.sidemove = m_fSideSpeed;
+		m_pCmd.upmove = m_fUpSpeed;
 	}
 
-	cmd.buttons = m_iButtons;
-	cmd.impulse = m_iImpulse;
-	cmd.viewangles = m_vViewAngles;
-	cmd.weaponselect = m_iSelectWeapon;
-	cmd.tick_count = gpGlobals->tickcount;
-	cmd.command_number = cmdnumbr;
+	m_pCmd.buttons = m_iButtons;
+	m_pCmd.impulse = m_iImpulse;
+	m_pCmd.viewangles = m_vViewAngles;
+	m_pCmd.weaponselect = m_iSelectWeapon;
+	m_pCmd.tick_count = gpGlobals->tickcount;
+	m_pCmd.command_number = cmdnumbr;
 
-	if ( bot_attack.GetInt() == 1 )
-		cmd.buttons = IN_ATTACK;
+	if (bot_attack.GetInt() == 1)
+		m_pCmd.buttons = IN_ATTACK;
 
 	m_iSelectWeapon = 0;
 	m_iImpulse = 0;
 
-	if ( CClients::clientsDebugging(BOT_DEBUG_BUTTONS) )
+	if (CClients::ClientsDebugging(BOT_DEBUG_BUTTONS))
 	{
-			char dbg[512];
+		char dbg[512];
 
-			sprintf(dbg,"m_pButtons = %d/%x, Weapon Select = %d, impulse = %d",cmd.buttons,cmd.buttons,cmd.weaponselect,cmd.impulse);
+		sprintf(dbg, "m_pButtons = %d/%x, Weapon Select = %d, impulse = %d", m_pCmd.buttons, m_pCmd.buttons, m_pCmd.weaponselect, m_pCmd.impulse);
 
-			CClients::clientDebugMsg(BOT_DEBUG_BUTTONS,dbg,this);
+		CClients::ClientDebugMsg(BOT_DEBUG_BUTTONS, dbg, this);
 	}
 }
 
-bool CBot :: startGame ()
+bool CBot::StartGame()
 {
 	return true;
 }
 
 // returns true if offset has been applied when not before
-bool CBot :: walkingTowardsWaypoint ( CWaypoint *pWaypoint, bool *bOffsetApplied, Vector &vOffset )
+bool CBot::WalkingTowardsWaypoint(CWaypoint *pWaypoint, bool *bOffsetApplied, Vector &vOffset)
 {
-	if ( pWaypoint->hasFlag(CWaypointTypes::W_FL_CROUCH) )
+	if (pWaypoint->HasFlag(CWaypointTypes::W_FL_CROUCH))
 	{
-		duck(true);
+		Duck(true);
 	}
-	
-	if ( pWaypoint->hasFlag(CWaypointTypes::W_FL_LIFT) )
+
+	if (pWaypoint->HasFlag(CWaypointTypes::W_FL_LIFT))
 	{
-		updateCondition(CONDITION_LIFT);
+		UpdateCondition(CONDITION_LIFT);
 	}
 	else
 	{
-		removeCondition(CONDITION_LIFT);
+		RemoveCondition(CONDITION_LIFT);
 	}
 
-	if ( !*bOffsetApplied )
+	if (!*bOffsetApplied)
 	{
-		float fRadius = pWaypoint->getRadius();
+		float fRadius = pWaypoint->GetRadius();
 
-		if ( fRadius > 0 )
-			vOffset = Vector(randomFloat(-fRadius,fRadius),randomFloat(-fRadius,fRadius),0);
+		if (fRadius > 0)
+			vOffset = Vector(RandomFloat(-fRadius, fRadius), RandomFloat(-fRadius, fRadius), 0);
 		else
-			vOffset = Vector(0,0,0);
+			vOffset = Vector(0, 0, 0);
 
 		*bOffsetApplied = true;
 
@@ -284,44 +257,44 @@ bool CBot :: walkingTowardsWaypoint ( CWaypoint *pWaypoint, bool *bOffsetApplied
 
 		/*if ( CClients::clientsDebugging(BOT_DEBUG_NAV) )
 		{
-			debugoverlay->AddLineOverlay(m_pBot->getOrigin(),pWaypoint->getOrigin() + m_vOffset,255,255,0,true,5.0f);
+		debugoverlay->AddLineOverlay(m_pBot->GetOrigin(), pWaypoint->GetOrigin() + m_vOffset, 255, 255, 0, true, 5.0f);
 		}*/
 	}
 
 	return false;
 }
 
-void CBot :: setEdict ( edict_t *pEdict)
+void CBot::SetEdict(edict_t *pEdict)
 {
 	m_pEdict = pEdict;
 	m_bUsed = true;
 
-	if ( m_pEdict )
+	if (m_pEdict)
 	{
-		m_pPlayerInfo = playerinfomanager->GetPlayerInfo(m_pEdict);	
-		strncpy(m_szBotName,m_pPlayerInfo->GetName(),63);
-		m_szBotName[63]=0;
+		m_pPI = playerinfomanager->GetPlayerInfo(m_pEdict);
+		strncpy(m_szBotName, m_pPI->GetName(), 63);
+		m_szBotName[63] = 0;
 	}
 	else
 	{
 		return;
 	}
 
-	spawnInit();
+	SpawnInit();
 }
 
-bool CBot :: isUnderWater ()
+bool CBot::IsUnderWater()
 {
-	return CClassInterface::getWaterLevel(m_pEdict) > 1; //m_pController->IsEFlagSet(EFL_TOUCHING_FLUID);
+	return CClassInterface::GetWaterLevel(m_pEdict) > 1; //m_pController->IsEFlagSet(EFL_TOUCHING_FLUID);
 }
 
 // return false if there is a problem
-bool CBot :: createBotFromEdict(edict_t *pEdict, CBotProfile *pProfile)
+bool CBot::CreateBotFromEdict(edict_t *pEdict, CBotProfile *pProfile)
 {
-	init();
-	setEdict(pEdict);
-	setup();
-	m_fTimeCreated = g_pEngine->Time();
+	Init();
+	SetEdict(pEdict);
+	Setup();
+	m_fTimeCreated = engine->Time();
 
 	/////////////////////////////
 
@@ -333,124 +306,121 @@ bool CBot :: createBotFromEdict(edict_t *pEdict, CBotProfile *pProfile)
 	return true;
 }
 
-bool CBot :: FVisible ( Vector &vOrigin, edict_t *pDest )
+bool CBot::FVisible(Vector &vOrigin, edict_t *pDest)
 {
 	//return CBotGlobals::isVisible(m_pEdict,getEyePosition(),vOrigin);
 	// fix bots seeing through gates/doors
-	return CBotGlobals::isVisibleHitAllExceptPlayer(m_pEdict,getEyePosition(),vOrigin,pDest);
+	return CBotGlobals::IsVisibleHitAllExceptPlayer(m_pEdict, GetEyePosition(), vOrigin, pDest);
 
 }
 
-bool CBot :: FVisible ( edict_t *pEdict, bool bCheckHead )
+bool CBot::FVisible(edict_t *pEdict, bool bCheckHead)
 {
 	static Vector eye;
 
 	// use special hit traceline for players so bots dont shoot through things 
 	// For players -- do two tracelines -- one at the origin and one at the head (for headshots)
-	if ( bCheckHead || (pEdict == m_pEnemy) || CBotGlobals::isPlayer(pEdict) )
+	if (bCheckHead || (pEdict == m_pEnemy) || CBotGlobals::IsPlayer(pEdict))
 	{
 		Vector vOrigin;
 		Vector vHead;
 
 		// use this method to get origin -- quicker 
 		vOrigin = pEdict->GetCollideable()->GetCollisionOrigin();
-		vHead = vOrigin+Vector(0,0,pEdict->GetCollideable()->OBBMaxs().z);
+		vHead = vOrigin + Vector(0, 0, pEdict->GetCollideable()->OBBMaxs().z);
 
-		if ( FVisible(vHead,pEdict) )
+		if (FVisible(vHead, pEdict))
 		{
-			if ( m_pEnemy == pEdict )
+			if (m_pEnemy == pEdict)
 			{
-				updateCondition(CONDITION_SEE_ENEMY_HEAD);
+				UpdateCondition(CONDITION_SEE_ENEMY_HEAD);
 
-				if ( FVisible(vOrigin,pEdict) )
-					updateCondition(CONDITION_SEE_ENEMY_GROUND);
+				if (FVisible(vOrigin, pEdict))
+					UpdateCondition(CONDITION_SEE_ENEMY_GROUND);
 				else
-					removeCondition(CONDITION_SEE_ENEMY_GROUND);
+					RemoveCondition(CONDITION_SEE_ENEMY_GROUND);
 			}
 
 			return true;
 		}
 		/*
 #if defined(_DEBUG) && !defined(__linux__)
-		else if ( CClients::clientsDebugging(BOT_DEBUG_VIS) && (CBotGlobals::getTraceResult()->m_pEnt != NULL) )
+		else if (CClients::clientsDebugging(BOT_DEBUG_VIS) && (CBotGlobals::GetTraceResult()->m_pEnt != NULL))
 		{
-			extern IServerGameEnts *servergameents;
+		extern IServerGameEnts *servergameents;
 
-			edict_t *edict = servergameents->BaseEntityToEdict(CBotGlobals::getTraceResult()->m_pEnt);
+		edict_t *edict = servergameents->BaseEntityToEdict(CBotGlobals::GetTraceResult()->m_pEnt);
 
-			if ( edict )
-				debugoverlay->AddTextOverlay(CBotGlobals::getTraceResult()->endpos,2.0f,"Traceline hit %s",edict->GetClassName());
+		if (edict)
+		debugoverlay->AddTextOverlay(CBotGlobals::GetTraceResult()->endpos, 2.0f, "Traceline hit %s", edict->GetClassName());
 		}
-#endif */
-		if ( m_pEnemy == pEdict )
+		#endif */
+		if (m_pEnemy == pEdict)
 		{
-			if ( FVisible(vOrigin,pEdict) )
+			if (FVisible(vOrigin, pEdict))
 			{
-				updateCondition(CONDITION_SEE_ENEMY_GROUND);
+				UpdateCondition(CONDITION_SEE_ENEMY_GROUND);
 				return true;
 			}
 			else
 			{
-				removeCondition(CONDITION_SEE_ENEMY_GROUND);
+				RemoveCondition(CONDITION_SEE_ENEMY_GROUND);
 				return false;
 			}
 		}
 
-		return FVisible(vOrigin,pEdict);
+		return FVisible(vOrigin, pEdict);
 	}
 
-	eye = getEyePosition();
+	eye = GetEyePosition();
 
 	// use typical traceline for non players
-	return CBotGlobals::isVisible(m_pEdict,eye,pEdict);//CBotGlobals::entityOrigin(pEdict)+Vector(0,0,50.0f));
+	return CBotGlobals::IsVisible(m_pEdict, eye, pEdict);//CBotGlobals::entityOrigin(pEdict)+Vector(0,0,50.0f));
 }
 
-inline QAngle CBot :: eyeAngles ()
+inline QAngle CBot::EyeAngles()
 {
-	return CBotGlobals::playerAngles(m_pEdict);
+	return CBotGlobals::PlayerAngles(m_pEdict);
 }
 
-Vector CBot :: getEyePosition ()
+Vector CBot::GetEyePosition()
 {
-	
-	Vector vOrigin;//'/ = getOrigin();
-	//vOrigin.z = m_pPlayerInfo->GetPlayerMaxs().z;
-
-	gameclients->ClientEarPosition(m_pEdict,&vOrigin);
+	Vector vOrigin;
+	gameclients->ClientEarPosition(m_pEdict, &vOrigin);
 
 	return vOrigin;
 }
 
-bool CBot :: checkStuck ()
+bool CBot::CheckStuck()
 {
 	static float fTime;
 
 	float fSpeed;
 	float fIdealSpeed;
 
-	if ( !moveToIsValid() )
+	if (!MoveToIsValid())
 		return false;
-	if ( rcbot_dont_move.GetBool() ) // bots not moving
+	if (bot_dont_move.GetBool()) // bots not moving
 		return false;
-	if ( hasEnemy() )
+	if (HasEnemy())
 		return false;
 
-	fTime = g_pEngine->Time();
+	fTime = engine->Time();
 
-	if ( m_fLastWaypointVisible == 0 )
+	if (m_fLastWaypointVisible == 0)
 	{
 		m_bFailNextMove = false;
 
-		if ( !hasSomeConditions(CONDITION_SEE_WAYPOINT) )
+		if (!HasSomeConditions(CONDITION_SEE_WAYPOINT))
 			m_fLastWaypointVisible = fTime;
 	}
 	else
 	{
-		if ( hasSomeConditions(CONDITION_SEE_WAYPOINT) )
+		if (HasSomeConditions(CONDITION_SEE_WAYPOINT))
 			m_fLastWaypointVisible = 0;
 		else
 		{
-			if ( (m_fLastWaypointVisible + 2.0) < fTime )
+			if ((m_fLastWaypointVisible + 2.0) < fTime)
 			{
 				m_fLastWaypointVisible = 0;
 				m_bFailNextMove = true;
@@ -460,28 +430,28 @@ bool CBot :: checkStuck ()
 		}
 	}
 
-	if ( m_fWaypointStuckTime && (m_fWaypointStuckTime < g_pEngine->Time()) )
+	if (m_fWaypointStuckTime && (m_fWaypointStuckTime < engine->Time()))
 	{
 		m_bFailNextMove = true;
-		m_fWaypointStuckTime = g_pEngine->Time() + randomFloat(15.0f,20.0f);
+		m_fWaypointStuckTime = engine->Time() + RandomFloat(15.0f, 20.0f);
 	}
 
-	if ( m_fCheckStuckTime > fTime )
+	if (m_fCheckStuckTime > fTime)
 		return m_bThinkStuck;
 
-	if ( hasSomeConditions(CONDITION_LIFT) || (onLadder() ))//fabs(m_vMoveTo.z - getOrigin().z) > 48 )
+	if (HasSomeConditions(CONDITION_LIFT) || (OnLadder()))//fabs(m_vMoveTo.z - getOrigin().z) > 48 )
 	{
-		if ( m_vVelocity.z != 0.0f )
+		if (m_vVelocity.z != 0.0f)
 			return false;
 	}
 
 	fSpeed = m_vVelocity.Length();
 	fIdealSpeed = m_fIdealMoveSpeed;
 
-	if ( m_pButtons->holdingButton(IN_DUCK) )
+	if (m_pButtons->HoldingButton(IN_DUCK))
 		fIdealSpeed /= 2;
 
-	if ( fIdealSpeed == 0 )
+	if (fIdealSpeed == 0)
 	{
 		m_bThinkStuck = false; // not stuck
 		m_fPercentMoved = 1.0f;
@@ -489,75 +459,28 @@ bool CBot :: checkStuck ()
 	else
 	{
 		// alpha percentage check
-		m_fPercentMoved = (m_fPercentMoved/2) + ((fSpeed/fIdealSpeed)/2);
+		m_fPercentMoved = (m_fPercentMoved / 2) + ((fSpeed / fIdealSpeed) / 2);
 
-		if ( m_fPercentMoved < 0.1f )
+		if (m_fPercentMoved < 0.1f)
 		{
 			m_bThinkStuck = true;
 			m_fPercentMoved = 0.1f;
 
-			m_pButtons->jump();
-			m_pButtons->duck(0.25f,randomFloat(0.2f,0.4f));
+			m_pButtons->Jump();
+			m_pButtons->Duck(0.25f, RandomFloat(0.2f, 0.4f));
 
-			if ( m_fStrafeTime < g_pEngine->Time() )
+			if (m_fStrafeTime < engine->Time())
 			{
-				reduceTouchDistance();
+				ReduceTouchDistance();
 
-				if ( CBotGlobals::yawAngleFromEdict(m_pEdict,m_vMoveTo) > 0 )
-					m_fSideSpeed = m_fIdealMoveSpeed/2;
+				if (CBotGlobals::YawAngleFromEdict(m_pEdict, m_vMoveTo) > 0)
+					m_fSideSpeed = m_fIdealMoveSpeed / 2;
 				else
-					m_fSideSpeed = -(m_fIdealMoveSpeed/2);
+					m_fSideSpeed = -(m_fIdealMoveSpeed / 2);
 
-				/*
-				CTraceFilterWorldAndPropsOnly filter;
-				Vector vOrigin = getOrigin();
-				QAngle v_eyeangles;
-				Vector vForward;
-				float left = 0;
-				float right = 0;
-
-				Vector vTr;
-
-				v_eyeangles = eyeAngles();
-
-				v_eyeangles.y -= 45;
-
-				CBotGlobals::fixFloatAngle(&(v_eyeangles.y));
-
-				VectorAngles(vForward,v_eyeangles);
-
-				vTr = (vForward / vForward.Length()) * 128;
-
-				CBotGlobals::traceLine(vOrigin,vOrigin + vTr,MASK_SOLID_BRUSHONLY,&filter);
-
-				left = CBotGlobals::getTraceResult()->fraction;
-
-				v_eyeangles.y += 90;
-
-				CBotGlobals::fixFloatAngle(&(v_eyeangles.y));
-
-				VectorAngles(vForward,v_eyeangles);
-
-				vTr = (vForward / vForward.Length()) * 128;
-
-				CBotGlobals::traceLine(vOrigin,vOrigin + vTr,MASK_SOLID_BRUSHONLY,&filter);
-
-				right = CBotGlobals::getTraceResult()->fraction;
-
-
-
-				if ( left > right )
-					m_fSideSpeed = -(m_fIdealMoveSpeed/2);
-				else
-					m_fSideSpeed = m_fIdealMoveSpeed/2;
-
-				m_fStrafeTime = g_pEngine->Time() + 2.0f;
-*/
-				
 			}
 
-
-			m_fCheckStuckTime = g_pEngine->Time() + 2.04f;
+			m_fCheckStuckTime = engine->Time() + 2.04f;
 		}
 		else
 			m_bThinkStuck = false;
@@ -566,67 +489,67 @@ bool CBot :: checkStuck ()
 	return m_bThinkStuck;
 }
 
-bool CBot :: isVisible ( edict_t *pEdict )
+bool CBot::IsVisible(edict_t *pEdict)
 {
-	return m_pVisibles->isVisible(pEdict);
+	return m_pVisibles->IsVisible(pEdict);
 }
 
-bool CBot :: canAvoid ( edict_t *pEntity )
+bool CBot::CanAvoid(edict_t *pEntity)
 {
 	float distance;
 	Vector vAvoidOrigin;
 
 	extern ConVar bot_avoid_radius;
 
-	if ( !CBotGlobals::entityIsValid(pEntity) )
+	if (!CBotGlobals::EntityIsValid(pEntity))
 		return false;
-	if ( m_pEdict == pEntity ) // can't avoid self!!!
+	if (m_pEdict == pEntity) // can't avoid self!!!
 		return false;
-	if ( m_pLookEdict == pEntity )
+	if (m_pLookEdict == pEntity)
 		return false;
-	if ( m_pLastEnemy == pEntity )
+	if (m_pLastEnemy == pEntity)
 		return false;
 
-	vAvoidOrigin = CBotGlobals::entityOrigin(pEntity);
+	vAvoidOrigin = CBotGlobals::EntityOrigin(pEntity);
 
-	distance = distanceFrom(vAvoidOrigin);
+	distance = DistanceFrom(vAvoidOrigin);
 
-	if ( ( distance > 1 ) && ( distance < bot_avoid_radius.GetFloat() ) && (fabs(getOrigin().z - vAvoidOrigin.z) < 32) )
+	if ((distance > 1) && (distance < bot_avoid_radius.GetFloat()) && (fabs(GetOrigin().z - vAvoidOrigin.z) < 32))
 	{
-		SolidType_t solid = pEntity->GetCollideable()->GetSolid() ;
+		SolidType_t solid = pEntity->GetCollideable()->GetSolid();
 
-		if ( (solid == SOLID_BBOX) || (solid == SOLID_VPHYSICS) )
-		{			
-			return isEnemy(pEntity,false);
+		if ((solid == SOLID_BBOX) || (solid == SOLID_VPHYSICS))
+		{
+			return IsEnemy(pEntity, false);
 		}
 	}
 
 	return false;
 }
 
-void CBot :: reachedCoverSpot (int flags)
+void CBot::ReachedCoverSpot(int flags)
 {
 
 }
 
 // something now visiable or not visible anymore
-bool CBot :: setVisible ( edict_t *pEntity, bool bVisible )
+bool CBot::SetVisible(edict_t *pEntity, bool bVisible)
 {
-	bool bValid = (pEntity->GetUnknown()!=NULL);
+	bool bValid = (pEntity->GetUnknown() != NULL);
 
-	if ( bValid && bVisible )
+	if (bValid && bVisible)
 	{
-		if ( canAvoid(pEntity) )
+		if (CanAvoid(pEntity))
 		{
-			if ( (m_pAvoidEntity.get()==NULL) || (distanceFrom(pEntity) < distanceFrom(m_pAvoidEntity)) )
-					m_pAvoidEntity = pEntity;
+			if ((m_pAvoidEntity.Get() == NULL) || (DistanceFrom(pEntity) < DistanceFrom(m_pAvoidEntity)))
+				m_pAvoidEntity = pEntity;
 		}
 	}
 	else
 	{
-		if ( m_pAvoidEntity == pEntity )
+		if (m_pAvoidEntity == pEntity)
 			m_pAvoidEntity = NULL;
-		if ( m_pEnemy == pEntity )
+		if (m_pEnemy == pEntity)
 		{
 			m_pLastEnemy = m_pEnemy;
 		}
@@ -636,192 +559,163 @@ bool CBot :: setVisible ( edict_t *pEntity, bool bVisible )
 	return bValid;
 }
 
-bool CBot :: isUsingProfile ( CBotProfile *pProfile )
+bool CBot::IsUsingProfile(CBotProfile *pProfile)
 {
 	return (m_pProfile == pProfile);
 }
 
-void CBot :: currentlyDead ()
+void CBot::CurrentlyDead()
 {
 	/*if ( m_bNeedToInit )
 	{
-		spawnInit();
-		m_bNeedToInit = false;
+	spawnInit();
+	m_bNeedToInit = false;
 	}*/
 
 	//attack();
 
 	// keep updating until alive
-	m_fSpawnTime = g_pEngine->Time();
+	m_fSpawnTime = engine->Time();
 
 	return;
 }
 
-CBotWeapon *CBot::getCurrentWeapon()
+CBotWeapon *CBot::GetCurrentWeapon()
 {
-	return m_pWeapons->getActiveWeapon(m_pPlayerInfo->GetWeaponName());
+	return m_pWeapons->GetActiveWeapon(m_pPI->GetWeaponName());
 }
 
-void CBot :: selectWeaponSlot ( int iSlot )
+void CBot::SelectWeaponSlot(int iSlot)
 {
 	char cmd[16];
 
-	sprintf(cmd,"slot%d",iSlot);
+	sprintf(cmd, "slot%d", iSlot);
 
-	helpers->ClientCommand(m_pEdict,cmd);
+	helpers->ClientCommand(m_pEdict, cmd);
 	//m_iSelectWeapon = iSlot;
 }
 
-CBotWeapon *CBot :: getBestWeapon (edict_t *pEnemy,bool bAllowMelee, bool bAllowMeleeFallback, bool bMeleeOnly, bool bExplosivesOnly )
+CBotWeapon *CBot::GetBestWeapon(edict_t *pEnemy, bool bAllowMelee, bool bAllowMeleeFallback, bool bMeleeOnly, bool bExplosivesOnly)
 {
-	return m_pWeapons->getBestWeapon(pEnemy,bAllowMelee,bAllowMeleeFallback,bMeleeOnly,bExplosivesOnly);
+	return m_pWeapons->GetBestWeapon(pEnemy, bAllowMelee, bAllowMeleeFallback, bMeleeOnly, bExplosivesOnly);
 }
 
-bool CBot::isHoldingPrimaryAttack()
+bool CBot::IsHoldingPrimaryAttack()
 {
-	return m_pButtons->holdingButton(IN_ATTACK);
+	return m_pButtons->HoldingButton(IN_ATTACK);
 }
 
-void CBot :: debugMsg ( int iLev, const char *szMsg )
+void CBot::DebugMsg(int iLev, const char *szMsg)
 {
-	if ( CClients::clientsDebugging () )
+	if (CClients::ClientsDebugging())
 	{
 		char szMsg2[512];
 
-		sprintf(szMsg2,"(%s):%s",m_pPlayerInfo->GetName(),szMsg);
+		sprintf(szMsg2, "(%s):%s", m_pPI->GetName(), szMsg);
 
-		CClients::clientDebugMsg (iLev,szMsg2,this);
+		CClients::ClientDebugMsg(iLev, szMsg2, this);
 	}
 }
 
-void CBot::SquadInPosition ()
+void CBot::SquadInPosition()
 {
-	if ( m_uSquadDetail.b1.said_in_position == false )
+	if (m_uSquadDetail.b1.said_in_position == false)
 	{
 		// say something here
-		sayInPosition();
+		SayInPosition();
 		m_uSquadDetail.b1.said_in_position = true;
 	}
 }
 
-void CBot :: kill ()
+void CBot::Kill()
 {
-	helpers->ClientCommand(m_pEdict,"kill\n");
+	helpers->ClientCommand(m_pEdict, "kill\n");
 }
 
-void CBot :: think ()
+void CBot::Think()
 {
 	static float fTime;
-	extern ConVar rcbot_debug_iglev;
-	extern ConVar rcbot_debug_dont_shoot;
-	extern ConVar rcbot_debug_notasks;
-	//static bool debug;
-	//static bool battack;
+	extern ConVar bot_debug_iglev;
+	extern ConVar bot_debug_dont_shoot;
+	extern ConVar bot_debug_notasks;
 
-	//debug = CClients::clientsDebugging(BOT_DEBUG_THINK);
-	
-	fTime = g_pEngine->Time();
+	fTime = engine->Time();
 
-//	Vector *pvVelocity;
+	//	Vector *pvVelocity;
 
 	// important!!!
 	//
 	m_iLookPriority = 0;
 	m_iMovePriority = 0;
 	m_iMoveSpeedPriority = 0;
-	
-	//if ( !CBotGlobals::entityIsValid(m_pEdict) || m_pPlayerInfo == NULL )
-	//{
-	//	m_pPlayerInfo = playerinfomanager->GetPlayerInfo(m_pEdict);
-	//	CBotGlobals::botMessage(NULL,0,"%s : m_pPlayerInfo = NULL; Waiting for player info...",m_szBotName);
-	//	return;
-	//}
 
 #ifdef _DEBUG
-	if ( rcbot_debug_iglev.GetInt() != 1 )
+	if (bot_debug_iglev.GetInt() != 1)
 	{
 #endif
-	//
-	// if bot is not in game, start it!!!
-	if ( !startGame() )
-	{
-		doButtons();
-		return; // don't do anything just now
-	}
-
-	doButtons();
-#ifdef _DEBUG
-	}
-#endif
-	if ( !isAlive() )
-	{/*
-	 // Dont need this anymore!! events does it, woohoo!
-		if ( m_bNeedToInit )
+		//
+		// if bot is not in game, start it!!!
+		if (!StartGame())
 		{
-			spawnInit();
-			m_bNeedToInit = false;
-		}*/
-		currentlyDead();
+			DoButtons();
+			return; // don't do anything just now
+		}
+
+		DoButtons();
+#ifdef _DEBUG
+	}
+#endif
+	if (!IsAlive())
+	{
+		CurrentlyDead();
 
 		return;
 	}
 #ifdef _DEBUG
-	if ( rcbot_debug_iglev.GetInt() != 2 )
+	if (bot_debug_iglev.GetInt() != 2)
 	{
 #endif
-	checkDependantEntities();
+		CheckDependantEntities();
 
-	//m_bNeedToInit = true;
+		//m_bNeedToInit = true;
 
-	doMove();
-	doLook();
+		DoMove();
+		DoLook();
 #ifdef _DEBUG
 	}
 #endif
-	if ( m_fNextThink > fTime )
+	if (m_fNextThink > fTime)
 		return;
 
-	m_pButtons->letGoAllButtons(false);
+	m_pButtons->LetGoAllButtons(false);
 
 	m_fNextThink = fTime + 0.03f;
 
-	if ( m_pWeapons )
+	if (m_pWeapons)
 	{
 		// update carried weapons
-		if ( m_pWeapons->update(overrideAmmoTypes()) )
+		if (m_pWeapons->Update(OverrideAmmoTypes()))
 		{
-			m_pPrimaryWeapon = m_pWeapons->getPrimaryWeapon();
+			m_pPrimaryWeapon = m_pWeapons->GetPrimaryWeapon();
 		}
 	}
 
-	/////////////////////////////
-
-	//m_iFlags = CClassInterface::getFlags(m_pEdict);
-
-	//if ( m_pController->IsEFlagSet(EFL_BOT_FROZEN)  || (m_iFlags & FL_FROZEN) )
-	//{
-	//	stopMoving(12);
-	//	return;
-	//}
-
-	//////////////////////////////
-
 	//m_pCurrentWeapon = m_pBaseCombatChar->GetActiveWeapon (); 
 #ifdef _DEBUG
-	if ( rcbot_debug_iglev.GetInt() != 3 )
+	if (bot_debug_iglev.GetInt() != 3)
 	{
 #endif
-	m_pVisibles->updateVisibles();
+		m_pVisibles->UpdateVisibles();
 #ifdef _DEBUG
 	}
 
-	if ( rcbot_debug_iglev.GetInt() != 4 )
+	if (bot_debug_iglev.GetInt() != 4)
 	{
 #endif
-		if ( checkStuck() )
+		if (CheckStuck())
 		{
 			// look in the direction I'm going to see what I'm stuck on
-			setLookAtTask(LOOK_WAYPOINT,randomFloat(2.0f,4.0f));
+			SetLookAtTask(LOOK_WAYPOINT, RandomFloat(2.0f, 4.0f));
 		}
 #ifdef _DEBUG
 	}
@@ -833,222 +727,222 @@ void CBot :: think ()
 
 
 	//
-	if ( !rcbot_debug_notasks.GetBool() )
+	if (!bot_debug_notasks.GetBool())
 	{
 #ifdef _DEBUG
-	if ( rcbot_debug_iglev.GetInt() != 5 )
-	{
+		if (bot_debug_iglev.GetInt() != 5)
+		{
 #endif
-	getTasks();	
+			GetTasks();
 	}
 #ifdef _DEBUG
 	}
 
-	if ( rcbot_debug_iglev.GetInt() != 7 )
+	if (bot_debug_iglev.GetInt() != 7)
 	{
 #endif
-	wantToInvestigateSound(true);
-	setMoveLookPriority(MOVELOOK_TASK);
-	m_pSchedules->execute(this);
-	setMoveLookPriority(MOVELOOK_THINK);
+		WantToInvestigateSound(true);
+		SetMoveLookPriority(MOVELOOK_TASK);
+		m_pSchedules->Execute(this);
+		SetMoveLookPriority(MOVELOOK_THINK);
 #ifdef _DEBUG
 	}
-// fix -- put listening AFTER task executed, as m_bWantToListen may update
-	if ( rcbot_debug_iglev.GetInt() != 6 )
+	// fix -- put listening AFTER task executed, as m_bWantToListen may update
+	if ( bot_debug_iglev.GetInt() != 6 )
 	{
 #endif
-		if ( m_bWantToListen && !hasEnemy() && !hasSomeConditions(CONDITION_SEE_CUR_ENEMY) && (m_fWantToListenTime<g_pEngine->Time()) )
+		if (m_bWantToListen && !HasEnemy() && !HasSomeConditions(CONDITION_SEE_CUR_ENEMY) && (m_fWantToListenTime < engine->Time()))
 		{
-			setMoveLookPriority(MOVELOOK_LISTEN);
-			listenForPlayers();
-			setMoveLookPriority(MOVELOOK_THINK);
+			SetMoveLookPriority(MOVELOOK_LISTEN);
+			ListenForPlayers();
+			SetMoveLookPriority(MOVELOOK_THINK);
 		}
-		else if ( hasEnemy() )
+		else if (HasEnemy())
 		{
 			// got an enemy -- reset 
 			m_PlayerListeningTo = MyEHandle(NULL);
 			m_fLookSetTime = 0.0f;
 			m_fListenTime = 0.0f;
 			m_bListenPositionValid = false;
-			m_fWantToListenTime = g_pEngine->Time() + 1.0f;
+			m_fWantToListenTime = engine->Time() + 1.0f;
 
 			// is player
-			if ( ENTINDEX(m_pEnemy.get()) <= gpGlobals->maxClients )
-				m_fLastSeeEnemyPlayer = g_pEngine->Time();
+			if (ENTINDEX(m_pEnemy.Get()) <= MAX_PLAYERS)
+				m_fLastSeeEnemyPlayer = engine->Time();
 		}
 
 #ifdef _DEBUG
 	}
 
-	if ( rcbot_debug_iglev.GetInt() != 8 )
+	if (bot_debug_iglev.GetInt() != 8)
 	{
 #endif
-	m_vGoal = m_pNavigator->getGoalOrigin();
+		m_vGoal = m_pNavigator->GetGoalOrigin();
 
-	if ( m_pNavigator->hasNextPoint() )
-	{		
-		m_pNavigator->updatePosition();
-	}
-	else
-	{
-		m_fWaypointStuckTime = 0.0f;
-		stopMoving();		
-		setLookAtTask(LOOK_AROUND);
-	}
-#ifdef _DEBUG
-	}
-
-	if ( rcbot_debug_iglev.GetInt() != 9 )
-	{
-#endif
-	// update m_pEnemy with findEnemy()
-	m_pOldEnemy = m_pEnemy;
-	m_pEnemy = NULL;
-
-	if ( m_pOldEnemy )
-		findEnemy(m_pOldEnemy); // any better enemies than this one?
-	else
-		findEnemy();
-#ifdef _DEBUG
-	}
-#endif
-	updateConditions();
-
-#ifdef _DEBUG
-	if ( !CClassInterface::getVelocity(m_pEdict,&m_vVelocity) )
-	{
-#endif
-		if ( m_fUpdateOriginTime < fTime )
+		if (m_pNavigator->HasNextPoint())
 		{
-			Vector vOrigin = getOrigin();
+			m_pNavigator->UpdatePosition();
+		}
+		else
+		{
+			m_fWaypointStuckTime = 0.0f;
+			StopMoving();
+			SetLookAtTask(LOOK_AROUND);
+		}
+#ifdef _DEBUG
+	}
 
-			m_vVelocity = m_vLastOrigin-vOrigin;
+	if (bot_debug_iglev.GetInt() != 9)
+	{
+#endif
+		// update m_pEnemy with findEnemy()
+		m_pOldEnemy = m_pEnemy;
+		m_pEnemy = NULL;
+
+		if (m_pOldEnemy)
+			FindEnemy(m_pOldEnemy); // any better enemies than this one?
+		else
+			FindEnemy();
+#ifdef _DEBUG
+	}
+#endif
+	UpdateConditions();
+
+#ifdef _DEBUG
+	if (!CClassInterface::GetVelocity(m_pEdict, &m_vVelocity))
+	{
+#endif
+		if (m_fUpdateOriginTime < fTime)
+		{
+			Vector vOrigin = GetOrigin();
+
+			m_vVelocity = m_vLastOrigin - vOrigin;
 			m_vLastOrigin = vOrigin;
-			m_fUpdateOriginTime = fTime+1.0f;
+			m_fUpdateOriginTime = fTime + 1.0f;
 		}
 #ifdef _DEBUG
 	}
 #endif
 
-	setMoveLookPriority(MOVELOOK_MODTHINK);
+	SetMoveLookPriority(MOVELOOK_MODTHINK);
 #ifdef _DEBUG
-	if ( rcbot_debug_iglev.GetInt() != 10 )
+	if (bot_debug_iglev.GetInt() != 10)
 	{
 #endif
-	modThink();
+		ModThink();
 #ifdef _DEBUG
 	}
 #endif
 
 #ifdef _DEBUG
-	if ( rcbot_debug_iglev.GetInt() != 11 )
+	if (bot_debug_iglev.GetInt() != 11)
 	{
 #endif
-		if ( m_fStatsTime < g_pEngine->Time() )
+		if (m_fStatsTime < engine->Time())
 		{
-			updateStatistics();
-			m_fStatsTime = g_pEngine->Time() + 0.15f;
+			UpdateStatistics();
+			m_fStatsTime = engine->Time() + 0.15f;
 		}
 #ifdef _DEBUG
 	}
 #endif
-	
+
 
 #ifdef _DEBUG
-	if ( rcbot_debug_iglev.GetInt() != 12 )
+	if ( bot_debug_iglev.GetInt() != 12 )
 	{
 #endif
-		if ( inSquad() && !isSquadLeader() )
+		if (InSquad() && !IsSquadLeader())
 		{
-			if ( m_pSquad->IsCrouchMode() )
-				duck();
-			else if ( m_pSquad->IsProneMode() )
-				updateCondition(CONDITION_PRONE);
-			else if ( m_pSquad->IsStealthMode() )
-				updateCondition(CONDITION_COVERT);
+			if (m_pSquad->IsCrouchMode())
+				Duck();
+			else if (m_pSquad->IsProneMode())
+				UpdateCondition(CONDITION_PRONE);
+			else if (m_pSquad->IsStealthMode())
+				UpdateCondition(CONDITION_COVERT);
 		}
 #ifdef _DEBUG
 	}
 #endif
-	setMoveLookPriority(MOVELOOK_ATTACK);
+	SetMoveLookPriority(MOVELOOK_ATTACK);
 
-	if ( !rcbot_debug_dont_shoot.GetBool() )
-		handleWeapons();
+	if (!bot_debug_dont_shoot.GetBool())
+		HandleWeapons();
 
 	// deal with voice commands bot wants to say,
 	// incase that he wants to use it in between frames (e.g. during an event call)
 	// deal with it here
-	if ( (m_fNextVoiceCommand < g_pEngine->Time()) && !m_nextVoicecmd.empty() )
+	if ((m_fNextVoiceCommand < engine->Time()) && !m_nextVoicecmd.empty())
 	{
 		byte cmd = m_nextVoicecmd.front();
 
-		m_fNextVoiceCommand = g_pEngine->Time() + randomFloat(0.4f,1.2f);
-		
-		if ( m_fLastVoiceCommand[cmd] < g_pEngine->Time() )
+		m_fNextVoiceCommand = engine->Time() + RandomFloat(0.4f, 1.2f);
+
+		if (m_fLastVoiceCommand[cmd] < engine->Time())
 		{
-			voiceCommand(cmd);
-			m_fLastVoiceCommand[cmd] = g_pEngine->Time() + randomFloat(8.0f,16.0f);
+			VoiceCommand(cmd);
+			m_fLastVoiceCommand[cmd] = engine->Time() + RandomFloat(8.0f, 16.0f);
 		}
 
 		m_nextVoicecmd.pop();
 	}
 
-	m_iPrevHealth = m_pPlayerInfo->GetHealth();
+	m_iPrevHealth = m_pPI->GetHealth();
 
 	m_bInitAlive = false;
 }
 
-void CBot :: addVoiceCommand ( int cmd ) 
+void CBot::AddVoiceCommand(int cmd)
 {
-	if ( bot_use_vc_commands.GetBool() && (m_fLastVoiceCommand[cmd] < g_pEngine->Time()) )
+	if (bot_use_vc_commands.GetBool() && (m_fLastVoiceCommand[cmd] < engine->Time()))
 	{
-		m_nextVoicecmd.push(cmd); 
-		m_fNextVoiceCommand = g_pEngine->Time() + randomFloat(0.2f,1.0f);
+		m_nextVoicecmd.push(cmd);
+		m_fNextVoiceCommand = engine->Time() + RandomFloat(0.2f, 1.0f);
 	}
 }
 
 
-void CBot :: handleWeapons ()
+void CBot::HandleWeapons()
 {
 	//
 	// Handle attacking at this point
 	//
-	if ( m_pEnemy && !hasSomeConditions(CONDITION_ENEMY_DEAD) && 
-		hasSomeConditions(CONDITION_SEE_CUR_ENEMY) && wantToShoot() && 
-		isVisible(m_pEnemy) && isEnemy(m_pEnemy) )
+	if (m_pEnemy && !HasSomeConditions(CONDITION_ENEMY_DEAD) &&
+		HasSomeConditions(CONDITION_SEE_CUR_ENEMY) && WantToShoot() &&
+		IsVisible(m_pEnemy) && IsEnemy(m_pEnemy))
 	{
 		CBotWeapon *pWeapon;
 
-		pWeapon = getBestWeapon(m_pEnemy);
+		pWeapon = GetBestWeapon(m_pEnemy);
 
-		if ( m_bWantToChangeWeapon && (pWeapon != NULL) && (pWeapon != getCurrentWeapon()) && pWeapon->getWeaponIndex() )
+		if (m_bWantToChangeWeapon && (pWeapon != NULL) && (pWeapon != GetCurrentWeapon()) && pWeapon->GetWeaponIndex())
 		{
 			//selectWeaponSlot(pWeapon->getWeaponInfo()->getSlot());
-			selectWeapon(pWeapon->getWeaponIndex());
+			SelectWeapon(pWeapon->GetWeaponIndex());
 		}
 
-		setLookAtTask(LOOK_ENEMY);
+		SetLookAtTask(LOOK_ENEMY);
 
-		if ( !handleAttack ( pWeapon, m_pEnemy ) )
+		if (!HandleAttack(pWeapon, m_pEnemy))
 		{
 			m_pEnemy = NULL;
 			m_pOldEnemy = NULL;
-			wantToShoot(false);
+			WantToShoot(false);
 		}
 	}
 }
 
-CBot :: CBot()
+CBot::CBot()
 {
-	init(true);
+	Init(true);
 }
 /*
 * init()
 *
-* initialize all bot variables 
+* initialize all bot variables
 * (this is called when bot is made for the first time)
 */
-void CBot :: init (bool bVarInit)
+void CBot::Init(bool bVarInit)
 {
 	//m_bNeedToInit = false; // doing this now
 	m_fLastHurtTime = 0.0f;
@@ -1058,82 +952,82 @@ void CBot :: init (bool bVarInit)
 	m_pSchedules = NULL;
 	m_pVisibles = NULL;
 	m_pEdict = NULL;
-//	m_pBaseEdict = NULL;
+	//	m_pBaseEdict = NULL;
 	m_pFindEnemyFunc = NULL;
 	m_bUsed = false;
-	m_pPlayerInfo = NULL;
+	m_pPI = NULL;
 
 	m_pWeapons = NULL;
-	m_fTimeCreated = 0;	
+	m_fTimeCreated = 0;
 	m_pProfile = NULL;
 	m_fIdealMoveSpeed = 320;
 	m_fFov = BOT_DEFAULT_FOV;
 	m_bOpenFire = true;
 	m_pSquad = NULL;
 
-	//cmd.command_number = 0;
+	//m_pCmd.command_number = 0;
 
-	if ( bVarInit )
-		spawnInit();
+	if (bVarInit)
+		SpawnInit();
 }
 
-edict_t *CBot :: getEdict ()
+edict_t *CBot::GetEdict()
 {
 	return m_pEdict;
 }
 
-bool CBot :: isSquadLeader ( void )
+bool CBot::IsSquadLeader(void)
 {
 	return (m_pSquad->GetLeader() == m_pEdict);
 }
 
-void CBot :: updateConditions ()
+void CBot::UpdateConditions()
 {
-	if ( m_pEnemy.get() != NULL )
+	if (m_pEnemy.Get() != NULL)
 	{
-		if ( !CBotGlobals::entityIsAlive(m_pEnemy) )
+		if (!CBotGlobals::EntityIsAlive(m_pEnemy))
 		{
-			updateCondition(CONDITION_ENEMY_DEAD);
+			UpdateCondition(CONDITION_ENEMY_DEAD);
 			m_pEnemy = NULL;
 		}
 		else
 		{
-			removeCondition(CONDITION_ENEMY_DEAD);
+			RemoveCondition(CONDITION_ENEMY_DEAD);
 
 			// clear enemy
-			if ( m_pVisibles->isVisible(m_pEnemy) )
+			if (m_pVisibles->IsVisible(m_pEnemy))
 			{
-				updateCondition(CONDITION_SEE_CUR_ENEMY);
-				removeCondition(CONDITION_ENEMY_OBSCURED);
+				UpdateCondition(CONDITION_SEE_CUR_ENEMY);
+				RemoveCondition(CONDITION_ENEMY_OBSCURED);
 			}
-			else 
+			else
 			{
-				if ( !m_pLastEnemy || (m_pLastEnemy != m_pEnemy ))
-					enemyLost(m_pEnemy);
+				if (!m_pLastEnemy || (m_pLastEnemy != m_pEnemy))
+					EnemyLost(m_pEnemy);
 
-				setLastEnemy(m_pEnemy);
+				SetLastEnemy(m_pEnemy);
 
-				removeCondition(CONDITION_SEE_CUR_ENEMY);
-				removeCondition(CONDITION_SEE_ENEMY_HEAD);
-				updateCondition(CONDITION_ENEMY_OBSCURED);
+				RemoveCondition(CONDITION_SEE_CUR_ENEMY);
+				RemoveCondition(CONDITION_SEE_ENEMY_HEAD);
+				UpdateCondition(CONDITION_ENEMY_OBSCURED);
 			}
 		}
 	}
 	else
 	{
-		removeCondition(CONDITION_SEE_CUR_ENEMY);
-		removeCondition(CONDITION_ENEMY_OBSCURED);
-		removeCondition(CONDITION_ENEMY_DEAD);
-		removeCondition(CONDITION_SEE_ENEMY_HEAD);
+		RemoveCondition(CONDITION_SEE_CUR_ENEMY);
+		RemoveCondition(CONDITION_ENEMY_OBSCURED);
+		RemoveCondition(CONDITION_ENEMY_DEAD);
+		RemoveCondition(CONDITION_SEE_ENEMY_HEAD);
 	}
 
-	if ( inSquad() )
+	if (InSquad())
 	{
-		if ( isSquadLeader() )
+		if (IsSquadLeader())
 		{
-			if ( m_uSquadDetail.b1.said_move_out == false )
+			if (m_uSquadDetail.b1.said_move_out == false)
 			{
-				sayMoveOut();
+				SayMoveOut();
 				m_uSquadDetail.b1.said_move_out = true;
 			}
 		}
@@ -1141,96 +1035,96 @@ void CBot :: updateConditions ()
 		{
 			edict_t *pLeader = m_pSquad->GetLeader();
 
-			if ( CBotGlobals::entityIsValid(pLeader) && CBotGlobals::entityIsAlive(pLeader) )
+			if (CBotGlobals::EntityIsValid(pLeader) && CBotGlobals::EntityIsAlive(pLeader))
 			{
-				extern ConVar rcbot_squad_idle_time;
+				extern ConVar bot_squad_idle_time;
 
-				removeCondition(CONDITION_SQUAD_LEADER_DEAD);
+				RemoveCondition(CONDITION_SQUAD_LEADER_DEAD);
 
-				if ( distanceFrom(pLeader) <= 400.0f )
-					updateCondition(CONDITION_SQUAD_LEADER_INRANGE);
+				if (DistanceFrom(pLeader) <= 400.0f)
+					UpdateCondition(CONDITION_SQUAD_LEADER_INRANGE);
 				else
-					removeCondition(CONDITION_SQUAD_LEADER_INRANGE);
+					RemoveCondition(CONDITION_SQUAD_LEADER_INRANGE);
 
-				if ( isVisible(pLeader) )
-					updateCondition(CONDITION_SEE_SQUAD_LEADER);
+				if (IsVisible(pLeader))
+					UpdateCondition(CONDITION_SEE_SQUAD_LEADER);
 				else
-					removeCondition(CONDITION_SEE_SQUAD_LEADER);
+					RemoveCondition(CONDITION_SEE_SQUAD_LEADER);
 
 				float fSpeed = 0.0f;
-				CClient *pClient = CClients::get(pLeader);
+				CClient *pClient = CClients::Get(pLeader);
 
-				if ( pClient )
-					fSpeed = pClient->getSpeed();
+				if (pClient)
+					fSpeed = pClient->GetSpeed();
 
 				// update squad idle condition. If squad is idle, bot can move around a small radius 
 				// around the leader and do what they want, e.g. defend or snipe
-				if ( (hasEnemy() || ((fSpeed > 10.0f) && ( CClassInterface::getMoveType(pLeader) != MOVETYPE_LADDER ))) )
+				if ((HasEnemy() || ((fSpeed > 10.0f) && (CClassInterface::GetMoveType(pLeader) != MOVETYPE_LADDER))))
 				{
-					setSquadIdleTime(g_pEngine->Time());
-					removeCondition(CONDITION_SQUAD_IDLE);
+					SetSquadIdleTime(engine->Time());
+					RemoveCondition(CONDITION_SQUAD_IDLE);
 				}
-				else if ( (g_pEngine->Time() - m_fSquadIdleTime) > rcbot_squad_idle_time.GetFloat() )
-					updateCondition(CONDITION_SQUAD_IDLE);
+				else if ((engine->Time() - m_fSquadIdleTime) > bot_squad_idle_time.GetFloat())
+					UpdateCondition(CONDITION_SQUAD_IDLE);
 
 			}
 			else
-				updateCondition(CONDITION_SQUAD_LEADER_DEAD);
+				UpdateCondition(CONDITION_SQUAD_LEADER_DEAD);
 		}
 	}
 
-	if ( m_pLastEnemy )
+	if (m_pLastEnemy)
 	{
-		if ( m_fLastSeeEnemy > 0.0f )
+		if (m_fLastSeeEnemy > 0.0f)
 		{
-			if ( m_fLastUpdateLastSeeEnemy < g_pEngine->Time() )
+			if (m_fLastUpdateLastSeeEnemy < engine->Time())
 			{
-				m_fLastUpdateLastSeeEnemy = g_pEngine->Time() + 0.5f;
+				m_fLastUpdateLastSeeEnemy = engine->Time() + 0.5f;
 
-				if ( FVisible(m_vLastSeeEnemyBlastWaypoint) )
-					updateCondition(CONDITION_SEE_LAST_ENEMY_POS);
+				if (FVisible(m_vLastSeeEnemyBlastWaypoint))
+					UpdateCondition(CONDITION_SEE_LAST_ENEMY_POS);
 				else
-					removeCondition(CONDITION_SEE_LAST_ENEMY_POS);
+					RemoveCondition(CONDITION_SEE_LAST_ENEMY_POS);
 			}
 		}
 		else
-			removeCondition(CONDITION_SEE_LAST_ENEMY_POS);
+			RemoveCondition(CONDITION_SEE_LAST_ENEMY_POS);
 	}
 
-	if ( FVisible(m_vLookVector) )
+	if (FVisible(m_vLookVector))
 	{
-		updateCondition(CONDITION_SEE_LOOK_VECTOR);
+		UpdateCondition(CONDITION_SEE_LOOK_VECTOR);
 	}
 	else
 	{
-		removeCondition(CONDITION_SEE_LOOK_VECTOR);
+		RemoveCondition(CONDITION_SEE_LOOK_VECTOR);
 	}
 }
 
 // Called when working out route
-bool CBot :: canGotoWaypoint ( Vector vPrevWaypoint, CWaypoint *pWaypoint, CWaypoint *pPrev )
+bool CBot::CanGotoWaypoint(Vector vPrevWaypoint, CWaypoint *pWaypoint, CWaypoint *pPrev)
 {
-	if ( pWaypoint->hasFlag(CWaypointTypes::W_FL_UNREACHABLE) ) 
+	if (pWaypoint->HasFlag(CWaypointTypes::W_FL_UNREACHABLE))
 		return false;
 
-	if ( !pWaypoint->forTeam(getTeam()) )
+	if (!pWaypoint->ForTeam(GetTeam()))
 		return false;
 
-	if ( pWaypoint->hasFlag(CWaypointTypes::W_FL_OPENS_LATER) )
+	if (pWaypoint->HasFlag(CWaypointTypes::W_FL_OPENS_LATER))
 	{
-		if ( pPrev != NULL )
+		if (pPrev != NULL)
 		{
-			return pPrev->isPathOpened(pWaypoint->getOrigin());
+			return pPrev->IsPathOpened(pWaypoint->GetOrigin());
 		}
-		else if ( (vPrevWaypoint != pWaypoint->getOrigin()) && !CBotGlobals::checkOpensLater(vPrevWaypoint,pWaypoint->getOrigin()) )
+		else if ((vPrevWaypoint != pWaypoint->GetOrigin()) && !CBotGlobals::CheckOpensLater(vPrevWaypoint, pWaypoint->GetOrigin()))
 			return false;
 	}
 
-	if ( pWaypoint->hasFlag(CWaypointTypes::W_FL_FALL) )
+	if (pWaypoint->HasFlag(CWaypointTypes::W_FL_FALL))
 	{
-		if ( getHealthPercent() <= 0.1f )
+		if (GetHealthPercent() <= 0.1f)
 		{
-			if ( (vPrevWaypoint.z - pWaypoint->getOrigin().z) > 200.0f )
+			if ((vPrevWaypoint.z - pWaypoint->GetOrigin().z) > 200.0f)
 				return false;
 		}
 	}
@@ -1238,66 +1132,66 @@ bool CBot :: canGotoWaypoint ( Vector vPrevWaypoint, CWaypoint *pWaypoint, CWayp
 	return true;
 }
 
-void CBot::updatePosition()
+void CBot::UpdatePosition()
 {
-	m_pNavigator->rollBackPosition();
+	m_pNavigator->RollBackPosition();
 }
 
-bool CBot::handleAttack ( CBotWeapon *pWeapon, edict_t *pEnemy )
+bool CBot::HandleAttack(CBotWeapon *pWeapon, edict_t *pEnemy)
 {
-	if ( pWeapon )
+	if (pWeapon)
 	{
-		clearFailedWeaponSelect();
+		ClearFailedWeaponSelect();
 
-		if ( pWeapon->isMelee() )
-			setMoveTo(CBotGlobals::entityOrigin(pEnemy));
+		if (pWeapon->IsMelee())
+			SetMoveTo(CBotGlobals::EntityOrigin(pEnemy));
 
-		if ( pWeapon->mustHoldAttack() )
-			primaryAttack(true);
+		if (pWeapon->MustHoldAttack())
+			PrimaryAttack(true);
 		else
-			primaryAttack();
+			PrimaryAttack();
 	}
 	else
-		primaryAttack();
+		PrimaryAttack();
 
 	return true;
 }
 
-int CBot :: getHealth ()
+int CBot::GetHealth()
 {
-	return m_pPlayerInfo->GetHealth();
+	return m_pPI->GetHealth();
 }
 
-float CBot :: getHealthPercent ()
+float CBot::GetHealthPercent()
 {
-	return (((float)m_pPlayerInfo->GetHealth())/m_pPlayerInfo->GetMaxHealth());
+	return (((float)m_pPI->GetHealth()) / m_pPI->GetMaxHealth());
 }
 
-bool CBot ::isOnLift()
+bool CBot::IsOnLift()
 {
-	return ((m_vVelocity.z < -8.0f)||(m_vVelocity.z >= 8.0f));//&&(CClassInterface::getFlags(m_pEdict) & FL_ONGROUND);
+	return ((m_vVelocity.z < -8.0f) || (m_vVelocity.z >= 8.0f));//&&(CClassInterface::getFlags(m_pEdict) & FL_ONGROUND);
 }
 
-edict_t *CBot :: getVisibleSpecial ()
+edict_t *CBot::GetVisibleSpecial()
 {
 	return NULL;
 }
 
-bool CBot::wantToInvestigateSound () 
-{ 
-	return ((m_fSpawnTime + 10.0f) < g_pEngine->Time()) && !hasEnemy() && m_bWantToInvestigateSound; 
-}
-
-bool CBot :: recentlyHurt ( float fTime )
+bool CBot::WantToInvestigateSound()
 {
-	return (m_fLastHurtTime>0) && (m_fLastHurtTime>(g_pEngine->Time()-fTime));
+	return ((m_fSpawnTime + 10.0f) < engine->Time()) && !HasEnemy() && m_bWantToInvestigateSound;
 }
 
-void CBot :: spawnInit ()
+bool CBot::RecentlyHurt(float fTime)
+{
+	return (m_fLastHurtTime > 0) && (m_fLastHurtTime>(engine->Time() - fTime));
+}
+
+void CBot::SpawnInit()
 {
 	m_fLastHurtTime = 0.0f;
 	m_bWantToInvestigateSound = true;
-	m_fSpawnTime = g_pEngine->Time();
+	m_fSpawnTime = engine->Time();
 	m_bIncreaseSensitivity = false;
 	m_fLastSeeEnemyPlayer = 0.0f;
 	m_PlayerListeningTo = NULL;
@@ -1311,30 +1205,30 @@ void CBot :: spawnInit ()
 
 	m_fWantToListenTime = 0;
 
-	resetTouchDistance(48.0f);
+	ResetTouchDistance(48.0f);
 	m_pLastCoverFrom = MyEHandle(NULL);
 
-	m_vAimOffset = Vector(1.0f,1.0f,1.0f);
+	m_vAimOffset = Vector(1.0f, 1.0f, 1.0f);
 
 	m_fTotalAimFactor = 0.0f;
 
 	m_fAimMoment = 0.0f;
 
-	memset(m_fLastVoiceCommand,0,sizeof(float)*MAX_VOICE_CMDS);
+	memset(m_fLastVoiceCommand, 0, sizeof(float)*MAX_VOICE_CMDS);
 
 	m_fLastUpdateLastSeeEnemy = 0;
 	m_fPercentMoved = 1.0f;
 
-	for ( register short int i = 0; i < BOT_UTIL_MAX; i ++ )
+	for (register short int i = 0; i < BOT_UTIL_MAX; i++)
 		m_fUtilTimes[i] = 0;
 
-	if ( m_pSchedules != NULL )
-		m_pSchedules->freeMemory(); // clear tasks, im dead now!!
-	if ( m_pVisibles != NULL )
-		m_pVisibles->reset();	
+	if (m_pSchedules != NULL)
+		m_pSchedules->FreeMemory(); // clear tasks, im dead now!!
+	if (m_pVisibles != NULL)
+		m_pVisibles->Reset();
 
-	if ( m_pEdict && (m_iAmmo == NULL) )
-		m_iAmmo = CClassInterface::getAmmoList(m_pEdict);
+	if (m_pEdict && (m_iAmmo == NULL))
+		m_iAmmo = CClassInterface::GetAmmoList(m_pEdict);
 
 	m_fCurrentDanger = 0.0f;
 	m_iSpecialVisibleId = 0;
@@ -1347,7 +1241,7 @@ void CBot :: spawnInit ()
 	m_bPrevAimVectorValid = false;
 	m_fLastSeeEnemy = 0;
 	m_fAvoidTime = 0;
-	m_vLookAroundOffset = Vector(0,0,0);
+	m_vLookAroundOffset = Vector(0, 0, 0);
 	m_fWaypointStuckTime = 0.0f;
 	m_pPickup = NULL;
 	m_pAvoidEntity = NULL;
@@ -1359,29 +1253,29 @@ void CBot :: spawnInit ()
 	////////////////////////
 	m_iPrevHealth = 0;    // 
 	////////////////////////
-	m_vStuckPos = Vector(0,0,0);
+	m_vStuckPos = Vector(0, 0, 0);
 	//m_iTimesStuck = 0;
 	m_fUpdateDamageTime = 0;
 	m_iAccumulatedDamage = 0;
-	m_fCheckStuckTime = g_pEngine->Time() + 8.0f;
+	m_fCheckStuckTime = engine->Time() + 8.0f;
 	m_fStuckTime = 0;
-	m_vLastOrigin = Vector(0,0,0);
-	m_vVelocity = Vector(0,0,0);
+	m_vLastOrigin = Vector(0, 0, 0);
+	m_vVelocity = Vector(0, 0, 0);
 	m_fUpdateOriginTime = 0;
 	m_fNextUpdateAimVector = 0;
-	m_vAimVector = Vector(0,0,0);
+	m_vAimVector = Vector(0, 0, 0);
 
 	m_fLookSetTime = 0.0f;
-	m_vHurtOrigin = Vector(0,0,0);
+	m_vHurtOrigin = Vector(0, 0, 0);
 
 	m_pOldEnemy = NULL;
-	m_pEnemy = NULL;	
+	m_pEnemy = NULL;
 
-	m_vLastSeeEnemy = Vector(0,0,0);
+	m_vLastSeeEnemy = Vector(0, 0, 0);
 	m_pLastEnemy = NULL; // enemy we were fighting before we lost it
 	//m_pAvoidEntity = NULL; // avoid this guy
 	m_fLastWaypointVisible = 0;
-	m_vGoal = Vector(0,0,0);
+	m_vGoal = Vector(0, 0, 0);
 	m_bHasGoal = false;
 	m_fLookAtTimeStart = 0;
 	m_fLookAtTimeEnd = 0;
@@ -1396,95 +1290,95 @@ void CBot :: spawnInit ()
 
 	m_bInitAlive = true;
 
-	m_vMoveTo = Vector(0,0,0);
+	m_vMoveTo = Vector(0, 0, 0);
 	m_bMoveToIsValid = false;
-	m_vLookAt = Vector(0,0,0);
+	m_vLookAt = Vector(0, 0, 0);
 	m_bLookAtIsValid = false;
 	m_iSelectWeapon = 0;
 
 	m_fAvoidSideSwitch = 0.0f;
 
-	m_bAvoidRight = (randomInt(0,1)==0);
+	m_bAvoidRight = (RandomInt(0, 1) == 0);
 
 	m_iLookTask = LOOK_WAYPOINT;
 
 	//
-	m_vViewAngles = QAngle(0,0,0);
+	m_vViewAngles = QAngle(0, 0, 0);
 
-	if ( m_pVisibles != NULL )
-		m_pVisibles->reset();
+	if (m_pVisibles != NULL)
+		m_pVisibles->Reset();
 }
 
-void CBot::setLastEnemy(edict_t *pEnemy)
+void CBot::SetLastEnemy(edict_t *pEnemy)
 {
 	CWaypoint *pWpt;
 
-	if ( pEnemy == NULL )
+	if (pEnemy == NULL)
 	{
 		m_fLastSeeEnemy = 0.0f;
 		m_pLastEnemy = NULL;
 		return;
 	}
 
-	m_fLastSeeEnemy = g_pEngine->Time();
+	m_fLastSeeEnemy = engine->Time();
 	m_pLastEnemy = pEnemy;
 	m_fLastUpdateLastSeeEnemy = 0;
-	m_vLastSeeEnemy = CBotGlobals::entityOrigin(m_pLastEnemy);
+	m_vLastSeeEnemy = CBotGlobals::EntityOrigin(m_pLastEnemy);
 	m_vLastSeeEnemyBlastWaypoint = m_vLastSeeEnemy;
 
-	pWpt = CWaypoints::getWaypoint(CWaypointLocations::NearestBlastWaypoint(m_vLastSeeEnemy,getOrigin(),8192.0,-1,true,true,false,false,0,false));
-	
-	if ( pWpt )
-		m_vLastSeeEnemyBlastWaypoint = pWpt->getOrigin();
+	pWpt = CWaypoints::GetWaypoint(CWaypointLocations::NearestBlastWaypoint(m_vLastSeeEnemy, GetOrigin(), 8192.0, -1, true, true, false, false, 0, false));
+
+	if (pWpt)
+		m_vLastSeeEnemyBlastWaypoint = pWpt->GetOrigin();
 
 }
 
-bool CBot :: selectBotWeapon ( CBotWeapon *pBotWeapon )
+bool CBot::SelectBotWeapon(CBotWeapon *pBotWeapon)
 {
-	int id = pBotWeapon->getWeaponIndex();
+	int id = pBotWeapon->GetWeaponIndex();
 
-	if ( id )
+	if (id)
 	{
-		selectWeapon(id);
+		SelectWeapon(id);
 		return true;
 	}
 	return false;
 }
 
-float CBot :: getEnemyFactor ( edict_t *pEnemy )
+float CBot::GetEnemyFactor(edict_t *pEnemy)
 {
-	return distanceFrom(pEnemy);
+	return DistanceFrom(pEnemy);
 }
 
-void CBot :: touchedWpt ( CWaypoint *pWaypoint, int iNextWaypoint, int iPrevWaypoint )
+void CBot::TouchedWpt(CWaypoint *pWaypoint, int iNextWaypoint, int iPrevWaypoint)
 {
-	resetTouchDistance(48.0f);
+	ResetTouchDistance(48.0f);
 
-	m_fWaypointStuckTime = g_pEngine->Time() + randomFloat(7.5f,12.5f);
+	m_fWaypointStuckTime = engine->Time() + RandomFloat(7.5f, 12.5f);
 
-	if ( pWaypoint->getFlags() & CWaypointTypes::W_FL_JUMP )
-		jump();
-	if ( pWaypoint->getFlags() & CWaypointTypes::W_FL_CROUCH )
-		duck();
-	if ( pWaypoint->getFlags() & CWaypointTypes::W_FL_SPRINT )
-		updateCondition(CONDITION_RUN);
+	if (pWaypoint->GetFlags() & CWaypointTypes::W_FL_JUMP)
+		Jump();
+	if (pWaypoint->GetFlags() & CWaypointTypes::W_FL_CROUCH)
+		Duck();
+	if (pWaypoint->GetFlags() & CWaypointTypes::W_FL_SPRINT)
+		UpdateCondition(CONDITION_RUN);
 
-	updateDanger(m_pNavigator->getBelief(CWaypoints::getWaypointIndex(pWaypoint)));
+	UpdateDanger(m_pNavigator->GetBelief(CWaypoints::GetWaypointIndex(pWaypoint)));
 }
 
-void CBot :: updateDanger ( float fBelief ) 
-{ 
-	m_fCurrentDanger = (m_fCurrentDanger * m_pProfile->m_fBraveness) + (fBelief * (1.0f-m_pProfile->m_fBraveness)); 
+void CBot::UpdateDanger(float fBelief)
+{
+	m_fCurrentDanger = (m_fCurrentDanger * m_pProfile->m_fBraveness) + (fBelief * (1.0f - m_pProfile->m_fBraveness));
 }
 // setup buttons and data structures
-void CBot :: setup ()
+void CBot::Setup()
 {
 	/////////////////////////////////
 	m_pButtons = new CBotButtons();
 	/////////////////////////////////
 	m_pSchedules = new CBotSchedules();
 	/////////////////////////////////
-	m_pNavigator = new CWaypointNavigator(this);   
+	m_pNavigator = new CWaypointNavigator(this);
 	/////////////////////////////////
 	m_pVisibles = new CBotVisibles(this);
 	/////////////////////////////////
@@ -1495,84 +1389,84 @@ void CBot :: setup ()
 	//stucknet = new CBotNeuralNet(3,2,2,1,0.5f);
 	//stucknet_tset = new CTrainingSet(3,1,10);
 
-//	m_pGAvStuck = new CBotStuckValues();
-//	m_pGAStuck = new CGA(10);
+	//	m_pGAvStuck = new CBotStuckValues();
+	//	m_pGAStuck = new CGA(10);
 	//m_pThinkStuck = new CPerceptron(2);
 }
 
 /*
 * called when a bot dies
 */
-void CBot :: died ( edict_t *pKiller, const char *pszWeapon )
-{	
-	spawnInit();
+void CBot::Died(edict_t *pKiller, const char *pszWeapon)
+{
+	SpawnInit();
 
-	if ( m_pSquad != NULL )
+	if (m_pSquad != NULL)
 	{
 		// died
-		CBotSquads::removeSquadMember(m_pSquad,m_pEdict);
+		CBotSquads::RemoveSquadMember(m_pSquad, m_pEdict);
 	}
 
-	m_vLastDiedOrigin = getOrigin();
+	m_vLastDiedOrigin = GetOrigin();
 }
 
 /*
 * called when a bot kills something
 */
-void CBot :: killed ( edict_t *pVictim, char *weapon )
-{	
-	if ( pVictim == m_pLastEnemy )
+void CBot::Killed(edict_t *pVictim, char *weapon)
+{
+	if (pVictim == m_pLastEnemy)
 		m_pLastEnemy = NULL;
 }
 
 // called when bot shoots a wall or similar object -i.e. not the enemy
-void CBot :: shotmiss ()
+void CBot::Shotmiss()
 {
 
 }
 // shot an enemy (or teammate?)
-void CBot :: shot ( edict_t *pEnemy )
+void CBot::Shot(edict_t *pEnemy)
 {
 
 }
 // got shot by someone
-bool CBot :: hurt ( edict_t *pAttacker, int iHealthNow, bool bDontHide )
+bool CBot::Hurt(edict_t *pAttacker, int iHealthNow, bool bDontHide)
 {
-	if ( !pAttacker )
+	if (!pAttacker)
 		return false;
 
-	if ( CClassInterface::getTeam(pAttacker) == getTeam() )
-		friendlyFire(pAttacker);
+	if (CClassInterface::GetTeam(pAttacker) == GetTeam())
+		FriendlyFire(pAttacker);
 
-	m_vHurtOrigin = CBotGlobals::entityOrigin(pAttacker);
+	m_vHurtOrigin = CBotGlobals::EntityOrigin(pAttacker);
 
-	if ( !hasSomeConditions(CONDITION_SEE_CUR_ENEMY) )
+	if (!HasSomeConditions(CONDITION_SEE_CUR_ENEMY))
 	{
 		m_fLookSetTime = 0;
-		setLookAtTask(LOOK_HURT_ORIGIN);
-		m_fLookSetTime = g_pEngine->Time() + randomFloat(3.0,8.0);
+		SetLookAtTask(LOOK_HURT_ORIGIN);
+		m_fLookSetTime = engine->Time() + RandomFloat(3.0, 8.0);
 	}
 
-	float fTime = g_pEngine->Time();
+	float fTime = engine->Time();
 
-	if ( m_fUpdateDamageTime < fTime )
+	if (m_fUpdateDamageTime < fTime)
 	{
 		m_fUpdateDamageTime = fTime + 0.5;
-		m_fCurrentDanger += (((float)m_iAccumulatedDamage)/m_pPlayerInfo->GetMaxHealth())*MAX_BELIEF;
+		m_fCurrentDanger += (((float)m_iAccumulatedDamage) / m_pPI->GetMaxHealth())*MAX_BELIEF;
 		m_iAccumulatedDamage = 0;
 	}
 
-	m_fLastHurtTime = g_pEngine->Time();
-	m_iAccumulatedDamage += (m_iPrevHealth-iHealthNow);
-	m_iPrevHealth = iHealthNow;	
+	m_fLastHurtTime = engine->Time();
+	m_iAccumulatedDamage += (m_iPrevHealth - iHealthNow);
+	m_iPrevHealth = iHealthNow;
 
 	// TO DO: replace with perceptron method
-	if ( m_iAccumulatedDamage > (m_pPlayerInfo->GetMaxHealth()*m_pProfile->m_fBraveness) )
+	if (m_iAccumulatedDamage > (m_pPI->GetMaxHealth()*m_pProfile->m_fBraveness))
 	{
-		if ( !bDontHide )
+		if (!bDontHide)
 		{
-			m_pSchedules->removeSchedule(SCHED_GOOD_HIDE_SPOT);
-			m_pSchedules->addFront(new CGotoHideSpotSched(this,m_vHurtOrigin));
+			m_pSchedules->RemoveSchedule(SCHED_GOOD_HIDE_SPOT);
+			m_pSchedules->AddFront(new CGotoHideSpotSched(this, m_vHurtOrigin));
 		}
 
 		m_iAccumulatedDamage = 0;
@@ -1584,13 +1478,13 @@ bool CBot :: hurt ( edict_t *pAttacker, int iHealthNow, bool bDontHide )
 	return false;
 }
 
-void CBot :: checkEntity ( edict_t **pEdict )
+void CBot::CheckEntity(edict_t **pEdict)
 {
-	if ( pEdict && *pEdict && !CBotGlobals::entityIsValid(*pEdict) )
+	if (pEdict && *pEdict && !CBotGlobals::EntityIsValid(*pEdict))
 		*pEdict = NULL;
 }
 
-void CBot :: checkDependantEntities ()
+void CBot::CheckDependantEntities()
 {
 	//checkEntity(&m_pOldEnemy);
 	//checkEntity(&m_pLookEdict);
@@ -1600,50 +1494,50 @@ void CBot :: checkDependantEntities ()
 	//checkEntity(&m_pPickup);
 }
 
-void CBot :: findEnemy ( edict_t *pOldEnemy )
+void CBot::FindEnemy(edict_t *pOldEnemy)
 {
-	m_pFindEnemyFunc->init();
+	m_pFindEnemyFunc->Init();
 
-	if ( pOldEnemy && isEnemy(pOldEnemy,true) ) 
-		m_pFindEnemyFunc->setOldEnemy(pOldEnemy);
+	if (pOldEnemy && IsEnemy(pOldEnemy, true))
+		m_pFindEnemyFunc->SetOldEnemy(pOldEnemy);
 	/*else if ( CBotGlobals::entityIsAlive(pOldEnemy) ) /// lost enemy
 	{
-		CWaypoint *pWpt;
+	CWaypoint *pWpt;
 
-		m_fLastSeeEnemy = g_pEngine->Time();
-		m_pLastEnemy = pOldEnemy;
-		m_fLastUpdateLastSeeEnemy = g_pEngine->Time() + 0.1f;
-		m_vLastSeeEnemy = CBotGlobals::entityOrigin(m_pLastEnemy);
-		m_vLastSeeEnemyBlastWaypoint = m_vLastSeeEnemy;
+	m_fLastSeeEnemy = engine->Time();
+	m_pLastEnemy = pOldEnemy;
+	m_fLastUpdateLastSeeEnemy = engine->Time() + 0.1f;
+	m_vLastSeeEnemy = CBotGlobals::entityOrigin(m_pLastEnemy);
+	m_vLastSeeEnemyBlastWaypoint = m_vLastSeeEnemy;
 
-		pWpt = CWaypoints::getWaypoint(CWaypointLocations::NearestBlastWaypoint(m_vLastSeeEnemy,getOrigin(),8192.0,-1,true,true,false,false,0,false));
-		
-		if ( pWpt )
-			m_vLastSeeEnemyBlastWaypoint = pWpt->getOrigin();
+	pWpt = CWaypoints::getWaypoint(CWaypointLocations::NearestBlastWaypoint(m_vLastSeeEnemy,getOrigin(),8192.0,-1,true,true,false,false,0,false));
+
+	if ( pWpt )
+	m_vLastSeeEnemyBlastWaypoint = pWpt->getOrigin();
 	}*/
 
-	m_pVisibles->eachVisible(m_pFindEnemyFunc);
+	m_pVisibles->EachVisible(m_pFindEnemyFunc);
 
-	m_pEnemy = m_pFindEnemyFunc->getBestEnemy();
+	m_pEnemy = m_pFindEnemyFunc->GetBestEnemy();
 
-	if ( m_pEnemy && (m_pEnemy != pOldEnemy) )
+	if (m_pEnemy && (m_pEnemy != pOldEnemy))
 	{
-		enemyFound(m_pEnemy);
+		EnemyFound(m_pEnemy);
 	}
 }
 
-bool CBot :: isAlive ()
+bool CBot::IsAlive()
 {
-	return !m_pPlayerInfo->IsDead();
+	return !m_pPI->IsDead();
 }
 
-int CBot :: getTeam ()
+int CBot::GetTeam()
 {
-	return m_pPlayerInfo->GetTeamIndex();
+	return m_pPI->GetTeamIndex();
 }
 
-const char *pszConditionsDebugStrings[CONDITION_MAX_BITS+1] =
-{"CONDITION_ENEMY_OBSCURED",
+const char *pszConditionsDebugStrings[CONDITION_MAX_BITS + 1] =
+{ "CONDITION_ENEMY_OBSCURED",
 "CONDITION_NO_WEAPON",
 "CONDITION_OUT_OF_AMMO",
 "CONDITION_SEE_CUR_ENEMY",
@@ -1671,9 +1565,9 @@ const char *pszConditionsDebugStrings[CONDITION_MAX_BITS+1] =
 "CONDITION_SQUAD_IDLE",
 "CONDITION_DEFENSIVE",
 "CONDITION_BUILDING_SAPPED",
-"CONDITION_SEE_ENEMY_GROUND"};
+"CONDITION_SEE_ENEMY_GROUND" };
 
-void CBot :: clearSquad ()
+void CBot::ClearSquad()
 {
 	//causes stack overflow
 	//if ( m_pSquad != NULL )
@@ -1682,14 +1576,14 @@ void CBot :: clearSquad ()
 	m_pSquad = NULL;
 }
 
-bool CBot :: isFacing ( Vector vOrigin )
+bool CBot::IsFacing(Vector vOrigin)
 {
 	return (DotProductFromOrigin(vOrigin) > 0.97f);
 }
 
-void CBot ::debugBot(char *msg)
+void CBot::DebugBot(char *msg)
 {
-	bool hastask = m_pSchedules->getCurrentTask()!=NULL;
+	bool bHastask = m_pSchedules->GetCurrentTask() != NULL;
 	int iEnemyID = 0;
 
 	char szConditions[512];
@@ -1698,129 +1592,128 @@ void CBot ::debugBot(char *msg)
 
 	szConditions[0] = 0; // initialise string
 
-	for ( iMask = 1; iMask <= CONDITION_MAX; iBit++ )
+	for (iMask = 1; iMask <= CONDITION_MAX; iBit++)
 	{
-		if ( m_iConditions & iMask )
+		if (m_iConditions & iMask)
 		{
-			strcat(szConditions,pszConditionsDebugStrings[iBit]);
-			strcat(szConditions,"\n");
+			strcat(szConditions, pszConditionsDebugStrings[iBit]);
+			strcat(szConditions, "\n");
 		}
-	
+
 		iMask *= 2;
 	}
 
 	char task_string[256];
 
-	extern const char *g_szUtils[BOT_UTIL_MAX+1];
+	extern const char *g_szUtils[BOT_UTIL_MAX + 1];
 
-	edict_t *pEnemy = m_pEnemy.get();
+	edict_t *pEnemy = m_pEnemy.Get();
 
 	IPlayerInfo *p = NULL;
 
 	iEnemyID = ENTINDEX(pEnemy);
 
-	if ( (iEnemyID > 0) && (iEnemyID <= gpGlobals->maxClients) )
+	if ((iEnemyID > 0) && (iEnemyID <= MAX_PLAYERS))
 		p = playerinfomanager->GetPlayerInfo(pEnemy);
-	
 
-	if ( hastask )
-		m_pSchedules->getCurrentTask()->debugString(task_string);
 
-	sprintf(msg,"Debugging bot: %s\n \
-		Current Util: %s \n \
-		Current Schedule: %s\n \
-		Current Task: {%s}\n \
-		Look Task:%s\n \
-		Current Waypoint:%d\n \
-		Current Goal: %d\n \
-		Danger: %0.2f pc\n \
-		Enemy: %s (name = '%s')\n \
-		---CONDITIONS---\n%s", 
-		m_szBotName, 
-		(m_CurrentUtil>=0)?g_szUtils[m_CurrentUtil]:"none",
-		m_pSchedules->isEmpty() ? "none" : m_pSchedules->getCurrentSchedule()->getIDString(),
-		hastask ? task_string : "none",
-		g_szLookTaskToString[m_iLookTask], 
-		m_pNavigator->hasNextPoint() ? m_pNavigator->getCurrentWaypointID() : -1, 
-		m_pNavigator->hasNextPoint() ? m_pNavigator->getCurrentGoalID() : -1,
-		(m_fCurrentDanger/MAX_BELIEF)*100,
-		(pEnemy!=NULL)?pEnemy->GetClassName():"none",
-		(p!=NULL)?p->GetName():"none",
-		szConditions
-		);
+	if (bHastask)
+		m_pSchedules->GetCurrentTask()->DebugString(task_string);
+
+	sprintf(msg, "Debugging bot: %s\n \
+				 				 		Current Util: %s \n \
+																		Current Schedule: %s\n \
+																												Current Task: {%s}\n \
+																																								Look Task:%s\n \
+																																																						Current Waypoint:%d\n \
+																																																																						Current Goal: %d\n \
+																																																																																								Danger: %0.2f pc\n \
+																																																																																																												Enemy: %s (name = '%s')\n \
+																																																																																																																																		---CONDITIONS---\n%s",
+																																																																																																																																		m_szBotName,
+																																																																																																																																		(m_CurrentUtil >= 0) ? g_szUtils[m_CurrentUtil] : "none",
+																																																																																																																																		m_pSchedules->IsEmpty() ? "none" : m_pSchedules->GetCurrentSchedule()->GetIDString(),
+																																																																																																																																		bHastask ? task_string : "none",
+																																																																																																																																		g_szLookTaskToString[m_iLookTask],
+																																																																																																																																		m_pNavigator->HasNextPoint() ? m_pNavigator->GetCurrentWaypointID() : -1,
+																																																																																																																																		m_pNavigator->HasNextPoint() ? m_pNavigator->GetCurrentGoalID() : -1,
+																																																																																																																																		(m_fCurrentDanger / MAX_BELIEF) * 100,
+																																																																																																																																		(pEnemy != NULL) ? pEnemy->GetClassName() : "none",
+																																																																																																																																		(p != NULL) ? p->GetName() : "none",
+																																																																																																																																		szConditions
+																																																																																																																																		);
 
 }
 
-int CBot :: nearbyFriendlies (float fDistance)
+int CBot::NearbyFriendlies(float fDistance)
 {
 	int num = 0;
 	register short int i = 0;
-	register short int maxclients = (short int)CBotGlobals::maxClients();
 	edict_t *pEdict;
 
-	for ( i = 0; i <= maxclients; i ++ )
+	for (i = 0; i <= MAX_PLAYERS; i++)
 	{
 		pEdict = INDEXENT(i);
 
-		if ( !CBotGlobals::entityIsValid(pEdict) )
+		if (!CBotGlobals::EntityIsValid(pEdict))
 			continue;
 
-		if ( distanceFrom(pEdict) > fDistance )
+		if (DistanceFrom(pEdict) > fDistance)
 			continue;
 
-		if ( !isVisible(pEdict) )
+		if (!IsVisible(pEdict))
 			continue;
 
-		if ( isEnemy(pEdict) )
+		if (IsEnemy(pEdict))
 			continue;
 
-		num ++;
+		num++;
 	}
 
 	return num;
 }
 
-void CBot :: freeMapMemory ()
+void CBot::FreeMapMemory()
 {
 	// we can save things here
 	// 
 	/////////////////////////////////
-	if ( m_pButtons != NULL )
+	if (m_pButtons != NULL)
 	{
-		m_pButtons->freeMemory();
+		m_pButtons->FreeMemory();
 		delete m_pButtons;
 		m_pButtons = NULL;
 	}
 	/////////////////////////////////
-	if ( m_pSchedules != NULL )
+	if (m_pSchedules != NULL)
 	{
-		m_pSchedules->freeMemory();
+		m_pSchedules->FreeMemory();
 		delete m_pSchedules;
 		m_pSchedules = NULL;
 	}
 	/////////////////////////////////
-	if ( m_pNavigator != NULL )
+	if (m_pNavigator != NULL)
 	{
-		m_pNavigator->beliefSave(true);
-		m_pNavigator->freeMapMemory();
+		m_pNavigator->BeliefSave(true);
+		m_pNavigator->FreeMapMemory();
 		delete m_pNavigator;
 		m_pNavigator = NULL;
 	}
 	/////////////////////////////////
-	if ( m_pVisibles != NULL )
+	if (m_pVisibles != NULL)
 	{
-		m_pVisibles->reset();
+		m_pVisibles->Reset();
 		delete m_pVisibles;
 		m_pVisibles = NULL;
 	}
 	/////////////////////////////////
-	if ( m_pFindEnemyFunc != NULL )
+	if (m_pFindEnemyFunc != NULL)
 	{
 		delete m_pFindEnemyFunc;
 		m_pFindEnemyFunc = NULL;
 	}
 	/////////////////////////////////
-	if ( m_pWeapons != NULL )
+	if (m_pWeapons != NULL)
 	{
 		delete m_pWeapons;
 		m_pWeapons = NULL;
@@ -1828,29 +1721,29 @@ void CBot :: freeMapMemory ()
 
 	m_iAmmo = NULL;
 	/////////////////////////////////
-	init();
+	Init();
 }
 
-void CBot :: updateStatistics ()
+void CBot::UpdateStatistics()
 {
 	bool bVisible;
 	bool bIsEnemy;
 
-	extern ConVar rcbot_stats_inrange_dist;
+	extern ConVar bot_stats_inrange_dist;
 
-	if ( (m_iStatsIndex == 0) || ( m_iStatsIndex > gpGlobals->maxClients ) )
+	if ((m_iStatsIndex == 0) || (m_iStatsIndex > MAX_PLAYERS))
 	{
-		if ( m_iStatsIndex != 0 )
+		if (m_iStatsIndex != 0)
 			m_bStatsCanUse = true;
 
 		m_StatsCanUse.data = m_Stats.data;
 		m_Stats.data = 0;
 		m_iStatsIndex = 1; // reset to be sure in case of m_iStatsIndex > gpGlobals->maxClients
 
-		if ( !m_uSquadDetail.b1.said_area_clear && (m_StatsCanUse.stats.m_iEnemiesInRange == 0) && (m_StatsCanUse.stats.m_iEnemiesVisible == 0) && (m_StatsCanUse.stats.m_iTeamMatesInRange > 0))
+		if (!m_uSquadDetail.b1.said_area_clear && (m_StatsCanUse.stats.m_iEnemiesInRange == 0) && (m_StatsCanUse.stats.m_iEnemiesVisible == 0) && (m_StatsCanUse.stats.m_iTeamMatesInRange > 0))
 		{
-			if ( !inSquad() || isSquadLeader() && (m_fLastSeeEnemy && ((m_fLastSeeEnemy + 10.0f)<g_pEngine->Time())) )
-				areaClear();
+			if (!InSquad() || IsSquadLeader() && (m_fLastSeeEnemy && ((m_fLastSeeEnemy + 10.0f) < engine->Time())))
+				AreaClear();
 
 			m_uSquadDetail.b1.said_area_clear = true;
 		}
@@ -1858,53 +1751,52 @@ void CBot :: updateStatistics ()
 
 	edict_t *pPlayer = INDEXENT(m_iStatsIndex++);
 
-	if ( !pPlayer || !pPlayer->IsFree() )
+	if (!pPlayer || !pPlayer->IsFree())
 		return; // not valid
 
-	if ( pPlayer == m_pEdict )
+	if (pPlayer == m_pEdict)
 		return; // don't listen to self
 
 	IPlayerInfo *p = playerinfomanager->GetPlayerInfo(pPlayer);
 
 	// 05/07/09 fix crash bug
-	if ( !p || !p->IsConnected() || p->IsDead() || p->IsObserver() || !p->IsPlayer() )
+	if (!p || !p->IsConnected() || p->IsDead() || p->IsObserver() || !p->IsPlayer())
 		return;
 
-	bVisible = isVisible(pPlayer);
-	bIsEnemy = isEnemy(pPlayer,false);
+	bVisible = IsVisible(pPlayer);
+	bIsEnemy = IsEnemy(pPlayer, false);
 
-	if ( bIsEnemy )
+	if (bIsEnemy)
 	{
-		if ( bVisible )
+		if (bVisible)
 			m_Stats.stats.m_iEnemiesVisible++;
 
-		if ( distanceFrom(pPlayer) < rcbot_stats_inrange_dist.GetFloat() )
+		if (DistanceFrom(pPlayer) < bot_stats_inrange_dist.GetFloat())
 			m_Stats.stats.m_iEnemiesInRange++;
 	}
 	else
 	{
 		// team-mate
-		if ( bVisible )
+		if (bVisible)
 			m_Stats.stats.m_iTeamMatesVisible++;
 
-		if ( distanceFrom(pPlayer) < rcbot_stats_inrange_dist.GetFloat() )
+		if (DistanceFrom(pPlayer) < bot_stats_inrange_dist.GetFloat())
 			m_Stats.stats.m_iTeamMatesInRange++;
 	}
 }
 
-bool CBot :: wantToListen ()
+bool CBot::WantToListen()
 {
-	return (m_bWantToListen && (m_fWantToListenTime < g_pEngine->Time()) && ((m_fLastSeeEnemy+2.5f) < g_pEngine->Time()));
+	return (m_bWantToListen && (m_fWantToListenTime < engine->Time()) && ((m_fLastSeeEnemy + 2.5f) < engine->Time()));
 }
 // Listen for players who are shooting
-void CBot :: listenForPlayers ()
+void CBot::ListenForPlayers()
 {
-	//m_fNextListenTime = g_pEngine->Time() + randomFloat(0.5f,2.0f);
+	//m_fNextListenTime = engine->Time() + randomFloat(0.5f,2.0f);
 
 	edict_t *pListenNearest = NULL;
 	CClient *pClient;
 	edict_t *pPlayer;
-	CBotCmd cmd;
 	IPlayerInfo *p;
 	float fFactor = 0;
 	float fMaxFactor = 0;
@@ -1912,159 +1804,157 @@ void CBot :: listenForPlayers ()
 	float fDist;
 	float fVelocity;
 	Vector vVelocity;
-	extern ConVar rcbot_listen_dist;
-	extern ConVar rcbot_footstep_speed;
+	extern ConVar bot_listen_dist;
+	extern ConVar bot_footstep_speed;
 	bool bIsNearestAttacking = false;
 
-	if ( m_bListenPositionValid && (m_fListenTime > g_pEngine->Time()) ) // already listening to something ?
+	if (m_bListenPositionValid && (m_fListenTime > engine->Time())) // already listening to something ?
 	{
-		setLookAtTask(LOOK_NOISE);
+		SetLookAtTask(LOOK_NOISE);
 		return;
 	}
 
 	m_bListenPositionValid = false;
 
-	for ( register short int i = 1; i <= gpGlobals->maxClients; i ++ )
+	for (register short int i = 1; i <= MAX_PLAYERS; i++)
 	{
 		pPlayer = INDEXENT(i);
 
-		if ( pPlayer == m_pEdict )
+		if (pPlayer == m_pEdict)
 			continue; // don't listen to self
 
-		if ( pPlayer->IsFree() )
+		if (pPlayer->IsFree())
 			continue;
 
-		pClient = CClients::get(pPlayer);
+		pClient = CClients::Get(pPlayer);
 
-		if ( !pClient->isUsed() )
+		if (!pClient->IsUsed())
 			continue;
 
 		p = playerinfomanager->GetPlayerInfo(pPlayer);
 
 		// 05/07/09 fix crash bug
-		if ( !p || !p->IsConnected() || p->IsDead() || p->IsObserver() || !p->IsPlayer() )
+		if (!p || !p->IsConnected() || p->IsDead() || p->IsObserver() || !p->IsPlayer())
 			continue;
 
-		fDist = distanceFrom(pPlayer);
+		fDist = DistanceFrom(pPlayer);
 
-		if ( fDist > rcbot_listen_dist.GetFloat() )
+		if (fDist > bot_listen_dist.GetFloat())
 			continue;
-		
+
 		fFactor = 0.0f;
 
-		cmd = p->GetLastUserCommand();
-
-		if ( (cmd.buttons & IN_ATTACK) )
+		if ((m_pCmd.buttons & IN_ATTACK))
 		{
-			if ( wantToListenToPlayerAttack(pPlayer) )
+			if (WantToListenToPlayerAttack(pPlayer))
 				fFactor += 1000.0f;
 		}
-		
+
 		// can't see this player and I'm on my own
-		if ( wantToListenToPlayerFootsteps(pPlayer) && !isVisible(pPlayer) && ( m_bStatsCanUse && ((m_StatsCanUse.stats.m_iTeamMatesVisible==0)/* && (m_fSeeTeamMateTime ...) */)) )
+		if (WantToListenToPlayerFootsteps(pPlayer) && !IsVisible(pPlayer) && (m_bStatsCanUse && ((m_StatsCanUse.stats.m_iTeamMatesVisible == 0)/* && (m_fSeeTeamMateTime ...) */)))
 		{
-			CClassInterface::getVelocity(pPlayer,&vVelocity);
-		
+			CClassInterface::GetVelocity(pPlayer, &vVelocity);
+
 			fVelocity = vVelocity.Length();
 
-			if ( fVelocity > rcbot_footstep_speed.GetFloat() )
+			if (fVelocity > bot_footstep_speed.GetFloat())
 				fFactor += vVelocity.Length();
 		}
 
-		if ( fFactor == 0.0f )
+		if (fFactor == 0.0f)
 			continue;
 
 		// add inverted distance to the factor (i.e. closer = better)
-		fFactor += (rcbot_listen_dist.GetFloat() - fDist);
+		fFactor += (bot_listen_dist.GetFloat() - fDist);
 
-		if ( fFactor > fMaxFactor )
+		if (fFactor > fMaxFactor)
 		{
 			fMaxFactor = fFactor;
 			pListenNearest = pPlayer;
-			bIsNearestAttacking = (cmd.buttons & IN_ATTACK);
+			bIsNearestAttacking = (m_pCmd.buttons & IN_ATTACK);
 		}
 	}
 
-	if ( pListenNearest != NULL )
+	if (pListenNearest != NULL)
 	{
-		listenToPlayer(pListenNearest,false,bIsNearestAttacking);
+		ListenToPlayer(pListenNearest, false, bIsNearestAttacking);
 	}
 }
 
-void CBot :: hearPlayerAttack( edict_t *pAttacker, int iWeaponID )
+void CBot::HearPlayerAttack(edict_t *pAttacker, int iWeaponID)
 {
-	if ( m_fListenTime < g_pEngine->Time() ) // already listening to something ?
-		listenToPlayer(pAttacker,false,true);
+	if (m_fListenTime < engine->Time()) // already listening to something ?
+		ListenToPlayer(pAttacker, false, true);
 }
 
-void CBot :: listenToPlayer ( edict_t *pPlayer, bool bIsEnemy, bool bIsAttacking )
+void CBot::ListenToPlayer(edict_t *pPlayer, bool bIsEnemy, bool bIsAttacking)
 {
-	bool bIsVisible = isVisible(pPlayer);
+	bool bIsVisible = IsVisible(pPlayer);
 
-	if ( CBotGlobals::isPlayer( pPlayer ) )
+	if (CBotGlobals::IsPlayer(pPlayer))
 	{
 		IPlayerInfo *p = playerinfomanager->GetPlayerInfo(pPlayer);
 
-		if ( bIsEnemy == false )
-			bIsEnemy = isEnemy(pPlayer);
-			 
+		if (bIsEnemy == false)
+			bIsEnemy = IsEnemy(pPlayer);
+
 		// look at possible enemy
-		if ( !bIsVisible || bIsEnemy )
+		if (!bIsVisible || bIsEnemy)
 		{
 			m_vListenPosition = p->GetAbsOrigin();
 		}
-		else if ( bIsAttacking )
+		else if (bIsAttacking)
 		{
-			if ( !bIsEnemy && wantToInvestigateSound() )
+			if (!bIsEnemy && WantToInvestigateSound())
 			{
 				QAngle angle = p->GetAbsAngles();
 				Vector forward;
 
-				AngleVectors( angle, &forward );
+				AngleVectors(angle, &forward);
 
 				// look where team mate is shooting
-				m_vListenPosition = p->GetAbsOrigin() + (forward*1024.0f);		
+				m_vListenPosition = p->GetAbsOrigin() + (forward*1024.0f);
 
 				// not investigating any noise right now -- depending on my braveness I will check it out
-				if ( !m_pSchedules->isCurrentSchedule(SCHED_INVESTIGATE_NOISE) && (randomFloat(0.0f,0.75f) < m_pProfile->m_fBraveness) )
+				if (!m_pSchedules->IsCurrentSchedule(SCHED_INVESTIGATE_NOISE) && (RandomFloat(0.0f, 0.75f) < m_pProfile->m_fBraveness))
 				{
-					trace_t *TraceResult = CBotGlobals::getTraceResult();
-					
-					Vector vAttackerOrigin = CBotGlobals::entityOrigin(pPlayer);
+					trace_t *TraceResult = CBotGlobals::GetTraceResult();
 
-					if ( distanceFrom(vAttackerOrigin) > 96.0f )
+					Vector vAttackerOrigin = CBotGlobals::EntityOrigin(pPlayer);
+
+					if (DistanceFrom(vAttackerOrigin) > 96.0f)
 					{
 						// check exactly where teammate is firing
-						CBotGlobals::quickTraceline(pPlayer,vAttackerOrigin,m_vListenPosition);
+						CBotGlobals::QuickTraceline(pPlayer, vAttackerOrigin, m_vListenPosition);
 
 						// update the wall or player teammate is shooting
-						m_vListenPosition = TraceResult->endpos; 
+						m_vListenPosition = TraceResult->endpos;
 
-						CBotGlobals::quickTraceline(m_pEdict,getOrigin(),m_vListenPosition);
+						CBotGlobals::QuickTraceline(m_pEdict, GetOrigin(), m_vListenPosition);
 
 						// can't see what my teammate is shooting -- go there
-						if ( (TraceResult->fraction < 1.0f) && (TraceResult->m_pEnt != m_pEdict->GetIServerEntity()->GetBaseEntity() ) )
+						if ((TraceResult->fraction < 1.0f) && (TraceResult->m_pEnt != m_pEdict->GetIServerEntity()->GetBaseEntity()))
 						{
-							m_pSchedules->removeSchedule(SCHED_INVESTIGATE_NOISE);
-						
+							m_pSchedules->RemoveSchedule(SCHED_INVESTIGATE_NOISE);
+
 							Vector vecLOS;
 							float flDot;
 
-							vecLOS = getOrigin() - vAttackerOrigin;
-							vecLOS = vecLOS/vecLOS.Length();
-	
-							flDot = DotProduct (vecLOS , forward );
+							vecLOS = GetOrigin() - vAttackerOrigin;
+							vecLOS = vecLOS / vecLOS.Length();
 
-							if ( flDot > 0.5f )
+							flDot = DotProduct(vecLOS, forward);
+
+							if (flDot > 0.5f)
 							{
 								// Facing my direction
-								m_pSchedules->addFront(new CBotInvestigateNoiseSched(m_vListenPosition,m_vListenPosition));
+								m_pSchedules->AddFront(new CBotInvestigateNoiseSched(m_vListenPosition, m_vListenPosition));
 							}
 							else
 							{
 								// Not facing my direction
-								m_pSchedules->addFront(new CBotInvestigateNoiseSched(vAttackerOrigin,m_vListenPosition));
-							}						
+								m_pSchedules->AddFront(new CBotInvestigateNoiseSched(vAttackerOrigin, m_vListenPosition));
+							}
 						}
 					}
 				}
@@ -2072,55 +1962,55 @@ void CBot :: listenToPlayer ( edict_t *pPlayer, bool bIsEnemy, bool bIsAttacking
 		}
 	}
 	else
-		m_vListenPosition = CBotGlobals::entityOrigin(pPlayer);
+		m_vListenPosition = CBotGlobals::EntityOrigin(pPlayer);
 
 	m_PlayerListeningTo = pPlayer;
 	m_bListenPositionValid = true;
-	m_fListenTime = g_pEngine->Time() + randomFloat(1.0f,2.0f);
-	setLookAtTask(LOOK_NOISE);
+	m_fListenTime = engine->Time() + RandomFloat(1.0f, 2.0f);
+	SetLookAtTask(LOOK_NOISE);
 	m_fLookSetTime = m_fListenTime;
 
-	if ( bIsVisible || !bIsEnemy ) 
+	if (bIsVisible || !bIsEnemy)
 	{// certain where noise is coming from -- don't listen elsewhere for another second
-		m_fWantToListenTime = g_pEngine->Time() + 1.0f;
+		m_fWantToListenTime = engine->Time() + 1.0f;
 	}
 	else
-		m_fWantToListenTime = g_pEngine->Time() + 0.25f;
+		m_fWantToListenTime = engine->Time() + 0.25f;
 
 }
 
-bool CBot :: onLadder ()
-{	
-	return CClassInterface::isMoveType(m_pEdict,MOVETYPE_LADDER);
+bool CBot::OnLadder()
+{
+	return CClassInterface::IsMoveType(m_pEdict, MOVETYPE_LADDER);
 }
 
-void CBot :: freeAllMemory ()
-{	
-	freeMapMemory();
+void CBot::FreeAllMemory()
+{
+	FreeMapMemory();
 	return;
 }
 
-void CBot :: forceGotoWaypoint ( int wpt )
+void CBot::ForceGotoWaypoint(int wpt)
 {
-	if ( wpt != -1 )
+	if (wpt != -1)
 	{
-		m_pSchedules->freeMemory();
-		m_pSchedules->add(new CBotSchedule(new CFindPathTask(wpt)));
+		m_pSchedules->FreeMemory();
+		m_pSchedules->Add(new CBotSchedule(new CFindPathTask(wpt)));
 	}
 }
 // found a new enemy
-void CBot :: enemyFound (edict_t *pEnemy)
+void CBot::EnemyFound(edict_t *pEnemy)
 {
 	m_bLookedForEnemyLast = false;
 }
 // work move velocity
-void CBot :: doMove ()
+void CBot::DoMove()
 {
 	// Temporary measure to make bot follow me when i make listen serevr
 	//setMoveTo(CBotGlobals::entityOrigin(INDEXENT(1)));
 
 	// moving somewhere?
-	if ( moveToIsValid () )
+	if (MoveToIsValid())
 	{
 		Vector2D move;
 		float flMove = 0.0;
@@ -2130,68 +2020,68 @@ void CBot :: doMove ()
 		float radians;
 		float fDist;
 
-		if ( m_pAvoidEntity && (m_fAvoidTime < g_pEngine->Time()) )
+		if (m_pAvoidEntity && (m_fAvoidTime < engine->Time()))
 		{
-			if ( canAvoid(m_pAvoidEntity) )
+			if (CanAvoid(m_pAvoidEntity))
 			{
 				extern ConVar bot_avoid_strength;
 
-				Vector m_vAvoidOrigin = CBotGlobals::entityOrigin(m_pAvoidEntity);
+				Vector m_vAvoidOrigin = CBotGlobals::EntityOrigin(m_pAvoidEntity);
 
 				//m_vMoveTo = getOrigin() + ((m_vMoveTo-getOrigin())-((m_vAvoidOrigin-getOrigin())*bot_avoid_strength.GetFloat()));
 				//float fAvoidDist = distanceFrom(m_pAvoidEntity);
 
-				Vector vMove = m_vMoveTo-getOrigin();
+				Vector vMove = m_vMoveTo - GetOrigin();
 				Vector vLeft;
 
-				if ( vMove.Length2D() > bot_avoid_strength.GetFloat() )
+				if (vMove.Length2D() > bot_avoid_strength.GetFloat())
 				{
-					vLeft = vMove.Cross(Vector(0,0,1));
-					vLeft = (vLeft/vLeft.Length());
+					vLeft = vMove.Cross(Vector(0, 0, 1));
+					vLeft = (vLeft / vLeft.Length());
 
-					if ( m_fAvoidSideSwitch < g_pEngine->Time() )
+					if (m_fAvoidSideSwitch < engine->Time())
 					{
-						m_fAvoidSideSwitch = g_pEngine->Time() + randomFloat(2.0f,3.0f);
+						m_fAvoidSideSwitch = engine->Time() + RandomFloat(2.0f, 3.0f);
 						m_bAvoidRight = !m_bAvoidRight;
 					}
 #ifndef __linux__
-					if ( CClients::clientsDebugging(BOT_DEBUG_THINK) )
+					if (CClients::ClientsDebugging(BOT_DEBUG_THINK))
 					{
-						debugoverlay->AddLineOverlay (getOrigin(), m_vAvoidOrigin, 0,0,255, false, 0.05f);
-						debugoverlay->AddLineOverlay (getOrigin(), m_bAvoidRight ? (getOrigin()+(vLeft*bot_avoid_strength.GetFloat())):(getOrigin()-(vLeft*bot_avoid_strength.GetFloat())), 0,255,0, false, 0.05f);
-						debugoverlay->AddLineOverlay (getOrigin(), getOrigin() + ((vMove/vMove.Length())*bot_avoid_strength.GetFloat()), 255,0,0, false, 0.05f);
-						debugoverlay->AddTextOverlayRGB(getOrigin()+Vector(0,0,100),0,0.05,255,255,255,255,"Avoiding: %s",m_pAvoidEntity.get()->GetClassName());
+						debugoverlay->AddLineOverlay(GetOrigin(), m_vAvoidOrigin, 0, 0, 255, false, 0.05f);
+						debugoverlay->AddLineOverlay(GetOrigin(), m_bAvoidRight ? (GetOrigin() + (vLeft*bot_avoid_strength.GetFloat())) : (GetOrigin() - (vLeft*bot_avoid_strength.GetFloat())), 0, 255, 0, false, 0.05f);
+						debugoverlay->AddLineOverlay(GetOrigin(), GetOrigin() + ((vMove / vMove.Length())*bot_avoid_strength.GetFloat()), 255, 0, 0, false, 0.05f);
+						debugoverlay->AddTextOverlayRGB(GetOrigin() + Vector(0, 0, 100), 0, 0.05, 255, 255, 255, 255, "Avoiding: %s", m_pAvoidEntity.Get()->GetClassName());
 					}
 #endif
 
-	//*/
+					//*/
 					//debugoverlay->AddLineOverlay (getOrigin(), m_vAvoidOrigin, 0,0,255, false, 0.05f);
 					//debugoverlay->AddLineOverlay (getOrigin(), m_bAvoidRight ? (getOrigin()+(vLeft*bot_avoid_strength.GetFloat())):(getOrigin()-(vLeft*bot_avoid_strength.GetFloat())), 0,255,0, false, 0.05f);
 					//debugoverlay->AddLineOverlay (getOrigin(), m_vMoveTo, 255,0,0, false, 0.05f);
-					
 
-					if ( m_bAvoidRight )
-						m_vMoveTo = getOrigin() + ((vMove/vMove.Length())*bot_avoid_strength.GetFloat()) + (vLeft*bot_avoid_strength.GetFloat());
+
+					if (m_bAvoidRight)
+						m_vMoveTo = GetOrigin() + ((vMove / vMove.Length())*bot_avoid_strength.GetFloat()) + (vLeft*bot_avoid_strength.GetFloat());
 					else
-						m_vMoveTo = getOrigin() + ((vMove/vMove.Length())*bot_avoid_strength.GetFloat()) - (vLeft*bot_avoid_strength.GetFloat());
+						m_vMoveTo = GetOrigin() + ((vMove / vMove.Length())*bot_avoid_strength.GetFloat()) - (vLeft*bot_avoid_strength.GetFloat());
 				}
 
-			
+
 			}
 			else
 				m_pAvoidEntity = NULL;
 		}
 
-		fAngle = CBotGlobals::yawAngleFromEdict(m_pEdict,m_vMoveTo);
-		fDist = (getOrigin()-m_vMoveTo).Length2D();
+		fAngle = CBotGlobals::YawAngleFromEdict(m_pEdict, m_vMoveTo);
+		fDist = (GetOrigin() - m_vMoveTo).Length2D();
 
 		radians = DEG_TO_RAD(fAngle);
 		//radians = fAngle * 3.141592f / 180.0f; // degrees to radians
-        // fl Move is percentage (0 to 1) of forward speed,
-        // flSide is percentage (0 to 1) of side speed.
-		
+		// fl Move is percentage (0 to 1) of forward speed,
+		// flSide is percentage (0 to 1) of side speed.
+
 		// quicker
-		SinCos(radians,&move.y,&move.x);
+		SinCos(radians, &move.y, &move.x);
 
 		move = move / move.Length();
 
@@ -2202,15 +2092,15 @@ void CBot :: doMove ()
 
 		// dont want this to override strafe speed if we're trying 
 		// to strafe to avoid a wall for instance.
-		if ( m_fStrafeTime < g_pEngine->Time() )
+		if (m_fStrafeTime < engine->Time())
 		{
 			// side speed 
 			m_fSideSpeed = m_fIdealMoveSpeed * flSide;
 		}
 
-		if ( hasSomeConditions(CONDITION_LIFT) )//fabs(m_vMoveTo.z - getOrigin().z) > 48 )
+		if (HasSomeConditions(CONDITION_LIFT))//fabs(m_vMoveTo.z - getOrigin().z) > 48 )
 		{
-			if ( fabs(m_vVelocity.z) > 16.0f )
+			if (fabs(m_vVelocity.z) > 16.0f)
 			{
 				m_fForwardSpeed = 0;
 				m_fSideSpeed = 0;
@@ -2219,36 +2109,36 @@ void CBot :: doMove ()
 
 		// moving less than 1.0 units/sec? just stop to 
 		// save bot jerking around..
-		if ( fabs(m_fForwardSpeed) < 1.0 )
+		if (fabs(m_fForwardSpeed) < 1.0)
 			m_fForwardSpeed = 0.0;
-		if ( fabs(m_fSideSpeed) < 1.0 )
+		if (fabs(m_fSideSpeed) < 1.0)
 			m_fSideSpeed = 0.0;
 
-		if ( (m_fForwardSpeed < 1.0f) && (m_fSideSpeed < 1.0f) )
+		if ((m_fForwardSpeed < 1.0f) && (m_fSideSpeed < 1.0f))
 		{
-			if ( m_pButtons->holdingButton(IN_SPEED) && m_pButtons->holdingButton(IN_FORWARD) )
+			if (m_pButtons->HoldingButton(IN_SPEED) && m_pButtons->HoldingButton(IN_FORWARD))
 			{
-				m_pButtons->letGo(IN_SPEED);
-				m_pButtons->letGo(IN_FORWARD);
+				m_pButtons->LetGo(IN_SPEED);
+				m_pButtons->LetGo(IN_FORWARD);
 			}
 		}
 
-		if ( (!onLadder() && !m_pNavigator->nextPointIsOnLadder()) && (fDist < 8.0f) )
+		if ((!OnLadder() && !m_pNavigator->NextPointIsOnLadder()) && (fDist < 8.0f))
 		{
 			m_fForwardSpeed = 0.0f;
 			m_fSideSpeed = 0.0f;
 		}
 
-		if ( isUnderWater() || onLadder() )
+		if (IsUnderWater() || OnLadder())
 		{
-			if ( m_vMoveTo.z > (getOrigin().z + 32.0) )
+			if (m_vMoveTo.z > (GetOrigin().z + 32.0))
 				m_fUpSpeed = m_fIdealMoveSpeed;
-			else if ( m_vMoveTo.z < (getOrigin().z - 32.0) )
+			else if (m_vMoveTo.z < (GetOrigin().z - 32.0))
 				m_fUpSpeed = -m_fIdealMoveSpeed;
 		}
 	}
 	else
-	{	
+	{
 		m_fForwardSpeed = 0;
 		// bots side move speed
 		m_fSideSpeed = 0;
@@ -2257,47 +2147,47 @@ void CBot :: doMove ()
 	}
 }
 
-bool CBot :: recentlySpawned ( float fTime )
+bool CBot::RecentlySpawned(float fTime)
 {
-	return ( ( m_fSpawnTime + fTime ) > g_pEngine->Time());
+	return ((m_fSpawnTime + fTime) > engine->Time());
 }
 
-bool CBot :: FInViewCone ( edict_t *pEntity )
-{	
+bool CBot::FInViewCone(edict_t *pEntity)
+{
 	static Vector origin;
-	
-	origin = CBotGlobals::entityOrigin(pEntity);
 
-	return ( ((origin - getEyePosition()).Length()>1) && (DotProductFromOrigin(origin) > 0) ); // 90 degree !! 0.422618f ); // 65 degree field of view   
+	origin = CBotGlobals::EntityOrigin(pEntity);
+
+	return (((origin - GetEyePosition()).Length() > 1) && (DotProductFromOrigin(origin) > 0)); // 90 degree !! 0.422618f ); // 65 degree field of view   
 }
 
-float CBot :: DotProductFromOrigin ( Vector pOrigin )
+float CBot::DotProductFromOrigin(Vector pOrigin)
 {
 	static Vector vecLOS;
 	static float flDot;
-	
+
 	Vector vForward;
 	QAngle eyes;
 
-	eyes = eyeAngles();
+	eyes = EyeAngles();
 
 	// in fov? Check angle to edict
-	AngleVectors(eyes,&vForward);
-	
-	vecLOS = pOrigin - getEyePosition();
-	vecLOS = vecLOS/vecLOS.Length();
-	
-	flDot = DotProduct (vecLOS , vForward );
-	
-	return flDot; 
+	AngleVectors(eyes, &vForward);
+
+	vecLOS = pOrigin - GetEyePosition();
+	vecLOS = vecLOS / vecLOS.Length();
+
+	flDot = DotProduct(vecLOS, vForward);
+
+	return flDot;
 }
 
-void CBot :: updateUtilTime ( int util )
+void CBot::UpdateUtilTime(int util)
 {
-	m_fUtilTimes[util] = g_pEngine->Time() + 0.5f;	
+	m_fUtilTimes[util] = engine->Time() + 0.5f;
 }
 
-Vector CBot::getAimVector ( edict_t *pEntity )
+Vector CBot::GetAimVector(edict_t *pEntity)
 {
 	static Vector v_desired_offset;
 	static Vector v_origin;
@@ -2306,75 +2196,75 @@ Vector CBot::getAimVector ( edict_t *pEntity )
 	static float fDist;
 	static float fDist2D;
 
-	if ( m_fNextUpdateAimVector > g_pEngine->Time() )
+	if (m_fNextUpdateAimVector > engine->Time())
 	{
 		return m_vAimVector;
 	}
 
-	fDist = distanceFrom(pEntity);
-	fDist2D = distanceFrom2D(pEntity);
+	fDist = DistanceFrom(pEntity);
+	fDist2D = DistanceFrom2D(pEntity);
 
 	v_size = pEntity->GetCollideable()->OBBMaxs() - pEntity->GetCollideable()->OBBMins();
 	v_size = v_size * 0.5f;
 
-	fSensitivity = (float)m_pProfile->m_iSensitivity/20;
+	fSensitivity = (float)m_pProfile->m_iSensitivity / 20;
 
-	v_origin = CBotGlobals::entityOrigin(pEntity);
+	v_origin = CBotGlobals::EntityOrigin(pEntity);
 
-	modAim(pEntity,v_origin,&v_desired_offset,v_size,fDist,fDist2D);
+	ModAim(pEntity, v_origin, &v_desired_offset, v_size, fDist, fDist2D);
 
 	// post aim
 	// update 
-	extern ConVar rcbot_supermode;
+	extern ConVar bot_supermode;
 
-	if ( rcbot_supermode.GetBool() )
+	if (bot_supermode.GetBool())
 	{
 		m_vAimOffset = v_desired_offset;
 	}
 	else
 	{
-		m_vAimOffset.x = ((1.0f-fSensitivity)*m_vAimOffset.x) + fSensitivity*v_desired_offset.x; 
-		m_vAimOffset.y = ((1.0f-fSensitivity)*m_vAimOffset.y) + fSensitivity*v_desired_offset.y;
-		m_vAimOffset.z = ((1.0f-fSensitivity)*m_vAimOffset.z) + fSensitivity*v_desired_offset.z;
+		m_vAimOffset.x = ((1.0f - fSensitivity)*m_vAimOffset.x) + fSensitivity*v_desired_offset.x;
+		m_vAimOffset.y = ((1.0f - fSensitivity)*m_vAimOffset.y) + fSensitivity*v_desired_offset.y;
+		m_vAimOffset.z = ((1.0f - fSensitivity)*m_vAimOffset.z) + fSensitivity*v_desired_offset.z;
 
 		// check for QNAN
-		if ( (m_vAimOffset.x != m_vAimOffset.x) || 
-			(m_vAimOffset.y != m_vAimOffset.y) || 
-			(m_vAimOffset.z != m_vAimOffset.z) )
+		if ((m_vAimOffset.x != m_vAimOffset.x) ||
+			(m_vAimOffset.y != m_vAimOffset.y) ||
+			(m_vAimOffset.z != m_vAimOffset.z))
 		{
-			m_vAimOffset = Vector(1.0f,1.0f,1.0f);
+			m_vAimOffset = Vector(1.0f, 1.0f, 1.0f);
 		}
 	}
 
-	if ( pEntity == CClassInterface::getGroundEntity(m_pEdict) )
+	if (pEntity == CClassInterface::GetGroundEntity(m_pEdict))
 		m_vAimOffset.z -= 32.0f;
 
 	m_vAimVector = v_origin + m_vAimOffset;
 
-	m_fNextUpdateAimVector = g_pEngine->Time() + (1.0f-m_pProfile->m_fAimSkill)*0.2f;
+	m_fNextUpdateAimVector = engine->Time() + (1.0f - m_pProfile->m_fAimSkill)*0.2f;
 
 #ifndef __linux__
-	if ( CClients::clientsDebugging(BOT_DEBUG_AIM) && CClients::isListenServerClient(CClients::get(0)) )
+	if (CClients::ClientsDebugging(BOT_DEBUG_AIM) && CClients::IsListenServerClient(CClients::Get(0)))
 	{
-		if ( CClients::get(0)->getDebugBot() == getEdict() )
+		if (CClients::Get(0)->GetDebugBot() == GetEdict())
 		{
 			int line = 0;
-			float ftime = m_fNextUpdateAimVector-g_pEngine->Time();
+			float ftime = m_fNextUpdateAimVector - engine->Time();
 
-			debugoverlay->AddTextOverlayRGB(m_vAimVector,line++,ftime,255,200,100,230,"x Aiming Info");
-			debugoverlay->AddTextOverlayRGB(m_vAimVector,line++,ftime,255,200,100,230,"fDist = %0.2f",fDist);
-			debugoverlay->AddTextOverlayRGB(m_vAimVector,line++,ftime,255,200,100,230,"fSensitivity = %0.2f",fSensitivity);
-			debugoverlay->AddTextOverlayRGB(m_vAimVector,line++,ftime,255,200,100,230,"v_size = (%0.2f,%0.2f,%0.2f)",v_size.x,v_size.y,v_size.z);
-			debugoverlay->AddTextOverlayRGB(m_vAimVector,line++,ftime,255,200,100,230,"v_desired_offset = (%0.2f,%0.2f,%0.2f)",v_desired_offset.x,v_desired_offset.y,v_desired_offset.z);
-			debugoverlay->AddTextOverlayRGB(m_vAimVector,line++,ftime,255,200,100,230,"m_vAimOffset = (%0.2f,%0.2f,%0.2f)",m_vAimOffset.x,m_vAimOffset.y,m_vAimOffset.z);
+			debugoverlay->AddTextOverlayRGB(m_vAimVector, line++, ftime, 255, 200, 100, 230, "x Aiming Info");
+			debugoverlay->AddTextOverlayRGB(m_vAimVector, line++, ftime, 255, 200, 100, 230, "fDist = %0.2f", fDist);
+			debugoverlay->AddTextOverlayRGB(m_vAimVector, line++, ftime, 255, 200, 100, 230, "fSensitivity = %0.2f", fSensitivity);
+			debugoverlay->AddTextOverlayRGB(m_vAimVector, line++, ftime, 255, 200, 100, 230, "v_size = (%0.2f,%0.2f,%0.2f)", v_size.x, v_size.y, v_size.z);
+			debugoverlay->AddTextOverlayRGB(m_vAimVector, line++, ftime, 255, 200, 100, 230, "v_desired_offset = (%0.2f,%0.2f,%0.2f)", v_desired_offset.x, v_desired_offset.y, v_desired_offset.z);
+			debugoverlay->AddTextOverlayRGB(m_vAimVector, line++, ftime, 255, 200, 100, 230, "m_vAimOffset = (%0.2f,%0.2f,%0.2f)", m_vAimOffset.x, m_vAimOffset.y, m_vAimOffset.z);
 		}
 	}
 #endif
-	
+
 	return m_vAimVector;
 }
 
-void CBot::modAim ( edict_t *pEntity, Vector &v_origin, Vector *v_desired_offset, Vector &v_size, float fDist, float fDist2D )
+void CBot::ModAim(edict_t *pEntity, Vector &v_origin, Vector *v_desired_offset, Vector &v_size, float fDist, float fDist2D)
 {
 	static Vector vel;
 	static Vector myvel;
@@ -2382,53 +2272,53 @@ void CBot::modAim ( edict_t *pEntity, Vector &v_origin, Vector *v_desired_offset
 	static float fDistFactor;
 	static float fHeadOffset;
 
-	extern ConVar rcbot_supermode;
+	extern ConVar bot_supermode;
 
-	int iPlayerFlags = CClassInterface::getPlayerFlags(pEntity);
+	int iPlayerFlags = CClassInterface::GetPlayerFlags(pEntity);
 
 	fHeadOffset = 0;
 
-	if ( rcbot_supermode.GetBool() )
+	if (bot_supermode.GetBool())
 	{
 		v_desired_offset->x = 0;
 		v_desired_offset->y = 0;
-		v_desired_offset->z = v_size.z-1;
+		v_desired_offset->z = v_size.z - 1;
 
 		return;
 	}
 
-	CBotWeapon *pWp = getCurrentWeapon();
+	CBotWeapon *pWp = GetCurrentWeapon();
 
 	float fVelFactor = 0.003125f;
 
-	if ( pWp && pWp->isMelee() )
+	if (pWp && pWp->IsMelee())
 	{
 		fDistFactor = 0;
 		fVelFactor = 0;
 	}
 	else
 	{
-		if ( fDist < 160 )
+		if (fDist < 160)
 			fVelFactor = 0.001f;
 
-		fDistFactor = (1.0f - m_pProfile->m_fAimSkill) + (fDist*0.000125f)*(m_fFov/90.0f);
+		fDistFactor = (1.0f - m_pProfile->m_fAimSkill) + (fDist*0.000125f)*(m_fFov / 90.0f);
 	}
 	// origin is always the bottom part of the entity
 	// add body height
-	fHeadOffset += v_size.z-1;
+	fHeadOffset += v_size.z - 1;
 
-	if ( ENTINDEX(pEntity) <= gpGlobals->maxClients ) // add body height
+	if (ENTINDEX(pEntity) <= MAX_PLAYERS) // add body height
 	{
 		// aim for head
-		if ( !(iPlayerFlags & FL_DUCKING) && hasSomeConditions(CONDITION_SEE_ENEMY_HEAD) && (m_fFov < BOT_DEFAULT_FOV) )
-			fHeadOffset += v_size.z-1;
+		if (!(iPlayerFlags & FL_DUCKING) && HasSomeConditions(CONDITION_SEE_ENEMY_HEAD) && (m_fFov < BOT_DEFAULT_FOV))
+			fHeadOffset += v_size.z - 1;
 	}
 
-	myvel = Vector(0,0,0);
-	enemyvel = Vector(0,0,0);
+	myvel = Vector(0, 0, 0);
+	enemyvel = Vector(0, 0, 0);
 
 	// change in velocity
-	if ( CClassInterface::getVelocity(pEntity,&enemyvel) && CClassInterface::getVelocity(m_pEdict,&myvel) )
+	if (CClassInterface::GetVelocity(pEntity, &enemyvel) && CClassInterface::GetVelocity(m_pEdict, &myvel))
 	{
 		vel = (enemyvel - myvel); // relative velocity
 
@@ -2438,284 +2328,285 @@ void CBot::modAim ( edict_t *pEntity, Vector &v_origin, Vector *v_desired_offset
 	}
 	else
 	{
-		vel = Vector(0.5f,0.5f,0.5f);
+		vel = Vector(0.5f, 0.5f, 0.5f);
 		//fVelocityFactor = 1.0f;
 	}
 
 	// velocity
-	v_desired_offset->x = randomFloat(-vel.x,vel.x)*fDistFactor*v_size.x;
-	v_desired_offset->y = randomFloat(-vel.y,vel.y)*fDistFactor*v_size.y;
-	v_desired_offset->z = randomFloat(-vel.z,vel.z)*fDistFactor*v_size.z;
+	v_desired_offset->x = RandomFloat(-vel.x, vel.x)*fDistFactor*v_size.x;
+	v_desired_offset->y = RandomFloat(-vel.y, vel.y)*fDistFactor*v_size.y;
+	v_desired_offset->z = RandomFloat(-vel.z, vel.z)*fDistFactor*v_size.z;
 
 	// target
-	v_desired_offset->z += (fHeadOffset * m_pProfile->m_fAimSkill) + (randomFloat(0.0,1.0f-m_pProfile->m_fAimSkill)*fHeadOffset);
+	v_desired_offset->z += (fHeadOffset * m_pProfile->m_fAimSkill) + (RandomFloat(0.0, 1.0f - m_pProfile->m_fAimSkill)*fHeadOffset);
 
 }
 
-void CBot :: grenadeThrown ()
+void CBot::GrenadeThrown()
 {
 
 }
 
-void CBot :: checkCanPickup ( edict_t *pPickup )
+void CBot::CheckCanPickup(edict_t *pPickup)
 {
 
 
 }
 
-Vector CBot::snipe (Vector &vAiming )
+Vector CBot::Snipe(Vector &vAiming)
 {
-		if ( m_fLookAroundTime < g_pEngine->Time() )
-		{
-			CTraceFilterWorldAndPropsOnly filter;
-			float fTime;
-			Vector vOrigin = getOrigin();
+	if (m_fLookAroundTime < engine->Time())
+	{
+		CTraceFilterWorldAndPropsOnly filter;
+		float fTime;
+		Vector vOrigin = GetOrigin();
 
-			//trace_t *tr = CBotGlobals::getTraceResult();
+		//trace_t *tr = CBotGlobals::getTraceResult();
 
-			m_vLookAroundOffset = Vector(randomFloat(-64.0f,64.0f),randomFloat(-64.0f,64.0f),randomFloat(-64.0f,32.0f));
-			// forward
-			//CBotGlobals::traceLine(vOrigin,m_vWaypointAim+m_vLookAroundOffset,MASK_SOLID_BRUSHONLY|CONTENTS_OPAQUE,&filter);	
+		m_vLookAroundOffset = Vector(RandomFloat(-64.0f, 64.0f), RandomFloat(-64.0f, 64.0f), RandomFloat(-64.0f, 32.0f));
+		// forward
+		//CBotGlobals::traceLine(vOrigin,m_vWaypointAim+m_vLookAroundOffset,MASK_SOLID_BRUSHONLY|CONTENTS_OPAQUE,&filter);	
 
-			if ( m_fLookAroundTime == 0.0f )
-				fTime = 0.1f;
-			else
-				fTime = randomFloat(3.0f,7.0f);
+		if (m_fLookAroundTime == 0.0f)
+			fTime = 0.1f;
+		else
+			fTime = RandomFloat(3.0f, 7.0f);
 
-			m_fLookAroundTime = g_pEngine->Time() + fTime;
+		m_fLookAroundTime = engine->Time() + fTime;
 #ifndef __linux__
-			if ( CClients::clientsDebugging(BOT_DEBUG_NAV) )
-			{
-				debugoverlay->AddLineOverlay (getOrigin(), m_vWaypointAim, 255,100,100, false, fTime);
-				debugoverlay->AddLineOverlay (getOrigin(), m_vWaypointAim+m_vLookAroundOffset, 255,40,40, false, fTime);
-			}
+		if (CClients::ClientsDebugging(BOT_DEBUG_NAV))
+		{
+			debugoverlay->AddLineOverlay(GetOrigin(), m_vWaypointAim, 255, 100, 100, false, fTime);
+			debugoverlay->AddLineOverlay(GetOrigin(), m_vWaypointAim + m_vLookAroundOffset, 255, 40, 40, false, fTime);
+		}
 #endif
 
-			//m_vWaypointAim = m_vWaypointAim + m_vLookAroundOffset;
-		}
+		//m_vWaypointAim = m_vWaypointAim + m_vLookAroundOffset;
+	}
 
-		return vAiming+m_vLookAroundOffset;
+	return vAiming + m_vLookAroundOffset;
 }
 
-void CBot :: getLookAtVector ()
+void CBot::GetLookAtVector()
 {
 	static bool bDebug = false;
 
-	bDebug = CClients::clientsDebugging(BOT_DEBUG_LOOK);
+	bDebug = CClients::ClientsDebugging(BOT_DEBUG_LOOK);
 
-	switch ( m_iLookTask )
+	switch (m_iLookTask)
 	{
 	case LOOK_NONE:
-		{
-			stopLooking();
+	{
+		StopLooking();
 
-			if ( bDebug )
-				CClients::clientDebugMsg(BOT_DEBUG_LOOK,"LOOK_NONE",this);
-		}
-		break;
+		if (bDebug)
+			CClients::ClientDebugMsg(BOT_DEBUG_LOOK, "LOOK_NONE", this);
+	}
+	break;
 	case LOOK_VECTOR:
-		{
-			setLookAt(m_vLookVector);
+	{
+		SetLookAt(m_vLookVector);
 
-			if ( bDebug )
-				CClients::clientDebugMsg(BOT_DEBUG_LOOK,"LOOK_VECTOR",this);
-		}
-		break;
+		if (bDebug)
+			CClients::ClientDebugMsg(BOT_DEBUG_LOOK, "LOOK_VECTOR", this);
+	}
+	break;
 	case LOOK_EDICT:
-		{
-			if ( m_pLookEdict )
-				setLookAt(getAimVector(m_pLookEdict));
-				//setLookAt(CBotGlobals::entityOrigin(m_pLookEdict)+Vector(0,0,32));
+	{
+		if (m_pLookEdict)
+			SetLookAt(GetAimVector(m_pLookEdict));
+		//setLookAt(CBotGlobals::entityOrigin(m_pLookEdict)+Vector(0,0,32));
 
-			if ( bDebug )
-				CClients::clientDebugMsg(BOT_DEBUG_LOOK,"LOOK_EDICT",this);
-		}
-		break;
+		if (bDebug)
+			CClients::ClientDebugMsg(BOT_DEBUG_LOOK, "LOOK_EDICT", this);
+	}
+	break;
 	case LOOK_GROUND:
-		{
-			setLookAt(m_vMoveTo);
-			//setLookAt(getOrigin()-Vector(0,0,64));
-			if ( bDebug )
-				CClients::clientDebugMsg(BOT_DEBUG_LOOK,"LOOK_GROUND",this);
-		}
-		break;
+	{
+		SetLookAt(m_vMoveTo);
+		//setLookAt(getOrigin()-Vector(0,0,64));
+		if (bDebug)
+			CClients::ClientDebugMsg(BOT_DEBUG_LOOK, "LOOK_GROUND", this);
+	}
+	break;
 	case LOOK_ENEMY:
+	{
+		if (m_pEnemy)
 		{
-			if ( m_pEnemy )
-			{
-				setLookAt(getAimVector(m_pEnemy));
-			}
-			else if ( m_pLastEnemy )
-				setLookAt(m_vLastSeeEnemy);
+			SetLookAt(GetAimVector(m_pEnemy));
+		}
+		else if (m_pLastEnemy)
+			SetLookAt(m_vLastSeeEnemy);
 
-			if ( bDebug )
-				CClients::clientDebugMsg(BOT_DEBUG_LOOK,"LOOK_ENEMY",this);
-		}		
-		break;
+		if (bDebug)
+			CClients::ClientDebugMsg(BOT_DEBUG_LOOK, "LOOK_ENEMY", this);
+	}
+	break;
 	case LOOK_LAST_ENEMY:
-		{
-			if ( m_pLastEnemy )
-				setLookAt(m_vLastSeeEnemy);
-			//else
-			// LOOK_WAYPOINT, below
-			if ( bDebug )
-				CClients::clientDebugMsg(BOT_DEBUG_LOOK,"LOOK_LAST_ENEMY",this);
-		}
-		break;
+	{
+		if (m_pLastEnemy)
+			SetLookAt(m_vLastSeeEnemy);
+		//else
+		// LOOK_WAYPOINT, below
+		if (bDebug)
+			CClients::ClientDebugMsg(BOT_DEBUG_LOOK, "LOOK_LAST_ENEMY", this);
+	}
+	break;
 	case LOOK_WAYPOINT_NEXT_ONLY:
-		{
-			setLookAt(m_vMoveTo);
-			break;
-		}
-	case LOOK_WAYPOINT:
-		{
-			//static float fWaypointHeight = 0.0f;
-			Vector vLook;
-
-			if ( m_pNavigator->nextPointIsOnLadder() )
-			{
-				QAngle angle;
-				Vector vforward;
-
-				vLook = m_pNavigator->getNextPoint();
-
-				angle = QAngle(0,m_pNavigator->getNextYaw(),0);
-
-				AngleVectors(angle,&vforward);
-
-				vforward = (vforward/vforward.Length())*64;
-
-				vforward.z = 64.0f;
-
-				setLookAt(vLook + vforward);
-			}
-			else if ( m_pNavigator->hasNextPoint() && m_pButtons->holdingButton(IN_SPEED) )
-			{
-				if (m_pNavigator->getNextRoutePoint(&vLook)) {
-					setLookAt(vLook);
-				} else {
-					vLook = m_pNavigator->getPreviousPoint();
-					setLookAt(vLook);
-
-					CClients::clientDebugMsg(BOT_DEBUG_AIM,"no valid route point",this);
-				}
-			}
-			else if ( (m_pLastEnemy.get()!=NULL) && ((m_fLastSeeEnemy + 5.0f) > g_pEngine->Time()) )
-				setLookAt(m_vLastSeeEnemy);
-			else if ( (m_fCurrentDanger >= 20.0f) && m_pNavigator->getDangerPoint(&vLook) )
-				setLookAt(vLook);
-			else if ( m_pNavigator->getNextRoutePoint(&vLook) )
-				setLookAt(vLook);				
-			else
-			{
-				vLook = m_pNavigator->getPreviousPoint();
-				setLookAt(vLook);
-			}
-				
-			if ( bDebug )
-				CClients::clientDebugMsg(BOT_DEBUG_LOOK,"LOOK_WAYPOINT",this);
-		}
+	{
+		SetLookAt(m_vMoveTo);
 		break;
+	}
+	case LOOK_WAYPOINT:
+	{
+		//static float fWaypointHeight = 0.0f;
+		Vector vLook;
+
+		if (m_pNavigator->NextPointIsOnLadder())
+		{
+			QAngle angle;
+			Vector vforward;
+
+			vLook = m_pNavigator->GetNextPoint();
+
+			angle = QAngle(0, m_pNavigator->GetNextYaw(), 0);
+
+			AngleVectors(angle, &vforward);
+
+			vforward = (vforward / vforward.Length()) * 64;
+
+			vforward.z = 64.0f;
+
+			SetLookAt(vLook + vforward);
+		}
+		else if (m_pNavigator->HasNextPoint() && m_pButtons->HoldingButton(IN_SPEED))
+		{
+			if (m_pNavigator->GetNextRoutePoint(&vLook)) {
+				SetLookAt(vLook);
+			}
+			else {
+				vLook = m_pNavigator->GetPreviousPoint();
+				SetLookAt(vLook);
+
+				CClients::ClientDebugMsg(BOT_DEBUG_AIM, "no valid route point", this);
+			}
+		}
+		else if ((m_pLastEnemy.Get() != NULL) && ((m_fLastSeeEnemy + 5.0f) > engine->Time()))
+			SetLookAt(m_vLastSeeEnemy);
+		else if ((m_fCurrentDanger >= 20.0f) && m_pNavigator->GetDangerPoint(&vLook))
+			SetLookAt(vLook);
+		else if (m_pNavigator->GetNextRoutePoint(&vLook))
+			SetLookAt(vLook);
+		else
+		{
+			vLook = m_pNavigator->GetPreviousPoint();
+			SetLookAt(vLook);
+		}
+
+		if (bDebug)
+			CClients::ClientDebugMsg(BOT_DEBUG_LOOK, "LOOK_WAYPOINT", this);
+	}
+	break;
 	case LOOK_WAYPOINT_AIM:
-			setLookAt(m_vWaypointAim);
-		if ( bDebug )
-				CClients::clientDebugMsg(BOT_DEBUG_LOOK,"LOOK_WAYPOINT_AIM",this);
+		SetLookAt(m_vWaypointAim);
+		if (bDebug)
+			CClients::ClientDebugMsg(BOT_DEBUG_LOOK, "LOOK_WAYPOINT_AIM", this);
 		break;
 	case LOOK_BUILD:
+	{
+		//if ( m_pEnemy && hasSomeConditions(CONDITION_SEE_CUR_ENEMY) )
+		//{
+		//	setLookAtTask((LOOK_ENEMY));
+		//	return;
+		//}
+		if (m_fLookAroundTime < engine->Time())
 		{
-			//if ( m_pEnemy && hasSomeConditions(CONDITION_SEE_CUR_ENEMY) )
-			//{
-			//	setLookAtTask((LOOK_ENEMY));
-			//	return;
-			//}
-			if ( m_fLookAroundTime < g_pEngine->Time() )
-			{
-				float fTime = randomFloat(2.0f,4.0f);
-				m_fLookAroundTime = g_pEngine->Time() + fTime;
+			float fTime = RandomFloat(2.0f, 4.0f);
+			m_fLookAroundTime = engine->Time() + fTime;
 
-				m_vLookAroundOffset = Vector(randomFloat(-64.0f,64.0f),randomFloat(-64.0f,64.0f),randomFloat(-64.0f,32.0f));
-			}
-
-			setLookAt(m_vWaypointAim+m_vLookAroundOffset);
-
-		if ( bDebug )
-				CClients::clientDebugMsg(BOT_DEBUG_LOOK,"LOOK_BUILD",this);
+			m_vLookAroundOffset = Vector(RandomFloat(-64.0f, 64.0f), RandomFloat(-64.0f, 64.0f), RandomFloat(-64.0f, 32.0f));
 		}
-		break;
+
+		SetLookAt(m_vWaypointAim + m_vLookAroundOffset);
+
+		if (bDebug)
+			CClients::ClientDebugMsg(BOT_DEBUG_LOOK, "LOOK_BUILD", this);
+	}
+	break;
 	case LOOK_SNIPE:
-		{
-			setLookAt(snipe(m_vWaypointAim));
+	{
+		SetLookAt(Snipe(m_vWaypointAim));
 
-		if ( bDebug )
-				CClients::clientDebugMsg(BOT_DEBUG_LOOK,"LOOK_SNIPE",this);
-		}
-		break;
+		if (bDebug)
+			CClients::ClientDebugMsg(BOT_DEBUG_LOOK, "LOOK_SNIPE", this);
+	}
+	break;
 	case LOOK_NOISE:
+	{
+		if (m_pEnemy && HasSomeConditions(CONDITION_SEE_CUR_ENEMY))
 		{
-			if ( m_pEnemy && hasSomeConditions(CONDITION_SEE_CUR_ENEMY) )
-			{
-				setLookAtTask((LOOK_ENEMY));
-				return;
-			}
-			else if ( !m_bListenPositionValid || (m_fListenTime < g_pEngine->Time()) ) // already listening to something ?
-			{
-				setLookAtTask((LOOK_WAYPOINT));
-				return;
-			}
-
-			setLookAt(m_vListenPosition);
-
-		if ( bDebug )
-				CClients::clientDebugMsg(BOT_DEBUG_LOOK,"LOOK_NOISE",this);
+			SetLookAtTask((LOOK_ENEMY));
+			return;
 		}
-		break;
+		else if (!m_bListenPositionValid || (m_fListenTime < engine->Time())) // already listening to something ?
+		{
+			SetLookAtTask((LOOK_WAYPOINT));
+			return;
+		}
+
+		SetLookAt(m_vListenPosition);
+
+		if (bDebug)
+			CClients::ClientDebugMsg(BOT_DEBUG_LOOK, "LOOK_NOISE", this);
+	}
+	break;
 
 
 	case LOOK_AROUND:
+	{
+		if (m_fLookAroundTime < engine->Time())
 		{
-			if ( m_fLookAroundTime < g_pEngine->Time() )
+			if ((m_fCurrentDanger < 10.0f) || ((m_pNavigator->NumPaths() == 0) || !m_pNavigator->RandomDangerPath(&m_vLookAroundOffset)))
 			{
-				if ( (m_fCurrentDanger < 10.0f) || ((m_pNavigator->numPaths() == 0) || !m_pNavigator->randomDangerPath(&m_vLookAroundOffset))  )
-				{
-					// random
-					m_vLookAroundOffset = getEyePosition();
-				}
-					
-				m_fLookAroundTime = g_pEngine->Time() + randomFloat(2.0f,3.0f);
-				m_vLookAroundOffset = m_vLookAroundOffset + Vector(randomFloat(-128,128),randomFloat(-128,128),randomFloat(-16,16));
+				// random
+				m_vLookAroundOffset = GetEyePosition();
 			}
 
-			setLookAt(m_vLookAroundOffset);
-
-		if ( bDebug )
-				CClients::clientDebugMsg(BOT_DEBUG_LOOK,"LOOK_AROUND",this);
+			m_fLookAroundTime = engine->Time() + RandomFloat(2.0f, 3.0f);
+			m_vLookAroundOffset = m_vLookAroundOffset + Vector(RandomFloat(-128, 128), RandomFloat(-128, 128), RandomFloat(-16, 16));
 		}
-		break;
+
+		SetLookAt(m_vLookAroundOffset);
+
+		if (bDebug)
+			CClients::ClientDebugMsg(BOT_DEBUG_LOOK, "LOOK_AROUND", this);
+	}
+	break;
 	case LOOK_HURT_ORIGIN:
-		{
-			setLookAt(m_vHurtOrigin);
+	{
+		SetLookAt(m_vHurtOrigin);
 
 
-		if ( bDebug )
-				CClients::clientDebugMsg(BOT_DEBUG_LOOK,"LOOK_HURT_ORIGIN",this);
-		}
-		break;
+		if (bDebug)
+			CClients::ClientDebugMsg(BOT_DEBUG_LOOK, "LOOK_HURT_ORIGIN", this);
+	}
+	break;
 	default:
 		break;
 	}
 }
 
-int CBot :: getPlayerID ()
+int CBot::GetPlayerID()
 {
-	return m_pPlayerInfo->GetUserID();
+	return m_pPI->GetUserID();
 }
 
-void CBot :: letGoOfButton ( int button )
+void CBot::LetGoOfButton(int button)
 {
-	m_pButtons->letGo(button);
+	m_pButtons->LetGo(button);
 }
 
-void CBot :: changeAngles ( float fSpeed, float *fIdeal, float *fCurrent, float *fUpdate )
+void CBot::ChangeAngles(float fSpeed, float *fIdeal, float *fCurrent, float *fUpdate)
 {
 	float current = *fCurrent;
 	float ideal = *fIdeal;
@@ -2729,56 +2620,56 @@ void CBot :: changeAngles ( float fSpeed, float *fIdeal, float *fCurrent, float 
 	if (bot_anglespeed.GetFloat() < 0.01f)
 		bot_anglespeed.SetValue(0.16f);
 
-	alphaspeed = (fSpeed/20);
+	alphaspeed = (fSpeed / 20);
 
 	alpha = alphaspeed * bot_anglespeed.GetFloat();
-	
+
 	diff = ideal - current;
 
-	if ( diff < -180.0f )
+	if (diff < -180.0f)
 		diff += 360.0f;
-	else if ( diff > 180.0f )
+	else if (diff > 180.0f)
 		diff -= 360.0f;
 
 	delta = (diff*alpha) + (m_fAimMoment*alphaspeed);
 
 	//check for QNAN
-	if ( delta != delta )
+	if (delta != delta)
 		delta = 1.0f;
 
-	m_fAimMoment = (m_fAimMoment * alphaspeed) + (delta * (1.0f-alphaspeed));
+	m_fAimMoment = (m_fAimMoment * alphaspeed) + (delta * (1.0f - alphaspeed));
 
 	//check for QNAN
-	if ( m_fAimMoment != m_fAimMoment )
+	if (m_fAimMoment != m_fAimMoment)
 		m_fAimMoment = 1.0f;
 
 	current = current + delta;
 
-	if ( current > 180.0f )
+	if (current > 180.0f)
 		current -= 360.0f;
-	else if ( current < -180.0f )
+	else if (current < -180.0f)
 		current += 360.0f;
 
 	*fCurrent = current;
 
-	if ( *fCurrent > 180.0f )
+	if (*fCurrent > 180.0f)
 		*fCurrent -= 360.0f;
-	else if ( *fCurrent < -180.0f )
+	else if (*fCurrent < -180.0f)
 		*fCurrent += 360.0f;
 }
 
-bool CBot :: select_CWeapon ( CWeapon *pWeapon )
+bool CBot::Select_CWeapon(CWeapon *pWeapon)
 {
-	CBotWeapon *pSelect = m_pWeapons->getWeapon(pWeapon);
+	CBotWeapon *pSelect = m_pWeapons->GetWeapon(pWeapon);
 
-	if ( pSelect )
+	if (pSelect)
 	{
-		int id = pSelect->getWeaponIndex();
+		int id = pSelect->GetWeaponIndex();
 
-		if ( id )
+		if (id)
 		{
-			failWeaponSelect();
-			selectWeapon(id);
+			FailWeaponSelect();
+			SelectWeapon(id);
 			return true;
 		}
 
@@ -2787,182 +2678,170 @@ bool CBot :: select_CWeapon ( CWeapon *pWeapon )
 	return false;
 }
 
-void CBot :: doLook ()
+void CBot::DoLook()
 {
 	// what do we want to look at
-	getLookAtVector();
+	GetLookAtVector();
 
 	// looking at something?
-    if ( lookAtIsValid () )
-	{	
+	if (LookAtIsValid())
+	{
 		float fSensitivity;
-		extern ConVar rcbot_supermode;
-		
-		if ( rcbot_supermode.GetBool() || m_bIncreaseSensitivity || onLadder() )
+		extern ConVar bot_supermode;
+
+		if (bot_supermode.GetBool() || m_bIncreaseSensitivity || OnLadder())
 			fSensitivity = 15.0f;
 		else
 			fSensitivity = (float)m_pProfile->m_iSensitivity;
 
 		QAngle requiredAngles;
 
-		VectorAngles(m_vLookAt-getEyePosition(),requiredAngles);
-		CBotGlobals::fixFloatAngle(&requiredAngles.x);
-		CBotGlobals::fixFloatAngle(&requiredAngles.y);
+		VectorAngles(m_vLookAt - GetEyePosition(), requiredAngles);
+		CBotGlobals::NormalizeAngle(requiredAngles);
 
-		if ( m_iLookTask == LOOK_GROUND )
+		if (m_iLookTask == LOOK_GROUND)
 			requiredAngles.x = 89.0f;
-	
-		m_vViewAngles = m_pPlayerInfo->GetAbsAngles();
 
-		if (m_vViewAngles.x == 0.0f && m_vViewAngles.y == 0.0f) {
-			CClients::clientDebugMsg(BOT_DEBUG_AIM, "view angle invalid", this);
-		}
+		m_vViewAngles = EyeAngles();
 
-		changeAngles(fSensitivity,&requiredAngles.x,&m_vViewAngles.x,NULL);
-		changeAngles(fSensitivity,&requiredAngles.y,&m_vViewAngles.y,NULL);
-		CBotGlobals::fixFloatAngle(&m_vViewAngles.x);
-		CBotGlobals::fixFloatAngle(&m_vViewAngles.y);
-
-		// Clamp pitch
-		if ( m_vViewAngles.x > 89.0f )
-			m_vViewAngles.x = 89.0f;
-		else if ( m_vViewAngles.x < -89.0f )
-			m_vViewAngles.x = -89.0f;
+		ChangeAngles(fSensitivity, &requiredAngles.x, &m_vViewAngles.x, NULL);
+		ChangeAngles(fSensitivity, &requiredAngles.y, &m_vViewAngles.y, NULL);
+		CBotGlobals::NormalizeAngle(m_vViewAngles);
 	}
 
 	m_bIncreaseSensitivity = false;
 }
 
-void CBot :: doButtons ()
+void CBot::DoButtons()
 {
-	m_iButtons = m_pButtons->getBitMask();
+	m_iButtons = m_pButtons->GetBitMask();
 }
 
-void CBot :: secondaryAttack ( bool bHold )
+void CBot::SecondaryAttack(bool bHold)
 {
 	float fLetGoTime = 0.15;
 	float fHoldTime = 0.12;
 
-	if ( bHold )
+	if (bHold)
 	{
 		fLetGoTime = 0.0;
 		fHoldTime = 1.0;
 	}
 
 	// not currently in "letting go" stage?
-	if ( bHold || m_pButtons->canPressButton(IN_ATTACK2) )
+	if (bHold || m_pButtons->CanPressButton(IN_ATTACK2))
 	{
-		m_pButtons->holdButton
+		m_pButtons->HoldButton
 			(
-				IN_ATTACK2,
-				0/* reaction time? (time to press)*/,
-				fHoldTime/* hold time*/,
-				fLetGoTime/*let go time*/
-			); 
+			IN_ATTACK2,
+			0/* reaction time? (time to press)*/,
+			fHoldTime/* hold time*/,
+			fLetGoTime/*let go time*/
+			);
 	}
 }
 
-void CBot :: primaryAttack ( bool bHold, float fTime )
+void CBot::PrimaryAttack(bool bHold, float fTime)
 {
 	float fLetGoTime = 0.15f;
 	float fHoldTime = 0.12f;
 
-	if ( bHold )
+	if (bHold)
 	{
 		fLetGoTime = 0.0f;
 
-		if ( fTime )
+		if (fTime)
 			fHoldTime = fTime;
 		else
 			fHoldTime = 2.0f;
 	}
 
 	// not currently in "letting go" stage?
-	if ( bHold || m_pButtons->canPressButton(IN_ATTACK) )
+	if (bHold || m_pButtons->CanPressButton(IN_ATTACK))
 	{
-		m_pButtons->holdButton
+		m_pButtons->HoldButton
 			(
-				IN_ATTACK,
-				0/* reaction time? (time to press)*/,
-				fHoldTime/* hold time*/,
-				fLetGoTime/*let go time*/
-			); 
+			IN_ATTACK,
+			0/* reaction time? (time to press)*/,
+			fHoldTime/* hold time*/,
+			fLetGoTime/*let go time*/
+			);
 	}
 }
 
-void CBot :: tapButton ( int iButton )
+void CBot::TapButton(int iButton)
 {
-	m_pButtons->tap(iButton);
+	m_pButtons->Tap(iButton);
 }
-void CBot :: reload ()
+void CBot::Reload()
 {
-	if ( m_pButtons->canPressButton(IN_RELOAD) )
-		m_pButtons->tap(IN_RELOAD);
+	if (m_pButtons->CanPressButton(IN_RELOAD))
+		m_pButtons->Tap(IN_RELOAD);
 }
-void CBot :: use ()
+void CBot::Use()
 {
-	if ( m_pButtons->canPressButton(IN_USE) )
-		m_pButtons->tap(IN_USE);
+	if (m_pButtons->CanPressButton(IN_USE))
+		m_pButtons->Tap(IN_USE);
 }
 
-void CBot :: jump ()
+void CBot::Jump()
 {
-	if ( m_pButtons->canPressButton(IN_JUMP) )
-	{		
-		m_pButtons->holdButton(IN_JUMP,0/* time to press*/,0.5/* hold time*/,0.5/*let go time*/); 
+	if (m_pButtons->CanPressButton(IN_JUMP))
+	{
+		m_pButtons->HoldButton(IN_JUMP, 0/* time to press*/, 0.5/* hold time*/, 0.5/*let go time*/);
 		// do the trademark jump & duck
-		m_pButtons->holdButton(IN_DUCK,0.2/* time to press*/,0.3/* hold time*/,0.5/*let go time*/); 
+		m_pButtons->HoldButton(IN_DUCK, 0.2/* time to press*/, 0.3/* hold time*/, 0.5/*let go time*/);
 	}
 }
 
-void CBot :: duck ( bool hold )
+void CBot::Duck(bool hold)
 {
-	if ( hold || m_pButtons->canPressButton(IN_DUCK) )
-		m_pButtons->holdButton(IN_DUCK,0.0/* time to press*/,1.0/* hold time*/,0.5/*let go time*/); 
+	if (hold || m_pButtons->CanPressButton(IN_DUCK))
+		m_pButtons->HoldButton(IN_DUCK, 0.0/* time to press*/, 1.0/* hold time*/, 0.5/*let go time*/);
 }
 
 // TO DO: perceptron method
-bool CBot::wantToFollowEnemy ()
+bool CBot::WantToFollowEnemy()
 {
-	return getHealthPercent() > (1.0f - m_pProfile->m_fBraveness);
+	return GetHealthPercent() > (1.0f - m_pProfile->m_fBraveness);
 }
 ////////////////////////////
-void CBot :: getTasks (unsigned int iIgnore)
+void CBot::GetTasks(unsigned int iIgnore)
 {
-	if ( !m_bLookedForEnemyLast && m_pLastEnemy && CBotGlobals::entityIsAlive(m_pLastEnemy) )
+	if (!m_bLookedForEnemyLast && m_pLastEnemy && CBotGlobals::EntityIsAlive(m_pLastEnemy))
 	{
-		if ( wantToFollowEnemy() )
+		if (WantToFollowEnemy())
 		{
-			Vector vVelocity = Vector(0,0,0);
-			CClient *pClient = CClients::get(m_pLastEnemy);
+			Vector vVelocity = Vector(0, 0, 0);
+			CClient *pClient = CClients::Get(m_pLastEnemy);
 			CBotSchedule *pSchedule = new CBotSchedule();
-			
-			CFindPathTask *pFindPath = new CFindPathTask(m_vLastSeeEnemy);	
-			
-			if ( pClient )
-				vVelocity = pClient->getVelocity();
 
-			pSchedule->addTask(pFindPath);
-			pSchedule->addTask(new CFindLastEnemy(m_vLastSeeEnemy,vVelocity));
+			CFindPathTask *pFindPath = new CFindPathTask(m_vLastSeeEnemy);
+
+			if (pClient)
+				vVelocity = pClient->GetVelocity();
+
+			pSchedule->AddTask(pFindPath);
+			pSchedule->AddTask(new CFindLastEnemy(m_vLastSeeEnemy, vVelocity));
 
 			//////////////
-			pFindPath->setNoInterruptions();
+			pFindPath->SetNoInterruptions();
 
-			m_pSchedules->add(pSchedule);
+			m_pSchedules->Add(pSchedule);
 
 			m_bLookedForEnemyLast = true;
 		}
 	}
 
-	if ( !m_pSchedules->isEmpty() )
+	if (!m_pSchedules->IsEmpty())
 		return; // already got some tasks left
 
 	// roam
-	CWaypoint *pWaypoint = CWaypoints::getWaypoint(CWaypoints::randomFlaggedWaypoint(getTeam()));
+	CWaypoint *pWaypoint = CWaypoints::GetWaypoint(CWaypoints::RandomFlaggedWaypoint(GetTeam()));
 
-	if ( pWaypoint )
+	if (pWaypoint)
 	{
-		m_pSchedules->add(new CBotGotoOriginSched(pWaypoint->getOrigin()));
+		m_pSchedules->Add(new CBotGotoOriginSched(pWaypoint->GetOrigin()));
 	}
 
 }
@@ -2971,26 +2850,26 @@ void CBot :: getTasks (unsigned int iIgnore)
 
 /*bool CBots :: controlBot ( edict_t *pEdict )
 {
-	CBotProfile *pBotProfile = CBotProfiles::getRandomFreeProfile();
+CBotProfile *pBotProfile = CBotProfiles::getRandomFreeProfile();
 
-	if ( m_Bots[slotOfEdict(pEdict)]->getEdict() == pEdict )
-	{
-		return false;
-	}
+if ( m_Bots[slotOfEdict(pEdict)]->getEdict() == pEdict )
+{
+return false;
+}
 
-	if ( pBotProfile == NULL )
-	{
-		CBotGlobals::botMessage(NULL,0,"No bot profiles are free, creating a default bot...");
+if ( pBotProfile == NULL )
+{
+CBotGlobals::botMessage(NULL,0,"No bot profiles are free, creating a default bot...");
 
-		pBotProfile = CBotProfiles::getDefaultProfile();
+pBotProfile = CBotProfiles::getDefaultProfile();
 
-		if ( pBotProfile == NULL )
-			return false;
-	}
+if ( pBotProfile == NULL )
+return false;
+}
 
-	m_Bots[slotOfEdict(pEdict)]->createBotFromEdict(pEdict,pBotProfile);
+m_Bots[slotOfEdict(pEdict)]->createBotFromEdict(pEdict,pBotProfile);
 
-	return true;
+return true;
 }*/
 
 #define SET_PROFILE_DATA_INT(varname,membername) if ( varname && *varname ) { pBotProfile->membername = atoi(varname); }
@@ -2998,256 +2877,256 @@ void CBot :: getTasks (unsigned int iIgnore)
 
 /*bool CBots :: controlBot ( const char *szOldName, const char *szName, const char *szTeam, const char *szClass )
 {
-	edict_t *pEdict;	
-	CBotProfile *pBotProfile;
+edict_t *pEdict;
+CBotProfile *pBotProfile;
 
-	char *szOVName = "";
+char *szOVName = "";
 
-	if ( (pEdict = CBotGlobals::findPlayerByTruncName(szOldName)) == NULL )
-	{
-		CBotGlobals::botMessage(NULL,0,"Can't find player");
-		return false;
-	}
+if ( (pEdict = CBotGlobals::findPlayerByTruncName(szOldName)) == NULL )
+{
+CBotGlobals::botMessage(NULL,0,"Can't find player");
+return false;
+}
 
-	if ( m_Bots[slotOfEdict(pEdict)]->getEdict() == pEdict )
-	{
-		CBotGlobals::botMessage(NULL,0,"already controlling player");
-		return false;
-	}
+if ( m_Bots[slotOfEdict(pEdict)]->getEdict() == pEdict )
+{
+CBotGlobals::botMessage(NULL,0,"already controlling player");
+return false;
+}
 
-	if ( (m_iMaxBots != -1) && (CBotGlobals::numClients() >= m_iMaxBots) )
-	{
-		CBotGlobals::botMessage(NULL,0,"Can't create bot, max_bots reached");
-		return false;
-	}
+if ( (m_iMaxBots != -1) && (CBotGlobals::numClients() >= m_iMaxBots) )
+{
+CBotGlobals::botMessage(NULL,0,"Can't create bot, max_bots reached");
+return false;
+}
 
-	m_flAddKickBotTime = g_pEngine->Time() + 2.0f;
+m_flAddKickBotTime = engine->Time() + 2.0f;
 
-	pBotProfile = CBotProfiles::getRandomFreeProfile();
+pBotProfile = CBotProfiles::getRandomFreeProfile();
 
-	if ( pBotProfile == NULL )
-	{
-		CBotGlobals::botMessage(NULL,0,"No bot profiles are free, creating a default bot...");
+if ( pBotProfile == NULL )
+{
+CBotGlobals::botMessage(NULL,0,"No bot profiles are free, creating a default bot...");
 
-		pBotProfile = CBotProfiles::getDefaultProfile();
+pBotProfile = CBotProfiles::getDefaultProfile();
 
-		if ( pBotProfile == NULL )
-			return false;
-	}
-	SET_PROFILE_DATA_INT(szClass,m_iClass);
-	SET_PROFILE_DATA_INT(szTeam,m_iTeam);
-	SET_PROFILE_STRING(szName,szOVName,m_szName);
+if ( pBotProfile == NULL )
+return false;
+}
+SET_PROFILE_DATA_INT(szClass,m_iClass);
+SET_PROFILE_DATA_INT(szTeam,m_iTeam);
+SET_PROFILE_STRING(szName,szOVName,m_szName);
 
-	//IBotController *p = g_pBotManager->GetBotController(pEdict);	
+//IBotController *p = g_pBotManager->GetBotController(pEdict);
 
-	return m_Bots[slotOfEdict(pEdict)]->createBotFromEdict(pEdict,pBotProfile);
-	
+return m_Bots[slotOfEdict(pEdict)]->createBotFromEdict(pEdict,pBotProfile);
+
 }*/
 
 /*bool CBots :: createBot (const char *szClass, const char *szTeam, const char *szName)
-{		
-	edict_t *pEdict;	
-	CBotProfile *pBotProfile;
-	CBotMod *pMod = CBotGlobals::getCurrentMod();
-	extern ConVar rcbot_addbottime;
+{
+edict_t *pEdict;
+CBotProfile *pBotProfile;
+CBotMod *pMod = CBotGlobals::getCurrentMod();
+extern ConVar bot_addbottime;
 
-	char *szOVName = "";
+char *szOVName = "";
 
-	if ( (m_iMaxBots != -1) && (CBotGlobals::numClients() >= m_iMaxBots) )
-		CBotGlobals::botMessage(NULL,0,"Can't create bot, max_bots reached");
+if ( (m_iMaxBots != -1) && (CBotGlobals::numClients() >= m_iMaxBots) )
+CBotGlobals::botMessage(NULL,0,"Can't create bot, max_bots reached");
 
-	m_flAddKickBotTime = g_pEngine->Time() + rcbot_addbottime.GetFloat();
+m_flAddKickBotTime = engine->Time() + bot_addbottime.GetFloat();
 
-	pBotProfile = CBotProfiles::getRandomFreeProfile();
+pBotProfile = CBotProfiles::getRandomFreeProfile();
 
-	if ( pBotProfile == NULL )
-	{
-		CBotGlobals::botMessage(NULL,0,"No bot profiles are free, creating a default bot...");
+if ( pBotProfile == NULL )
+{
+CBotGlobals::botMessage(NULL,0,"No bot profiles are free, creating a default bot...");
 
-		pBotProfile = CBotProfiles::getDefaultProfile();
+pBotProfile = CBotProfiles::getDefaultProfile();
 
-		if ( pBotProfile == NULL )
-			return false;
-	}
+if ( pBotProfile == NULL )
+return false;
+}
 
-	SET_PROFILE_DATA_INT(szClass,m_iClass);
-	SET_PROFILE_DATA_INT(szTeam,m_iTeam);
-	SET_PROFILE_STRING(szName,szOVName,m_szName);
+SET_PROFILE_DATA_INT(szClass,m_iClass);
+SET_PROFILE_DATA_INT(szTeam,m_iTeam);
+SET_PROFILE_STRING(szName,szOVName,m_szName);
 
-	if ( CBots::controlBots() )
-	{
-		extern ConVar bot_sv_cheats_auto;
+if ( CBots::controlBots() )
+{
+extern ConVar bot_sv_cheats_auto;
 
-		char cmd[128];
-		memset(cmd, 0, sizeof(cmd));
+char cmd[128];
+memset(cmd, 0, sizeof(cmd));
 
-		extern ConCommandBase *puppet_bot_cmd;
+extern ConCommandBase *puppet_bot_cmd;
 
-		// Attempt to make puppet bot command cheat free
-		if ( puppet_bot_cmd != NULL )
-		{
-			if ( /*bot_cmd_nocheats.GetBool() &&*/ /*puppet_bot_cmd->IsFlagSet(FCVAR_CHEAT) )
-			{
-				int *m_nFlags = (int*)((unsigned long)puppet_bot_cmd + BOT_CONVAR_FLAGS_OFFSET); // 20 is offset to flags
-				//nPrevFlags = *m_nFlags;
-				*m_nFlags &= ~FCVAR_CHEAT;
-				//bChangedFlags = true;
-			}
-		}
+// Attempt to make puppet bot command cheat free
+if ( puppet_bot_cmd != NULL )
+{
+if ( /*bot_cmd_nocheats.GetBool() &&*/ /*puppet_bot_cmd->IsFlagSet(FCVAR_CHEAT) )
+{
+int *m_nFlags = (int*)((unsigned long)puppet_bot_cmd + BOT_CONVAR_FLAGS_OFFSET); // 20 is offset to flags
+//nPrevFlags = *m_nFlags;
+*m_nFlags &= ~FCVAR_CHEAT;
+//bChangedFlags = true;
+}
+}
 
-		extern ConVar *sv_cheats;
-	
-		// const char *pparg[1];
-		// pparg[0] = cmd;
+extern ConVar *sv_cheats;
 
-		sprintf(cmd,"%s -name \"%s\"\n",BOT_ADD_PUPPET_COMMAND,szOVName);
+// const char *pparg[1];
+// pparg[0] = cmd;
 
-		// CCommand *com = new CCommand(1,pparg);
+sprintf(cmd,"%s -name \"%s\"\n",BOT_ADD_PUPPET_COMMAND,szOVName);
 
-		int *m_nFlags = (int*)((unsigned long)sv_cheats + BOT_CONVAR_FLAGS_OFFSET); // 20 is offset to flags
+// CCommand *com = new CCommand(1,pparg);
 
-		if ( sv_cheats->IsFlagSet(FCVAR_NOTIFY) )
-			*m_nFlags &= ~FCVAR_NOTIFY;
+int *m_nFlags = (int*)((unsigned long)sv_cheats + BOT_CONVAR_FLAGS_OFFSET); // 20 is offset to flags
 
-		if ( pMod->needCheatsHack() )
-			sv_cheats->SetValue(1);
+if ( sv_cheats->IsFlagSet(FCVAR_NOTIFY) )
+*m_nFlags &= ~FCVAR_NOTIFY;
 
-		m_bControlNext = true;
+if ( pMod->needCheatsHack() )
+sv_cheats->SetValue(1);
 
-		g_pEngine->ServerCommand(cmd);
-		g_pEngine->ServerExecute();
+m_bControlNext = true;
 
-		// ((ConCommand*)puppet_bot_cmd)->Dispatch(*com);
+engine->ServerCommand(cmd);
+engine->ServerExecute();
 
-		if ( pMod->needCheatsHack() )
-			sv_cheats->SetValue(0);
+// ((ConCommand*)puppet_bot_cmd)->Dispatch(*com);
 
-		*m_nFlags |= FCVAR_NOTIFY;
+if ( pMod->needCheatsHack() )
+sv_cheats->SetValue(0);
 
-		// delete com;
+*m_nFlags |= FCVAR_NOTIFY;
 
-		return true;
-	}
-	else
-	{
-		pEdict = g_pBotManager->CreateBot( szOVName );
+// delete com;
 
-		if ( pEdict == NULL )
-			return false;
+return true;
+}
+else
+{
+pEdict = g_pBotManager->CreateBot( szOVName );
 
-		return ( m_Bots[slotOfEdict(pEdict)]->createBotFromEdict(pEdict,pBotProfile) );
-	}
+if ( pEdict == NULL )
+return false;
+
+return ( m_Bots[slotOfEdict(pEdict)]->createBotFromEdict(pEdict,pBotProfile) );
+}
 }*/
 
-void CBots :: botFunction ( IBotFunction *function )
+void CBots::BotFunction(IBotFunction *function)
 {
-	for ( unsigned int i = 0; i < MAX_PLAYERS; i ++ )
+	for (unsigned int i = 0; i < MAX_PLAYERS; i++)
 	{
-		if ( m_Bots[i]->inUse() && m_Bots[i]->getEdict() )
-			function->execute (m_Bots[i]);
+		if (m_Bots[i]->InUse() && m_Bots[i]->GetEdict())
+			function->Execute(m_Bots[i]);
 	}
 }
 
-int CBots :: slotOfEdict ( edict_t *pEdict )
+int CBots::SlotOfEdict(edict_t *pEdict)
 {
-	return g_pEngine->IndexOfEdict(pEdict) - 1;
+	return engine->IndexOfEdict(pEdict) - 1;
 }
 
-void CBots :: init ()
+void CBots::Init()
 {
 	unsigned int i;
 
 	m_Bots = new CBot*[MAX_PLAYERS];
 	//m_Bots = (CBot**)malloc(sizeof(CBot*) * MAX_PLAYERS);
 
-	for ( i = 0; i < MAX_PLAYERS; i ++ )
+	for (i = 0; i < MAX_PLAYERS; i++)
 	{
-		switch ( CBotGlobals::getCurrentMod()->getBotType() )
+		switch (CBotGlobals::GetCurrentMod()->GetBotType())
 		{
-		/*case BOTTYPE_DOD:
-			m_Bots[i] = new CDODBot();
-			break;
-		case BOTTYPE_CSS:
-			m_Bots[i] = new CCSSBot();
-			break;
-		case BOTTYPE_HL2DM:
-			m_Bots[i] = new CHLDMBot();
-			break;
-		case BOTTYPE_HL1DM:
-			m_Bots[i] = new CHL1DMSrcBot();
-			break;
-		case BOTTYPE_COOP:
-			m_Bots[i] = new CBotCoop();
-			break;*/
+			/*case BOTTYPE_DOD:
+				m_Bots[i] = new CDODBot();
+				break;
+				case BOTTYPE_CSS:
+				m_Bots[i] = new CCSSBot();
+				break;
+				case BOTTYPE_HL2DM:
+				m_Bots[i] = new CHLDMBot();
+				break;
+				case BOTTYPE_HL1DM:
+				m_Bots[i] = new CHL1DMSrcBot();
+				break;
+				case BOTTYPE_COOP:
+				m_Bots[i] = new CBotCoop();
+				break;*/
 		case BOTTYPE_TF2:
 			m_Bots[i] = new CBotTF2();
 			break;
-		/*case BOTTYPE_FF:
-			m_Bots[i] = new CBotFF();
-			break;
-		case BOTTYPE_ZOMBIE:
-			m_Bots[i] = new CBotZombie();
-			break;*/
+			/*case BOTTYPE_FF:
+				m_Bots[i] = new CBotFF();
+				break;
+				case BOTTYPE_ZOMBIE:
+				m_Bots[i] = new CBotZombie();
+				break;*/
 		default:
 			m_Bots[i] = new CBot();
 			break;
 		}
 	}
 }
-int CBots :: numBots ()
+
+int CBots::NumBots()
 {
 	static CBot *pBot;
 
 	int iCount = 0;
 
-	for ( short int i = 0; i < MAX_PLAYERS; i ++ )
+	for (short int i = 0; i < MAX_PLAYERS; i++)
 	{
 		pBot = m_Bots[i];
 
-		if ( pBot->inUse() )
-			iCount++;		
+		if (pBot->InUse())
+			iCount++;
 	}
 
 	return iCount;
 }
 
-CBot *CBots :: findBotByProfile ( CBotProfile *pProfile )
-{	
+CBot *CBots::FindBotByProfile(CBotProfile *pProfile)
+{
 	CBot *pBot = NULL;
 
-	for ( short int i = 0; i < MAX_PLAYERS; i ++ )
+	for (short int i = 0; i < MAX_PLAYERS; i++)
 	{
 		pBot = m_Bots[i];
 
-		if ( pBot->inUse() )
+		if (pBot->InUse())
 		{
-			if ( pBot->isUsingProfile(pProfile) )
+			if (pBot->IsUsingProfile(pProfile))
 				return pBot;
 		}
 	}
-	
+
 	return NULL;
 }
 
-void CBots :: runPlayerMoveAll ()
+void CBots::RunPlayerMoveAll()
 {
 	static CBot *pBot;
-	extern ConVar bot_stop;
 
-	for ( short int i = 0; i < MAX_PLAYERS; i ++ )
+	for (short int i = 0; i < MAX_PLAYERS; i++)
 	{
 		pBot = m_Bots[i];
 
-		if ( pBot->inUse() )
+		if (pBot->InUse())
 		{
-			pBot->runPlayerMove();
+			pBot->RunPlayerMove();
 		}
 	}
 }
 
 #define CHECK_STRING(str) (((str)==NULL)?"NULL":(str))
 
-void CBots :: botThink ()
+void CBots::BotThink()
 {
 	static CBot *pBot;
 
@@ -3260,8 +3139,8 @@ void CBots :: botThink ()
 	CProfileTimer *CBotsBotThink;
 	CProfileTimer *CBotThink;
 
-	CBotsBotThink = CProfileTimers::getTimer(BOTS_THINK_TIMER);
-	CBotThink = CProfileTimers::getTimer(BOT_THINK_TIMER);
+	CBotsBotThink = CProfileTimers::GetTimer(BOTS_THINK_TIMER);
+	CBotThink = CProfileTimers::GetTimer(BOT_THINK_TIMER);
 
 	if ( CClients::clientsDebugging(BOT_DEBUG_PROFILE) )
 	{
@@ -3270,166 +3149,137 @@ void CBots :: botThink ()
 
 #endif
 
-	for ( short int i = 0; i < MAX_PLAYERS; i ++ )
+	for (short int i = 0; i < MAX_PLAYERS; i++)
 	{
 		pBot = m_Bots[i];
 
-		if ( pBot->inUse() )
+		if (pBot->InUse())
 		{
-			if ( !bBotStop )
+			if (!bBotStop)
 			{
-				#ifdef _DEBUG
+#ifdef _DEBUG
 
-					if ( CClients::clientsDebugging(BOT_DEBUG_PROFILE) )
-					{
-						CBotThink->Start();
-					}
+				if ( CClients::ClientsDebugging(BOT_DEBUG_PROFILE) )
+				{
+					CBotThink->Start();
+				}
 
-				#endif
+#endif
 
-				pBot->setMoveLookPriority(MOVELOOK_THINK);
-				pBot->think();
-				pBot->setMoveLookPriority(MOVELOOK_EVENT);
+				pBot->SetMoveLookPriority(MOVELOOK_THINK);
+				pBot->Think();
+				pBot->SetMoveLookPriority(MOVELOOK_EVENT);
 
 
-				#ifdef _DEBUG
+#ifdef _DEBUG
 
-					if ( CClients::clientsDebugging(BOT_DEBUG_PROFILE) )
-					{
-						CBotThink->Stop();
-					}
+				if ( CClients::ClientsDebugging(BOT_DEBUG_PROFILE) )
+				{
+					CBotThink->Stop();
+				}
 
-				#endif
+#endif
 			}
-			if ( bot_command.GetString() && *bot_command.GetString() )
+			if (bot_command.GetString() && *bot_command.GetString())
 			{
-				helpers->ClientCommand(pBot->getEdict(),bot_command.GetString());
+				helpers->ClientCommand(pBot->GetEdict(), bot_command.GetString());
 
 				bot_command.SetValue("");
 			}
 
-			pBot->runPlayerMove();
+			pBot->RunPlayerMove();
 		}
 	}
 
 #ifdef _DEBUG
 
-	if ( CClients::clientsDebugging(BOT_DEBUG_PROFILE) )
+	if ( CClients::ClientsDebugging(BOT_DEBUG_PROFILE) )
 	{
 		CBotsBotThink->Stop();
 	}
 
 #endif
-	if ( needToKickBot () )
+	/*if (NeedToKickBot())
 	{
-		kickRandomBot();
+		KickRandomBot();
 
-		/*if ( m_iMaxBots >= 0 )
+		if (m_iMaxBots >= 0)
 		{
 			m_iMaxBots--;
-			CBotGlobals::botMessage(NULL,0,"max bots changed to %d",m_iMaxBots);
-		}*/
-	}
+			CBotGlobals::BotMessage(NULL, 0, "max bots changed to %d", m_iMaxBots);
+		}
+	}*/
 }
 
-/*bool CBots :: addBot ( const char *szClass, const char *szTeam, const char *szName )
-{
-	// lock the critical section
-	g_MutexAddBot.Lock();
-
-	int numClients = CBotGlobals::numClients();
-	int botQueueSize = m_AddBotQueue.size();
-	int maxClients = gpGlobals->maxClients;
-
-	bool successful = false;
-
-	if ( (numClients + botQueueSize) < maxClients )
-	{
-		CAddbot newbot;
-
-		newbot.m_szClass = CStrings::getString(szClass);
-		newbot.m_szTeam = CStrings::getString(szTeam);
-		newbot.m_szBotName = CStrings::getString(szName);
-
-		m_AddBotQueue.push(newbot);
-		successful = true;
-	}
-
-	// unlock the critical section
-	g_MutexAddBot.Unlock();
-
-	return successful;
-}*/
-
-void CBots :: makeBot ( edict_t *pEdict )
+void CBots::MakeBot(edict_t *pEdict)
 {
 	CBotProfile *pBotProfile;
 
-	pBotProfile = CBotProfiles::getRandomFreeProfile();
+	pBotProfile = CBotProfiles::GetRandomFreeProfile();
 
 	if (pBotProfile == NULL)
-		pBotProfile = CBotProfiles::getDefaultProfile();
+		pBotProfile = CBotProfiles::GetDefaultProfile();
 
-	m_Bots[slotOfEdict(pEdict)]->createBotFromEdict(pEdict, pBotProfile);
+	m_Bots[SlotOfEdict(pEdict)]->CreateBotFromEdict(pEdict, pBotProfile);
 }
 
-void CBots :: makeNotBot ( edict_t *pEdict )
+void CBots::MakeNotBot(edict_t *pEdict)
 {
-	CBot *pBot = CBots::getBotPointer(pEdict);
+	CBot *pBot = CBots::GetBotPointer(pEdict);
 
 	if (pBot != NULL)
 	{
-		if (pBot->inUse())
+		if (pBot->InUse())
 		{
-			pBot->freeAllMemory();
+			pBot->FreeAllMemory();
 		}
 	}
 }
 
-CBot *CBots :: getBotPointer ( edict_t *pEdict )
+CBot *CBots::GetBotPointer(edict_t *pEdict)
 {
 	int slot;
 
-	if ( !pEdict )
+	if (!pEdict)
 		return NULL;
 
-	slot = slotOfEdict(pEdict);
+	slot = SlotOfEdict(pEdict);
 
-	if ( (slot < 0) || (slot >= MAX_PLAYERS) )
+	if ((slot < 0) || (slot >= MAX_PLAYERS))
 		return NULL;
 
 	CBot *pBot = m_Bots[slot];
 
-	if ( pBot->inUse() )
+	if (pBot->InUse())
 		return pBot;
 
 	return NULL;
 }
 
-void CBots :: freeMapMemory ()
+void CBots::FreeMapMemory()
 {
-	if ( m_Bots == NULL )
+	if (m_Bots == NULL)
 		return;
 
 	//bots should have been freed when they disconnected
 	// just incase do this 
-	for ( short int i = 0; i < MAX_PLAYERS; i ++ )
+	for (short int i = 0; i < MAX_PLAYERS; i++)
 	{
-		if ( m_Bots[i] )
-			m_Bots[i]->freeMapMemory();
+		if (m_Bots[i])
+			m_Bots[i]->FreeMapMemory();
 	}
 }
 
-void CBots :: freeAllMemory ()
+void CBots::FreeAllMemory()
 {
-	if ( m_Bots == NULL )
+	if (m_Bots == NULL)
 		return;
 
-	for ( short int i = 0; i < MAX_PLAYERS; i ++ )
+	for (short int i = 0; i < MAX_PLAYERS; i++)
 	{
-		if ( m_Bots[i] != NULL )
+		if (m_Bots[i] != NULL)
 		{
-			m_Bots[i]->freeAllMemory();
+			m_Bots[i]->FreeAllMemory();
 			delete m_Bots[i];
 			m_Bots[i] = NULL;
 		}
@@ -3439,150 +3289,150 @@ void CBots :: freeAllMemory ()
 	m_Bots = NULL;
 }
 
-void CBots :: roundStart ()
+void CBots::RoundStart()
 {
-	for ( short int i = 0; i < MAX_PLAYERS; i ++ )
+	for (short int i = 0; i < MAX_PLAYERS; i++)
 	{
-		if ( m_Bots[i]->inUse() )
-			m_Bots[i]->spawnInit();
+		if (m_Bots[i]->InUse())
+			m_Bots[i]->SpawnInit();
 	}
 }
 
-void CBots :: mapInit ()
+void CBots::MapInit()
 {
-	m_flAddKickBotTime = g_pEngine->Time() + 10.0f;
+	//m_flAddKickBotTime = engine->Time() + 10.0f;
 }
 
-bool CBots :: needToAddBot ()
+/*bool CBots::NeedToAddBot()
 {
-	int iClients = CBotGlobals::numClients();
+	int iClients = CBotGlobals::NumClients();
 
-	return (((m_iMinBots!=-1)&&(CBots::numBots() < m_iMinBots)) || ((iClients < m_iMaxBots)&&(m_iMaxBots!=-1)));
+	return (((m_iMinBots != -1) && (CBots::NumBots() < m_iMinBots)) || ((iClients < m_iMaxBots) && (m_iMaxBots != -1)));
 }
 
-bool CBots :: needToKickBot ()
+bool CBots::NeedToKickBot()
 {
-	if ( m_flAddKickBotTime < g_pEngine->Time() )
+	if (m_flAddKickBotTime < engine->Time())
 	{
-		if ( ((m_iMinBots != -1 ) && (CBots::numBots() <= m_iMinBots)) )
+		if (((m_iMinBots != -1) && (CBots::NumBots() <= m_iMinBots)))
 			return false;
 
-		if ( (m_iMaxBots > 0 ) && (CBotGlobals::numClients() > m_iMaxBots) )
+		if ((m_iMaxBots > 0) && (CBotGlobals::NumClients() > m_iMaxBots))
 			return true;
 	}
 
 	return false;
 }
 
-void CBots :: kickRandomBot ()
+void CBots::KickRandomBot()
 {
 	dataUnconstArray<int> list;
 	int index;
 	CBot *tokick;
 	char szCommand[512];
 	//gather list of bots
-	for ( short int i = 0; i < MAX_PLAYERS; i ++ )
+	for (short int i = 0; i < MAX_PLAYERS; i++)
 	{
-		if ( m_Bots[i]->inUse() )
+		if (m_Bots[i]->InUse())
 			list.Add(i);
 	}
 
-	if ( list.IsEmpty() )
+	if (list.IsEmpty())
 	{
-		CBotGlobals::botMessage(NULL,0,"kickRandomBot() : No bots to kick");
+		CBotGlobals::BotMessage(NULL, 0, "kickRandomBot() : No bots to kick");
 		return;
 	}
 
 	index = list.Random();
 	list.Clear();
-	
+
 	tokick = m_Bots[index];
-	
-	sprintf(szCommand,"kickid %d\n",tokick->getPlayerID());
 
-	m_flAddKickBotTime = g_pEngine->Time() + 2.0f;
+	sprintf(szCommand, "kickid %d\n", tokick->GetPlayerID());
 
-	g_pEngine->ServerCommand(szCommand);
+	m_flAddKickBotTime = engine->Time() + 2.0f;
+
+	engine->ServerCommand(szCommand);
 }
 
-void CBots :: kickRandomBotOnTeam ( int team )
+void CBots::KickRandomBotOnTeam(int team)
 {
 	dataUnconstArray<int> list;
 	int index;
 	CBot *tokick;
 	char szCommand[512];
 	//gather list of bots
-	for ( short int i = 0; i < MAX_PLAYERS; i ++ )
+	for (short int i = 0; i < MAX_PLAYERS; i++)
 	{
-		if ( m_Bots[i]->inUse() )
+		if (m_Bots[i]->InUse())
 		{
-			if ( m_Bots[i]->getTeam() == team )
+			if (m_Bots[i]->GetTeam() == team)
 				list.Add(i);
 		}
 	}
 
-	if ( list.IsEmpty() )
+	if (list.IsEmpty())
 	{
-		CBotGlobals::botMessage(NULL,0,"kickRandomBotOnTeam() : No bots to kick");
+		CBotGlobals::BotMessage(NULL, 0, "kickRandomBotOnTeam() : No bots to kick");
 		return;
 	}
 
 	index = list.Random();
 	list.Clear();
-	
+
 	tokick = m_Bots[index];
-	
-	sprintf(szCommand,"kickid %d\n",tokick->getPlayerID());
 
-	m_flAddKickBotTime = g_pEngine->Time() + 2.0f;
+	sprintf(szCommand, "kickid %d\n", tokick->GetPlayerID());
 
-	g_pEngine->ServerCommand(szCommand);
-}
+	m_flAddKickBotTime = engine->Time() + 2.0f;
+
+	engine->ServerCommand(szCommand);
+}*/
 ////////////////////////
 
 /*bool CBots :: handlePlayerJoin ( edict_t *pEdict, const char *name )
 {
-	static int botnum;
+static int botnum;
 
-	if ( m_bControlNext && 
-		((strcmp(&name[strlen(name)-strlen(m_szNextName)],m_szNextName) == 0) || (sscanf(name,"Bot%d",&botnum) == 1)) )
-	{
-		m_ControlQueue.push(pEdict);
-		m_bControlNext = false;
-
-		return true;
-	}
-
-	return false;
-}*/
-
-CBotLastSee :: CBotLastSee ( edict_t *pEdict )
+if ( m_bControlNext &&
+((strcmp(&name[strlen(name)-strlen(m_szNextName)],m_szNextName) == 0) || (sscanf(name,"Bot%d",&botnum) == 1)) )
 {
-	m_pLastSee = pEdict;
-	update();
+m_ControlQueue.push(pEdict);
+m_bControlNext = false;
+
+return true;
 }
 
-void CBotLastSee :: update ()
+return false;
+}*/
+
+CBotLastSee::CBotLastSee(edict_t *pEdict)
 {
-	if ( (m_pLastSee.get() == NULL) || !CBotGlobals::entityIsAlive(m_pLastSee) )
+	m_pLastSee = pEdict;
+	Update();
+}
+
+void CBotLastSee::Update()
+{
+	if ((m_pLastSee.Get() == NULL) || !CBotGlobals::EntityIsAlive(m_pLastSee))
 	{
 		m_fLastSeeTime = 0.0f;
 		m_pLastSee = NULL;
 	}
 	else
 	{
-		m_fLastSeeTime = g_pEngine->Time();
-		m_vLastSeeLoc = CBotGlobals::entityOrigin(m_pLastSee);
-		CClassInterface::getVelocity(m_pLastSee,&m_vLastSeeVel);
+		m_fLastSeeTime = engine->Time();
+		m_vLastSeeLoc = CBotGlobals::EntityOrigin(m_pLastSee);
+		CClassInterface::GetVelocity(m_pLastSee, &m_vLastSeeVel);
 	}
 }
 
-bool CBotLastSee :: hasSeen ( float fTime )
+bool CBotLastSee::HasSeen(float fTime)
 {
-	return (m_pLastSee.get() != NULL) && ((m_fLastSeeTime + fTime) > g_pEngine->Time());
+	return (m_pLastSee.Get() != NULL) && ((m_fLastSeeTime + fTime) > engine->Time());
 }
 
-Vector CBotLastSee :: getLocation ()
+Vector CBotLastSee::GetLocation()
 {
 	return (m_vLastSeeLoc + m_vLastSeeVel);
 }

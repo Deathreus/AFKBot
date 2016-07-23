@@ -30,10 +30,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game g_pEngine ("HL
- *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game engine ("HL
+ *    engine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL g_pEngine and MODs
+ *    respects for all of the code used other than the HL engine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -48,7 +48,7 @@ using namespace std;
 
 //#include "vstdlib/random.h" // for random functions
 
-#include "bot_mtrand.h"
+//#include "bot_mtrand.h"
 
 
 //////////////////////////////////////////////////////////////////////
@@ -722,7 +722,7 @@ class dataUnconstArray
 		{
 			//return array[RANDOM_INT(0,array.size()-1)];
 			//return array[RandomInteger(0,array.size()-1)];
-			return array[randomInt(0,array.size()-1)];
+			return array[RandomInt(0,array.size()-1)];
 		}
 
 		void Add ( const T pObj )

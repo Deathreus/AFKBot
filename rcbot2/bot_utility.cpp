@@ -20,10 +20,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game g_pEngine ("HL
- *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game engine ("HL
+ *    engine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL g_pEngine and MODs
+ *    respects for all of the code used other than the HL engine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -39,7 +39,7 @@
 #include "bot_mods.h"
 #include "bot_fortress.h"
 
-const char *g_szUtils[BOT_UTIL_MAX+1] =
+const char *g_szUtils[BOT_UTIL_MAX + 1] =
 {
 	"BOT_UTIL_BUILDSENTRY",
 	"BOT_UTIL_BUILDDISP",
@@ -149,7 +149,7 @@ const char *g_szUtils[BOT_UTIL_MAX+1] =
 	"BOT_UTIL_MAX"
 };
 
-CBotUtility :: CBotUtility ( CBot *pBot, eBotAction id, bool bCanDo, float fUtil, CBotWeapon *pWeapon, int iData, Vector vec )
+CBotUtility::CBotUtility(CBot *pBot, eBotAction id, bool bCanDo, float fUtil, CBotWeapon *pWeapon, int iData, Vector vec)
 {
 	m_iData = iData;
 	m_fUtility = fUtil;
@@ -159,19 +159,19 @@ CBotUtility :: CBotUtility ( CBot *pBot, eBotAction id, bool bCanDo, float fUtil
 	m_pWeapon = pWeapon;
 	m_vVector = vec;
 
-	if ( m_pBot && m_pBot->isTF2() )
+	if (m_pBot && m_pBot->IsTF2())
 	{
-		int iClass = CClassInterface::getTF2Class(pBot->getEdict());
+		int iClass = CClassInterface::GetTF2Class(pBot->GetEdict());
 
-		if ( CTeamFortress2Mod::isAttackDefendMap() && (m_pBot->getTeam() == TF2_TEAM_BLUE) )
-			m_fUtility += randomFloat(CRCBotTF2UtilFile::m_fUtils[BOT_ATT_UTIL][id][iClass].min,CRCBotTF2UtilFile::m_fUtils[BOT_ATT_UTIL][id][iClass].max);
+		if (CTeamFortress2Mod::IsAttackDefendMap() && (m_pBot->GetTeam() == TF2_TEAM_BLUE))
+			m_fUtility += RandomFloat(CRCBotTF2UtilFile::m_fUtils[BOT_ATT_UTIL][id][iClass].min, CRCBotTF2UtilFile::m_fUtils[BOT_ATT_UTIL][id][iClass].max);
 		else
-			m_fUtility += randomFloat(CRCBotTF2UtilFile::m_fUtils[BOT_NORM_UTIL][id][iClass].min,CRCBotTF2UtilFile::m_fUtils[BOT_NORM_UTIL][id][iClass].max);
+			m_fUtility += RandomFloat(CRCBotTF2UtilFile::m_fUtils[BOT_NORM_UTIL][id][iClass].min, CRCBotTF2UtilFile::m_fUtils[BOT_NORM_UTIL][id][iClass].max);
 	}
 }
 
 // Execute a list of possible actions and put them into order of available actions against utility
-void CBotUtilities :: execute ()
+void CBotUtilities::Execute()
 {
 	unsigned int i = 0;
 	CBotUtility *pUtil;
@@ -183,34 +183,34 @@ void CBotUtilities :: execute ()
 
 	m_pBest.head = NULL;
 
-	for ( i = 0; i < m_Utilities.size(); i ++ )
+	for (i = 0; i < m_Utilities.size(); i++)
 	{
 		pUtil = &(m_Utilities[i]);
-		fUtil = pUtil->getUtility();
+		fUtil = pUtil->GetUtility();
 
 		// if bot can do this action
-		if ( pUtil->canDo() )
-		{			
+		if (pUtil->CanDo())
+		{
 			// add to list
 			temp = m_pBest.head;
 
 			// put in correct order by making a linked list
 			pnew = (util_node_t*)malloc(sizeof(util_node_t));
 
-			if ( pnew != NULL )
+			if (pnew != NULL)
 			{
 				pnew->util = pUtil;
 				pnew->next = NULL;
 				prev = NULL;
 
-				if ( temp )
+				if (temp)
 				{
-					while ( temp )
+					while (temp)
 					{
 						// put into correct position
-						if ( fUtil > temp->util->getUtility() )
+						if (fUtil > temp->util->GetUtility())
 						{
-							if ( temp == m_pBest.head )
+							if (temp == m_pBest.head)
 							{
 								pnew->next = temp;
 								m_pBest.head = pnew;
@@ -228,7 +228,7 @@ void CBotUtilities :: execute ()
 						temp = temp->next;
 					}
 
-					if ( pnew->next == NULL )
+					if (pnew->next == NULL)
 						prev->next = pnew;
 				}
 				else
@@ -240,26 +240,26 @@ void CBotUtilities :: execute ()
 	//return pBest;
 }
 
-void CBotUtilities :: freeMemory ()
+void CBotUtilities::FreeMemory()
 {
 	util_node_t *temp;
 	m_Utilities.clear();
 
 	// FREE LIST
-	while ( (temp = m_pBest.head) != NULL )
+	while ((temp = m_pBest.head) != NULL)
 	{
 		temp = m_pBest.head;
 		m_pBest.head = m_pBest.head->next;
-		free(temp);		
+		free(temp);
 	}
 }
 
-CBotUtility *CBotUtilities :: nextBest ()
+CBotUtility *CBotUtilities::NextBest()
 {
 	CBotUtility *pBest;
 	util_node_t *temp;
 
-	if ( m_pBest.head == NULL )
+	if (m_pBest.head == NULL)
 		return NULL;
 
 	pBest = m_pBest.head->util;
@@ -271,5 +271,5 @@ CBotUtility *CBotUtilities :: nextBest ()
 	free(temp);
 
 	return pBest;
-	
+
 }

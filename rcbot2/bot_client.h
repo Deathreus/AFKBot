@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game g_pEngine ("HL
- *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game engine ("HL
+ *    engine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL g_pEngine and MODs
+ *    respects for all of the code used other than the HL engine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -35,7 +35,6 @@
 using namespace std;
 
 #include "bot_const.h"
-//#include "bot_ehandle.h"
 
 #define MAX_STORED_AUTOWAYPOINT 5
 
@@ -104,7 +103,7 @@ public:
 		SetVector(vec);
 	}
 
-	int getFlags ()
+	int GetFlags ()
 	{
 		return m_iFlags;
 	}
@@ -127,7 +126,7 @@ public:
 		m_pszSound = pszSound;
 	}
 
-	void send(edict_t *pPlayer);
+	void Send(edict_t *pPlayer);
 private:
 	const char *m_pszMessage;
 	const char *m_pszSound;
@@ -162,122 +161,122 @@ public:
 		m_fMonitorHighFiveTime = 0;
 	}
 
-	void monitorHighFive ()
+	void MonitorHighFive ()
 	{
-		m_fMonitorHighFiveTime = g_pEngine->Time() + 5.0f;
+		m_fMonitorHighFiveTime = engine->Time() + 5.0f;
 	}
 
-	void init ();
+	void Init ();
 
-	void setupMenuCommands ();
-	void resetMenuCommands ();
+	void SetupMenuCommands ();
+	void ResetMenuCommands ();
 
-	void setTeleportVector ();
-	Vector *getTeleportVector () { if ( m_bTeleportVectorValid ) return &m_vTeleportVector; return NULL; }
+	void SetTeleportVector ();
+	Vector *GetTeleportVector () { if ( m_bTeleportVectorValid ) return &m_vTeleportVector; return NULL; }
 
-	inline bool isUsingMenu () { return (m_pMenu != NULL); }
-	inline void setCurrentMenu ( CBotMenu *pMenu ) 
+	inline bool IsUsingMenu () { return (m_pMenu != NULL); }
+	inline void SetCurrentMenu ( CBotMenu *pMenu ) 
 	{ 
 		m_pMenu = pMenu; 
 
 		if ( pMenu == NULL )
-			resetMenuCommands();
+			ResetMenuCommands();
 		else
-			setupMenuCommands();
+			SetupMenuCommands();
 	}
-	inline CBotMenu *getCurrentMenu () { return m_pMenu; }
-	inline void setMenuCommand ( int iCommand ) { m_iMenuCommand = iCommand; }
-	inline int getLastMenuCommand () { return m_iMenuCommand; }
-	bool needToRenderMenu ();
-	void updateRenderMenuTime ();
+	inline CBotMenu *GetCurrentMenu () { return m_pMenu; }
+	inline void SetMenuCommand ( int iCommand ) { m_iMenuCommand = iCommand; }
+	inline int GetLastMenuCommand () { return m_iMenuCommand; }
+	bool NeedToRenderMenu ();
+	void UpdateRenderMenuTime ();
 
-	int accessLevel ();
+	int AccessLevel ();
 	// this player joins with pPlayer edict
-	void clientConnected ( edict_t *pPlayer );
+	void ClientConnected ( edict_t *pPlayer );
 	// this player disconnects
-	void clientDisconnected ();	
+	void ClientDisconnected ();	
 
-	inline void showMenu () { m_bShowMenu = true; };
+	inline void ShowMenu () { m_bShowMenu = true; };
 
-	bool isUsed ();
+	bool IsUsed ();
 
-	Vector getOrigin ();
+	Vector GetOrigin ();
 
-	inline float getSpeed () { return m_fSpeed; }
-	inline Vector getVelocity () { return m_vVelocity; }
+	inline float GetSpeed () { return m_fSpeed; }
+	inline Vector GetVelocity () { return m_vVelocity; }
 
-	void setWaypointCut ( CWaypoint *pWaypoint );
-	void setWaypointCopy (CWaypoint *pWaypoint); 
-	void setEdict ( edict_t *pPlayer );
+	void SetWaypointCut ( CWaypoint *pWaypoint );
+	void SetWaypointCopy (CWaypoint *pWaypoint); 
+	void SetEdict ( edict_t *pPlayer );
 
-	edict_t *getPlayer () { return m_pPlayer; }
+	edict_t *GetPlayer () { return m_pPlayer; }
 
-	inline bool isPlayer ( edict_t *pPlayer ) { return m_pPlayer == pPlayer; }
+	inline bool IsPlayer ( edict_t *pPlayer ) { return m_pPlayer == pPlayer; }
 
-	inline bool isWaypointOn () { return m_bWaypointOn; }
-	inline void setWaypointOn ( bool bOn ) { m_bWaypointOn = bOn; }
-	inline void setWaypoint ( int iWpt ) { m_iCurrentWaypoint = iWpt; }
-	inline int currentWaypoint () { return m_iCurrentWaypoint; }
+	inline bool IsWaypointOn () { return m_bWaypointOn; }
+	inline void SetWaypointOn ( bool bOn ) { m_bWaypointOn = bOn; }
+	inline void SetWaypoint ( int iWpt ) { m_iCurrentWaypoint = iWpt; }
+	inline int CurrentWaypoint () { return m_iCurrentWaypoint; }
 
-	inline void setAccessLevel ( int iLev ) { m_iAccessLevel = iLev; }
+	inline void SetAccessLevel ( int iLev ) { m_iAccessLevel = iLev; }
 
-	inline bool isAutoPathOn () { return m_bAutoPaths; }
-	inline void setAutoPath ( bool bOn ) { m_bAutoPaths = bOn; }
-	inline bool isPathWaypointOn () { return m_bPathWaypointOn; }
-	inline void setPathWaypoint ( bool bOn ) { m_bPathWaypointOn = bOn; }
+	inline bool IsAutoPathOn () { return m_bAutoPaths; }
+	inline void SetAutoPath ( bool bOn ) { m_bAutoPaths = bOn; }
+	inline bool IsPathWaypointOn () { return m_bPathWaypointOn; }
+	inline void SetPathWaypoint ( bool bOn ) { m_bPathWaypointOn = bOn; }
 
-	inline int getWptArea () { return m_iWptArea; }
-	inline void setWptArea ( int area ) { m_iWptArea = area; }	
+	inline int GetWptArea () { return m_iWptArea; }
+	inline void SetWptArea ( int area ) { m_iWptArea = area; }	
 
-	inline void setPathFrom ( int iWpt ) { m_iPathFrom = iWpt; }
-	inline void setPathTo ( int iWpt ) { m_iPathTo = iWpt; }
+	inline void SetPathFrom ( int iWpt ) { m_iPathFrom = iWpt; }
+	inline void SetPathTo ( int iWpt ) { m_iPathTo = iWpt; }
 
-	inline int getPathFrom () { return m_iPathFrom; }
-	inline int getPathTo () { return m_iPathTo; }
+	inline int GetPathFrom () { return m_iPathFrom; }
+	inline int GetPathTo () { return m_iPathTo; }
 
-	void teleportTo ( Vector vOrigin );
+	void TeleportTo ( Vector vOrigin );
 
-	inline const char *getSteamID () { return m_szSteamID; }
-	const char *getName ();
+	inline const char *GetSteamID () { return m_szSteamID; }
+	const char *GetName ();
 
-	void updateCurrentWaypoint ();
+	void UpdateCurrentWaypoint ();
 
-	void clientActive ();
+	void ClientActive ();
 
-	void setDebug ( int iLevel, bool bSet ) { if ( bSet ) { m_iDebugLevels |= (1<<iLevel); } else { m_iDebugLevels &= ~(1<<iLevel); } }
-	bool isDebugOn ( int iLevel ) { return (m_iDebugLevels & (1<<iLevel))>0; }
-	void clearDebug ( ) { m_iDebugLevels = 0; }
-	bool isDebugging () { return (m_iDebugLevels != 0); }
+	void SetDebug ( int iLevel, bool bSet ) { if ( bSet ) { m_iDebugLevels |= (1<<iLevel); } else { m_iDebugLevels &= ~(1<<iLevel); } }
+	bool IsDebugOn ( int iLevel ) { return (m_iDebugLevels & (1<<iLevel))>0; }
+	void ClearDebug ( ) { m_iDebugLevels = 0; }
+	bool IsDebugging () { return (m_iDebugLevels != 0); }
 
-	inline void setDebugBot ( edict_t *pBot ) { m_pDebugBot = pBot; }	
-	inline bool isDebuggingBot ( edict_t *pBot ) { return m_pDebugBot == pBot; }
-	inline edict_t *getDebugBot () { return m_pDebugBot; }
+	inline void SetDebugBot ( edict_t *pBot ) { m_pDebugBot = pBot; }	
+	inline bool IsDebuggingBot ( edict_t *pBot ) { return m_pDebugBot == pBot; }
+	inline edict_t *GetDebugBot () { return m_pDebugBot; }
 
-	void think ();
+	void Think ();
 
-	inline void setDrawType ( unsigned short int iType ) { m_iWaypointDrawType = iType; }
-	inline unsigned short int getDrawType () { return m_iWaypointDrawType; }
+	inline void SetDrawType ( unsigned short int iType ) { m_iWaypointDrawType = iType; }
+	inline unsigned short int GetDrawType () { return m_iWaypointDrawType; }
 
-	inline float getWptCopyRadius() { return m_fCopyWptRadius; }
-	inline int getWptCopyFlags () { return m_iCopyWptFlags; }
-	inline int getWptCopyArea () { return m_iCopyWptArea; }
+	inline float GetWptCopyRadius() { return m_fCopyWptRadius; }
+	inline int GetWptCopyFlags () { return m_iCopyWptFlags; }
+	inline int GetWptCopyArea () { return m_iCopyWptArea; }
 
-	inline eWptCopyType getWptCopyType () { return m_WaypointCopyType; }
+	inline eWptCopyType GetWptCopyType () { return m_WaypointCopyType; }
 
-	inline bool isShowingWaypoint ( int iFlags ) { return (m_iWaypointShowFlags & iFlags) > 0; }
-	inline void showWaypoints ( int iFlags ) { m_iWaypointShowFlags |= iFlags; }
-	inline void dontShowWaypoints ( int iFlags ) { m_iWaypointShowFlags &= ~iFlags; }
-	inline bool isShowingAllWaypoints () { return m_iWaypointShowFlags == 0; }
-	inline int getShowWaypointFlags () { return m_iWaypointShowFlags; }
-	void playSound ( const char *pszSound );
-	inline void setAutoWaypointMode ( bool mode, bool debug ) 
+	inline bool IsShowingWaypoint ( int iFlags ) { return (m_iWaypointShowFlags & iFlags) > 0; }
+	inline void ShowWaypoints ( int iFlags ) { m_iWaypointShowFlags |= iFlags; }
+	inline void DontShowWaypoints ( int iFlags ) { m_iWaypointShowFlags &= ~iFlags; }
+	inline bool IsShowingAllWaypoints () { return m_iWaypointShowFlags == 0; }
+	inline int GetShowWaypointFlags () { return m_iWaypointShowFlags; }
+	void PlaySound ( const char *pszSound );
+	inline void SetAutoWaypointMode ( bool mode, bool debug ) 
 	{ 
 		m_bAutoWaypoint = mode; 
 		m_bDebugAutoWaypoint = debug; 
 	}
-	inline bool autoWaypointOn () { return m_bAutoWaypoint; }
-	void autoEventWaypoint ( int iType, float fRadius, bool bAtOtherOrigin = false, int iTeam = 0, Vector vOrigin = Vector(0,0,0), bool bIgnoreTeam = false, bool bAutoType = false );
-	void giveMessage(char*msg, float fTime=0.1f);
+	inline bool AutoWaypointOn () { return m_bAutoWaypoint; }
+	void AutoEventWaypoint ( int iType, float fRadius, bool bAtOtherOrigin = false, int iTeam = 0, Vector vOrigin = Vector(0,0,0), bool bIgnoreTeam = false, bool bAutoType = false );
+	void GiveMessage(char*msg, float fTime=0.1f);
 private:
 	edict_t *m_pPlayer;
 	// steam id
@@ -378,27 +377,27 @@ class CClients
 {
 public:
 	// called when player joins
-	static CClient *clientConnected ( edict_t *pPlayer );
-	static void clientDisconnected ( edict_t *pPlayer );
+	static CClient *ClientConnected ( edict_t *pPlayer );
+	static void ClientDisconnected ( edict_t *pPlayer );
 	// player starts game
-	static void clientActive ( edict_t *pPlayer );
+	static void ClientActive ( edict_t *pPlayer );
 	// get index in array
-	static int slotOfEdict ( edict_t *pPlayer );
-	static void init ( edict_t *pPlayer );
-	static CClient *get ( int iIndex ) { return &m_Clients[iIndex]; }
-	static CClient *get ( edict_t *pPlayer ) { return &m_Clients[slotOfEdict(pPlayer)]; }
-	static void setListenServerClient ( CClient *pClient ) { m_pListenServerClient = pClient; }
-	static bool isListenServerClient ( CClient *pClient ) { return m_pListenServerClient == pClient; }
-	static bool noListenServerClient () { return m_pListenServerClient == NULL; }
-	static void clientThink ();
-	static bool clientsDebugging ( int iLev = 0 );
-	static void clientDebugMsg ( int iLev, const char *szMsg, CBot *pBot = NULL );
-	static void clientDebugMsg(CBot *pBot, int iLev, const char *fmt, ... );
-	static CClient *findClientBySteamID ( char *szSteamID );
-	static edict_t *getListenServerClient() { if ( m_pListenServerClient ) return m_pListenServerClient->getPlayer(); else return NULL; }
+	static int SlotOfEdict ( edict_t *pPlayer );
+	static void Init ( edict_t *pPlayer );
+	static CClient *Get ( int iIndex ) { return &m_Clients[iIndex]; }
+	static CClient *Get ( edict_t *pPlayer ) { return &m_Clients[SlotOfEdict(pPlayer)]; }
+	static void SetListenServerClient ( CClient *pClient ) { m_pListenServerClient = pClient; }
+	static bool IsListenServerClient ( CClient *pClient ) { return m_pListenServerClient == pClient; }
+	static bool NoListenServerClient () { return m_pListenServerClient == NULL; }
+	static void ClientThink ();
+	static bool ClientsDebugging ( int iLev = 0 );
+	static void ClientDebugMsg ( int iLev, const char *szMsg, CBot *pBot = NULL );
+	static void ClientDebugMsg(CBot *pBot, int iLev, const char *fmt, ... );
+	static CClient *FindClientBySteamID ( char *szSteamID );
+	static edict_t *GetListenServerClient() { if ( m_pListenServerClient ) return m_pListenServerClient->GetPlayer(); else return NULL; }
 
-	static void initall () { for ( int i = 0; i < MAX_PLAYERS; i ++ ) { m_Clients[i].init(); } }
-	static void giveMessage (char *msg, float fTime = 0.1, edict_t *pPlayer = NULL );// NULL to everyone
+	static void Initall () { for ( int i = 1; i <= MAX_PLAYERS; i ++ ) { m_Clients[i].Init(); } }
+	static void GiveMessage (char *msg, float fTime = 0.1, edict_t *pPlayer = NULL );// NULL to everyone
 private:
 	static CClient m_Clients[MAX_PLAYERS];
 	static CClient *m_pListenServerClient;

@@ -156,7 +156,7 @@
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>..;..\linux_sdk;..\devtools;..\sdk;$(HL2SDKTF2)\public;$(HL2SDKTF2)\public\mathlib;$(HL2SDKTF2)\public\engine;$(HL2SDKTF2)\public\tier0;$(HL2SDKTF2)\public\tier1;$(HL2SDKTF2)\game\shared;$(HL2SDKTF2)\game\server;$(HL2SDKTF2)\public\game\server;$(MMSOURCE)\core;$(MMSOURCE)\core\sourcehook;$(MMSOURCE)\public;$(SOURCEMOD)\public;$(SOURCEMOD)\sourcepawn\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..;..\sdk;$(SOURCEMOD)\public;$(SOURCEMOD)\public\extensions;$(SOURCEMOD)\sourcepawn\include;$(HL2SDKOBVALVE)\public;$(HL2SDKOBVALVE)\public\mathlib;$(HL2SDKOBVALVE)\public\engine;$(HL2SDKOBVALVE)\public\tier0;$(HL2SDKOBVALVE)\public\tier1;$(HL2SDKOBVALVE)\public\SoundEmitterSystem;$(HL2SDKOBVALVE)\game\shared;$(HL2SDKOBVALVE)\game\server;$(HL2SDKOBVALVE)\public\game\server;$(MMSOURCE)\core;$(MMSOURCE)\core\sourcehook;$(MMSOURCE)\public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>SOURCE_ENGINE=4;WIN32;NDEBUG;_WINDOWS;HOMEFOLDER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -173,7 +173,8 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
       <OmitDefaultLibName>false</OmitDefaultLibName>
-      <AdditionalOptions>/D SE_EPISODEONE=1 /D SE_DARKMESSIAH=2 /D SE_ORANGEBOX=3 /D SE_ORANGEBOXVALVE=4 /D SE_LEFT4DEAD=5 /D SE_LEFT4DEAD2=6 /D SE_ALIENSWARM=7</AdditionalOptions>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -261,6 +262,7 @@ copy "$(ProjectDir)\update.txt" "C:\Program Files (x86)\Steam\steamapps\paul.mur
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\extension.cpp" />
     <ClCompile Include="..\rcbot2\bot.cpp" />
     <ClCompile Include="..\rcbot2\bot_buttons.cpp" />
     <ClCompile Include="..\rcbot2\bot_client.cpp" />
@@ -268,26 +270,18 @@ copy "$(ProjectDir)\update.txt" "C:\Program Files (x86)\Steam\steamapps\paul.mur
     <ClCompile Include="..\rcbot2\bot_configfile.cpp" />
     <ClCompile Include="..\rcbot2\bot_events.cpp" />
     <ClCompile Include="..\rcbot2\bot_fortress.cpp" />
-    <ClCompile Include="..\rcbot2\bot_ga.cpp" />
-    <ClCompile Include="..\rcbot2\bot_ga_ind.cpp" />
     <ClCompile Include="..\rcbot2\bot_getprop.cpp" />
     <ClCompile Include="..\rcbot2\bot_globals.cpp" />
     <ClCompile Include="..\rcbot2\bot_kv.cpp" />
     <ClCompile Include="..\rcbot2\bot_menu.cpp" />
     <ClCompile Include="..\rcbot2\bot_mods.cpp" />
-    <ClCompile Include="..\rcbot2\bot_mtrand.cpp" />
-    <ClCompile Include="..\rcbot2\bot_navmesh.cpp" />
-    <ClCompile Include="..\rcbot2\bot_perceptron.cpp" />
     <ClCompile Include="..\rcbot2\bot_profile.cpp" />
-    <ClCompile Include="..\rcbot2\bot_profiling.cpp" />
     <ClCompile Include="..\rcbot2\bot_schedule.cpp" />
-    <ClCompile Include="..\rcbot2\bot_som.cpp" />
     <ClCompile Include="..\rcbot2\bot_squads.cpp" />
     <ClCompile Include="..\rcbot2\bot_strings.cpp" />
     <ClCompile Include="..\rcbot2\bot_task.cpp" />
     <ClCompile Include="..\rcbot2\bot_tf2_mod.cpp" />
     <ClCompile Include="..\rcbot2\bot_tf2_points.cpp" />
-    <ClCompile Include="..\rcbot2\bot_usercmd.cpp" />
     <ClCompile Include="..\rcbot2\bot_utility.cpp" />
     <ClCompile Include="..\rcbot2\bot_visibles.cpp" />
     <ClCompile Include="..\rcbot2\bot_waypoint.cpp" />
@@ -297,40 +291,34 @@ copy "$(ProjectDir)\update.txt" "C:\Program Files (x86)\Steam\steamapps\paul.mur
     <ClCompile Include="..\rcbot2\bot_wpt_dist.cpp" />
     <ClCompile Include="..\rcbot2\bot_sigscan.cpp" />
     <ClCompile Include="..\rcbot2\bot_cvars.cpp" />
-    <ClCompile Include="..\rcbot2\bot_plugin_meta.cpp" />
+    <ClCompile Include="..\sdk\smsdk_ext.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\extension.h" />
     <ClInclude Include="..\rcbot2\bot.h" />
+    <ClInclude Include="..\rcbot2\bot_accessclient.h" />
     <ClInclude Include="..\rcbot2\bot_belief.h" />
     <ClInclude Include="..\rcbot2\bot_buttons.h" />
     <ClInclude Include="..\rcbot2\bot_client.h" />
     <ClInclude Include="..\rcbot2\bot_commands.h" />
-    <ClInclude Include="..\rcbot2\bot_config.h" />
     <ClInclude Include="..\rcbot2\bot_configfile.h" />
     <ClInclude Include="..\rcbot2\bot_const.h" />
     <ClInclude Include="..\rcbot2\bot_cvars.h" />
     <ClInclude Include="..\rcbot2\bot_ehandle.h" />
     <ClInclude Include="..\rcbot2\bot_event.h" />
     <ClInclude Include="..\rcbot2\bot_fortress.h" />
-    <ClInclude Include="..\rcbot2\bot_ga.h" />
-    <ClInclude Include="..\rcbot2\bot_ga_ind.h" />
+    <ClInclude Include="..\rcbot2\bot_ga_nn_const.h" />
     <ClInclude Include="..\rcbot2\bot_genclass.h" />
     <ClInclude Include="..\rcbot2\bot_getprop.h" />
     <ClInclude Include="..\rcbot2\bot_globals.h" />
-    <ClInclude Include="..\rcbot2\bot_hooks.h" />
     <ClInclude Include="..\rcbot2\bot_kv.h" />
     <ClInclude Include="..\rcbot2\bot_menu.h" />
     <ClInclude Include="..\rcbot2\bot_mods.h" />
-    <ClInclude Include="..\rcbot2\bot_mtrand.h" />
     <ClInclude Include="..\rcbot2\bot_navigator.h" />
     <ClInclude Include="..\rcbot2\bot_perceptron.h" />
     <ClInclude Include="..\rcbot2\bot_profile.h" />
-    <ClInclude Include="..\rcbot2\bot_profiling.h" />
-    <ClInclude Include="..\rcbot2\bot_rb.h" />
-    <ClInclude Include="..\rcbot2\bot_recipients.h" />
     <ClInclude Include="..\rcbot2\bot_schedule.h" />
     <ClInclude Include="..\rcbot2\bot_sigscan.h" />
-    <ClInclude Include="..\rcbot2\bot_som.h" />
     <ClInclude Include="..\rcbot2\bot_squads.h" />
     <ClInclude Include="..\rcbot2\bot_strings.h" />
     <ClInclude Include="..\rcbot2\bot_task.h" />
@@ -343,7 +331,9 @@ copy "$(ProjectDir)\update.txt" "C:\Program Files (x86)\Steam\steamapps\paul.mur
     <ClInclude Include="..\rcbot2\bot_weapons.h" />
     <ClInclude Include="..\rcbot2\bot_wpt_color.h" />
     <ClInclude Include="..\rcbot2\bot_wpt_dist.h" />
-    <ClInclude Include="..\rcbot2\bot_plugin_meta.h" />
+    <ClInclude Include="..\sdk\smsdk_config.h" />
+    <ClInclude Include="..\sdk\smsdk_ext.h" />
+    <ClInclude Include="..\version.h" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\lib\public\mathlib.lib" />

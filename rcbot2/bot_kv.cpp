@@ -1,10 +1,9 @@
 #include "bot.h"
 #include "bot_kv.h"
-#include "bot_globals.h"
 
-void CAFKBotKeyValueList :: parseFile ( FILE *fp )
+void CAFKBotKeyValueList::ParseFile(FILE *fp)
 {
-	char buffer[2*(RCBOT_MAX_KV_LEN)];
+	char buffer[2 * (RCBOT_MAX_KV_LEN)];
 	char szKey[RCBOT_MAX_KV_LEN];
 	char szValue[RCBOT_MAX_KV_LEN];
 
@@ -18,22 +17,22 @@ void CAFKBotKeyValueList :: parseFile ( FILE *fp )
 	iLine = 0;
 
 	// parse profile ini
-	while ( fgets(buffer,255,fp) != NULL )
+	while (fgets(buffer, 255, fp) != NULL)
 	{
 		iLine++;
 
-		if ( buffer[0] == '#' ) // skip comment
+		if (buffer[0] == '#') // skip comment
 			continue;
 
 		iLen = strlen(buffer);
 
-		if ( iLen == 0 )
+		if (iLen == 0)
 			continue;
 
-		if ( buffer[iLen-1] == '\n' )
+		if (buffer[iLen - 1] == '\n')
 			buffer[--iLen] = 0;
 
-		if ( buffer[iLen-1] == '\r' )
+		if (buffer[iLen - 1] == '\r')
 			buffer[--iLen] = 0;
 
 		bHaveKey = false;
@@ -41,15 +40,15 @@ void CAFKBotKeyValueList :: parseFile ( FILE *fp )
 		iKi = 0;
 		iVi = 0;
 
-		for ( iCi = 0; iCi < iLen; iCi ++ )
+		for (iCi = 0; iCi < iLen; iCi++)
 		{
 			// ignore spacing
-			if ( buffer[iCi] == ' ' )
+			if (buffer[iCi] == ' ')
 				continue;
 
-			if ( !bHaveKey )
+			if (!bHaveKey)
 			{
-				if ( buffer[iCi] == '=' )
+				if (buffer[iCi] == '=')
 				{
 					bHaveKey = true;
 					continue;
@@ -57,21 +56,19 @@ void CAFKBotKeyValueList :: parseFile ( FILE *fp )
 
 				// parse key
 
-				if ( iKi < RCBOT_MAX_KV_LEN )
-					szKey[iKi++] = buffer[iCi];													
+				if (iKi < RCBOT_MAX_KV_LEN)
+					szKey[iKi++] = buffer[iCi];
 			}
-			else if ( iVi < RCBOT_MAX_KV_LEN )
+			else if (iVi < RCBOT_MAX_KV_LEN)
 				szValue[iVi++] = buffer[iCi];
 			else
 				break;
-		}      
+		}
 
 		szKey[iKi] = 0;
 		szValue[iVi] = 0;
 
-		CBotGlobals::botMessage(NULL,0,"m_KVs.push_back(%s,%s)",szKey, szValue);
-
-		m_KVs.push_back(new CAFKBotKeyValue(szKey,szValue));
+		m_KVs.push_back(new CAFKBotKeyValue(szKey, szValue));
 
 	}
 
@@ -79,7 +76,7 @@ void CAFKBotKeyValueList :: parseFile ( FILE *fp )
 
 CAFKBotKeyValueList :: ~CAFKBotKeyValueList()
 {
-	for ( unsigned int i = 0; i < m_KVs.size(); i ++ )
+	for (unsigned int i = 0; i < m_KVs.size(); i++)
 	{
 		delete m_KVs[i];
 		m_KVs[i] = NULL;
@@ -88,65 +85,65 @@ CAFKBotKeyValueList :: ~CAFKBotKeyValueList()
 	m_KVs.clear();
 }
 
-CAFKBotKeyValue *CAFKBotKeyValueList :: getKV ( const char *key )
+CAFKBotKeyValue *CAFKBotKeyValueList::GetKV(const char *key)
 {
-	for ( unsigned int i = 0; i < m_KVs.size(); i ++ )
+	for (unsigned int i = 0; i < m_KVs.size(); i++)
 	{
-		if ( FStrEq(m_KVs[i]->getKey(),key) )
+		if (FStrEq(m_KVs[i]->GetKey(), key))
 			return m_KVs[i];
 	}
 
 	return NULL;
 }
 
-bool CAFKBotKeyValueList :: getFloat ( const char *key, float *val )
+bool CAFKBotKeyValueList::GetFloat(const char *key, float *val)
 {
 	CAFKBotKeyValue *pKV;
 
-	pKV = getKV(key);
+	pKV = GetKV(key);
 
-	if ( !pKV )
+	if (!pKV)
 		return false;
-	
-	*val = atof(pKV->getValue());
 
-	return true;
-}
-
-	
-bool CAFKBotKeyValueList :: getInt ( const char *key, int *val )
-{
-	CAFKBotKeyValue *pKV;
-
-	pKV = getKV(key);
-
-	if ( !pKV )
-		return false;
-	
-	*val = atoi(pKV->getValue());
+	*val = atof(pKV->GetValue());
 
 	return true;
 }
 
 
-bool CAFKBotKeyValueList :: getString ( const char *key, char **val )
+bool CAFKBotKeyValueList::GetInt(const char *key, int *val)
 {
 	CAFKBotKeyValue *pKV;
 
-	pKV = getKV(key);
+	pKV = GetKV(key);
 
-	if ( !pKV )
+	if (!pKV)
 		return false;
 
-	*val = pKV->getValue();
+	*val = atoi(pKV->GetValue());
 
 	return true;
 }
 
-CAFKBotKeyValue :: CAFKBotKeyValue (const char *szKey, char *szValue )
+
+bool CAFKBotKeyValueList::GetString(const char *key, char **val)
 {
-	strncpy(m_szKey,szKey,RCBOT_MAX_KV_LEN-1);
-	m_szKey[RCBOT_MAX_KV_LEN-1] = 0;
-	strncpy(m_szValue,szValue,RCBOT_MAX_KV_LEN-1);
-	m_szValue[RCBOT_MAX_KV_LEN-1] = 0;
+	CAFKBotKeyValue *pKV;
+
+	pKV = GetKV(key);
+
+	if (!pKV)
+		return false;
+
+	*val = pKV->GetValue();
+
+	return true;
+}
+
+CAFKBotKeyValue::CAFKBotKeyValue(const char *szKey, char *szValue)
+{
+	strncpy(m_szKey, szKey, RCBOT_MAX_KV_LEN - 1);
+	m_szKey[RCBOT_MAX_KV_LEN - 1] = 0;
+	strncpy(m_szValue, szValue, RCBOT_MAX_KV_LEN - 1);
+	m_szValue[RCBOT_MAX_KV_LEN - 1] = 0;
 }

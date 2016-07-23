@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game g_pEngine ("HL
- *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game engine ("HL
+ *    engine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL g_pEngine and MODs
+ *    respects for all of the code used other than the HL engine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -37,40 +37,40 @@
 #include "bot_navigator.h"
 #include "bot_kv.h"
 
-vector <CBotProfile*> CBotProfiles :: m_Profiles;
-CBotProfile *CBotProfiles :: m_pDefaultProfile = NULL;
+vector <CBotProfile*> CBotProfiles::m_Profiles;
+CBotProfile *CBotProfiles::m_pDefaultProfile = NULL;
 
-CBotProfile :: CBotProfile ( CBotProfile &other )
+CBotProfile::CBotProfile(CBotProfile &other)
 {
 	*this = other;
 
-	m_szName = CStrings::getString(other.m_szName);
-	m_szModel = CStrings::getString(other.m_szModel);
+	m_szName = CStrings::GetString(other.m_szName);
+	m_szModel = CStrings::GetString(other.m_szModel);
 }
 
-CBotProfile :: CBotProfile ( 
-		const char *szModel, 
-		int iVisionTicks, 
-		int iPathTicks, 
-		int iVisionTicksClients,
-		int iSensitivity,
-		float fBraveness,
-		float fAimSkill,
-		int iClass )
-{ 
+CBotProfile::CBotProfile(
+	const char *szModel,
+	int iVisionTicks,
+	int iPathTicks,
+	int iVisionTicksClients,
+	int iSensitivity,
+	float fBraveness,
+	float fAimSkill,
+	int iClass)
+{
 	m_iVisionTicksClients = iVisionTicksClients;
 	m_iSensitivity = iSensitivity;
 	m_fBraveness = fBraveness;
 	m_fAimSkill = fAimSkill;
-	m_szModel = CStrings::getString(szModel);
+	m_szModel = CStrings::GetString(szModel);
 	m_iPathTicks = iPathTicks;
 	m_iVisionTicks = iVisionTicks;
 	m_iClass = iClass;
 }
 
-void CBotProfiles :: deleteProfiles ()
+void CBotProfiles::DeleteProfiles()
 {
-	for ( unsigned int i = 0; i < m_Profiles.size(); i ++ )
+	for (unsigned int i = 0; i < m_Profiles.size(); i++)
 	{
 		delete m_Profiles[i];
 		m_Profiles[i] = NULL;
@@ -83,7 +83,7 @@ void CBotProfiles :: deleteProfiles ()
 }
 
 // find profiles and setup list
-void CBotProfiles :: setupProfiles ()
+void CBotProfiles::SetupProfiles()
 {
 	extern ConVar bot_skill;
 	extern ConVar bot_sensitivity;
@@ -102,39 +102,39 @@ void CBotProfiles :: setupProfiles ()
 		bot_braveness.GetFloat(), // braveness
 		bot_skill.GetFloat(), // aim skill
 		-1 // class
-		);	
+		);
 
 }
 
-CBotProfile *CBotProfiles :: getDefaultProfile ()
+CBotProfile *CBotProfiles::GetDefaultProfile()
 {
-	if ( m_pDefaultProfile == NULL )
-		CBotGlobals::botMessage(NULL,1,"Error, default profile is NULL (Caused by memory problem, bad initialisation or overwrite) Exiting..");
+	if (m_pDefaultProfile == NULL)
+		CBotGlobals::BotMessage(NULL, 1, "Error, default profile is NULL (Caused by memory problem, bad initialisation or overwrite) Exiting..");
 
 	return m_pDefaultProfile;
 }
 
 // return a profile unused by a bot
-CBotProfile *CBotProfiles :: getRandomFreeProfile ()
+CBotProfile *CBotProfiles::GetRandomFreeProfile()
 {
 	unsigned int i;
 	dataUnconstArray<int> iList;
 	CBotProfile *found = NULL;
 
-	for ( i = 0; i < m_Profiles.size(); i ++ )
+	for (i = 0; i < m_Profiles.size(); i++)
 	{
-		if ( !CBots::findBotByProfile(m_Profiles[i]) )
+		if (!CBots::FindBotByProfile(m_Profiles[i]))
 			iList.Add(i);
 	}
 
-	if ( iList.IsEmpty() )
+	if (iList.IsEmpty())
 		return NULL;
-	
+
 	found = m_Profiles[iList.Random()];
 	iList.Clear();
 
 	return found;
 }
 
-	
+
 

@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game g_pEngine ("HL
- *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game engine ("HL
+ *    engine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL g_pEngine and MODs
+ *    respects for all of the code used other than the HL engine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -39,35 +39,35 @@ using namespace std;
 class CSomNeuron
 {
 public:
-	~CSomNeuron ();
+	~CSomNeuron();
 
-	CSomNeuron ();
+	CSomNeuron();
 
-	CSomNeuron ( unsigned short id, int iInp, int iX, int iY );
+	CSomNeuron(unsigned short id, int iInp, int iX, int iY);
 
-	inline float getX()
+	inline float GetX()
 	{
 		return m_iX;
 	}
 
-	inline float getY()	
+	inline float GetY()
 	{
 		return m_iY;
 	}
 
-	void update ( vector<float> *inputs, float inf );
+	void Update(vector<float> *inputs, float inf);
 
-	float distance ( vector <float> *inputs );
-	
-	vector <float> *weights ();
+	float Distance(vector <float> *inputs);
 
-	void displayWeights ();
-	
-	float neighbourDistance ( CSomNeuron *other );
+	vector <float> *Weights();
 
-	inline void setClassID ( unsigned short iId ) { m_iId = iId; }
+	void DisplayWeights();
 
-	inline unsigned short getClassID () { return m_iId; }
+	float NeighbourDistance(CSomNeuron *other);
+
+	inline void SetClassID(unsigned short iId) { m_iId = iId; }
+
+	inline unsigned short GetClassID() { return m_iId; }
 
 private:
 	vector<float> fWeights;
@@ -81,23 +81,23 @@ class CSom
 public:
 	static float m_fLearnRate;
 
-	CSom ( int iW, int iH, int iIn );
+	CSom(int iW, int iH, int iIn);
 
-	~CSom ();
+	~CSom();
 
-	CSomNeuron *getBMU ( vector <float> *inputs );
+	CSomNeuron *GetBMU(vector <float> *inputs);
 
-	void updateAround ( vector<float> *inputs, CSomNeuron *bmu );
+	void UpdateAround(vector<float> *inputs, CSomNeuron *bmu);
 
-	CSomNeuron *input ( vector < vector <float> > *inputs );
+	CSomNeuron *Input(vector < vector <float> > *inputs);
 
-	CSomNeuron *inputOne ( vector < float > *inputs );
+	CSomNeuron *InputOne(vector < float > *inputs);
 
-	void input ( vector < vector <float> > *inputs, int epochs );
+	void Input(vector < vector <float> > *inputs, int epochs);
 
-	void display ();
+	void Display();
 
-	inline unsigned int epochs ()
+	inline unsigned int Epochs()
 	{
 		return m_iEpochs;
 	}

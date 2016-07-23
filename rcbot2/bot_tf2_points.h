@@ -9,7 +9,7 @@ class CTeamControlPointRound
 {
 public:
 
-	bool isPointInRound ( edict_t *point_pent );
+	bool IsPointInRound(edict_t *point_pent);
 
 	CUtlVector< CBaseHandle > m_ControlPoints;
 
@@ -53,178 +53,178 @@ class CTFObjectiveResource
 public:
 	CTFObjectiveResource()
 	{
-		reset();
+		Reset();
 	}
 
-	void reset ()
+	void Reset()
 	{
-		memset(this,0,sizeof(CTFObjectiveResource));
-		memset(m_iControlPointWpt,0xFF,sizeof(int)*MAX_CONTROL_POINTS);
+		memset(this, 0, sizeof(CTFObjectiveResource));
+		memset(m_iControlPointWpt, 0xFF, sizeof(int)*MAX_CONTROL_POINTS);
 		m_iMonitorPoint[0] = -1;
 		m_iMonitorPoint[1] = -1;
 	}
 
 
-	bool isWaypointAreaValid ( int wptarea, int waypointflags = 0 );
+	bool IsWaypointAreaValid(int wptarea, int waypointflags = 0);
 
 
-	bool testProbWptArea ( int iWptArea, int iTeam );
+	bool TestProbWptArea(int iWptArea, int iTeam);
 
-	void debugprint ( void );
-	void updatePoints();
-	bool TeamCanCapPoint( int index, int team )
+	void Debugprint(void);
+	void UpdatePoints();
+	bool TeamCanCapPoint(int index, int team)
 	{
 		AssertValidIndex(index);
-		return m_bTeamCanCap[ TEAM_ARRAY( index, team ) ];
+		return m_bTeamCanCap[TEAM_ARRAY(index, team)];
 	}
 
 	// Is the point visible in the objective display
-	bool	IsCPVisible( int index )
+	bool	IsCPVisible(int index)
 	{
 		return (m_bCPIsVisible[index] == 1);
 	}
 
-	bool	IsCPBlocked( int index )
+	bool	IsCPBlocked(int index)
 	{
 		return m_bBlocked[index];
 	}
 
-	void think ();
+	void Think();
 
-	int getControlPointArea ( edict_t *pPoint );
+	int GetControlPointArea(edict_t *pPoint);
 
 	// Get the world location of this control point
-	Vector& GetCPPosition( int index )
+	Vector& GetCPPosition(int index)
 	{
 		return m_vCPPositions[index];
 	}
 
-	int getControlPointWaypoint ( int index )
+	int GetControlPointWaypoint(int index)
 	{
 		return m_iControlPointWpt[index];
 	}
 
-	int NearestArea ( Vector vOrigin );
+	int NearestArea(Vector vOrigin);
 
-	int GetCappingTeam( int index )
+	int GetCappingTeam(int index)
 	{
-		if ( index >= *m_iNumControlPoints )
+		if (index >= *m_iNumControlPoints)
 			return TEAM_UNASSIGNED;
 
 		return m_iCappingTeam[index];
 	}
 
-	int GetTeamInZone( int index )
+	int GetTeamInZone(int index)
 	{
-		if ( index >= *m_iNumControlPoints )
+		if (index >= *m_iNumControlPoints)
 			return TEAM_UNASSIGNED;
 
 		return m_iTeamInZone[index];
 	}
 
 	// Icons
-	int GetCPCurrentOwnerIcon( int index, int iOwner )
+	int GetCPCurrentOwnerIcon(int index, int iOwner)
 	{
-		return GetIconForTeam( index, iOwner );
+		return GetIconForTeam(index, iOwner);
 	}
 
-	int GetCPCappingIcon( int index )
+	int GetCPCappingIcon(int index)
 	{
 		int iCapper = GetCappingTeam(index);
 
-		return GetIconForTeam( index, iCapper );
+		return GetIconForTeam(index, iCapper);
 	}
 
 	// Icon for the specified team
-	int GetIconForTeam( int index, int team )
-	{		
-		return m_iTeamIcons[ TEAM_ARRAY(index,team) ];
+	int GetIconForTeam(int index, int team)
+	{
+		return m_iTeamIcons[TEAM_ARRAY(index, team)];
 	}
 
 	// Overlay for the specified team
-	int GetOverlayForTeam( int index, int team )
+	int GetOverlayForTeam(int index, int team)
 	{
-		return m_iTeamOverlays[ TEAM_ARRAY(index,team) ];
+		return m_iTeamOverlays[TEAM_ARRAY(index, team)];
 	}
 
 	// Number of players in the area
-	int GetNumPlayersInArea( int index, int team )
+	int GetNumPlayersInArea(int index, int team)
 	{
-		return m_iNumTeamMembers[ TEAM_ARRAY(index,team) ];
+		return m_iNumTeamMembers[TEAM_ARRAY(index, team)];
 	}
-	
+
 	// get the required cappers for the passed team
-	int GetRequiredCappers( int index, int team )
+	int GetRequiredCappers(int index, int team)
 	{
-		return m_iTeamReqCappers[ TEAM_ARRAY(index,team) ];
+		return m_iTeamReqCappers[TEAM_ARRAY(index, team)];
 	}
 
 	// Base Icon for the specified team
-	int GetBaseIconForTeam( int team )
+	int GetBaseIconForTeam(int team)
 	{
-		return m_iTeamBaseIcons[ team ];
+		return m_iTeamBaseIcons[team];
 	}
 
-	int GetBaseControlPointForTeam( int iTeam ) 
-	{ 
-		return m_iBaseControlPoints[iTeam]; 
+	int GetBaseControlPointForTeam(int iTeam)
+	{
+		return m_iBaseControlPoints[iTeam];
 	}
 
 	// Data functions, called to set up the state at the beginning of a round
-	inline int	 GetNumControlPoints( void ) 
-	{ 
-		if ( m_iNumControlPoints==NULL )
+	inline int	 GetNumControlPoints(void)
+	{
+		if (m_iNumControlPoints == NULL)
 			return 0;
 		return *m_iNumControlPoints;
 	}
 
-	int GetPreviousPointForPoint( int index, int team, int iPrevIndex )
+	int GetPreviousPointForPoint(int index, int team, int iPrevIndex)
 	{
 		AssertValidIndex(index);
-		Assert( iPrevIndex >= 0 && iPrevIndex < MAX_PREVIOUS_POINTS );
+		Assert(iPrevIndex >= 0 && iPrevIndex < MAX_PREVIOUS_POINTS);
 		int iIntIndex = iPrevIndex + (index * MAX_PREVIOUS_POINTS) + (team * MAX_CONTROL_POINTS * MAX_PREVIOUS_POINTS);
-		return m_iPreviousPoints[ iIntIndex ];
+		return m_iPreviousPoints[iIntIndex];
 	}
 
-	int GetOwningTeam( int index )
+	int GetOwningTeam(int index)
 	{
-		if ( index >= *m_iNumControlPoints )
+		if (index >= *m_iNumControlPoints)
 			return TEAM_UNASSIGNED;
 
 		return m_iOwner[index];
-	}	
-
-	void AssertValidIndex( int index )
-	{
-		Assert( (0 <= index) && (index <= MAX_CONTROL_POINTS) && (index < *m_iNumControlPoints) );
 	}
 
-	float getLastCaptureTime(int index);
+	void AssertValidIndex(int index)
+	{
+		Assert((0 <= index) && (index <= MAX_CONTROL_POINTS) && (index < *m_iNumControlPoints));
+	}
 
-	bool isCPValidWptArea ( int iWptArea, int iTeam, ePointAttackDefend_s type);
-	bool isCPValid ( int iCPIndex, int iTeam, ePointAttackDefend_s type);
+	float GetLastCaptureTime(int index);
+
+	bool IsCPValidWptArea(int iWptArea, int iTeam, ePointAttackDefend_s type);
+	bool IsCPValid(int iCPIndex, int iTeam, ePointAttackDefend_s type);
 
 
 	// Mini-rounds data
-	bool PlayingMiniRounds( void ){ return *m_bPlayingMiniRounds; }
-	bool IsInMiniRound( int index ) { return m_bInMiniRound[index]; }
-	void updateCaptureTime(int index);
-	void setup ();
-	bool isInitialised() { return m_bInitialised == true; }
+	bool PlayingMiniRounds(void){ return *m_bPlayingMiniRounds; }
+	bool IsInMiniRound(int index) { return m_bInMiniRound[index]; }
+	void UpdateCaptureTime(int index);
+	void Setup();
+	bool IsInitialised() { return m_bInitialised == true; }
 	MyEHandle m_ObjectiveResource;
 
-	int getRandomValidPointForTeam ( int team, ePointAttackDefend_s type );
+	int GetRandomValidPointForTeam(int team, ePointAttackDefend_s type);
 
 	// [team][type][point]
 	TF2PointProb_t m_ValidPoints[2][2][MAX_CONTROL_POINTS];
 	// [team][type] -- if changed, bots must also be updated
-	int m_PointSignature[2][2]; 
+	int m_PointSignature[2][2];
 
 	// this is a union set of the above array
 	bool m_ValidAreas[MAX_CONTROL_POINTS];
-	 // For compatibility with old waypoints, need this
+	// For compatibility with old waypoints, need this
 	int m_IndexToWaypointAreaTranslation[MAX_CONTROL_POINTS];
-	int m_WaypointAreaToIndexTranslation[MAX_CONTROL_POINTS+1]; // add one because 0 is always valid for waypoints
+	int m_WaypointAreaToIndexTranslation[MAX_CONTROL_POINTS + 1]; // add one because 0 is always valid for waypoints
 
 	MyEHandle m_pControlPoints[MAX_CONTROL_POINTS];
 	//CTeamControlPoint *m_pControlPointClass[MAX_CONTROL_POINTS];
@@ -258,32 +258,32 @@ public:
 	// capindex of point being monitored to check previous points for both teams
 	int m_iMonitorPoint[2];
 	float m_fNextCheckMonitoredPoint;
-	
+
 	float m_fLastCaptureTime[MAX_CONTROL_POINTS];
 
 	float m_fUpdatePointTime;
 
-	private:
+private:
 	bool m_bInitialised;
 
 	//return a signature of the points structure. Bots will rethink their defend or attack point
 	// if the signature changes
-	bool updateAttackPoints ( int team );
-	bool updateDefendPoints ( int team );
+	bool UpdateAttackPoints(int team);
+	bool UpdateDefendPoints(int team);
 
-	inline void resetValidWaypointAreas() 
-	{ 
-		memset(m_ValidAreas,0,sizeof(bool)*MAX_CONTROL_POINTS); 
-	}
-	void updateValidWaypointAreas ( void )
+	inline void ResetValidWaypointAreas()
 	{
-		resetValidWaypointAreas();
+		memset(m_ValidAreas, 0, sizeof(bool)*MAX_CONTROL_POINTS);
+	}
+	void UpdateValidWaypointAreas(void)
+	{
+		ResetValidWaypointAreas();
 
-		for ( int i = 0; i < 2; i ++ )
+		for (int i = 0; i < 2; i++)
 		{
-			for ( int j = 0; j < 2; j ++ )
+			for (int j = 0; j < 2; j++)
 			{
-				for ( int k = 0; k < MAX_CONTROL_POINTS; k ++ )
+				for (int k = 0; k < MAX_CONTROL_POINTS; k++)
 				{
 					// OR
 					m_ValidAreas[k] = (m_ValidAreas[k] || m_ValidPoints[i][j][k].bValid);
@@ -299,19 +299,19 @@ class CTeamRoundTimer
 public:
 	CTeamRoundTimer()
 	{
-		memset(this,0,sizeof(CTeamRoundTimer));
+		memset(this, 0, sizeof(CTeamRoundTimer));
 	}
 
-	float getSetupTime ()
+	float GetSetupTime()
 	{
-		if ( (m_Resource.get() != NULL) && m_nSetupTimeLength )
+		if ((m_Resource.Get() != NULL) && m_nSetupTimeLength)
 			return (float)*m_nSetupTimeLength;
 		//else error!
 
 		return 0.0f;
 	}
 
-	void reset ();
+	void Reset();
 
 	MyEHandle m_Resource;
 
@@ -337,11 +337,21 @@ class variant_t
 
 class CEventAction;
 
+class CSoundPatch;
+
 class COutputEvent
 {
 	variant_t m_Value;
 	CEventAction *m_ActionList;
 	DECLARE_SIMPLE_DATADESC();
+};
+
+class CBaseEntityOutput
+{
+public:
+	variant_t m_Value;
+	// end variant_t
+	CEventAction *m_ActionList;
 };
 
 class CTeamControlPointMaster
@@ -352,7 +362,7 @@ public:
 
 	bool m_bFoundPoints;		// true when the control points have been found and the array is initialized
 
-	CTeamControlPointRound *getCurrentRound ( );
+	CTeamControlPointRound *GetCurrentRound();
 
 	CUtlVector<CBaseEntity *> m_ControlPointRounds;
 	int m_iCurrentRoundIndex;
@@ -375,20 +385,10 @@ public:
 
 	COutputEvent m_OnWonByTeam1;
 	COutputEvent m_OnWonByTeam2;
-	
+
 	float m_flPartialCapturePointsRate;
 	float m_flLastOwnershipChangeTime;
 
-};
-
-class CSoundPatch;
-
-class CBaseEntityOutput
-{
-public:
-	variant_t m_Value;
-	// end variant_t
-	CEventAction *m_ActionList;
 };
 
 // From latest GITHUB
@@ -397,7 +397,7 @@ class CTeamControlPoint
 public:
 	//static CTeamControlPoint *getPoint ( edict_t *pent );
 
-	int			m_iTeam;			
+	int			m_iTeam;
 	int			m_iDefaultOwner;			// Team that initially owns the cap point
 	int			m_iIndex;					// The index of this point in the controlpointArray
 	int			m_iWarnOnCap;				// Warn the team that owns the control point when the opposing team starts to capture it.
@@ -421,7 +421,7 @@ public:
 			iszOverlay = NULL_STRING;
 			iPlayersRequired = 0;
 			iTimedPoints = 0;
-			for ( int i = 0; i < MAX_PREVIOUS_POINTS; i++ )
+			for (int i = 0; i < MAX_PREVIOUS_POINTS; i++)
 			{
 				iszPreviousPoint[i] = NULL_STRING;
 			}

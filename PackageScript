@@ -30,16 +30,16 @@ def CopyFiles(src, dest, files):
     builder.AddCopy(source_path, dest_entry)
 
 # Include files 
-#CopyFiles('include', 'addons/sourcemod/scripting/include',
-#  [
-#    'sample.inc',
-#  ]
-#)
+CopyFiles('extras', 'addons/sourcemod/scripting/include',
+  [
+    'afk_bot.inc',
+  ]
+)
 
 # GameData files
-CopyFiles('CEntity', 'addons/sourcemod/gamedata',
+CopyFiles('extras', 'addons/sourcemod/gamedata',
   [
-    'centity.games.txt',
+    'tf2.afk.txt',
   ]
 )
 

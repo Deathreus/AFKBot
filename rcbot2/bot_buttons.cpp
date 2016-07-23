@@ -18,100 +18,101 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game g_pEngine ("HL
- *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game engine ("HL
+ *    engine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL g_pEngine and MODs
+ *    respects for all of the code used other than the HL engine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
  *    version.
  *
  */
+
 #include "bot.h"
 #include "bot_buttons.h"
 #include "in_buttons.h"
 
-void CBotButtons :: attack (float fFor, float fFrom)
-{	
-	holdButton(IN_ATTACK,fFrom,fFor,0.1);
+void CBotButtons::Attack(float fFor, float fFrom)
+{
+	HoldButton(IN_ATTACK, fFrom, fFor, 0.1);
 }
 
-void CBotButtons :: jump (float fFor, float fFrom)
+void CBotButtons::Jump(float fFor, float fFrom)
 {
-	holdButton(IN_JUMP,fFrom,fFor,0.25);
+	HoldButton(IN_JUMP, fFrom, fFor, 0.25);
 }
 
-void CBotButtons :: duck (float fFor, float fFrom)
+void CBotButtons::Duck(float fFor, float fFrom)
 {
-	holdButton(IN_DUCK,fFrom,fFor);
+	HoldButton(IN_DUCK, fFrom, fFor);
 }
 
-void CBotButton :: hold ( float fFrom, float fFor, float fLetGoTime )
+void CBotButton::Hold(float fFrom, float fFor, float fLetGoTime)
 {
-	fFrom += g_pEngine->Time();
+	fFrom += engine->Time();
 	m_fTimeStart = fFrom;
 	m_fTimeEnd = fFrom + fFor;
-	m_fLetGoTime = m_fTimeEnd+fLetGoTime;
+	m_fLetGoTime = m_fTimeEnd + fLetGoTime;
 }
 
-CBotButtons :: CBotButtons()
+CBotButtons::CBotButtons()
 {
-	add(new CBotButton(IN_ATTACK));
-	add(new CBotButton(IN_ATTACK2));
-	add(new CBotButton(IN_DUCK));
-	add(new CBotButton(IN_JUMP));
-	add(new CBotButton(IN_RELOAD));
-	add(new CBotButton(IN_SPEED)); // for sprint
-	add(new CBotButton(IN_FORWARD)); // for ladders
-	add(new CBotButton(IN_USE)); // for chargers
-	add(new CBotButton(IN_ALT1)); // for proning
-	add(new CBotButton(IN_RUN)); // ????
+	Add(new CBotButton(IN_ATTACK));
+	Add(new CBotButton(IN_ATTACK2));
+	Add(new CBotButton(IN_DUCK));
+	Add(new CBotButton(IN_JUMP));
+	Add(new CBotButton(IN_RELOAD));
+	Add(new CBotButton(IN_SPEED)); // for sprint
+	Add(new CBotButton(IN_FORWARD)); // for ladders
+	Add(new CBotButton(IN_USE)); // for chargers
+	Add(new CBotButton(IN_ALT1)); // for proning
+	Add(new CBotButton(IN_RUN)); // ????
 
 	m_bLetGoAll = false;
 }
 
-void CBotButtons :: holdButton ( int iButtonId, float fFrom, float fFor, float fLetGoTime )
+void CBotButtons::HoldButton(int iButtonId, float fFrom, float fFor, float fLetGoTime)
 {
-	for (unsigned int i = 0; i < m_theButtons.size(); i ++ )
-	{			
-		if ( m_theButtons[i]->getID() == iButtonId )
+	for (unsigned int i = 0; i < m_theButtons.size(); i++)
+	{
+		if (m_theButtons[i]->GetID() == iButtonId)
 		{
-			m_theButtons[i]->hold(fFrom,fFor,fLetGoTime);
+			m_theButtons[i]->Hold(fFrom, fFor, fLetGoTime);
 			return;
 		}
 	}
 }
 
-void CBotButtons :: letGo (int iButtonId)
+void CBotButtons::LetGo(int iButtonId)
 {
-	for (unsigned int i = 0; i < m_theButtons.size(); i ++ )
-	{			
-		if ( m_theButtons[i]->getID() == iButtonId )
+	for (unsigned int i = 0; i < m_theButtons.size(); i++)
+	{
+		if (m_theButtons[i]->GetID() == iButtonId)
 		{
-			m_theButtons[i]->letGo();
+			m_theButtons[i]->LetGo();
 			return;
 		}
 	}
 }
 
-int CBotButtons :: getBitMask ()
+int CBotButtons::GetBitMask()
 {
-	if ( m_bLetGoAll )
+	if (m_bLetGoAll)
 		return 0;
 	else
 	{
 
 		int iBitMask = 0;
 
-		float fTime = g_pEngine->Time();
+		float fTime = engine->Time();
 
-		for (unsigned int i = 0; i < m_theButtons.size(); i ++ )
-		{			
-			if ( m_theButtons[i]->held(fTime) )
+		for (unsigned int i = 0; i < m_theButtons.size(); i++)
+		{
+			if (m_theButtons[i]->Held(fTime))
 			{
-				m_theButtons[i]->unTap();
-				iBitMask |= m_theButtons[i]->getID();
+				m_theButtons[i]->UnTap();
+				iBitMask |= m_theButtons[i]->GetID();
 			}
 		}
 
@@ -120,39 +121,39 @@ int CBotButtons :: getBitMask ()
 	}
 }
 
-bool CBotButtons :: canPressButton ( int iButtonId )
+bool CBotButtons::CanPressButton(int iButtonId)
 {
-	for (unsigned int i = 0; i < m_theButtons.size(); i ++ )
-	{			
-		if ( m_theButtons[i]->getID() == iButtonId )
-			return m_theButtons[i]->canPress(g_pEngine->Time());
+	for (unsigned int i = 0; i < m_theButtons.size(); i++)
+	{
+		if (m_theButtons[i]->GetID() == iButtonId)
+			return m_theButtons[i]->CanPress(engine->Time());
 	}
-	return false;		
+	return false;
 }
 
-void CBotButtons :: add ( CBotButton *theButton )
+void CBotButtons::Add(CBotButton *theButton)
 {
 	m_theButtons.push_back(theButton);
 }
 
-bool CBotButtons :: holdingButton ( int iButtonId )
+bool CBotButtons::HoldingButton(int iButtonId)
 {
-	for ( unsigned int i = 0; i < m_theButtons.size(); i ++ )
+	for (unsigned int i = 0; i < m_theButtons.size(); i++)
 	{
-		if ( m_theButtons[i]->getID() == iButtonId )
-			return m_theButtons[i]->held(g_pEngine->Time());
+		if (m_theButtons[i]->GetID() == iButtonId)
+			return m_theButtons[i]->Held(engine->Time());
 	}
 
 	return false;
 }
 
-void CBotButtons :: tap ( int iButtonId )
+void CBotButtons::Tap(int iButtonId)
 {
-	for ( unsigned int i = 0; i < m_theButtons.size(); i ++ )
+	for (unsigned int i = 0; i < m_theButtons.size(); i++)
 	{
-		if ( m_theButtons[i]->getID() == iButtonId )
+		if (m_theButtons[i]->GetID() == iButtonId)
 		{
-			 m_theButtons[i]->tap();
+			m_theButtons[i]->Tap();
 
 			return;
 		}

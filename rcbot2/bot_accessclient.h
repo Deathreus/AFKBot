@@ -40,19 +40,19 @@ using namespace std;
 class CAccessClient
 {
 public:
-	CAccessClient( char *szSteamId, int iAccessLevel );
+	CAccessClient(char *szSteamId, int iAccessLevel);
 
-	bool isForSteamId ( const char *szSteamId );
+	bool IsForSteamId(const char *szSteamId);
 
-	void giveAccessToClient ( CClient *pClient );
+	void GiveAccessToClient(CClient *pClient);
 
-	void save ( FILE *fp );
+	void Save(FILE *fp);
 
-	bool forBot ();
+	bool ForBot();
 
-	inline char *getSteamID () { return m_szSteamId; }
+	inline char *GetSteamID() { return m_szSteamId; }
 
-	inline int getAccessLevel () { return m_iAccessLevel; }
+	inline int GetAccessLevel() { return m_iAccessLevel; }
 private:
 	char *m_szSteamId;
 	int m_iAccessLevel;
@@ -61,17 +61,17 @@ private:
 class CAccessClients
 {
 public:
-	static void freeMemory ();
+	static void FreeMemory();
 
-	static void showUsers ( edict_t *pEntity );
+	static void ShowUsers(edict_t *pEntity);
 
-	static void load ();
+	static void Load();
 
-	static void save ();
+	static void Save();
 
-	static void checkClientAccess ( CClient *pClient );
+	static void CheckClientAccess(CClient *pClient);
 
-	static void createFile (); // create file if it doesn't exist (and mention of creation etc)
+	static void CreateFile(); // create file if it doesn't exist (and mention of creation etc)
 private:
 	static vector<CAccessClient*> m_Clients;
 };

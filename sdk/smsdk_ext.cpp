@@ -1,42 +1,42 @@
 /**
- * vim: set ts=4 :
- * =============================================================================
- * SourceMod Base Extension Code
- * Copyright (C) 2004-2008 AlliedModders LLC.  All rights reserved.
- * =============================================================================
- *
- * This program is free software; you can redistribute it and/or modify it under
- * the terms of the GNU General Public License, version 3.0, as published by the
- * Free Software Foundation.
- * 
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
- * details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * As a special exception, AlliedModders LLC gives you permission to link the
- * code of this program (as well as its derivative works) to "Half-Life 2," the
- * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
- * by the Valve Corporation.  You must obey the GNU General Public License in
- * all respects for all other code used.  Additionally, AlliedModders LLC grants
- * this exception to all derivative works.  AlliedModders LLC defines further
- * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
- * or <http://www.sourcemod.net/license.php>.
- *
- * Version: $Id$
- */
+* vim: set ts=4 sw=4 tw=99 noet:
+* =============================================================================
+* SourceMod Base Extension Code
+* Copyright (C) 2004-2008 AlliedModders LLC.  All rights reserved.
+* =============================================================================
+*
+* This program is free software; you can redistribute it and/or modify it under
+* the terms of the GNU General Public License, version 3.0, as published by the
+* Free Software Foundation.
+*
+* This program is distributed in the hope that it will be useful, but WITHOUT
+* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+* FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public License along with
+* this program.  If not, see <http://www.gnu.org/licenses/>.
+*
+* As a special exception, AlliedModders LLC gives you permission to link the
+* code of this program (as well as its derivative works) to "Half-Life 2," the
+* "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+* by the Valve Corporation.  You must obey the GNU General Public License in
+* all respects for all other code used.  Additionally, AlliedModders LLC grants
+* this exception to all derivative works.  AlliedModders LLC defines further
+* exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+* or <http://www.sourcemod.net/license.php>.
+*
+* Version: $Id$
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
 #include "smsdk_ext.h"
 
 /**
- * @file smsdk_ext.cpp
- * @brief Contains wrappers for making Extensions easier to write.
- */
+* @file smsdk_ext.cpp
+* @brief Contains wrappers for making Extensions easier to write.
+*/
 
 IExtension *myself = NULL;				/**< Ourself */
 IShareSys *g_pShareSys = NULL;			/**< Share system */
@@ -97,8 +97,8 @@ IUserMessages *usermsgs = NULL;
 #if defined SMEXT_ENABLE_TRANSLATOR
 ITranslator *translator = NULL;
 #endif
-#if defined SMEXT_ENABLE_NINVOKE
-INativeInterface *ninvoke = NULL;
+#if defined SMEXT_ENABLE_ROOTCONSOLEMENU
+IRootConsole *rootconsole = NULL;
 #endif
 
 /** Exports the main interface */
@@ -188,6 +188,9 @@ bool SDKExtension::OnExtensionLoad(IExtension *me, IShareSys *sys, char *error, 
 #if defined SMEXT_ENABLE_TRANSLATOR
 	SM_GET_IFACE(TRANSLATOR, translator);
 #endif
+#if defined SMEXT_ENABLE_ROOTCONSOLEMENU
+	SM_GET_IFACE(ROOTCONSOLE, rootconsole);
+#endif
 
 	if (SDK_OnLoad(error, maxlength, late))
 	{
@@ -228,6 +231,11 @@ void SDKExtension::OnExtensionUnload()
 	m_WeAreUnloaded = true;
 #endif
 	SDK_OnUnload();
+}
+
+void SDKExtension::OnDependenciesDropped()
+{
+	SDK_OnDependenciesDropped();
 }
 
 const char *SDKExtension::GetExtensionAuthor()
@@ -282,6 +290,10 @@ void SDKExtension::SDK_OnAllLoaded()
 {
 }
 
+void SDKExtension::SDK_OnDependenciesDropped()
+{
+}
+
 #if defined SMEXT_CONF_METAMOD
 
 PluginId g_PLID = 0;						/**< Metamod plugin ID */
@@ -289,8 +301,10 @@ ISmmPlugin *g_PLAPI = NULL;					/**< Metamod plugin API */
 SourceHook::ISourceHook *g_SHPtr = NULL;	/**< SourceHook pointer */
 ISmmAPI *g_SMAPI = NULL;					/**< SourceMM API pointer */
 
+#ifndef META_NO_HL2SDK
 IVEngineServer *engine = NULL;				/**< IVEngineServer pointer */
 IServerGameDLL *gamedll = NULL;				/**< IServerGameDLL pointer */
+#endif
 
 /** Exposes the extension to Metamod */
 SMM_API void *PL_EXPOSURE(const char *name, int *code)
@@ -303,14 +317,14 @@ SMM_API void *PL_EXPOSURE(const char *name, int *code)
 	{
 		if (code)
 		{
-			*code = IFACE_OK;
+			*code = META_IFACE_OK;
 		}
 		return static_cast<void *>(g_pExtensionIface);
 	}
 
 	if (code)
 	{
-		*code = IFACE_FAILED;
+		*code = META_IFACE_FAILED;
 	}
 
 	return NULL;
@@ -320,13 +334,36 @@ bool SDKExtension::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, 
 {
 	PLUGIN_SAVEVARS();
 
+#ifndef META_NO_HL2SDK
 #if !defined METAMOD_PLAPI_VERSION
 	GET_V_IFACE_ANY(serverFactory, gamedll, IServerGameDLL, INTERFACEVERSION_SERVERGAMEDLL);
 	GET_V_IFACE_CURRENT(engineFactory, engine, IVEngineServer, INTERFACEVERSION_VENGINESERVER);
 #else
 	GET_V_IFACE_ANY(GetServerFactory, gamedll, IServerGameDLL, INTERFACEVERSION_SERVERGAMEDLL);
+#if SOURCE_ENGINE == SE_CSS || SOURCE_ENGINE == SE_DODS || SOURCE_ENGINE == SE_HL2DM || SOURCE_ENGINE == SE_SDK2013
+	// Shim to avoid hooking shims
+	engine = (IVEngineServer *)ismm->GetEngineFactory()("VEngineServer023", nullptr);
+	if (!engine)
+	{
+		engine = (IVEngineServer *)ismm->GetEngineFactory()("VEngineServer022", nullptr);
+		if (!engine)
+		{
+			engine = (IVEngineServer *)ismm->GetEngineFactory()("VEngineServer021", nullptr);
+			if (!engine)
+			{
+				if (error && maxlen)
+				{
+					ismm->Format(error, maxlen, "Could not find interface: VEngineServer023 or VEngineServer022");
+				}
+				return false;
+			}
+		}
+	}
+#else
 	GET_V_IFACE_CURRENT(GetEngineFactory, engine, IVEngineServer, INTERFACEVERSION_VENGINESERVER);
-#endif
+#endif // TF2 / CSS / DODS / HL2DM / SDK2013
+#endif // !METAMOD_PLAPI_VERSION
+#endif //META_NO_HL2SDK
 
 	m_SourceMMLoaded = true;
 
@@ -447,17 +484,17 @@ void *operator new(size_t size)
 	return malloc(size);
 }
 
-void *operator new[](size_t size) 
+void *operator new[](size_t size)
 {
 	return malloc(size);
 }
 
-void operator delete(void *ptr) noexcept
+void operator delete(void *ptr)
 {
 	free(ptr);
 }
 
-void operator delete[](void * ptr) noexcept
+void operator delete[](void * ptr)
 {
 	free(ptr);
 }

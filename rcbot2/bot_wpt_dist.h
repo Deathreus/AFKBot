@@ -15,28 +15,28 @@ public:
 		m_fSaveTime = 0;
 	}
 
-	static float getDistance ( int iFrom, int iTo );
+	static float GetDistance(int iFrom, int iTo);
 
-	static inline bool isSet ( int iFrom, int iTo )
+	static inline bool IsSet(int iFrom, int iTo)
 	{
 		return m_Distances[iFrom][iTo] >= 0;
 	}
 
-	static inline void setDistance ( int iFrom, int iTo, float fDist )
+	static inline void SetDistance(int iFrom, int iTo, float fDist)
 	{
 		m_Distances[iFrom][iTo] = (int)fDist;
 	}
 
-	static void load ();
+	static void Load();
 
-	static void save ();
+	static void Save();
 
-	static void reset ()
+	static void Reset()
 	{
-		memset(m_Distances,0xFF,sizeof(int)*CWaypoints::MAX_WAYPOINTS*CWaypoints::MAX_WAYPOINTS);
+		memset(m_Distances, 0xFF, sizeof(int)*CWaypoints::MAX_WAYPOINTS*CWaypoints::MAX_WAYPOINTS);
 	}
 private:
-	static int m_Distances [CWaypoints::MAX_WAYPOINTS][CWaypoints::MAX_WAYPOINTS];
+	static int m_Distances[CWaypoints::MAX_WAYPOINTS][CWaypoints::MAX_WAYPOINTS];
 	static float m_fSaveTime;
 
 };

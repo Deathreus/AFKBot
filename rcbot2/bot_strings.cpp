@@ -18,10 +18,10 @@
  *    Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *    In addition, as a special exception, the author gives permission to
- *    link the code of this program with the Half-Life Game g_pEngine ("HL
- *    g_pEngine") and Modified Game Libraries ("MODs") developed by Valve,
+ *    link the code of this program with the Half-Life Game engine ("HL
+ *    engine") and Modified Game Libraries ("MODs") developed by Valve,
  *    L.L.C ("Valve").  You must obey the GNU General Public License in all
- *    respects for all of the code used other than the HL g_pEngine and MODs
+ *    respects for all of the code used other than the HL engine and MODs
  *    from Valve.  If you modify this file, you may extend this exception
  *    to your version of the file, but you are not obligated to do so.  If
  *    you do not wish to do so, delete this exception statement from your
@@ -37,23 +37,23 @@
 
 vector<char *> CStrings::m_Strings[MAX_STRINGS_HASH];
 
-CStrings :: CStrings ()
+CStrings::CStrings()
 {
 	return;
 }
 
-void CStrings :: freeAllMemory()
+void CStrings::FreeAllMemory()
 {
 	char *pszFree;
 
 	// clear strings 
-	for ( int i = 0; i < MAX_STRINGS_HASH; i ++ )
+	for (int i = 0; i < MAX_STRINGS_HASH; i++)
 	{
-		for ( unsigned int j = 0; j < m_Strings[i].size(); j ++ )
+		for (unsigned int j = 0; j < m_Strings[i].size(); j++)
 		{
 			pszFree = m_Strings[i][j];
 
-			if ( pszFree )
+			if (pszFree)
 				delete pszFree;
 
 			m_Strings[i][j] = NULL;
@@ -64,35 +64,35 @@ void CStrings :: freeAllMemory()
 }
 
 // Either : 1 . Return the existing string or 2 . make a new string and return it.
-char *CStrings :: getString ( const char *szString )
+char *CStrings::GetString(const char *szString)
 {
-	if ( szString == NULL )
+	if (szString == NULL)
 		return NULL;
 
-	unsigned short int iHash = szString[0]%MAX_STRINGS_HASH;
-	
-	for ( register unsigned short int i = 0; i < m_Strings[iHash].size(); i ++ )
+	unsigned short int iHash = szString[0] % MAX_STRINGS_HASH;
+
+	for (register unsigned short int i = 0; i < m_Strings[iHash].size(); i++)
 	{
 		char *szCompString = m_Strings[iHash][i];
 
 		// check if pointers match first
-		if ( szCompString == szString )
+		if (szCompString == szString)
 			return szCompString;
 
 		// if not do a full string comparison
-		if ( FStrEq(szString,szCompString) )
+		if (FStrEq(szString, szCompString))
 			return szCompString;
 	}
 
 	unsigned int len = strlen(szString);
 
-	char *szNew = new char[len+1];
+	char *szNew = new char[len + 1];
 
-	strcpy(szNew,szString);
+	strcpy(szNew, szString);
 
 	szNew[len] = 0;
 
 	m_Strings[iHash].push_back(szNew);
 
-    return szNew;
+	return szNew;
 }
