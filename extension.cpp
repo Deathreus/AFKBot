@@ -27,18 +27,12 @@
 #include <stdio.h>
 
 #include "extension.h"
+#include <compat_wrappers.h>
 
-#include "interface.h"
+#include <Color.h>
+#include <time.h>
 
-#ifdef __linux__
-#include "shake.h"    //bir3yk
-#endif
-
-#include "Color.h"
-#include "server_class.h"
-#include "time.h"
-
-#include "KeyValues.h"
+#include <KeyValues.h>
 
 #include "rcbot2/bot_cvars.h"
 
@@ -47,17 +41,15 @@
 #include "rcbot2/bot_globals.h"
 #include "rcbot2/bot_profile.h"
 #include "rcbot2/bot_waypoint.h"
-#include "rcbot2/bot_menu.h"
 #include "rcbot2/bot_getprop.h"
 #include "rcbot2/bot_fortress.h"
 #include "rcbot2/bot_event.h"
-//#include "rcbot2/bot_profiling.h"
 #include "rcbot2/bot_wpt_dist.h"
 #include "rcbot2/bot_squads.h"
 #include "rcbot2/bot_weapons.h"
 #include "rcbot2/bot_waypoint_visibility.h"
-#include "rcbot2/bot_kv.h"
-#include "rcbot2/bot_sigscan.h"
+#include "rcbot2/bot_gamerules.h"
+//#include "rcbot2/bot_navmesh.h"
 
 using namespace SourceMM;
 
@@ -70,18 +62,7 @@ SH_DECL_HOOK0_void(IServerGameDLL, LevelShutdown, SH_NOATTRIB, 0);
 SH_DECL_HOOK2_void(IServerGameClients, ClientActive, SH_NOATTRIB, 0, edict_t *, bool);
 SH_DECL_HOOK1_void(IServerGameClients, ClientDisconnect, SH_NOATTRIB, 0, edict_t *);
 SH_DECL_HOOK2_void(IServerGameClients, ClientPutInServer, SH_NOATTRIB, 0, edict_t *, char const *);
-SH_DECL_HOOK1_void(IServerGameClients, SetCommandClient, SH_NOATTRIB, 0, int);
-SH_DECL_HOOK1_void(IServerGameClients, ClientSettingsChanged, SH_NOATTRIB, 0, edict_t *);
-SH_DECL_HOOK5(IServerGameClients, ClientConnect, SH_NOATTRIB, 0, bool, edict_t *, const char*, const char *, char *, int);
 SH_DECL_HOOK2(IGameEventManager2, FireEvent, SH_NOATTRIB, 0, bool, IGameEvent *, bool);
-
-
-#if SOURCE_ENGINE >= SE_ORANGEBOX
-SH_DECL_HOOK2_void(IServerGameClients, NetworkIDValidated, SH_NOATTRIB, 0, const char *, const char *);
-SH_DECL_HOOK2_void(IServerGameClients, ClientCommand, SH_NOATTRIB, 0, edict_t *, const CCommand &);
-#else
-SH_DECL_HOOK1_void(IServerGameClients, ClientCommand, SH_NOATTRIB, 0, edict_t *);
-#endif
 
 SH_DECL_MANUALHOOK2_void(PlayerRunCmd, 0, 0, 0, CUserCmd*, IMoveHelper*);
 
@@ -95,9 +76,7 @@ void (CBaseEntity::*TF2WeaponEquip)(CBaseEntity*) = 0x0;
 IGameEventManager2 *gameevents = NULL;
 IServerPluginCallbacks *vsp_callbacks = NULL;
 ICvar *icvar = NULL;
-IFileSystem *filesystem = NULL;  // file I/O 
-IGameEventManager2 *gameeventmanager2 = NULL;
-IGameEventManager *gameeventmanager = NULL;  // game events interface
+IFileSystem *filesystem = NULL;  // file I/O
 IPlayerInfoManager *playerinfomanager = NULL;  // game dll interface to interact with players
 IServerPluginHelpers *helpers = NULL;  // special 3rd party plugin helpers from the engine
 IServerGameClients* gameclients = NULL;
@@ -107,8 +86,8 @@ CGlobalVars *gpGlobals = NULL;
 IVDebugOverlay *debugoverlay = NULL;
 IServerGameEnts *servergameents = NULL; // for accessing the server game entities
 
-ConVar bot_version("afkbot_version", SMEXT_CONF_VERSION, FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_DONTRECORD|FCVAR_NOTIFY, "AFK Bot Version");
-ConVar bot_enabled("afkbot_enabled", "1", FCVAR_NONE, "Enable turning players into bots?", true, 0.0f, true, 1.0f);
+static ConVar bot_version(BOT_VER_CVAR, SMEXT_CONF_VERSION, FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_DONTRECORD|FCVAR_NOTIFY, BOT_NAME_VER);
+ConVar bot_enabled("afkbot_enabled", "1", FCVAR_NOTIFY, "Enable turning players into bots?", true, 0.0f, true, 1.0f);
 
 IGameConfig *g_pGameConf = NULL;
 ISDKTools *g_pSDKTools = NULL;
@@ -179,102 +158,6 @@ private:
 	int m_iPlayerSlot[MAX_PLAYERS];
 };
 
-///////////////
-// hud message
-///////////////
-void AFKBot::HudTextMessage(edict_t *pEntity, const char *szMessage)
-{
-	int msgid = 0;
-	int imsgsize = 0;
-	char msgbuf[64];
-	bool bOK;
-
-	int hint = -1;
-	int say = -1;
-
-	while ((bOK = gamedll->GetUserMessageInfo(msgid, msgbuf, 63, imsgsize)) == true)
-	{
-		if (strcmp(msgbuf, "HintText") == 0)
-			hint = msgid;
-		else if (strcmp(msgbuf, "SayText") == 0)
-			say = msgid;
-
-		msgid++;
-	}
-
-	if (msgid == 0)
-		return;
-
-	// if (!bOK)
-	// return;
-
-	CBotRecipientFilter *filter = new CBotRecipientFilter(pEntity);
-
-	bf_write *buf = nullptr;
-
-	if (hint > 0) 
-	{
-		buf = engine->UserMessageBegin(filter, hint);
-		buf->WriteString(szMessage);
-		engine->MessageEnd();
-	}
-
-	if (say > 0) 
-	{
-		char chatline[128];
-		snprintf(chatline, sizeof(chatline), "\x01\x04[RCBot2]\x01 %s\n", szMessage);
-
-		buf = engine->UserMessageBegin(filter, say);
-		buf->WriteString(chatline);
-		engine->MessageEnd();
-	}
-
-	delete filter;
-}
-
-//////////////////////////
-// chat broadcast message
-//////////////////////////
-void AFKBot::BroadcastTextMessage(const char *szMessage)
-{
-	int msgid = 0;
-	int imsgsize = 0;
-	char msgbuf[64];
-	bool bOK;
-
-	int hint = -1;
-	int say = -1;
-
-	while ((bOK = gamedll->GetUserMessageInfo(msgid, msgbuf, 63, imsgsize)) == true)
-	{
-		if (strcmp(msgbuf, "HintText") == 0)
-			hint = msgid;
-		else if (strcmp(msgbuf, "SayText") == 0)
-			say = msgid;
-
-		msgid++;
-	}
-
-	if (msgid == 0)
-		return;
-
-	CClientBroadcastRecipientFilter *filter = new CClientBroadcastRecipientFilter();
-
-	bf_write *buf = nullptr;
-
-	if (say > 0) 
-	{
-		char chatline[128];
-		snprintf(chatline, sizeof(chatline), "\x01\x04[RCBot2]\x01 %s\n", szMessage);
-
-		buf = engine->UserMessageBegin(filter, say);
-		buf->WriteString(chatline);
-		engine->MessageEnd();
-	}
-
-	delete filter;
-}
-
 CBaseEntity *AFKBot::TF2_GetPlayerWeaponSlot(edict_t *pPlayer, int iSlot)
 {
 	CBaseEntity *pEnt = servergameents->EdictToBaseEntity(pPlayer);
@@ -299,22 +182,24 @@ void AFKBot::TF2_EquipWeapon(edict_t *pPlayer, CBaseEntity *pWeapon)
 
 void AFKBot::PlayerRunCmd(CUserCmd *ucmd, IMoveHelper *moveHelper)
 {
-	static CBot *pBot;
+	if (bot_stop.GetBool())
+		RETURN_META(MRES_IGNORED);
 
-	CBaseEntity *pEnt = META_IFACEPTR(CBaseEntity);
-
-	edict_t *pEdict = servergameents->BaseEntityToEdict(pEnt);
-
-	pBot = CBots::GetBotPointer(pEdict);
+	edict_t *pEdict = servergameents->BaseEntityToEdict(META_IFACEPTR(CBaseEntity));
+	static CBot *pBot; pBot = CBots::GetBotPointer(pEdict);
 
 	if (pBot)
 	{
+		if (!bot_enabled.GetBool())
+		{
+			CBots::MakeNotBot(pEdict);
+			RETURN_META(MRES_IGNORED);
+		}
+
 		static CUserCmd *cmd;
 		static CPlayerState *pl;
 
 		cmd = pBot->GetUserCMD();
-		pl = gameclients->GetPlayerState(pEdict);
-
 		// put the bot's commands into this move frame
 		ucmd->buttons = cmd->buttons;
 		ucmd->forwardmove = cmd->forwardmove;
@@ -327,151 +212,53 @@ void AFKBot::PlayerRunCmd(CUserCmd *ucmd, IMoveHelper *moveHelper)
 		ucmd->tick_count = cmd->tick_count;
 		ucmd->command_number = cmd->command_number;
 
-		pl->v_angle = pBot->GetViewAngles();
+		pl = gameclients->GetPlayerState(pEdict);
+		pl->v_angle = cmd->viewangles;
 		pl->fixangle = FIXANGLE_ABSOLUTE;
 
 		g_pLastBot = (CBotTF2*)pBot;
 	}
 
-	//g_pSM->LogMessage(NULL, "H %i | %i | %f | %f | %f | %f | %f | %i", ucmd->command_number, ucmd->tick_count, ucmd->viewangles.x, ucmd->viewangles.y, ucmd->viewangles.z, ucmd->forwardmove, ucmd->sidemove, ucmd->buttons); 
-
 	RETURN_META(MRES_IGNORED);
 }
 
-void OnVSPListening(IServerPluginCallbacks *iface)
+void AFKBot::OnMaxPlayersChanged(int newvalue)
 {
-	vsp_callbacks = iface;
+	CBotGlobals::SetClientMax(newvalue);
 }
 
 void AFKBot::ServerActivate(edict_t *pEdictList, int edictCount, int clientMax)
 {
-	META_LOG(g_PLAPI, "ServerActivate() called: edictCount = %d, clientMax = %d", edictCount, clientMax);
-
 	CBotGlobals::SetClientMax(clientMax);
 }
 
-void AFKBot::ClientActive(edict_t *pEntity, bool bLoadGame)
+void AFKBot::ClientActive(edict_t *pClient, bool bLoadGame)
 {
-	META_LOG(g_PLAPI, "Hook_ClientActive(%d, %d)", IndexOfEdict(pEntity), bLoadGame);
-
-	CClients::ClientActive(pEntity);
-}
-
-#if SOURCE_ENGINE >= SE_ORANGEBOX
-void AFKBot::ClientCommand(edict_t *pEntity, const CCommand &args)
-#else
-void AFKBot::ClientCommand(edict_t *pEntity)
-#endif
-{
-	static CBotMod *pMod = NULL;
-
-#if SOURCE_ENGINE <= SE_DARKMESSIAH
-	CCommand args;
-#endif
-
-	const char *pcmd = args.Arg(0);
-
-	if (!pEntity || pEntity->IsFree())
-	{
-		return;
-	}
-
-	CClient *pClient = CClients::Get(pEntity);
-
-	// is bot command?
-	if (CBotGlobals::m_pCommands->IsCommand(pcmd))
-	{
-		eBotCommandResult iResult = CBotGlobals::m_pCommands->Execute(pClient, args.Arg(1), args.Arg(2), args.Arg(3), args.Arg(4), args.Arg(5), args.Arg(6));
-
-		if (iResult == COMMAND_ACCESSED)
-		{
-			// ok
-		}
-		else if (iResult == COMMAND_REQUIRE_ACCESS)
-		{
-			CBotGlobals::BotMessage(pEntity, 0, "You do not have access to this command");
-		}
-		else if (iResult == COMMAND_NOT_FOUND)
-		{
-			CBotGlobals::BotMessage(pEntity, 0, "Command not found");
-		}
-		else if (iResult == COMMAND_ERROR)
-		{
-			CBotGlobals::BotMessage(pEntity, 0, "Command returned an error");
-		}
-
-		RETURN_META(MRES_SUPERCEDE);
-	}
-	else if (strncmp(pcmd, "menuselect", 10) == 0) // menu command
-	{
-		if (pClient->IsUsingMenu())
-		{
-			int iCommand = atoi(args.Arg(1));
-
-			// format is 1.2.3.4.5.6.7.8.9.0
-			if (iCommand == 0)
-				iCommand = 9;
-			else
-				iCommand--;
-
-			pClient->GetCurrentMenu()->SelectedMenu(pClient, iCommand);
-		}
-	}
-
-	// command capturing
-	pMod = CBotGlobals::GetCurrentMod();
-
-	// capture some client commands e.g. voice commands
-	pMod->ClientCommand(pEntity, args.ArgC(), pcmd, args.Arg(1), args.Arg(2));
-
-	RETURN_META(MRES_IGNORED);
-}
-
-void AFKBot::ClientSettingsChanged(edict_t *pEdict)
-{
-
-}
-
-bool AFKBot::ClientConnect(edict_t *pEntity,
-	const char *pszName,
-	const char *pszAddress,
-	char *reject,
-	int maxrejectlen)
-{
-	META_LOG(g_PLAPI, "Hook_ClientConnect(%d, \"%s\", \"%s\")", IndexOfEdict(pEntity), pszName, pszAddress);
-
-	CClients::Init(pEntity);
-
-	return true;
-}
-
-void AFKBot::ClientPutInServer(edict_t *pEntity, char const *playername)
-{
-	CClient *pClient = CClients::ClientConnected(pEntity);
+	CClients::ClientActive(pClient);
 
 	CBotMod *pMod = CBotGlobals::GetCurrentMod();
+	pMod->PlayerSpawned(pClient);
 
-	pMod->PlayerSpawned(pEntity);
-
-	META_LOG(g_PLAPI, "Hook_ClientPutInServer(%d)", IndexOfEdict(pEntity));
+	CBaseEntity *pEntity = servergameents->EdictToBaseEntity(pClient);
+	SH_ADD_MANUALHOOK_MEMFUNC(PlayerRunCmd, pEntity, this, &AFKBot::PlayerRunCmd, false);
 }
 
-void AFKBot::ClientDisconnect(edict_t *pEntity)
+void AFKBot::ClientPutInServer(edict_t *pClient, const char *playername)
 {
-	CClients::ClientDisconnected(pEntity);
+	CClients::ClientConnected(pClient);
+	CClients::Init(pClient);
+}
 
-	META_LOG(g_PLAPI, "Hook_ClientDisconnect(%d)", IndexOfEdict(pEntity));
+void AFKBot::ClientDisconnect(edict_t *pClient)
+{
+	CClients::ClientDisconnected(pClient);
+
+	CBaseEntity *pEntity = servergameents->EdictToBaseEntity(pClient);
+	SH_REMOVE_MANUALHOOK_MEMFUNC(PlayerRunCmd, pEntity, this, &AFKBot::PlayerRunCmd, false);
 }
 
 void AFKBot::GameFrame(bool simulating)
 {
-	/**
-	* simulating:
-	* ***********
-	* true  | game is ticking
-	* false | game is not ticking
-	*/
-
 	static CBotMod *currentmod;
 
 	if (simulating && CBotGlobals::IsMapRunning())
@@ -483,14 +270,6 @@ void AFKBot::GameFrame(bool simulating)
 		{
 			CWaypoints::GetVisiblity()->WorkVisibility();
 		}
-
-		// Profiling
-#ifdef _DEBUG
-		if (CClients::clientsDebugging(BOT_DEBUG_PROFILE))
-		{
-			CProfileTimers::UpdateAndDisplay();
-		}
-#endif
 
 		// Config Commands
 		CBotConfigFile::DoNextCommand();
@@ -507,13 +286,11 @@ bool AFKBot::LevelInit(const char *pMapName,
 	bool loadGame,
 	bool background)
 {
-	META_LOG(g_PLAPI, "Hook_LevelInit(%s)", pMapName);
-
-	//CClients::initall();
 	// Must set this
 	CBotGlobals::SetMapName(pMapName);
 
-	CWaypoints::PrecacheWaypointTexture();
+	/*char *error[512];
+	CNavMeshNavigator::Init(error, sizeof(error));*/
 
 	CWaypointDistances::Reset();
 
@@ -539,35 +316,24 @@ bool AFKBot::LevelInit(const char *pMapName,
 
 	CBotSquads::FreeMemory();
 
-	CClients::SetListenServerClient(NULL);
-
-	// Setup game rules
-	extern void *g_pGameRules;
-	g_pGameRules = g_pSDKTools->GetGameRules();
-
 	return true;
 }
 
 void AFKBot::LevelShutdown()
 {
-	META_LOG(g_PLAPI, "Hook_LevelShutdown()");
-
 	CClients::Initall();
 	CWaypointDistances::Save();
 
 	CBots::FreeMapMemory();
 	CWaypoints::Init();
 
+	//CNavMeshNavigator::FreeMapMemory();
+
 	CBotGlobals::SetMapRunning(false);
 	CBotEvents::FreeMemory();
 }
 
-void AFKBot::SetCommandClient(int index)
-{
-	// META_LOG(g_PLAPI, "Hook_SetCommandClient(%d)", index);
-}
-
-bool AFKBot::FireGameEvent(IGameEvent * pEvent, bool bDontBroadcast)
+bool AFKBot::FireGameEvent(IGameEvent *pEvent, bool bDontBroadcast)
 {
 	static char szKey[128];
 	static char szValue[128];
@@ -577,21 +343,21 @@ bool AFKBot::FireGameEvent(IGameEvent * pEvent, bool bDontBroadcast)
 	RETURN_META_VALUE(MRES_IGNORED, true);
 }
 
-bool AFKBot::SDK_OnLoad(char *error, size_t maxlen, bool late) {
+bool AFKBot::SDK_OnLoad(char *error, size_t maxlength, bool late) {
 
 	char conf_error[255] = "";
 	if (!gameconfs->LoadGameConfigFile("tf2.afk", &g_pGameConf, conf_error, sizeof(conf_error)))
 	{
 		if (conf_error[0])
 		{
-			g_pSM->Format(error, maxlen, "Could not read tf2.afk.txt: %s", conf_error);
+			g_pSM->Format(error, maxlength, "Could not read tf2.afk.txt: %s", conf_error);
 		}
 		return false;
 	}
 
 	if (!g_pGameConf->GetOffset("PlayerRunCommand", &bot_playerruncmd_offset))
 	{
-		snprintf(error, maxlen, "Could not find offset for PlayerRunCmd");
+		snprintf(error, maxlength, "Could not find offset for PlayerRunCmd");
 		return false;
 	} else {
 		SH_MANUALHOOK_RECONFIGURE(PlayerRunCmd, bot_playerruncmd_offset, 0, 0);
@@ -599,20 +365,49 @@ bool AFKBot::SDK_OnLoad(char *error, size_t maxlen, bool late) {
 
 	if (!g_pGameConf->GetOffset("Weapon_Equip", &bot_weaponequip_offset))
 	{
-		snprintf(error, maxlen, "Could not find offset for Weapon_Equip");
+		snprintf(error, maxlength, "Could not find offset for Weapon_Equip");
 		return false;
 	}
 
 	if (!g_pGameConf->GetOffset("Weapon_GetSlot", &bot_getweaponslot_offset))
 	{
-		snprintf(error, maxlen, "Could not find offset for Weapon_GetSlot");
+		snprintf(error, maxlength, "Could not find offset for Weapon_GetSlot");
 		return false;
 	}
 
-#if SOURCE_ENGINE >= SE_ORANGEBOX
-	g_pCVar = icvar;
-	ConVar_Register(0, this);
-#endif
+	SM_GET_IFACE(SDKTOOLS, g_pSDKTools);
+	playerhelpers->AddClientListener(this);
+	MathLib_Init();
+
+	CBotGlobals::SetMapName(STRING(gpGlobals->mapname));
+
+	//CNavMeshNavigator::Init(error, maxlen);
+
+	CGameRulesObject::GetGameRules(error, maxlength);
+
+	CWaypointDistances::Reset();
+
+	CWaypoints::Init();
+	CWaypoints::Load();
+
+	CBotGlobals::SetMapRunning(true);
+	CBotConfigFile::Reset();
+
+	if (mp_teamplay)
+		CBotGlobals::SetTeamplay(mp_teamplay->GetBool());
+	else
+		CBotGlobals::SetTeamplay(false);
+
+	CBotEvents::SetupEvents();
+
+	CBots::MapInit();
+
+	CBotMod *pMod = CBotGlobals::GetCurrentMod();
+
+	if (pMod)
+		pMod->MapInit();
+
+	CBotSquads::FreeMemory();
 
 	return true;
 }
@@ -638,13 +433,6 @@ bool AFKBot::SDK_OnMetamodLoad(ISmmAPI *ismm, char *error, size_t maxlen, bool l
 
 	gpGlobals = ismm->GetCGlobals();
 
-	/* Load the VSP listener.  This is usually needed for IServerPluginHelpers. */
-	if ((vsp_callbacks = ismm->GetVSPInfo(NULL)) == NULL)
-	{
-		ismm->AddListener(this, this);
-		ismm->EnableVSPListener();
-	}
-
 	SH_ADD_HOOK_MEMFUNC(IServerGameDLL, LevelInit, gamedll, this, &AFKBot::LevelInit, true);
 	SH_ADD_HOOK_MEMFUNC(IServerGameDLL, ServerActivate, gamedll, this, &AFKBot::ServerActivate, true);
 	SH_ADD_HOOK_MEMFUNC(IServerGameDLL, GameFrame, gamedll, this, &AFKBot::GameFrame, true);
@@ -652,12 +440,12 @@ bool AFKBot::SDK_OnMetamodLoad(ISmmAPI *ismm, char *error, size_t maxlen, bool l
 	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientActive, gameclients, this, &AFKBot::ClientActive, true);
 	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientDisconnect, gameclients, this, &AFKBot::ClientDisconnect, true);
 	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientPutInServer, gameclients, this, &AFKBot::ClientPutInServer, true);
-	SH_ADD_HOOK_MEMFUNC(IServerGameClients, SetCommandClient, gameclients, this, &AFKBot::SetCommandClient, true);
-	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientSettingsChanged, gameclients, this, &AFKBot::ClientSettingsChanged, false);
-	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientConnect, gameclients, this, &AFKBot::ClientConnect, false);
-	SH_ADD_HOOK_MEMFUNC(IServerGameClients, ClientCommand, gameclients, this, &AFKBot::ClientCommand, false);
 	SH_ADD_HOOK_MEMFUNC(IGameEventManager2, FireEvent, gameevents, this, &AFKBot::FireGameEvent, false);
 
+#if SOURCE_ENGINE >= SE_ORANGEBOX
+	g_pCVar = icvar;
+#endif
+	CONVAR_REGISTER(this);
 
 	// Read Signatures and Offsets
 	CBotGlobals::InitModFolder();
@@ -666,29 +454,24 @@ bool AFKBot::SDK_OnMetamodLoad(ISmmAPI *ismm, char *error, size_t maxlen, bool l
 	if (!CBotGlobals::GameStart())
 		return false;
 
-	CBotMod *pMod = CBotGlobals::GetCurrentMod();
-
 	// Initialize bot variables
 	CBotProfiles::SetupProfiles();
 
-	//CBotEvents::setupEvents();
 	CWaypointTypes::Setup();
 	CWaypoints::SetupVisibility();
 
 	CBotConfigFile::Reset();
 	CBotConfigFile::Load();
 
-	CBotMenuList::SetupMenus();
-
 	CClassInterface::Init();
 
-	mp_stalemate_enable = icvar->FindVar("mp_stalemate_enable");
-	mp_stalemate_meleeonly = icvar->FindVar("mp_stalemate_meleeonly");
-	sv_cheats = icvar->FindVar("sv_cheats");
-	sv_gravity = icvar->FindVar("sv_gravity");
-	mp_friendlyfire = icvar->FindVar("mp_friendlyfire");
-	sv_tags = icvar->FindVar("sv_tags");
-	mp_teamplay = icvar->FindVar("mp_teamplay");
+	mp_stalemate_enable = g_pCVar->FindVar("mp_stalemate_enable");
+	mp_stalemate_meleeonly = g_pCVar->FindVar("mp_stalemate_meleeonly");
+	sv_cheats = g_pCVar->FindVar("sv_cheats");
+	sv_gravity = g_pCVar->FindVar("sv_gravity");
+	mp_friendlyfire = g_pCVar->FindVar("mp_friendlyfire");
+	sv_tags = g_pCVar->FindVar("sv_tags");
+	mp_teamplay = g_pCVar->FindVar("mp_teamplay");
 
 	if (sv_tags != NULL)
 	{
@@ -719,17 +502,12 @@ void AFKBot::SDK_OnAllLoaded()
 
 	if (g_pSDKTools == NULL)
 	{
-		g_pSM->LogMessage(myself, "Unable to retrieve interface: SDKTOOLS!");
+		g_pSM->LogMessage(myself, "Unable to retrieve the SDKTools interface!");
 	}
 
 	// Register natives for Pawn
 	sharesys->AddNatives(myself, g_ExtensionNatives);
-	sharesys->RegisterLibrary(myself, "AFKBot");
-}
-
-void AFKBot::SDK_OnUnload()
-{
-	gameconfs->CloseGameConfigFile(g_pGameConf);
+	sharesys->RegisterLibrary(myself, "afkbot");
 }
 
 bool AFKBot::QueryRunning(char *error, size_t maxlength)
@@ -737,6 +515,23 @@ bool AFKBot::QueryRunning(char *error, size_t maxlength)
 	SM_CHECK_IFACE(SDKTOOLS, g_pSDKTools);
 
 	return true;
+}
+
+void AFKBot::SDK_OnUnload()
+{
+	gameconfs->CloseGameConfigFile(g_pGameConf);
+	playerhelpers->RemoveClientListener(this);
+
+	CBots::FreeAllMemory();
+	CStrings::FreeAllMemory();
+	CBotMods::FreeMemory();
+	CBotEvents::FreeMemory();
+	CWaypoints::FreeMemory();
+	CWaypointTypes::FreeMemory();
+	CBotProfiles::DeleteProfiles();
+	CWeapons::FreeMemory();
+	CGameRulesObject::Delete();
+	//CNavMeshNavigator::FreeAllMemory();
 }
 
 bool AFKBot::SDK_OnMetamodUnload(char *error, size_t maxlen)
@@ -748,23 +543,7 @@ bool AFKBot::SDK_OnMetamodUnload(char *error, size_t maxlen)
 	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientActive, gameclients, this, &AFKBot::ClientActive, true);
 	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientDisconnect, gameclients, this, &AFKBot::ClientDisconnect, true);
 	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientPutInServer, gameclients, this, &AFKBot::ClientPutInServer, true);
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, SetCommandClient, gameclients, this, &AFKBot::SetCommandClient, true);
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientSettingsChanged, gameclients, this, &AFKBot::ClientSettingsChanged, false);
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientConnect, gameclients, this, &AFKBot::ClientConnect, false);
-	SH_REMOVE_HOOK_MEMFUNC(IServerGameClients, ClientCommand, gameclients, this, &AFKBot::ClientCommand, false);
 	SH_REMOVE_HOOK_MEMFUNC(IGameEventManager2, FireEvent, gameevents, this, &AFKBot::FireGameEvent, false);
-
-	CBots::FreeAllMemory();
-	CStrings::FreeAllMemory();
-	CBotGlobals::FreeMemory();
-	CBotMods::FreeMemory();
-	//CAccessClients::FreeMemory();
-	CBotEvents::FreeMemory();
-	CWaypoints::FreeMemory();
-	CWaypointTypes::FreeMemory();
-	CBotProfiles::DeleteProfiles();
-	CWeapons::FreeMemory();
-	CBotMenuList::FreeMemory();
 
 	ConVar_Unregister();
 
@@ -782,37 +561,37 @@ bool AFKBot::RegisterConCommandBase(ConCommandBase *pVar)
 
 static cell_t SetClientAFKBot(IPluginContext *pContext, const cell_t *params)
 {
-	cell_t tClient = params[1];
-	edict_t *pClient = PEntityOfEntIndex(tClient);
-
+	edict_t *pClient = INDEXENT(params[1]);
 	IPlayerInfo *p = playerinfomanager->GetPlayerInfo(pClient);
 
-	if (p && p->IsConnected() && !p->IsFakeClient() && !p->IsObserver())
+	if (!bot_enabled.GetBool())
+		return pContext->ThrowNativeError("Error: The bot extension is disabled. afkbot_enabled is currently set to off(0)");
+
+	if (p->IsConnected() && !p->IsFakeClient() && !p->IsObserver())
 	{
 		if (params[2])
 			CBots::MakeBot(pClient);
-		else if (!params[2])
+		else if (!params[2])	// Probably don't need elif
 			CBots::MakeNotBot(pClient);
 	}
 	else
-		return pContext->ThrowNativeError("Invalid client %d\nHe is either not connected, a fake client, or in spectator", params[1]);
+		return pContext->ThrowNativeError("Invalid client %s(%d)!\nHe is either not connected, a fake client, or in spectator.", p->GetName(), params[1]);
 
 	return 0;
 }
 
 static cell_t IsClientAFKBot(IPluginContext *pContext, const cell_t *params)
 {
-	cell_t tClient = params[1];
+	cell_t pClient = params[1];
+	IPlayerInfo *p = playerinfomanager->GetPlayerInfo(INDEXENT(pClient));
 
-	IPlayerInfo *p = playerinfomanager->GetPlayerInfo(PEntityOfEntIndex(tClient));
-
-	if (p && p->IsConnected() && !p->IsFakeClient() && !p->IsObserver())
+	if (p->IsConnected() && !p->IsFakeClient() && !p->IsObserver())
 	{
-		if (CBots::Get(tClient)->InUse())
+		if (CBots::Get(pClient)->InUse())
 			return 1;
 	}
 	else
-		return pContext->ThrowNativeError("Invalid client %d\nHe is either not connected, a fake client, or in spectator", params[1]);
+		return pContext->ThrowNativeError("Invalid client %s(%d)!\nHe is either not connected, a fake client, or in spectator.", p->GetName(), params[1]);
 
 	return 0;
 }

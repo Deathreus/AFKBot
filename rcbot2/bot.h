@@ -40,13 +40,8 @@
 #ifndef __RCBOT2_H__
 #define __RCBOT2_H__
 
-#ifdef __linux__
-#include "shake.h"    //bir3yk
-#endif
 #include "eiface.h"
-#ifdef __linux__
-#include "shareddefs.h" //bir3yk
-#endif
+
 #include "usercmd.h"
 #include <queue>
 
@@ -58,11 +53,7 @@
 
 #include "PlayerState.h"
 
-#include "../extension.h"
-
-#if defined WIN32 && !defined snprintf
-#define snprintf _snprintf
-#endif
+#include "..\extension.h"
 
 using namespace std;
 
@@ -592,7 +583,7 @@ public:
 
 	virtual bool Hurt(edict_t *pAttacker, int iHealthNow, bool bDontHide = false);
 	virtual void Shot(edict_t *pEnemy);
-	virtual void Shotmiss();
+	virtual void ShotMiss();
 	//inline void SetAvoidEntity (edict_t *pEntity) { m_pAvoidEntity = pEntity; };
 
 	int GetPlayerID(); // return player ID on server
@@ -906,7 +897,7 @@ protected:
 	// weapons storage -- sensor
 	CBotWeapons *m_pWeapons;
 	////////////////////////////////////
-	IPlayerInfo *m_pPI; //-- sensors
+	IPlayerInfo *m_pPI;
 	CPlayerState m_pPS;
 	CUserCmd m_pCmd;
 	////////////////////////////////////

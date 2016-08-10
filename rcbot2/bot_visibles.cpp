@@ -195,34 +195,16 @@ void CBotVisibles::CheckVisible(edict_t *pEntity, int *iTicks, bool *bVisible, i
 			vEntityOrigin = CBotGlobals::EntityOrigin(pEntity);
 
 			// for some reason the origin is their feet. add body height
-			if (iIndex <= gpGlobals->maxClients)
+			if (iIndex <= MAX_PLAYERS)
 				vEntityOrigin + Vector(0, 0, 32);
 
-			playerInPVS = engine->CheckOriginInPVS(vEntityOrigin, m_bPvs, sizeof(m_bPvs));//engine->CheckBoxInPVS( vectorSurroundMins, vectorSurroundMaxs, m_bPvs, sizeof( m_bPvs ) );
+			playerInPVS = engine->CheckOriginInPVS(vEntityOrigin, m_bPvs, sizeof(m_bPvs));
 
 			if (playerInPVS)
 			{
-
 				*bVisible = m_pBot->FVisible(pEntity, bCheckHead);
-
-#ifndef __linux__
-				if (*bVisible)
-				{
-					if (CClients::ClientsDebugging(BOT_DEBUG_VIS) && CClients::Get(0)->IsDebuggingBot(m_pBot->GetEdict()) && (ENTINDEX(pEntity) <= CBotGlobals::MaxClients()))
-						debugoverlay->AddTextOverlay(CBotGlobals::EntityOrigin(pEntity), 0, 0.1, "VISIBLE");
-				}
-				else
-				{
-					if (CClients::ClientsDebugging(BOT_DEBUG_VIS) && CClients::Get(0)->IsDebuggingBot(m_pBot->GetEdict()) && (ENTINDEX(pEntity) <= CBotGlobals::MaxClients()))
-						debugoverlay->AddTextOverlayRGB(CBotGlobals::EntityOrigin(pEntity), 0, 0.1, 255, 0, 0, 200, "INVISIBLE");
-				}
-#endif
 			}
-			//else if ( CClients::ClientsDebugging() && CClients::Get(0)->IsDebuggingBot(m_pBot) && (ENTINDEX(pEntity)<CBotGlobals::MaxClients()))
-			//	debugoverlay->AddTextOverlay(CBotGlobals::EntityOrigin(pEntity),0,0.1,"INVISIBLE: playerInPVS false");
 		}
-		//else if ( CClients::ClientsDebugging() && CClients::Get(0)->IsDebuggingBot(m_pBot) && (ENTINDEX(pEntity)<CBotGlobals::MaxClients()) )
-		//	debugoverlay->AddTextOverlay(CBotGlobals::EntityOrigin(pEntity),0,0.1,"INVISIBLE: FInViewCone false");
 	}
 }
 
@@ -259,7 +241,7 @@ void CBotVisibles::UpdateVisibles()
 	iStartIndex = m_iCurrentIndex;
 
 	if (bot_supermode.GetBool())
-		iMaxClientTicks = (gpGlobals->maxClients / 2) + 1;
+		iMaxClientTicks = (MAX_PLAYERS / 2) + 1;
 	else
 		iMaxClientTicks = m_pBot->GetProfile()->m_iVisionTicksClients; // bot_visrevs_clients.GetInt();
 

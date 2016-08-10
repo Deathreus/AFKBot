@@ -195,8 +195,6 @@ public:
 	void Init();
 
 	void SetLookTask(eLookTask task) { m_LookTask = task; }
-
-	virtual void DebugString(char *string);
 private:
 
 
@@ -240,8 +238,6 @@ public:
 	{
 		m_fTime = 0.0f;
 	}
-
-	void DebugString(char *string);
 private:
 
 	MyEHandle m_pSentryGun;
@@ -266,11 +262,6 @@ public:
 
 	Vector GetTarget() { return m_vTarget; }
 
-	void DebugString(char *string)
-	{
-		sprintf(string, "CBotTF2Spam");
-	}
-
 	float GetDistance();
 private:
 
@@ -291,11 +282,6 @@ public:
 	CBotTF2DemomanPipeJump(CBot *pBot, Vector vWaypointGround, Vector vWaypointNext, CBotWeapon *pWeapon);
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	void DebugString(char *string)
-	{
-		sprintf(string, "CBotTF2DemomanPipeJump");
-	}
 private:
 
 	Vector m_vStart;
@@ -319,11 +305,6 @@ public:
 	CBotTF2DemomanPipeEnemy(CBotWeapon *pPipeLauncher, Vector vEnemy, edict_t *pEnemy);
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	void DebugString(char *string)
-	{
-		sprintf(string, "CBotTF2DemomanPipeEnemy");
-	}
 private:
 	Vector m_vStand;
 	Vector m_vEnemy;
@@ -344,11 +325,6 @@ public:
 	CBotTF2DemomanPipeTrap(eDemoTrapType type, Vector vStand, Vector vLoc, Vector vSpread, bool bAutoDetonate = false, int m_iWptArea = -1);
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	void DebugString(char *string)
-	{
-		sprintf(string, "CBotTF2DemomanPipeTrap");
-	}
 private:
 	Vector m_vPoint;
 	Vector m_vStand;
@@ -370,11 +346,6 @@ public:
 	CBotTF2FindPipeWaypoint(Vector vOrigin, Vector vTarget);
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	void DebugString(char *string)
-	{
-		sprintf(string, "Finding Pipe Waypoint");
-	}
 private:
 	int m_iters;
 	unsigned short int m_i;
@@ -405,11 +376,6 @@ public:
 	}
 
 	void Execute (CBot *pBot,CBotSchedule *pSchedule);
-
-	void DebugString ( char *string )
-	{
-		sprintf(string,"Grav Gun Pickup");
-	}
 private:
 	MyEHandle m_Weapon;
 	MyEHandle m_Prop;
@@ -432,11 +398,6 @@ public:
 	}
 
 	void Execute (CBot *pBot,CBotSchedule *pSchedule);
-
-	void DebugString ( char *string )
-	{
-		sprintf(string,"Use Charger");
-	}
 private:
 	MyEHandle m_pCharger;
 	float m_fTime;
@@ -454,11 +415,6 @@ public:
 	}
 
 	void Execute (CBot *pBot,CBotSchedule *pSchedule);
-
-	void DebugString ( char *string )
-	{
-		sprintf(string,"Use Button");
-	}
 private:
 	MyEHandle m_pButton;
 	float m_fTime;
@@ -470,11 +426,6 @@ public:
 	CBotTF2MedicHeal();
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	void DebugString(char *string)
-	{
-		sprintf(string, "CBotTF2MedicHeal");
-	}
 private:
 	MyEHandle m_pHeal;
 	Vector m_vJump;
@@ -488,11 +439,6 @@ public:
 	CBotRemoveSapper(edict_t *pBuilding, eEngiBuild id);
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	void DebugString(char *string)
-	{
-		sprintf(string, "CBotRemoveSapper");
-	}
 private:
 	float m_fTime;
 	float m_fHealTime;
@@ -506,11 +452,6 @@ public:
 	CBotUseLunchBoxDrink();
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	void DebugString(char *string)
-	{
-		sprintf(string, "CBotUseLunchBoxDrink");
-	}
 private:
 	float m_fTime;
 };
@@ -521,11 +462,6 @@ public:
 	CBotUseBuffItem();
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	void DebugString(char *string)
-	{
-		sprintf(string, "CBotUseBuffITem");
-	}
 private:
 	float m_fTime;
 };
@@ -536,11 +472,6 @@ public:
 	CBotBackstab(edict_t *_pEnemy);
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	void DebugString(char *string)
-	{
-		sprintf(string, "CBotBackstab");
-	}
 private:
 	float m_fTime;
 	MyEHandle pEnemy;
@@ -556,11 +487,6 @@ public:
 	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	void DebugString(char *string)
-	{
-		sprintf(string, "CBotFollowSquadLeader");
-	}
 private:
 	edict_t *m_pPlayer;
 };
@@ -580,11 +506,6 @@ public:
 	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	void DebugString(char *string)
-	{
-		sprintf(string, "CBotFollowSquadLeader");
-	}
 private:
 	CBotSquad *m_pSquad;
 	float m_fVisibleTime;
@@ -601,11 +522,6 @@ public:
 	CBotNest();
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	void DebugString(char *string)
-	{
-		sprintf(string, "CBotNest");
-	}
 private:
 	float m_fTime;
 	MyEHandle m_pEnemy;
@@ -627,11 +543,6 @@ public:
 	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	void DebugString(char *string)
-	{
-		sprintf(string, "CBotDefendTask");
-	}
 private:
 	float m_fTime;
 	float m_fMaxTime;
@@ -658,11 +569,6 @@ public:
 	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	void DebugString(char *string)
-	{
-		sprintf(string, "CBotInvestigateTask");
-	}
 private:
 	int m_iState;
 	float m_fTime;
@@ -681,11 +587,6 @@ public:
 	CBotTF2EngiLookAfter(edict_t *pSentry) { m_pSentry = pSentry; m_fTime = 0; m_fHitSentry = 0; }
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	void DebugString(char *string)
-	{
-		sprintf(string, "CBotTF2EngiLookAfter");
-	}
 private:
 	float m_fTime;
 	float m_fHitSentry;
@@ -698,11 +599,6 @@ public:
 	CBotTF2SnipeCrossBow(Vector vOrigin, int iWpt);
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	void DebugString(char *string)
-	{
-		sprintf(string, "CBotSnipe");
-	}
 private:
 	float m_fTime; // time of task
 	Vector m_vAim; // base origin to aim at
@@ -727,11 +623,6 @@ public:
 	CBotTF2Snipe(Vector vOrigin, int iWpt);
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	void DebugString(char *string)
-	{
-		sprintf(string, "CBotSnipe");
-	}
 private:
 	float m_fTime; // time of task
 	Vector m_vAim; // base origin to aim at
@@ -756,9 +647,6 @@ public:
 CBotDODSnipe ( CBotWeapon *pWeaponToUse, Vector vOrigin, float fYaw, bool bUseZ = false, float z = 0, int iWaypointType = 0 );
 
 void execute (CBot *pBot,CBotSchedule *pSchedule);
-
-void debugString ( char *string );
-
 private:
 	float m_fTime;
 	float m_fEnemyTime;
@@ -779,9 +667,6 @@ public:
 CBotHL2DMSnipe ( CBotWeapon *pWeaponToUse, Vector vOrigin, float fYaw, bool bUseZ = false, float z = 0, int iWaypointType = 0 );
 
 void execute (CBot *pBot,CBotSchedule *pSchedule);
-
-void debugString ( char *string );
-
 private:
 float m_fTime;
 float m_fEnemyTime;
@@ -799,12 +684,7 @@ class CBotTF2SpyDisguise : public CBotTask
 public:
 	CBotTF2SpyDisguise();
 
-	void execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	void debugString(char *string)
-	{
-		sprintf(string, "CBotTF2SpyDisguise");
-	}
+	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 };
 
 class CBotTFEngiBuildTask : public CBotTask
@@ -814,10 +694,7 @@ public:
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 
-	virtual void DebugString(char *string);
-
 	void OneTryOnly() { m_iTries = 2; }
-
 private:
 	Vector m_vOrigin;
 	eEngiBuild m_iObject;
@@ -841,7 +718,6 @@ m_fTime = 0.0f;
 m_pPlayer = pPlayer;
 }
 
-virtual void debugString ( char *string );
 void execute (CBot *pBot,CBotSchedule *pSchedule);
 
 private:
@@ -858,7 +734,6 @@ m_pGrenade = pGrenade;
 m_fTime = 0.0f;
 }
 
-virtual void debugString ( char *string );
 void execute (CBot *pBot,CBotSchedule *pSchedule);
 
 private:
@@ -875,7 +750,6 @@ m_pBombTarget = pBombTarget;
 m_fTime = 0.0f;
 m_pBlocking = pBlocking;
 }
-virtual void debugString ( char *string );
 void execute (CBot *pBot,CBotSchedule *pSchedule);
 
 private:
@@ -890,8 +764,6 @@ class CBotDODBomb : public CBotTask
 public:
 CBotDODBomb ( int iBombType, int iBombID, edict_t *m_pBombTarget, Vector vPosition, int iPrevOwner );
 void execute (CBot *pBot,CBotSchedule *pSchedule);
-
-virtual void debugString ( char *string );
 private:
 Vector m_vOrigin;
 float m_fTime;
@@ -906,8 +778,6 @@ class CBotDODAttackPoint : public CBotTask
 public:
 CBotDODAttackPoint ( int iFlagID, Vector vOrigin, float fRadius );
 void execute (CBot *pBot,CBotSchedule *pSchedule);
-
-virtual void debugString ( char *string );
 private:
 Vector m_vOrigin;
 Vector m_vMoveTo;
@@ -925,8 +795,6 @@ public:
 	CBotTF2AttackPoint(int iArea, Vector vOrigin, int iRadius);
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	virtual void DebugString(char *string);
 private:
 	Vector m_vOrigin;
 	Vector m_vMoveTo;
@@ -943,8 +811,6 @@ public:
 	CBotTF2ShootLastEnemyPosition(Vector vPosition, edict_t *pEnemy, Vector velocity);
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	virtual void DebugString(char *string);
 private:
 	MyEHandle m_pEnemy;
 	Vector m_vPosition;
@@ -958,8 +824,6 @@ public:
 	CBotTF2DefendPoint(int iArea, Vector vOrigin, int iRadius);
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	virtual void DebugString(char *string);
 private:
 	Vector m_vOrigin;
 	Vector m_vMoveTo;
@@ -977,8 +841,6 @@ public:
 	CBotInvestigateHidePoint(int iWaypointIndexToInvestigate, int iOriginalWaypointIndex);
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	virtual void DebugString(char *string);
 private:
 	Vector m_vOrigin;
 	Vector m_vMoveTo;
@@ -995,8 +857,6 @@ public:
 	CBotTF2PushPayloadBombTask(edict_t * pPayloadBomb);
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	virtual void DebugString(char *string);
 private:
 	MyEHandle m_pPayloadBomb;
 	Vector m_vMoveTo;
@@ -1012,8 +872,6 @@ public:
 	CBotTF2DefendPayloadBombTask(edict_t * pPayloadBomb);
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	virtual void DebugString(char *string);
 private:
 	MyEHandle m_pPayloadBomb;
 	Vector m_vMoveTo;
@@ -1029,8 +887,6 @@ public:
 	CBotTF2UpgradeBuilding(edict_t *pBuilding);
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	virtual void DebugString(char *string);
 private:
 	MyEHandle m_pBuilding;
 	float m_fTime;
@@ -1042,8 +898,6 @@ public:
 	CBotTF2WaitAmmoTask(Vector vOrigin);
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	virtual void DebugString(char *string);
 private:
 	Vector m_vOrigin;
 	float m_fWaitTime;
@@ -1055,8 +909,6 @@ public:
 	CBotTF2WaitHealthTask(Vector vOrigin);
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	virtual void DebugString(char *string);
 private:
 	Vector m_vOrigin;
 	float m_fWaitTime;
@@ -1068,8 +920,6 @@ public:
 	CBotTFDoubleJump(); // going here
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	virtual void DebugString(char *string);
 private:
 	float m_fTime;
 };
@@ -1081,8 +931,6 @@ public:
 	CBotTFRocketJump(); // going here
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	virtual void DebugString(char *string);
 private:
 	float m_fTime;
 	float m_fJumpTime;
@@ -1095,8 +943,6 @@ public:
 	CBotTF2SpySap(edict_t *pBuilding, eEngiBuild id); // going to use this 
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	virtual void DebugString(char *string);
 private:
 	MyEHandle m_pBuilding;
 	float m_fTime;
@@ -1109,8 +955,6 @@ public:
 	CBotTFUseTeleporter(edict_t *pTele); // going to use this 
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	virtual void DebugString(char *string);
 private:
 	MyEHandle m_pTele;
 	float m_fTime;
@@ -1123,8 +967,6 @@ public:
 	CBotTaskEngiPickupBuilding(edict_t *pBuilding); // going to use this 
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	virtual void DebugString(char *string);
 private:
 	MyEHandle m_pBuilding;
 	float m_fTime;
@@ -1136,8 +978,6 @@ public:
 	CBotTaskEngiPlaceBuilding(eEngiBuild iObject, Vector vOrigin); // going to use this 
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	virtual void DebugString(char *string);
 private:
 	Vector m_vOrigin;
 	float m_fTime;
@@ -1152,8 +992,6 @@ public:
 	CBotTF2WaitFlagTask(Vector vOrigin, bool bFind = false);
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	virtual void DebugString(char *string);
 private:
 	Vector m_vOrigin;
 	float m_fWaitTime;
@@ -1166,7 +1004,6 @@ public:
 CThrowGrenadeTask ( CBotWeapon *pWeapon, int ammo, Vector vLoc );
 void init ();
 void execute (CBot *pBot,CBotSchedule *pSchedule);
-virtual void debugString ( char *string );
 private:
 Vector m_vLoc;
 CBotWeapon *m_pWeapon;
@@ -1183,8 +1020,6 @@ public:
 	void Init();
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	virtual void DebugString(char *string);
 private:
 	MyEHandle m_pEdict;
 };
@@ -1215,8 +1050,6 @@ public:
 	void Init();
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	virtual void DebugString(char *string);
 private:
 	Vector m_vPlayer;
 	Vector m_vOrigin;
@@ -1241,8 +1074,6 @@ public:
 	void Init();
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	virtual void DebugString(char *string);
 private:
 	float fPrevDist;
 	Vector m_vVector;
@@ -1255,11 +1086,6 @@ public:
 	CMessAround(edict_t *pFriendly, int iMaxVoiceCmd);
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	void DebugString(char *string)
-	{
-		sprintf(string, "CMessAround");
-	}
 private:
 	float m_fTime;
 	MyEHandle m_pFriendly;
@@ -1274,11 +1100,6 @@ public:
 	CFindLastEnemy(Vector vLast, Vector vVelocity);
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	void DebugString(char *string)
-	{
-		sprintf(string, "CFindLastEnemy");
-	}
 private:
 	Vector m_vLast;
 	float m_fTime;
@@ -1294,11 +1115,6 @@ public:
 	void Init();
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	void DebugString(char *string)
-	{
-		sprintf(string, "CFindGoodHideSpot");
-	}
 private:
 	Vector m_vHideFrom;
 };
@@ -1311,8 +1127,6 @@ public:
 	void Init();
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	virtual void DebugString(char *string);
 private:
 	Vector m_vHideFrom;
 	float m_fHideTime;
@@ -1326,8 +1140,6 @@ public:
 	void Init();
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	virtual void DebugString(char *string);
 private:
 	MyEHandle m_pFollow;
 	float m_fFollowTime;
@@ -1344,8 +1156,6 @@ public:
 	void Init();
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	virtual void DebugString(char *string);
 private:
 	MyEHandle m_pHideFrom;
 	float m_fHideTime;
@@ -1360,8 +1170,6 @@ public:
 	CSpyCheckAir() { m_fTime = 0.0f; m_pUnseenBefore = NULL; m_bHitPlayer = false; }
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
-
-	void DebugString(char *string);
 private:
 	edict_t *m_pUnseenBefore;
 	int seenlist;

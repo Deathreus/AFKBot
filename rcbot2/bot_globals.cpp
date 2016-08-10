@@ -119,7 +119,7 @@ void CBotGlobals::Init()
 
 bool CBotGlobals::IsAlivePlayer(edict_t *pEntity)
 {
-	return pEntity && ENTINDEX(pEntity) && (ENTINDEX(pEntity) <= gpGlobals->maxClients) && (EntityIsAlive(pEntity));
+	return pEntity && ENTINDEX(pEntity) && (ENTINDEX(pEntity) <= MAX_PLAYERS) && (EntityIsAlive(pEntity));
 }
 
 //new map
@@ -272,7 +272,7 @@ class CTraceFilterHitAllExceptPlayers : public CTraceFilter
 public:
 	virtual bool ShouldHitEntity(IHandleEntity *pServerEntity, int contentsMask)
 	{
-		return pServerEntity->GetRefEHandle().GetEntryIndex() <= gpGlobals->maxClients;
+		return pServerEntity->GetRefEHandle().GetEntryIndex() <= MAX_PLAYERS;
 	}
 };
 
@@ -452,11 +452,6 @@ bool CBotGlobals::TraceVisible(edict_t *pEnt)
 	return (m_TraceResult.fraction >= 1.0) || (m_TraceResult.m_pEnt && pEnt && (m_TraceResult.m_pEnt == pEnt->GetUnknown()->GetBaseEntity()));
 }
 
-void CBotGlobals::FreeMemory()
-{
-	m_pCommands->FreeMemory();
-}
-
 bool CBotGlobals::InitModFolder() {
 	char szGameFolder[512];
 	engine->GetGameDir(szGameFolder, 512);
@@ -521,7 +516,7 @@ bool CBotGlobals::GameStart()
 	}
 	else
 	{
-		Msg("[BOT ERROR] Mod not found. Please edit the bot_mods.ini in the bot config folder\nsteamdir = %s\ngamedir = %s\n", m_szGameFolder, m_szModFolder);
+		Msg("[BOT ERROR] Mod not found. Please edit the bot_mods.cfg in the bot config folder\nsteamdir = %s\ngamedir = %s\n", m_szGameFolder, m_szModFolder);
 
 		return false;
 	}
@@ -588,7 +583,7 @@ bool CBotGlobals::EntityIsAlive(edict_t *pEntity)
 
 	index = ENTINDEX(pEntity);
 
-	if (index && (index <= gpGlobals->maxClients))
+	if (index && (index <= MAX_PLAYERS))
 	{
 		IPlayerInfo *p = playerinfomanager->GetPlayerInfo(pEntity);
 

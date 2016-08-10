@@ -31,7 +31,7 @@
 #ifndef __BOT_CONST_H__
 #define __BOT_CONST_H__
 
-#include "shareddefs.h"
+#include <shareddefs.h>
 
 #define BOT_DEFAULT_FOV 75.0f
 
@@ -63,34 +63,6 @@
 #define BOT_DEBUG_AIM			13 
 #define BOT_DEBUG_CHAT			14
 
-// from sourcemod
-enum RoundState 
-{
-	// initialize the game, create teams
-	RoundState_Init,
-	//Before players have joined the game. Periodically checks to see if enough players are ready
-	//to start a game. Also reverts to this when there are no active players
-	RoundState_Pregame,
-	//The game is about to start, wait a bit and spawn everyone
-	RoundState_StartGame,
-	//All players are respawned, frozen in place
-	RoundState_Preround,
-	//Round is on, playing normally
-	RoundState_RoundRunning,
-	//Someone has won the round
-	RoundState_TeamWin,
-	//Noone has won, manually restart the game, reset scores
-	RoundState_Restart,
-	//Noone has won, restart the game
-	RoundState_Stalemate,
-	//Game is over, showing the scoreboard etc
-	RoundState_GameOver,
-	//Game is over, doing bonus round stuff
-	RoundState_Bonus,
-	//Between rounds
-	RoundState_BetweenRounds,
-};
-
 typedef enum
 {
 	LOOK_NONE = 0,
@@ -115,39 +87,12 @@ extern const char *g_szLookTaskToString[LOOK_MAX];
 #define BOT_CONFIG_FOLDER "config"
 #define BOT_MOD_FILE "bot_mods"
 #define BOT_WAYPOINT_FOLDER "waypoints"
-#define BOT_CONFIG_EXTENSION "ini"
+#define BOT_CONFIG_EXTENSION "cfg"
 
 #define BOT_WAYPOINT_EXTENSION "rcw" // extension for waypoint files
 #define BOT_WAYPOINT_FILE_TYPE "RCBot2\0" // for waypoint file header
 
 #define BOT_TAG "[AFKBot] " // for printing messages
-
-/*
-// engine player info, no game related infos here
-// If you change this, change the two byteswap defintions: 
-// cdll_client_int.cpp and cdll_engine_int.cpp
-typedef struct player_info_s
-{
-	DECLARE_BYTESWAP_DATADESC();
-	// scoreboard information
-	char			name[MAX_PLAYER_NAME_LENGTH];
-	// local server user ID, unique while server is running
-	int				userID;
-	// global unique player identifer
-	char			guid[SIGNED_GUID_LEN + 1];
-	// friends identification number
-	uint32			friendsID;
-	// friends name
-	char			friendsName[MAX_PLAYER_NAME_LENGTH];
-	// true, if player is a bot controlled by game.dll
-	bool			fakeplayer;
-	// true if player is the HLTV proxy
-	bool			ishltv;
-	// custom files CRC for this player
-	CRC32_t			customFiles[MAX_CUSTOM_FILES];
-	// this counter increases each time the server downloaded a new file
-	unsigned char	filesDownloaded;
-} player_info_t;*/
 
 typedef enum
 {
@@ -173,20 +118,12 @@ typedef enum
 
 #define MIN_COVER_MOVE_DIST 128
 
-#undef INDEXENT
 #define INDEXENT(iEdictNum) engine->PEntityOfEntIndex(iEdictNum)
-
-#undef ENTINDEX
 #define ENTINDEX(pEdict) engine->IndexOfEdict(pEdict)
 
 #define BOT_NAME "AFKBot"
-#ifdef __linux__
-#define BOT_VER "TF2/HL2DM/DOD:S 1.00 META Linux 473 (BUILD " __DATE__ "-" __TIME__ ")" //bir3yk
-#else
-#define BOT_VER "TF2/HL2DM/DOD:S 1.00 META Win32 473 (BUILD " ## __DATE__ ## "-" ## __TIME__ ## ")"
-#endif
 #define BOT_NAME_VER "AFKBot version"
-#define BOT_VER_CVAR "Version"
+#define BOT_VER_CVAR "afkbot_version"
 #define BOT_FOLDER "afkbot"
 
 typedef enum
@@ -229,6 +166,10 @@ typedef enum
 #define CONDITION_SEE_ENEMY_GROUND		268435456	// bit 28 - can see enemy ground so aim for it if i have explosive
 #define CONDITION_MAX					CONDITION_SEE_ENEMY_GROUND
 #define CONDITION_MAX_BITS				28
+
+#define MAX_MAP_STRING_LEN 64
+#define MAX_PATH_LEN 512
+#define MAX_ENTITIES 2048
 
 ////////////////////////
 #define BLAST_RADIUS 200

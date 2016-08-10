@@ -1062,15 +1062,6 @@ int CBotFortress::EngiBuildObject(int *iState, eEngiBuild iObject, float *fTime,
 		}
 		////////////////////////////////////
 		*iState = iNextState;
-
-#ifndef __linux__
-		if (CClients::ClientsDebugging(BOT_DEBUG_THINK) && !engine->IsDedicatedServer())
-		{
-			debugoverlay->AddTriangleOverlay(v_src - v_left*32.0f, v_src + v_left*32.0f, v_src + (building - v_src), 255, 50, 50, 255, false, 60.0f);
-			debugoverlay->AddLineOverlay(building, vchosen, 255, 50, 50, false, 60.0f);
-			debugoverlay->AddTextOverlayRGB(building + Vector(0, 0, 25), 0, 60.0f, 255, 255, 255, 255, "Chosen State: %d", iNextState);
-		}
-#endif
 	}
 	case 2:
 	{
@@ -1804,7 +1795,7 @@ edict_t *CBotFortress::GetVisibleSpecial()
 	// this is a special visible which will return something important 
 	// that should be visible quickly, e.g. an enemy sentry gun
 	// or teleporter entrance for bots to make decisions quickly
-	if ((signed int)m_iSpecialVisibleId >= gpGlobals->maxClients)
+	if ((signed int)m_iSpecialVisibleId >= MAX_PLAYERS)
 		m_iSpecialVisibleId = 0;
 
 	pPlayer = INDEXENT(m_iSpecialVisibleId + 1);
@@ -2557,7 +2548,7 @@ void CBotFortress::ChooseClass()
 	if ((m_iClass >= 0) && (m_iClass < 10))
 		fClassFitness[m_iClass] = 0.1f;
 
-	for (i = 1; i <= gpGlobals->maxClients; i++)
+	for (i = 1; i <= MAX_PLAYERS; i++)
 	{
 		pPlayer = INDEXENT(i);
 
@@ -3249,7 +3240,7 @@ bool CBotTF2::WantToInvestigateSound()
 bool CBotTF2::WantToListenToPlayerFootsteps(edict_t *pPlayer)
 {
 	extern ConVar bot_notarget;
-	if (bot_notarget.GetBool() && (CClients::IsListenServerClient(CClients::Get(pPlayer))))
+	if (bot_notarget.GetBool() && (CClients::Get(pPlayer)->IsUsed()))
 		return false;
 
 	switch (CClassInterface::GetTF2Class(pPlayer))
@@ -3897,7 +3888,7 @@ bool CBotTF2::HealPlayer()
 	edict_t *pPlayer = NULL;
 
 	// Find the player I'm currently healing
-	for (unsigned short i = 1; i <= gpGlobals->maxClients; i++)
+	for (unsigned short i = 1; i <= MAX_PLAYERS; i++)
 	{
 		pent = INDEXENT(i);
 
@@ -4468,7 +4459,7 @@ void CBotTF2::GetTasks(unsigned int iIgnore)
 	else if (m_iClass == TF_CLASS_MEDIC)
 	{
 		if (CTeamFortress2Mod::HasRoundStarted())
-			fGetFlagUtility = 0.85f - (((float)numplayersonteam) / (gpGlobals->maxClients / 2));
+			fGetFlagUtility = 0.85f - (((float)numplayersonteam) / (MAX_PLAYERS / 2));
 		else
 			fGetFlagUtility = 0.1f; // not my priority
 	}
@@ -4740,20 +4731,6 @@ void CBotTF2::GetTasks(unsigned int iIgnore)
 			m_CurrentUtil = next->GetId();
 			// avoid trying to do same thing again and again if it fails
 			m_fUtilTimes[m_CurrentUtil] = engine->Time() + 0.5f;
-
-			if (CClients::ClientsDebugging(BOT_DEBUG_UTIL))
-			{
-				int i = 0;
-
-				CClients::ClientDebugMsg(this, BOT_DEBUG_UTIL, "-------- getTasks(%s) --------", m_szBotName);
-
-				do
-				{
-					CClients::ClientDebugMsg(this, BOT_DEBUG_UTIL, "%s = %0.3f", g_szUtils[next->GetId()], next->GetUtility(), this);
-				} while ((++i < 10) && ((next = utils.NextBest()) != NULL));
-
-				CClients::ClientDebugMsg(this, BOT_DEBUG_UTIL, "----END---- getTasks(%s) ----END----", m_szBotName);
-			}
 
 			utils.FreeMemory();
 			return;

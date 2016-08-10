@@ -73,7 +73,6 @@ extern ConVar bot_tf2_autoupdate_point_time;
 extern ConVar bot_tf2_payload_dist_retreat;
 extern ConVar bot_spy_runaway_health;
 
-extern ConVar bot_gamerules_offset;
 extern ConVar bot_const_point_master_offset;
 extern ConVar bot_const_round_offset;
 

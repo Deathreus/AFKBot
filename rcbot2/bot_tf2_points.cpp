@@ -210,7 +210,7 @@ int CTFObjectiveResource::GetRandomValidPointForTeam(int team, ePointAttackDefen
 					// IF this is not base point and a lot of players are here, reduce probability of defending
 					if ((i != GetBaseControlPointForTeam(team)) && (numplayers > 1))
 					{
-						arr[i].fProbMultiplier = 1.0f - ((float)numplayers / (gpGlobals->maxClients / 4));
+						arr[i].fProbMultiplier = 1.0f - ((float)numplayers / (MAX_PLAYERS / 4));
 
 						if (arr[i].fProbMultiplier <= 0.0f)
 							arr[i].fProbMultiplier = 0.1f;
@@ -250,7 +250,7 @@ void CTeamRoundTimer::Reset()
 {
 	CTeamRoundTimer();
 
-	m_Resource = CClassInterface::FindEntityByNetClass(gpGlobals->maxClients + 1, "CTeamRoundTimer");
+	m_Resource = CClassInterface::FindEntityByNetClass(MAX_PLAYERS + 1, "CTeamRoundTimer");
 	if (m_Resource.Get() != NULL)
 	{
 		CClassInterface::SetupCTeamRoundTimer(this);
@@ -326,8 +326,8 @@ void CTFObjectiveResource::Setup()
 
 	Vector vOrigin;
 
-	int i = gpGlobals->maxClients;
-	int maxEnts = gpGlobals->maxEntities;
+	int i = MAX_PLAYERS;
+	int maxEnts = MAX_ENTITIES;
 
 	memset(m_IndexToWaypointAreaTranslation, 0, sizeof(int)*MAX_CONTROL_POINTS);
 	memset(m_WaypointAreaToIndexTranslation, 0xFF, sizeof(int)*(MAX_CONTROL_POINTS + 1));
@@ -402,17 +402,6 @@ int CTFObjectiveResource::GetControlPointArea(edict_t *pPoint)
 
 	return 0;
 }
-void CTFObjectiveResource::Debugprint(void)
-{
-	edict_t *pEdict = CClients::GetListenServerClient();
-
-	/*CBotGlobals::botMessage(pEdict,0,"m_iNumControlPoints = %d",*m_iNumControlPoints);
-	CBotGlobals::botMessage(pEdict,0,"m_bBlocked[8]\t[%s,%s,%s,%s,%s,%s,%s,%s]",m_bBlocked[0]?"Y":"N",m_bBlocked[1]?"Y":"N",m_bBlocked[2]?"Y":"N",m_bBlocked[3]?"Y":"N",m_bBlocked[4]?"Y":"N",m_bBlocked[5]?"Y":"N",m_bBlocked[6]?"Y":"N",m_bBlocked[7]?"Y":"N");
-	CBotGlobals::botMessage(pEdict,0,"m_bCPLocked[byte]\t[%d]",*m_bCPLocked);
-	CBotGlobals::botMessage(pEdict,0,"m_bCPLocked[8]\t[%s,%s,%s,%s,%s,%s,%s,%s]",m_bCPLocked[0]?"Y":"N",m_bCPLocked[1]?"Y":"N",m_bCPLocked[2]?"Y":"N",m_bCPLocked[3]?"Y":"N",m_bCPLocked[4]?"Y":"N",m_bCPLocked[5]?"Y":"N",m_bCPLocked[6]?"Y":"N",m_bCPLocked[7]?"Y":"N");
-	CBotGlobals::botMessage(pEdict,0,"m_bCPIsVisible[8]\t[%s,%s,%s,%s,%s,%s,%s,%s]",m_bCPIsVisible[0]?"Y":"N",m_bCPIsVisible[1]?"Y":"N",m_bCPIsVisible[2]?"Y":"N",m_bCPIsVisible[3]?"Y":"N",m_bCPIsVisible[4]?"Y":"N",m_bCPIsVisible[5]?"Y":"N",m_bCPIsVisible[6]?"Y":"N",m_bCPIsVisible[7]?"Y":"N");
-	CBotGlobals::botMessage(pEdict,0,"m_iOwner[8]\t[%s,%s,%s,%s,%s,%s,%s,%s]",(m_iOwner[0]==2)?"red":((m_iOwner[0]==3)?"blue":"unassigned"),(m_iOwner[1]==2)?"red":((m_iOwner[1]==3)?"blue":"unassigned"),(m_iOwner[2]==2)?"red":((m_iOwner[2]==3)?"blue":"unassigned"),(m_iOwner[3]==2)?"red":((m_iOwner[3]==3)?"blue":"unassigned"),(m_iOwner[4]==2)?"red":((m_iOwner[4]==3)?"blue":"unassigned"),(m_iOwner[5]==2)?"red":((m_iOwner[5]==3)?"blue":"unassigned"),(m_iOwner[6]==2)?"red":((m_iOwner[6]==3)?"blue":"unassigned"),(m_iOwner[7]==2)?"red":((m_iOwner[7]==3)?"blue":"unassigned"));*/
-}
 
 int CTFObjectiveResource::NearestArea(Vector vOrigin)
 {
@@ -435,13 +424,6 @@ int CTFObjectiveResource::NearestArea(Vector vOrigin)
 	// Add one for waypoint area
 	return m_IndexToWaypointAreaTranslation[iNearest];
 }
-
-/*CTeamControlPoint *CTeamControlPoint::getPoint ( edict_t *pent )
-{
-extern ConVar bot_const_point_offset;
-return (CTeamControlPoint*)((((unsigned long)pent) + bot_const_point_offset.GetInt())); //MAP_CLASS(CTeamControlPoint,(((unsigned long)pent) + offset),knownoffset);
-}*/
-
 
 bool CTFObjectiveResource::UpdateDefendPoints(int team)
 {

@@ -30,17 +30,17 @@
 #define _INCLUDE_SOURCEMOD_EXTENSION_CONFIG_H_
 
 /**
- * @file smsdk_config.hpp
+ * @file smsdk_config.h
  * @brief Contains macros for configuring basic extension information.
  */
 
 /* Basic information exposed publicly */
 #define SMEXT_CONF_NAME			"AFKBot"
-#define SMEXT_CONF_DESCRIPTION	"Let's a bot take over when players are away for an extended period of time.\nRequires an external AFK manager to automatically enable the bot!"
+#define SMEXT_CONF_DESCRIPTION	"Let's a bot take over when players are away\nRequires an external AFK manager to automatically enable the bot!"
 #define SMEXT_CONF_VERSION		"1.0"
 #define SMEXT_CONF_AUTHOR		"Cheeseh & Deathreus"
 #define SMEXT_CONF_URL			""
-#define SMEXT_CONF_LOGTAG		"AFKBOT"
+#define SMEXT_CONF_LOGTAG		"AFKBot"
 #define SMEXT_CONF_LICENSE		"GPLv3"
 #define SMEXT_CONF_DATESTRING	__DATE__
 
@@ -58,7 +58,7 @@
 /** Enable interfaces you want to use here by uncommenting lines */
 //#define SMEXT_ENABLE_FORWARDSYS
 //#define SMEXT_ENABLE_HANDLESYS
-//#define SMEXT_ENABLE_PLAYERHELPERS
+#define SMEXT_ENABLE_PLAYERHELPERS
 //#define SMEXT_ENABLE_DBMANAGER
 #define SMEXT_ENABLE_GAMECONF
 //#define SMEXT_ENABLE_MEMUTILS
@@ -66,7 +66,7 @@
 //#define SMEXT_ENABLE_TIMERSYS
 //#define SMEXT_ENABLE_THREADER
 //#define SMEXT_ENABLE_LIBSYS
-#define SMEXT_ENABLE_MENUS
+//#define SMEXT_ENABLE_MENUS
 //#define SMEXT_ENABLE_ADTFACTORY
 //#define SMEXT_ENABLE_PLUGINSYS
 //#define SMEXT_ENABLE_ADMINSYS

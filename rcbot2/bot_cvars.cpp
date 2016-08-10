@@ -15,7 +15,7 @@ ConVar bot_waypointpathdist("afkbot_wpt_pathdist", "400", 0, "Length for waypoin
 ConVar bot_avoid_radius("afkbot_avoid_radius", "80", 0, "radius in units for bots to avoid things");
 ConVar bot_avoid_strength("afkbot_avoid_strength", "100", 0, "strength of avoidance (0 = disable)");
 ConVar bot_messaround("afkbot_messaround", "1", 0, "bots mess around at start up");
-ConVar bot_aimsmoothing("afkbot_aimsmooting", "1", 0, "(0 = no smoothing)");
+ConVar bot_aimsmoothing("afkbot_aimsmoothing", "1", 0, "(0 = no smoothing)");
 ConVar bot_wptplace_width("afkbot_wpt_width", "48", 0, "width of the player, automatic paths won't connect unless there is enough space for a player");
 ConVar bot_wpt_autoradius("afkbot_wpt_autoradius", "0", 0, "every waypoint added is given this radius, 0 = no radius");
 ConVar bot_wpt_autotype("afkbot_wpt_autotype", "1", 0, "If 1, types will be automatically added to waypoints when they are added (only for resupply/health/capture/flag etc)\nIf 2: types will autoamtically be added even if the waypoint is cut/paste");
@@ -55,7 +55,6 @@ ConVar bot_bot_squads_percent("afkbot_bot_squads_percent", "50", 0, "the percent
 // TF2 vars
 ConVar bot_tf2_debug_spies_cloakdisguise("afkbot_tf2_debug_spies_cloakdisguise", "1", 0, "Debug command : allow spy bots to cloak and disguise");
 ConVar bot_tf2_medic_letgotime("afkbot_tf2_medic_letgotime", "0.4", 0, "Time for medic to let go of medigun to switch players");
-ConVar bot_const_round_offset("afkbot_const_round_offset", "852", 0, "TF2 OFFSET for Round Class");
 ConVar bot_tf2_pyro_airblast("afkbot_tf2_pyro_airblast_ammo", "50", 0, "Ammo must be above this to airblast -- if 200 airblast will be disabled");
 ConVar bot_spyknifefov("afkbot_spyknifefov", "80", 0, "the FOV from the enemy that spies must backstab from");
 ConVar bot_scoutdj("afkbot_scoutdj", "0.28", 0, "time scout uses to double jump");
@@ -75,7 +74,7 @@ ConVar bot_demo_jump("afkbot_enable_pipejump", "1", 0, "Enable experimental pipe
 ConVar bot_move_tele_time("afkbot_move_tele_time", "120", 0, "seconds for bots to start thinking about moving teleporters");
 ConVar bot_move_tele_tpm("afkbot_move_tele_tpm", "1", 0, "if no of players teleported per minute is less than this, bot will move the teleport");
 ConVar bot_tf2_protect_cap_time("afkbot_tf2_prot_cap_time", "12.5", 0, "time that the bots will spen more attention to the cap point if attacked");
-ConVar bot_tf2_protect_cap_percent("afkbot_tf2_protect_cap_percent", "0.25", 0, "the percentage that bots defend the capture point by standing on the point");
+ConVar bot_tf2_protect_cap_percent("afkbot_tf2_prot_cap_percent", "0.25", 0, "the percentage that bots defend the capture point by standing on the point");
 ConVar bot_tf2_spy_kill_on_cap_dist("afkbot_tf2_spy_kill_on_cap_dist", "200.0", 0, "the distance for spy bots to attack players capturing a point");
 ConVar bot_move_dist("afkbot_move_dist", "800", 0, "minimum distance to move objects to");
 ConVar bot_move_obj("afkbot_move_obj", "1", 0, "if 1 afkbot engineers will move objects around");
@@ -85,28 +84,28 @@ ConVar bot_tf2_payload_dist_retreat("afkbot_tf2_payload_dist_retreat", "512.0", 
 ConVar bot_spy_runaway_health("afkbot_spy_runaway_health", "70", 0, "health which spies run away after attacking");
 
 // Default offsets
-ConVar bot_gamerules_offset("afkbot_gamerules_offset", "5", 0, "offset for gamerules object");
 ConVar bot_const_point_master_offset("afkbot_const_mstr_offset", "852", 0, "TF2 OFFSET for Point Master Class");
+ConVar bot_const_round_offset("afkbot_const_round_offset", "852", 0, "TF2 OFFSET for Round Class");
 
 
 // Default skill settings
-ConVar bot_skill("afkbot_bot_aimskill", "0.5", FCVAR_NOTIFY, "aim skill level", true, 0.0f, true, 1.0f);
-ConVar bot_sensitivity("afkbot_bot_sensitivity", "8.0", FCVAR_NOTIFY, "turning sensitivity");
-ConVar bot_braveness("afkbot_bot_braveness", "0.5", FCVAR_NOTIFY, "braveness", true, 0.0f, true, 1.0f);
-ConVar bot_visrevs("afkbot_bot_visrevs", "4", FCVAR_NOTIFY, "vision revisions");
-ConVar bot_visrevs_client("afkbot_bot_visrevs_client", "6", FCVAR_NOTIFY, "client vision revisions");
-ConVar bot_pathrevs("afkbot_bot_pathrevs", "128", FCVAR_NOTIFY, "path revisions");
-ConVar bot_defrate("afkbot_defrate", "0.24", 0, "rate for bots to defend");
-ConVar bot_beliefmulti("afkbot_beliefmulti", "20.0", 0, "multiplier for increasing bot belief");
-ConVar bot_belief_fade("afkbot_belief_fade", "0.75", 0, "the multiplayer rate bot belief decreases");
-ConVar bot_projectile_tweak("afkbot_projtweak", "0.05", 0, "Tweaks the bots knowledge of projectiles and gravity");
-ConVar bot_general_difficulty("afkbot_skill", "0.6", 0, "General difficulty of the bots. 0.5 = stock, < 0.5 easier, > 0.5 = harder");
-ConVar bot_bossattackfactor("afkbot_bossattackfactor", "1.0", 0, "the higher the more often the bots will shoot the boss");
-ConVar bot_enemyshootfov("afkbot_enemyshootfov", "0.97", 0, "the fov dot product before the bot shoots an enemy 0.7 = 45 degrees");
-ConVar bot_enemyshoot_gravgun_fov("afkbot_enemyshoot_gravgun_fov", "0.98", 0, "the fov dot product before the bot shoots an enemy 0.98 = 11 degrees");
-ConVar bot_anglespeed("afkbot_anglespeed", "0.21", 0, "smaller number will make bots turn slower (1 = instant turn but may overshoot)");
-ConVar bot_listen_dist("afkbot_listen_dist", "512", 0, "the distance for bots to hear things");
-ConVar bot_footstep_speed("afkbot_footstep_speed", "250", 0, "the speed players can go when you first hear them make footsteps");
+ConVar bot_skill("afkbot_aimskill", "0.5", FCVAR_NOTIFY, "aim skill level", true, 0.0f, true, 1.0f);
+ConVar bot_sensitivity("afkbot_sensitivity", "8.0", FCVAR_NOTIFY, "turning sensitivity");
+ConVar bot_braveness("afkbot_braveness", "0.5", FCVAR_NOTIFY, "braveness", true, 0.0f, true, 1.0f);
+ConVar bot_visrevs("afkbot_visrevs", "4", FCVAR_NOTIFY, "vision revisions");
+ConVar bot_visrevs_client("afkbot_visrevs_client", "6", FCVAR_NOTIFY, "client vision revisions");
+ConVar bot_pathrevs("afkbot_pathrevs", "128", FCVAR_NOTIFY, "path revisions");
+ConVar bot_defrate("afkbot_defrate", "0.24", FCVAR_NOTIFY, "rate for bots to defend");
+ConVar bot_beliefmulti("afkbot_beliefmulti", "20.0", FCVAR_NOTIFY, "multiplier for increasing bot belief");
+ConVar bot_belief_fade("afkbot_belief_fade", "0.75", FCVAR_NOTIFY, "the multiplayer rate bot belief decreases");
+ConVar bot_projectile_tweak("afkbot_projtweak", "0.05", FCVAR_NOTIFY, "Tweaks the bots knowledge of projectiles and gravity");
+ConVar bot_general_difficulty("afkbot_skill", "0.6", FCVAR_NOTIFY, "General difficulty of the bots. 0.5 = stock, < 0.5 easier, > 0.5 = harder");
+ConVar bot_bossattackfactor("afkbot_bossattackfactor", "1.0", FCVAR_NOTIFY, "the higher the more often the bots will shoot the boss");
+ConVar bot_enemyshootfov("afkbot_enemyshootfov", "0.97", FCVAR_NOTIFY, "the fov dot product before the bot shoots an enemy 0.7 = 45 degrees");
+ConVar bot_enemyshoot_gravgun_fov("afkbot_enemyshoot_gravgun_fov", "0.98", FCVAR_NOTIFY, "the fov dot product before the bot shoots an enemy 0.98 = 11 degrees");
+ConVar bot_anglespeed("afkbot_anglespeed", "0.21", FCVAR_NOTIFY, "smaller number will make bots turn slower (1 = instant turn but may overshoot)");
+ConVar bot_listen_dist("afkbot_listen_dist", "512", FCVAR_NOTIFY, "the distance for bots to hear things");
+ConVar bot_footstep_speed("afkbot_footstep_speed", "250", FCVAR_NOTIFY, "the speed players can go when you first hear them make footsteps");
 
 
 ConVar *sv_gravity = NULL;

@@ -7,7 +7,7 @@
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License, version 3.0, as published by the
  * Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
@@ -30,21 +30,18 @@
 
 #include <ISmmPlugin.h>
 #include <sh_vector.h>
+
 #include "rcbot2/engine_wrappers.h"
-#include <shareddefs.h>
 
 #include <convar.h>
 
-#include <iplayerinfo.h>
-#include <IEngineTrace.h>
-#include <filesystem.h>
-#include <IEffects.h>
-#include <igameevents.h>
-#include <engine/ivdebugoverlay.h>
-#include <irecipientfilter.h>
-
-#include <IPlayerHelpers.h>
-#include <IGameHelpers.h>
+#include "iplayerinfo.h"
+#include "IEngineTrace.h"
+#include "filesystem.h"
+#include "IEffects.h"
+#include "igameevents.h"
+#include "engine/ivdebugoverlay.h"
+#include "irecipientfilter.h"
 
 #include "ISDKTools.h"
 
@@ -60,8 +57,9 @@ class IMoveHelper;
  * Note: Uncomment one of the pre-defined virtual functions in order to use it.
  */
 class AFKBot : public SDKExtension,
-	           public IConCommandBaseAccessor,
-			   public IMetamodListener
+	public IConCommandBaseAccessor,
+	public IMetamodListener,
+	public IClientListener
 {
 public:
 	/**
@@ -73,7 +71,7 @@ public:
 	 * @return			True to succeed loading, false to fail.
 	 */
 	virtual bool SDK_OnLoad(char *error, size_t maxlen, bool late);
-	
+
 	/**
 	 * @brief This is called right before the extension is unloaded.
 	 */
@@ -138,9 +136,6 @@ public:
 	static CBaseEntity *TF2_GetPlayerWeaponSlot(edict_t *pPlayer, int iSlot);
 	static void TF2_EquipWeapon(edict_t *pPlayer, CBaseEntity *pWeapon);
 
-	static void HudTextMessage(edict_t *pEntity, const char *szMessage);
-	static void BroadcastTextMessage(const char *szMessage);
-
 public:
 	bool LevelInit(char const *pMapName, char const *pMapEntities, char const *pOldLevel, char const *pLandmarkName, bool loadGame, bool background);
 	void LevelShutdown();
@@ -151,33 +146,13 @@ public:
 
 	void PlayerRunCmd(CUserCmd *ucmd, IMoveHelper *moveHelper);
 
-	bool ClientConnect(edict_t *pEntity, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen);
 	void ClientPutInServer(edict_t *pEntity, char const *playername);
 	void ClientDisconnect(edict_t *pEntity);
-	void ClientSettingsChanged(edict_t *pEdict);
 	void ClientActive(edict_t *pEntity, bool bLoadGame);
 
-#if SOURCE_ENGINE >= SE_ORANGEBOX
-	void ClientCommand(edict_t *pEntity, const CCommand &args);
-#else
-	void ClientCommand(edict_t *pEntity);
-#endif
-
-	void SetCommandClient(int index);
+	void OnMaxPlayersChanged(int newvalue);
 
 	bool FireGameEvent(IGameEvent *pEvent, bool bDontBroadcast);
-
-public:
-#if SOURCE_ENGINE == SE_DOTA
-	void OnClientCommand(CEntityIndex index, const CCommand &args);
-#elif SOURCE_ENGINE >= SE_ORANGEBOX
-	void OnClientCommand(edict_t *pEntity, const CCommand &args);
-#else
-	void OnClientCommand(edict_t *pEntity);
-#endif
-#if SOURCE_ENGINE == SE_CSS || SOURCE_ENGINE == SE_CSGO
-	void OnSendClientCommand(edict_t *pPlayer, const char *szFormat);
-#endif
 };
 
 extern AFKBot g_AFKBot;
@@ -188,8 +163,6 @@ extern IGameEventManager2 *gameevents;
 extern IServerPluginCallbacks *vsp_callback;
 extern ICvar *icvar;
 extern IFileSystem *filesystem;
-extern IGameEventManager2 *gameeventmanager2;
-extern IGameEventManager *gameeventmanager;
 extern IPlayerInfoManager *playerinfomanager;
 extern IServerPluginHelpers *helpers;
 extern IServerGameClients* gameclients;
@@ -197,6 +170,8 @@ extern IEngineTrace *enginetrace;
 extern IEffects *effects;
 extern IServerGameEnts *servergameents;
 extern IVDebugOverlay *debugoverlay;
+
+extern ISDKTools *g_pSDKTools;
 
 extern sp_nativeinfo_t g_ExtensionNatives[];
 

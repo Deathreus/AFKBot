@@ -21,10 +21,10 @@ void UTIL_FindServerClassnamePrint(const char *name_cmd)
 {
 	edict_t *current;
 
-	int maxEntities = gpGlobals->maxEntities;
-	for (int i = 0; i < maxEntities; i++)
+	register short int maxEnts = (short int)MAX_ENTITIES;
+	for (register short int i = 0; i < maxEnts; i++)
 	{
-		current = engine->PEntityOfEntIndex(i);
+		current = INDEXENT(i);
 		if (current == NULL)
 		{
 			continue;
@@ -80,11 +80,11 @@ void UTIL_FindServerClassPrint(const char *name_cmd)
 	}
 }
 /**
- * Searches for a named Server Class.
- *
- * @param name		Name of the top-level server class.
- * @return 		Server class matching the name, or NULL if none found.
- */
+* Searches for a named Server Class.
+*
+* @param name		Name of the top-level server class.
+* @return 		Server class matching the name, or NULL if none found.
+*/
 ServerClass *UTIL_FindServerClass(const char *name)
 {
 	ServerClass *pClass = gamedll->GetAllServerClasses();
@@ -103,12 +103,12 @@ ServerClass *UTIL_FindServerClass(const char *name)
 }
 
 /**
- * Recursively looks through a send table for a given named property.
- *
- * @param pTable	Send table to browse.
- * @param name		Property to search for.
- * @return 		SendProp pointer on success, NULL on failure.
- */
+* Recursively looks through a send table for a given named property.
+*
+* @param pTable	Send table to browse.
+* @param name		Property to search for.
+* @return 		SendProp pointer on success, NULL on failure.
+*/
 bool g_PrintProps = false;
 
 SendProp *UTIL_FindSendProp(SendTable *pTable, const char *name)
@@ -116,7 +116,7 @@ SendProp *UTIL_FindSendProp(SendTable *pTable, const char *name)
 	int count = pTable->GetNumProps();
 	//SendTable *pTable;
 	SendProp *pProp;
-	for (int i = 0; i < count; i++)
+	for (int i = 0; i<count; i++)
 	{
 		pProp = pTable->GetProp(i);
 
@@ -139,52 +139,49 @@ SendProp *UTIL_FindSendProp(SendTable *pTable, const char *name)
 	return NULL;
 }
 /**
- * vim: set ts=4 :
- * =============================================================================
- * SourceMod
- * Copyright (C) 2004-2008 AlliedModders LLC.  All rights reserved.
- * =============================================================================
- *
- * This program is free software; you can redistribute it and/or modify it under
- * the terms of the GNU General Public License, version 3.0, as published by the
- * Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
- * details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * As a special exception, AlliedModders LLC gives you permission to link the
- * code of this program (as well as its derivative works) to "Half-Life 2," the
- * "Source engine," the "SourcePawn JIT," and any Game MODs that run on software
- * by the Valve Corporation.  You must obey the GNU General Public License in
- * all respects for all other code used.  Additionally, AlliedModders LLC grants
- * this exception to all derivative works.  AlliedModders LLC defines further
- * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
- * or <http://www.sourcemod.net/license.php>.
- *
- * Version: $Id$
- */
+* vim: set ts=4 :
+* =============================================================================
+* SourceMod
+* Copyright (C) 2004-2008 AlliedModders LLC.  All rights reserved.
+* =============================================================================
+*
+* This program is free software; you can redistribute it and/or modify it under
+* the terms of the GNU General Public License, version 3.0, as published by the
+* Free Software Foundation.
+*
+* This program is distributed in the hope that it will be useful, but WITHOUT
+* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+* FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public License along with
+* this program.  If not, see <http://www.gnu.org/licenses/>.
+*
+* As a special exception, AlliedModders LLC gives you permission to link the
+* code of this program (as well as its derivative works) to "Half-Life 2," the
+* "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+* by the Valve Corporation.  You must obey the GNU General Public License in
+* all respects for all other code used.  Additionally, AlliedModders LLC grants
+* this exception to all derivative works.  AlliedModders LLC defines further
+* exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+* or <http://www.sourcemod.net/license.php>.
+*
+* Version: $Id$
+*/
 
 /*struct sm_sendprop_info_t
 {
-	SendProp *prop;					// Property instance.
-	unsigned int actual_offset;		// Actual computed offset. 
+	SendProp *prop;					//<- Property instance.
+	unsigned int actual_offset;		//<- Actual computed offset.
 };*/
 
-bool UTIL_FindInSendTable(SendTable *pTable,
-	const char *name,
-	sm_sendprop_info_t *info,
-	unsigned int offset)
+bool UTIL_FindInSendTable(SendTable *pTable, const char *name, sm_sendprop_info_t *info, unsigned int offset)
 {
 	const char *pname;
 	int props = pTable->GetNumProps();
 	SendProp *prop;
 
-	for (int i = 0; i < props; i++)
+	for (int i = 0; i<props; i++)
 	{
 		prop = pTable->GetProp(i);
 		pname = prop->GetName();
@@ -249,7 +246,6 @@ edict_t *CClassInterfaceValue::GetEntity(edict_t *edict)
 	m_berror = false;
 
 	GetData(edict);
-
 
 	if (m_berror)
 		return NULL;
@@ -325,50 +321,73 @@ void CClassInterfaceValue::FindOffset()
 	else
 	{
 		CBotGlobals::botMessage(NULL,1,"Warning: Couldn't find getprop %s for class %s",m_value,m_class);
-	}
+}
 #endif
 }
 /* Find and save all offsets at load to save CPU */
 void CClassInterface::Init()
 {
 	//	DEFINE_GETPROP			ID						Class			Variable	Offset
+	DEFINE_GETPROP(GETPROP_TF2MINIBUILDING, "CObjectSentryGun", "m_bMiniBuilding", 0);
+
+	DEFINE_GETPROP(GETPROP_TF2SCORE, "CTFPlayerResource", "m_iTotalScore", 0);
 	DEFINE_GETPROP(GETPROP_ENTITY_FLAGS, "CBaseEntity", "m_iEffectFlags", 0);
-	DEFINE_GETPROP(GETPROP_ALL_ENTOWNER, "CBaseEntity", "m_hOwnerEntity", 0);
-	DEFINE_GETPROP(GETPROP_GROUND_ENTITY, "CBasePlayer", "m_hGroundEntity", 0);
-	DEFINE_GETPROP(GETPROP_ORIGIN, "CBasePlayer", "m_vecOrigin", 0);
-	DEFINE_GETPROP(GETPROP_TAKEDAMAGE, "CBaseEntity", "m_takedamage", 0);
-	DEFINE_GETPROP(GETPROP_WATERLEVEL, "CBasePlayer", "m_nWaterLevel", 0);
-	DEFINE_GETPROP(GETPROP_SIMULATIONTIME, "CBaseEntity", "m_flSimulationTime", 0);
 	DEFINE_GETPROP(GETPROP_TEAM, "CBaseEntity", "m_iTeamNum", 0);
 	DEFINE_GETPROP(GETPROP_PLAYERHEALTH, "CBasePlayer", "m_iHealth", 0);
 	DEFINE_GETPROP(GETPROP_EFFECTS, "CBaseEntity", "m_fEffects", 0);
 	DEFINE_GETPROP(GETPROP_AMMO, "CBasePlayer", "m_iAmmo", 0);
-	DEFINE_GETPROP(GETPROP_MOVETYPE, "CBaseEntity", "movetype", 0);
+	DEFINE_GETPROP(GETPROP_TF2_NUMHEALERS, "CTFPlayer", "m_nNumHealers", 0);
+	DEFINE_GETPROP(GETPROP_TF2_CONDITIONS, "CTFPlayer", "m_nPlayerCond", 0);
 	DEFINE_GETPROP(GETPROP_VELOCITY, "CBasePlayer", "m_vecVelocity[0]", 0);
+	DEFINE_GETPROP(GETPROP_TF2CLASS, "CTFPlayer", "m_PlayerClass", 4);
+	DEFINE_GETPROP(GETPROP_TF2SPYMETER, "CTFPlayer", "m_flCloakMeter", 0);
+	DEFINE_GETPROP(GETPROP_TF2SPYDISGUISED_TEAM, "CTFPlayer", "m_nDisguiseTeam", 0);
+	DEFINE_GETPROP(GETPROP_TF2SPYDISGUISED_CLASS, "CTFPlayer", "m_nDisguiseClass", 0);
+	DEFINE_GETPROP(GETPROP_TF2SPYDISGUISED_TARGET_INDEX, "CTFPlayer", "m_iDisguiseTargetIndex", 0);
+	DEFINE_GETPROP(GETPROP_TF2SPYDISGUISED_DIS_HEALTH, "CTFPlayer", "m_iDisguiseHealth", 0);
+	DEFINE_GETPROP(GETPROP_TF2MEDIGUN_HEALING, "CWeaponMedigun", "m_bHealing", 0);
+	DEFINE_GETPROP(GETPROP_TF2MEDIGUN_TARGETTING, "CWeaponMedigun", "m_hHealingTarget", 0);
+	DEFINE_GETPROP(GETPROP_TF2TELEPORTERMODE, "CObjectTeleporter", "m_iObjectMode", 0);
 	DEFINE_GETPROP(GETPROP_CURRENTWEAPON, "CBaseCombatCharacter", "m_hActiveWeapon", 0);
+	DEFINE_GETPROP(GETPROP_TF2UBERCHARGE_LEVEL, "CWeaponMedigun", "m_flChargeLevel", 0);
+	DEFINE_GETPROP(GETPROP_TF2SENTRYHEALTH, "CObjectSentrygun", "m_iHealth", 0);
+	DEFINE_GETPROP(GETPROP_TF2DISPENSERHEALTH, "CObjectDispenser", "m_iHealth", 0);
+	DEFINE_GETPROP(GETPROP_TF2TELEPORTERHEALTH, "CObjectTeleporter", "m_iHealth", 0);
+	DEFINE_GETPROP(GETPROP_TF2OBJECTCARRIED, "CObjectSentrygun", "m_bCarried", 0);
+	DEFINE_GETPROP(GETPROP_TF2OBJECTUPGRADELEVEL, "CObjectSentrygun", "m_iUpgradeLevel", 0);
+	DEFINE_GETPROP(GETPROP_TF2OBJECTUPGRADEMETAL, "CObjectSentrygun", "m_iUpgradeMetal", 0);
+	DEFINE_GETPROP(GETPROP_TF2OBJECTMAXHEALTH, "CObjectSentrygun", "m_iMaxHealth", 0);
+	DEFINE_GETPROP(GETPROP_TF2OBJECTSHELLS, "CObjectSentrygun", "m_iAmmoShells", 0);
+	DEFINE_GETPROP(GETPROP_TF2OBJECTROCKETS, "CObjectSentrygun", "m_iAmmoRockets", 0);
+	DEFINE_GETPROP(GETPROP_TF2DISPMETAL, "CObjectDispenser", "m_iAmmoMetal", 0);
 	DEFINE_GETPROP(GETPROP_MAXSPEED, "CBasePlayer", "m_flMaxspeed", 0);
 	DEFINE_GETPROP(GETPROP_CONSTRAINT_SPEED, "CTFPlayer", "m_flConstraintSpeedFactor", 0);
+	DEFINE_GETPROP(GETPROP_TF2OBJECTBUILDING, "CObjectDispenser", "m_bBuilding", 0);
 	DEFINE_GETPROP(GETPROP_ENTITYFLAGS, "CBasePlayer", "m_fFlags", 0);
-	DEFINE_GETPROP(GETPROP_SEQUENCE, "CBaseAnimating", "m_nSequence", 0);
-	DEFINE_GETPROP(GETPROP_CYCLE, "CBaseAnimating", "m_flCycle", 0);
 
 	// hl2dm
 	DEFINE_GETPROP(GETPROP_HL2DM_PHYSCANNON_ATTACHED, "CWeaponPhysCannon", "m_hAttachedObject", 0);
 	DEFINE_GETPROP(GETPROP_HL2DM_PHYSCANNON_OPEN, "CWeaponPhysCannon", "m_bOpen", 0);
 	DEFINE_GETPROP(GETPROP_HL2DM_PLAYER_AUXPOWER, "CHL2MP_Player", "m_flSuitPower", 0);
 	DEFINE_GETPROP(GETPROP_HL2DM_LADDER_ENT, "CHL2MP_Player", "m_hLadder", 0);
+
 	DEFINE_GETPROP(GETPROP_WEAPONLIST, "CBaseCombatCharacter", "m_hMyWeapons", 0);
 	DEFINE_GETPROP(GETPROP_WEAPONSTATE, "CBaseCombatWeapon", "m_iState", 0);
+
 	DEFINE_GETPROP(GETPROP_WEAPONCLIP1, "CBaseCombatWeapon", "m_iClip1", 0);
 	DEFINE_GETPROP(GETPROP_WEAPONCLIP2, "CBaseCombatWeapon", "m_iClip2", 0);
+
 	DEFINE_GETPROP(GETPROP_WEAPON_AMMOTYPE1, "CBaseCombatWeapon", "m_iPrimaryAmmoType", 0);
 	DEFINE_GETPROP(GETPROP_WEAPON_AMMOTYPE2, "CBaseCombatWeapon", "m_iSecondaryAmmoType", 0);
 
-	//dods
 	DEFINE_GETPROP(GETPROP_DOD_PLAYERCLASS, "CDODPlayer", "m_iPlayerClass", 0);
 	DEFINE_GETPROP(GETPROP_DOD_DES_PLAYERCLASS, "CDODPlayer", "m_iDesiredPlayerClass", 0);
+
 	DEFINE_GETPROP(GETPROP_DOD_STAMINA, "CDODPlayer", "m_flStamina", 0);
 	DEFINE_GETPROP(GETPROP_DOD_PRONE, "CDODPlayer", "m_bProne", 0);
+	DEFINE_GETPROP(GETPROP_SEQUENCE, "CBaseAnimating", "m_nSequence", 0);
+	DEFINE_GETPROP(GETPROP_CYCLE, "CBaseAnimating", "m_flCycle", 0);
+
 	DEFINE_GETPROP(GETPROP_DOD_CP_NUMCAPS, "CDODObjectiveResource", "m_iNumControlPoints", 0);
 	DEFINE_GETPROP(GETPROP_DOD_CP_POSITIONS, "CDODObjectiveResource", "m_vCPPositions", 0);
 	DEFINE_GETPROP(GETPROP_DOD_CP_ALLIES_REQ_CAP, "CDODObjectiveResource", "m_iAlliesReqCappers", 0);
@@ -380,6 +399,7 @@ void CClassInterface::Init()
 	DEFINE_GETPROP(GETPROP_DOD_MACHINEGUN_DEPLOYED, "CDODBipodWeapon", "m_bDeployed", 0);
 	DEFINE_GETPROP(GETPROP_DOD_ROCKET_DEPLOYED, "CDODBaseRocketWeapon", "m_bDeployed", 0);
 	DEFINE_GETPROP(GETPROP_DOD_SEMI_AUTO, "CDODFireSelectWeapon", "m_bSemiAuto", 0);
+	DEFINE_GETPROP(GETPROP_MOVETYPE, "CBaseEntity", "movetype", 0);
 	DEFINE_GETPROP(GETPROP_DOD_GREN_THROWER, "CDODBaseGrenade", "m_hThrower", 0);
 	DEFINE_GETPROP(GETPROP_DOD_SCORE, "CDODPlayerResource", "m_iScore", 0);
 	DEFINE_GETPROP(GETPROP_DOD_OBJSCORE, "CDODPlayerResource", "m_iObjScore", 0);
@@ -400,35 +420,18 @@ void CClassInterface::Init()
 	DEFINE_GETPROP(GETPROP_DOD_BOMB_TEAM, "CDODBombTarget", "m_iBombingTeam", 0);
 	DEFINE_GETPROP(GETPROP_DOD_CP_VISIBLE, "CDODObjectiveResource", "m_bCPIsVisible", 0);
 
-	//tf2
-	DEFINE_GETPROP(GETPROP_TF2_NUMHEALERS, "CTFPlayer", "m_nNumHealers", 0);
-	DEFINE_GETPROP(GETPROP_TF2_CONDITIONS, "CTFPlayer", "m_nPlayerCond", 0);
-	DEFINE_GETPROP(GETPROP_TF2CLASS, "CTFPlayer", "m_PlayerClass", 4);
-	DEFINE_GETPROP(GETPROP_TF2SPYMETER, "CTFPlayer", "m_flCloakMeter", 0);
-	DEFINE_GETPROP(GETPROP_TF2SPYDISGUISED_TEAM, "CTFPlayer", "m_nDisguiseTeam", 0);
-	DEFINE_GETPROP(GETPROP_TF2SPYDISGUISED_CLASS, "CTFPlayer", "m_nDisguiseClass", 0);
-	DEFINE_GETPROP(GETPROP_TF2SPYDISGUISED_TARGET_INDEX, "CTFPlayer", "m_iDisguiseTargetIndex", 0);
-	DEFINE_GETPROP(GETPROP_TF2SPYDISGUISED_DIS_HEALTH, "CTFPlayer", "m_iDisguiseHealth", 0);
-	DEFINE_GETPROP(GETPROP_TF2MEDIGUN_HEALING, "CWeaponMedigun", "m_bHealing", 0);
-	DEFINE_GETPROP(GETPROP_TF2MEDIGUN_TARGETTING, "CWeaponMedigun", "m_hHealingTarget", 0);
-	DEFINE_GETPROP(GETPROP_TF2TELEPORTERMODE, "CObjectTeleporter", "m_iObjectMode", 0);
-	DEFINE_GETPROP(GETPROP_TF2UBERCHARGE_LEVEL, "CWeaponMedigun", "m_flChargeLevel", 0);
-	DEFINE_GETPROP(GETPROP_TF2SENTRYHEALTH, "CObjectSentrygun", "m_iHealth", 0);
-	DEFINE_GETPROP(GETPROP_TF2DISPENSERHEALTH, "CObjectDispenser", "m_iHealth", 0);
-	DEFINE_GETPROP(GETPROP_TF2TELEPORTERHEALTH, "CObjectTeleporter", "m_iHealth", 0);
-	DEFINE_GETPROP(GETPROP_TF2OBJECTCARRIED, "CObjectSentrygun", "m_bCarried", 0);
-	DEFINE_GETPROP(GETPROP_TF2OBJECTUPGRADELEVEL, "CObjectSentrygun", "m_iUpgradeLevel", 0);
-	DEFINE_GETPROP(GETPROP_TF2OBJECTUPGRADEMETAL, "CObjectSentrygun", "m_iUpgradeMetal", 0);
-	DEFINE_GETPROP(GETPROP_TF2OBJECTMAXHEALTH, "CObjectSentrygun", "m_iMaxHealth", 0);
-	DEFINE_GETPROP(GETPROP_TF2OBJECTSHELLS, "CObjectSentrygun", "m_iAmmoShells", 0);
-	DEFINE_GETPROP(GETPROP_TF2OBJECTROCKETS, "CObjectSentrygun", "m_iAmmoRockets", 0);
-	DEFINE_GETPROP(GETPROP_TF2DISPMETAL, "CObjectDispenser", "m_iAmmoMetal", 0);
-	DEFINE_GETPROP(GETPROP_TF2OBJECTBUILDING, "CObjectDispenser", "m_bBuilding", 0);
-	DEFINE_GETPROP(GETPROP_TF2MINIBUILDING, "CObjectSentryGun", "m_bMiniBuilding", 0);
-	DEFINE_GETPROP(GETPROP_TF2SCORE, "CTFPlayerResource", "m_iTotalScore", 0);
+	DEFINE_GETPROP(GETPROP_ALL_ENTOWNER, "CBaseEntity", "m_hOwnerEntity", 0);
+	DEFINE_GETPROP(GETPROP_GROUND_ENTITY, "CBasePlayer", "m_hGroundEntity", 0);
+	DEFINE_GETPROP(GETPROP_ORIGIN, "CBasePlayer", "m_vecOrigin", 0);
+	DEFINE_GETPROP(GETPROP_TAKEDAMAGE, "CBaseEntity", "m_takedamage", 0);
+
 	DEFINE_GETPROP(GETPROP_SENTRY_ENEMY, "CObjectSentrygun", "m_hEnemy", 0);
+	DEFINE_GETPROP(GETPROP_WATERLEVEL, "CBasePlayer", "m_nWaterLevel", 0);
+
 	DEFINE_GETPROP(GETPROP_TF2_TELEPORT_RECHARGETIME, "CObjectTeleporter", "m_flRechargeTime", 0);
 	DEFINE_GETPROP(GETPROP_TF2_TELEPORT_RECHARGEDURATION, "CObjectTeleporter", "m_flCurrentRechargeDuration", 0);
+
+	/* All the nutty TF2 Objective Resource Stuff */
 	DEFINE_GETPROP(GETPROP_TF2_OBJTR_m_vCPPositions, "CTFObjectiveResource", "m_vCPPositions", 0);
 	DEFINE_GETPROP(GETPROP_TF2_OBJTR_m_bCPIsVisible, "CTFObjectiveResource", "m_bCPIsVisible", 0);
 	DEFINE_GETPROP(GETPROP_TF2_OBJTR_m_iTeamIcons, "CTFObjectiveResource", "m_iTeamIcons", 0);
@@ -459,12 +462,17 @@ void CClassInterface::Init()
 	DEFINE_GETPROP(GETPROP_TF2_RNDTM_m_bInSetup, "CTeamRoundTimer", "m_bInSetup", 0);
 	DEFINE_GETPROP(GETPROP_PIPEBOMB_OWNER, "CTFGrenadePipebombProjectile", "m_hThrower", 0);
 	DEFINE_GETPROP(GETPROP_SENTRYGUN_PLACING, "CObjectSentrygun", "m_bPlacing", 0);
+
 	DEFINE_GETPROP(GETPROP_TF2_TAUNTYAW, "CTFPlayer", "m_flTauntYaw", 0);
 	DEFINE_GETPROP(GETPROP_TF2_HIGHFIVE, "CTFPlayer", "m_bIsReadyToHighFive", 0);
 	DEFINE_GETPROP(GETPROP_TF2_HIGHFIVE_PARTNER, "CTFPlayer", "m_hHighFivePartner", 0);
+	//8480 : m_hCarriedObject
+	//8484 : m_bCarryingObject
 	DEFINE_GETPROP(GETPROP_TF2_ISCARRYINGOBJ, "CTFPlayer", "m_bCarryingObject", 0);
 	DEFINE_GETPROP(GETPROP_TF2_GETCARRIEDOBJ, "CTFPlayer", "m_hCarriedObject", 0);
 	DEFINE_GETPROP(GETPROP_TF2_ATTRIBUTELIST, "CTFPlayer", "m_AttributeList", 0);
+
+	// Addon stuff for TF2
 	DEFINE_GETPROP(GETPROP_TF2_ITEMDEFINITIONINDEX, "CTFWeaponBase", "m_iItemDefinitionIndex", 0);
 	DEFINE_GETPROP(GETPROP_TF2_DISGUISEWEARABLE, "CTFWearable", "m_bDisguiseWearable", 0);
 	DEFINE_GETPROP(GETPROP_TF2_ENTITYLEVEL, "CBaseAttributableItem", "m_iEntityLevel", 0);
@@ -472,6 +480,7 @@ void CClassInterface::Init()
 	DEFINE_GETPROP(GETPROP_TF2_RAGEDRAINING, "CTFPlayer", "m_bRageDraining", 0);
 	DEFINE_GETPROP(GETPROP_TF2_ENTITYQUALITY, "CBaseAttributableItem", "m_iEntityQuality", 0);
 	DEFINE_GETPROP(GETPROP_TF2_WEAPON_INITIALIZED, "CBaseAttributableItem", "m_bInitialized", 0);
+	DEFINE_GETPROP(GETPROP_SIMULATIONTIME, "CBaseEntity", "m_flSimulationTime", 0);
 	DEFINE_GETPROP(GETPROP_TF2_INUPGRADEZONE, "CTFPlayer", "m_bInUpgradeZone", 0);
 	DEFINE_GETPROP(GETPROP_TF2_EXTRAWEARABLE, "CTFWeaponBase", "m_hExtraWearable", 0);
 	DEFINE_GETPROP(GETPROP_TF2_EXTRAWEARABLEVIEWMODEL, "CTFWeaponBase", "m_hExtraWearableViewModel", 0);
@@ -494,10 +503,10 @@ void CClassInterface::Init()
 void CClassInterface::SetupCTeamRoundTimer(CTeamRoundTimer *pTimer)
 {
 	/*
-		GETPROP_TF2_RNDTM_m_flTimerEndTime,
-		GETPROP_TF2_RNDTM_m_nSetupTimeLength,
-		GETPROP_TF2_RNDTM_m_bInSetup,
-		*/
+	GETPROP_TF2_RNDTM_m_flTimerEndTime,
+	GETPROP_TF2_RNDTM_m_nSetupTimeLength,
+	GETPROP_TF2_RNDTM_m_bInSetup,
+	*/
 	pTimer->m_flTimerEndTime = g_GetProps[GETPROP_TF2_RNDTM_m_flTimerEndTime].GetFloatPointer(pTimer->m_Resource);
 	pTimer->m_nSetupTimeLength = g_GetProps[GETPROP_TF2_RNDTM_m_nSetupTimeLength].GetIntPointer(pTimer->m_Resource);
 	pTimer->m_bInSetup = g_GetProps[GETPROP_TF2_RNDTM_m_bInSetup].GetBoolPointer(pTimer->m_Resource);
@@ -581,12 +590,10 @@ edict_t *CClassInterface::FindEntityByClassnameNearest(Vector vstart, const char
 	edict_t *pfound = NULL;
 	float fDist;
 	const char *pszClassname;
-	// speed up loop by by using smaller ints in register
-	register short int max = (short int)gpGlobals->maxEntities;
 
-	for (register short int i = 0; i < max; i++)
+	for (register short int i = 0; i < MAX_ENTITIES; i++)
 	{
-		current = engine->PEntityOfEntIndex(i);
+		current = INDEXENT(i);
 
 		if (current == NULL)
 			continue;
@@ -624,9 +631,9 @@ edict_t *CClassInterface::FindEntityByNetClassNearest(Vector vstart, const char 
 	float fMindist = 8192.0f;
 	float fDist;
 
-	for (short int i = 0; i < gpGlobals->maxEntities; i++)
+	for (register short int i = 0; i < MAX_ENTITIES; i++)
 	{
-		current = engine->PEntityOfEntIndex(i);
+		current = INDEXENT(i);
 		if (current == NULL)
 		{
 			continue;
@@ -665,9 +672,9 @@ const char *CClassInterface::FindEntityNetClass(int start, const char *classname
 {
 	edict_t *current;
 
-	for (int i = ((start != -1) ? start : 0); i < gpGlobals->maxEntities; i++)
+	for (register short int i = 0; i < MAX_ENTITIES; i++)
 	{
-		current = engine->PEntityOfEntIndex(i);
+		current = INDEXENT(i);
 		if (current == NULL)
 		{
 			continue;
@@ -696,7 +703,7 @@ edict_t *CClassInterface::FindEntityByNetClass(int start, const char *classname)
 {
 	edict_t *current;
 
-	for (int i = ((start != -1) ? start : 0); i < gpGlobals->maxEntities; i++)
+	for (register short int i = 0; i < MAX_ENTITIES; i++)
 	{
 		current = engine->PEntityOfEntIndex(i);
 		if (current == NULL)

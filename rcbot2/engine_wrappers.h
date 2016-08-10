@@ -38,14 +38,5 @@ extern CGlobalVars *gpGlobals;
 #define MM_Format g_SMAPI->Format
 #endif
 
-inline int IndexOfEdict(const edict_t *pEdict)
-{
-	return engine->IndexOfEdict(pEdict);
-}
-inline edict_t *PEntityOfEntIndex(int iEntIndex)
-{
-	return engine->PEntityOfEntIndex(iEntIndex);
-}
-
 #endif //_INCLUDE_SOURCE_ENGINE_WRAPPERS_
 

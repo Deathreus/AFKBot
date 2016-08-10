@@ -297,11 +297,6 @@ void CBotTF2ShootLastEnemyPosition::Execute(CBot *pBot, CBotSchedule *pSchedule)
 
 }
 
-void CBotTF2ShootLastEnemyPosition::DebugString(char *string)
-{
-	sprintf(string, "CBotTF2ShootLastEnemyPosition\nm_vPosition = (%0.4f,%0.4f,%0.4f)", m_vPosition.x, m_vPosition.y, m_vPosition.z);
-}
-
 
 /////////////
 
@@ -348,11 +343,6 @@ void CBotTF2WaitHealthTask::Execute(CBot *pBot, CBotSchedule *pSchedule)
 	}
 }
 
-void CBotTF2WaitHealthTask::DebugString(char *string)
-{
-	sprintf(string, "CBotTF2WaitHealthTask\nm_vOrigin = (%0.4f,%0.4f,%0.4f)", m_vOrigin.x, m_vOrigin.y, m_vOrigin.z);
-}
-
 
 CBotTF2WaitFlagTask::CBotTF2WaitFlagTask(Vector vOrigin, bool bFind)
 {
@@ -395,10 +385,6 @@ void CBotTF2WaitFlagTask::Execute(CBot *pBot, CBotSchedule *pSchedule)
 	}
 }
 
-void CBotTF2WaitFlagTask::DebugString(char *string)
-{
-	sprintf(string, "CBotTF2WaitFlagTask\nm_vOrigin = (%0.4f,%0.4f,%0.4f)", m_vOrigin.x, m_vOrigin.y, m_vOrigin.z);
-}
 //////////
 /*CBotDODBomb :: CBotDODBomb ( int iBombType, int iBombID, edict_t *pBomb, Vector vPosition, int iPrevOwner )
 {
@@ -803,11 +789,6 @@ void CBotTF2AttackPoint::Execute(CBot *pBot, CBotSchedule *pSchedule)
 	}
 }
 
-void CBotTF2AttackPoint::DebugString(char *string)
-{
-	sprintf(string, "CBotTF2AttackPoint (%d,%0.1f,%0.1f,%0.1f,%d)", m_iArea, m_vOrigin.x, m_vOrigin.y, m_vOrigin.z, m_iRadius);
-}
-
 ////////////////////////
 void CPrimaryAttack::Execute(CBot *pBot, CBotSchedule *pSchedule)
 {
@@ -866,10 +847,6 @@ void CBotTF2PushPayloadBombTask::Execute(CBot *pBot, CBotSchedule *pSchedule)
 
 }
 
-void CBotTF2PushPayloadBombTask::DebugString(char *string)
-{
-	sprintf(string, "CBotTF2PushPayloadBombTask (%0.1f,%0.1f,%0.1f)", m_vOrigin.x, m_vOrigin.y, m_vOrigin.z);
-}
 ////////////////////////////////////////////////////////////////////////
 
 CBotTF2DefendPayloadBombTask::CBotTF2DefendPayloadBombTask(edict_t * pPayloadBomb)
@@ -912,10 +889,6 @@ void CBotTF2DefendPayloadBombTask::Execute(CBot *pBot, CBotSchedule *pSchedule)
 
 }
 
-void CBotTF2DefendPayloadBombTask::DebugString(char *string)
-{
-	sprintf(string, "CBotTF2DefendPayloadBombTask (%0.1f,%0.1f,%0.1f)", m_vOrigin.x, m_vOrigin.y, m_vOrigin.z);
-}
 //////////////////////
 CBotTF2DefendPoint::CBotTF2DefendPoint(int iArea, Vector vOrigin, int iRadius)
 {
@@ -976,11 +949,6 @@ void CBotTF2DefendPoint::Execute(CBot *pBot, CBotSchedule *pSchedule)
 	}
 }
 
-void CBotTF2DefendPoint::DebugString(char *string)
-{
-	sprintf(string, "CBotTF2DefendPoint\nm_iArea=%d\nm_vOrigin=(%0.1f,%0.1f,%0.1f,%d)", m_iArea, m_vOrigin.x, m_vOrigin.y, m_vOrigin.z, m_iRadius);
-}
-
 ///////////
 CBotTF2UpgradeBuilding::CBotTF2UpgradeBuilding(edict_t *pBuilding)
 {
@@ -1032,11 +1000,6 @@ void CBotTF2UpgradeBuilding::Execute(CBot *pBot, CBotSchedule *pSchedule)
 	}
 	else
 		Fail();
-}
-
-void CBotTF2UpgradeBuilding::DebugString(char *string)
-{
-	sprintf(string, "CBotTF2UpgradeBuilding");
 }
 
 /*void CBotHL2DMUseButton :: Execute (CBot *pBot,CBotSchedule *pSchedule)
@@ -1295,10 +1258,6 @@ void CBotTF2WaitAmmoTask::Execute(CBot *pBot, CBotSchedule *pSchedule)
 	}
 }
 
-void CBotTF2WaitAmmoTask::DebugString(char *string)
-{
-	sprintf(string, "CBotTF2WaitAmmoTask");
-}
 ///////////////////////////
 CBotTaskEngiPickupBuilding::CBotTaskEngiPickupBuilding(edict_t *pBuilding)
 {
@@ -1358,10 +1317,6 @@ void CBotTaskEngiPickupBuilding::Execute(CBot *pBot, CBotSchedule *pSchedule)
 	else
 		pBot->SetMoveTo((CBotGlobals::EntityOrigin(m_pBuilding)));
 }
-void CBotTaskEngiPickupBuilding::DebugString(char *string)
-{
-	sprintf(string, "CBotTaskEngiPickupBuilding");
-}
 
 /////////////////
 CBotTaskEngiPlaceBuilding::CBotTaskEngiPlaceBuilding(eEngiBuild iObject, Vector vOrigin)
@@ -1419,10 +1374,7 @@ void CBotTaskEngiPlaceBuilding::Execute(CBot *pBot, CBotSchedule *pSchedule)
 			pBot->PrimaryAttack();
 	}
 }
-void CBotTaskEngiPlaceBuilding::DebugString(char *string)
-{
-	sprintf(string, "CBotTaskEngiPlaceBuilding");
-}
+
 /////////////////////////////
 CBotUseLunchBoxDrink::CBotUseLunchBoxDrink()
 {
@@ -1971,12 +1923,6 @@ void CBotTFEngiBuildTask::Execute(CBot *pBot, CBotSchedule *pSchedule)
 	}
 }
 
-void CBotTFEngiBuildTask::DebugString(char *string)
-{
-	sprintf(string, "CBotTFEngiBuildTask (%d,%0.4f,%0.4f,%0.4f)", m_iObject, m_vOrigin.x, m_vOrigin.y, m_vOrigin.z);
-}
-
-
 ///////////////////////////////////////////////////////
 
 CFindGoodHideSpot::CFindGoodHideSpot(edict_t *pEntity)
@@ -2041,11 +1987,6 @@ CFindPathTask::CFindPathTask(edict_t *pEdict)
 	m_bGetPassedIntAsWaypointId = false;
 }
 
-void CFindPathTask::DebugString(char *string)
-{
-	sprintf(string, "CFindPathTask\n m_iInt = %d\n m_vVector = (%0.4f,%0.4f,%0.4f)", m_iInt, m_vVector.x, m_vVector.y, m_vVector.z);
-}
-
 void CFindPathTask::Execute(CBot *pBot, CBotSchedule *pSchedule)
 {
 	bool bFail = false;
@@ -2077,15 +2018,6 @@ void CFindPathTask::Execute(CBot *pBot, CBotSchedule *pSchedule)
 
 		pBot->m_fWaypointStuckTime = 0;
 
-#ifdef _DEBUG
-		CProfileTimer *timer = CProfileTimers::GetTimer(BOT_ROUTE_TIMER);
-
-		if ( CClients::clientsDebugging(BOT_DEBUG_PROFILE) )
-		{
-			timer->Start();
-		}
-#endif
-
 		if (pNav->WorkRoute(pBot->GetOrigin(),
 			m_vVector,
 			&bFail,
@@ -2100,20 +2032,10 @@ void CFindPathTask::Execute(CBot *pBot, CBotSchedule *pSchedule)
 		}
 		else
 			m_iInt = 1;
-
-#ifdef _DEBUG
-		if ( CClients::clientsDebugging(BOT_DEBUG_PROFILE) )
-		{
-			timer->Stop();
-		}
-#endif
-
-		pBot->DebugMsg(BOT_DEBUG_NAV, "Trying to work out route");
 	}
 
 	if (bFail)
 	{
-		pBot->DebugMsg(BOT_DEBUG_NAV, "Route Failed");
 		Fail();
 	}
 	else if (m_iInt == 2)
@@ -2121,22 +2043,14 @@ void CFindPathTask::Execute(CBot *pBot, CBotSchedule *pSchedule)
 		if (pBot->m_fWaypointStuckTime == 0)
 			pBot->m_fWaypointStuckTime = engine->Time() + RandomFloat(5.0f, 10.0f);
 
-		//if ( m_bNoInterruptions )
-		//{
-		//pBot->DebugMsg(BOT_DEBUG_NAV,"Found route");
-		//Complete(); // ~fin~
-		//}
-
 		if (!pBot->GetNavigator()->HasNextPoint())
 		{
-			pBot->DebugMsg(BOT_DEBUG_NAV, "Nowhere to go");
 			Complete(); // reached goal
 		}
 		else
 		{
 			if (pBot->MoveFailed())
 			{
-				pBot->DebugMsg(BOT_DEBUG_NAV, "moveFailed() == true");
 				Fail();
 				pBot->GetNavigator()->FailMove();
 			}
@@ -2358,22 +2272,12 @@ void CTF2_TauntTask::Execute(CBot *pBot, CBotSchedule *pSchedule)
 	}
 }
 
-void CTF2_TauntTask::DebugString(char *string)
-{
-	sprintf(string, "CTF2_TauntTask");
-}
-
 //////////////////////////////////////
 void CMoveToTask::Init()
 {
 	fPrevDist = 0;
 	//m_vVector = Vector(0,0,0);
 	//m_pEdict = NULL;
-}
-
-void CMoveToTask::DebugString(char *string)
-{
-	sprintf(string, "CMoveToTask\nm_vVector =(%0.4f,%0.4f,%0.4f)", m_vVector.x, m_vVector.y, m_vVector.z);
 }
 
 CMoveToTask::CMoveToTask(edict_t *pEdict)
@@ -2472,12 +2376,6 @@ void CBotTFRocketJump::Execute(CBot *pBot, CBotSchedule *pSchedule)
 	}
 }
 
-void CBotTFRocketJump::DebugString(char *string)
-{
-	sprintf(string, "CBotTFRocketJump");
-}
-
-
 //////////////////////////////////////////////////////
 
 CBotTFDoubleJump::CBotTFDoubleJump()
@@ -2502,10 +2400,6 @@ void CBotTFDoubleJump::Execute(CBot *pBot, CBotSchedule *pSchedule)
 	}
 }
 
-void CBotTFDoubleJump::DebugString(char *string)
-{
-	sprintf(string, "CbotTFDoublejump");
-}
 ///////////////////////////////////////////////
 void CSpyCheckAir::Execute(CBot *pBot, CBotSchedule *pSchedule)
 {
@@ -2534,7 +2428,7 @@ void CSpyCheckAir::Execute(CBot *pBot, CBotSchedule *pSchedule)
 		seenlist = 0;
 		m_bHitPlayer = false;
 
-		for (i = 1; i <= gpGlobals->maxClients; i++)
+		for (i = 1; i <= MAX_PLAYERS; i++)
 		{
 			pPlayer = INDEXENT(i);
 
@@ -2724,11 +2618,6 @@ void CSpyCheckAir::Execute(CBot *pBot, CBotSchedule *pSchedule)
 		}
 	}
 
-}
-
-void CSpyCheckAir::DebugString(char *string)
-{
-	sprintf(string, "CSpyCheckAir: Checking for spies");
 }
 
 /////////////////////////////////////////////
@@ -3516,12 +3405,6 @@ void CBotTF2SpySap::Execute(CBot *pBot, CBotSchedule *pSchedule)
 
 }
 
-void CBotTF2SpySap::DebugString(char *string)
-{
-	sprintf(string, "CBotTF2SpySap");
-}
-
-
 /////////////////////////////////////////////////////
 CBotTFUseTeleporter::CBotTFUseTeleporter(edict_t *pTele)
 {// going to use thIs 
@@ -3555,16 +3438,12 @@ void CBotTFUseTeleporter::Execute(CBot *pBot, CBotSchedule *pSchedule)
 	}
 
 	// FIX BUG
-	//if ( !((CBotFortress*)pBot)->IsTeleporterUseful(m_pTele) )
+	//if (!((CBotFortress*)pBot)->IsTeleporterUseful(m_pTele))
 	//	Fail();
 
 	if (m_fTime < engine->Time())
 	{
-		if (CClients::ClientsDebugging(BOT_DEBUG_TASK))
-			CClients::ClientDebugMsg(BOT_DEBUG_TASK, "TELEPORT: TIMEOUT", pBot);
-
 		Fail();
-
 	}
 	else
 	{
@@ -3596,26 +3475,11 @@ void CBotTFUseTeleporter::Execute(CBot *pBot, CBotSchedule *pSchedule)
 	}
 }
 
-void CBotTFUseTeleporter::DebugString(char *string)
-{
-	sprintf(string, "CBotTFUSeteleporter\nm_pTele = %x", (int)m_pTele.Get());
-}
-
 ///////////////////////////////////////////////////
 
 CAttackEntityTask::CAttackEntityTask(edict_t *pEdict)
 {
 	m_pEdict = pEdict;
-}
-
-void CAttackEntityTask::DebugString(char *string)
-{
-	int id = -1;
-
-	if (m_pEdict)
-		id = ENTINDEX(m_pEdict);
-
-	sprintf(string, "CAttackEntityTask (%d)", id);
 }
 
 void CAttackEntityTask::Init()
@@ -3859,10 +3723,6 @@ void CBotInvestigateHidePoint::Execute(CBot *pBot, CBotSchedule *pSchedule)
 	}
 }
 
-void CBotInvestigateHidePoint::DebugString(char *string)
-{
-	sprintf(string, "CBotInvestigateHidePoint");
-}
 //////
 
 /*void CAutoBuy :: init ()
@@ -3961,10 +3821,6 @@ void CFollowTask::Execute(CBot *pBot, CBotSchedule *pSchedule)
 		Complete();
 }
 
-void CFollowTask::DebugString(char *string)
-{
-	sprintf(string, "CFollowTask\nm_pFollow =(%s)", engine->GetPlayerNetworkIDString(m_pFollow));
-}
 ////////////////////////////////////////////////
 
 /*void CDODDropAmmoTask :: DebugString ( char *string )
@@ -4028,11 +3884,6 @@ void CCrouchHideTask::Init()
 	m_fHideTime = 0.0f;
 }
 
-void CCrouchHideTask::DebugString(char *string)
-{
-	sprintf(string, "CCrouchHideTask\nm_pHideFrom =(%s)", engine->GetPlayerNetworkIDString(m_pHideFrom));
-}
-
 void CCrouchHideTask::Execute(CBot *pBot, CBotSchedule *pSchedule)
 {
 	pBot->WantToListen(false);
@@ -4091,12 +3942,6 @@ void CCrouchHideTask::Execute(CBot *pBot, CBotSchedule *pSchedule)
 CHideTask::CHideTask(Vector vHideFrom)
 {
 	m_vHideFrom = vHideFrom;
-}
-
-
-void CHideTask::DebugString(char *string)
-{
-	sprintf(string, "CHideTask\nm_vHideFrom =(%0.4f,%0.4f,%0.4f)", m_vHideFrom.x, m_vHideFrom.y, m_vHideFrom.z);
 }
 
 void CHideTask::Init()
@@ -4836,11 +4681,6 @@ void CBotTF2AttackSentryGunTask::Execute(CBot *pBot, CBotSchedule *pSchedule)
 		// attack
 		pBot->HandleAttack(m_pWeapon, m_pSentryGun);
 	}
-}
-
-void CBotTF2AttackSentryGunTask::DebugString(char *string)
-{
-	sprintf(string, "CBotTF2AttackSentryGunTask");
 }
 
 /////////////

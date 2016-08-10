@@ -786,15 +786,6 @@ void CBotSchedule::Execute(CBot *pBot)
 			pTask->Fail(); // fail
 		else
 		{
-			if (CClients::ClientsDebugging(BOT_DEBUG_TASK))
-			{
-				char dbg[512];
-
-				pTask->DebugString(dbg);
-
-				CClients::ClientDebugMsg(BOT_DEBUG_TASK, dbg, pBot);
-			}
-
 			pTask->Execute(pBot, this); // run
 		}
 	}

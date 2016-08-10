@@ -499,34 +499,4 @@ private:
 	bool m_bOffsetApplied;
 };
 
-class CNavMeshNavigator : public IBotNavigator
-{
-public:
-	virtual bool WorkRoute(Vector vFrom, Vector vTo, bool *bFail, bool bRestart = true, bool bNoInterruptions = false, int iGoalId = -1, int iConditions = 0, int iDangerId = -1);
-
-	virtual Vector GetNextPoint();
-
-	virtual void UpdatePosition();
-
-	void FreeMapMemory();
-
-	void FreeAllMemory();
-
-	bool RouteFound();
-
-	bool HasNextPoint();
-
-	void RollBackPosition() {};
-
-	void Init();
-
-	void Belief(Vector origin, Vector facing, float fBelief, float fStrength, BotBelief iType){}; //bir3yk
-
-	//void RememberEnemyPosition ( Vector vOrigin );
-
-	//Vector GetEnemyPositionPinchPoint ( Vector vOrigin );
-private:
-	CNavMesh *m_pNavMesh;
-};
-
 #endif

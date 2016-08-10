@@ -1065,11 +1065,10 @@ public:
 
 	static edict_t *GetSentryOwner(edict_t *pSentry)
 	{
-		//for ( short int i = 1; i <= gpGlobals->maxClients; i ++ )
-		for (short int i = 0; i < MAX_PLAYERS; i++)
+		for (short int i = 1; i <= MAX_PLAYERS; i++)
 		{
 			if (m_SentryGuns[i].sentry.Get() == pSentry)
-				return INDEXENT(i + 1);
+				return INDEXENT(i);
 		}
 
 		return NULL;

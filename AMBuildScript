@@ -18,26 +18,26 @@ WinLinuxMac = ['windows', 'linux', 'mac']
 
 PossibleSDKs = {
   'episode1':  SDK('HL2SDK', '1.ep1', '1', 'EPISODEONE', WinLinux, 'episode1'),
+  'darkm':  SDK('HL2SDK-DARKM', '2.darkm', '2', 'DARKMESSIAH', WinOnly, 'darkm'),
   'ep2':  SDK('HL2SDKOB', '2.ep2', '3', 'ORANGEBOX', WinLinux, 'orangebox'),
+  'bgt':  SDK('HL2SDK-BGT', '2.bgt', '4', 'BLOODYGOODTIME', WinOnly, 'bgt'),
+  'eye':  SDK('HL2SDK-EYE', '2.eye', '5', 'EYE', WinOnly, 'eye'),
   'css':  SDK('HL2SDKCSS', '2.css', '6', 'CSS', WinLinuxMac, 'css'),
   'hl2dm':  SDK('HL2SDKHL2DM', '2.hl2dm', '7', 'HL2DM', WinLinuxMac, 'hl2dm'),
   'dods': SDK('HL2SDKDODS', '2.dods', '8', 'DODS', WinLinuxMac, 'dods'),
   'sdk2013': SDK('HL2SDK2013', '2.sdk2013', '9', 'SDK2013', WinLinuxMac, 'sdk2013'),
+  'bms':  SDK('HL2SDKBMS', '2.bms', '10', 'BMS', WinLinux, 'bms'),
   'tf2':  SDK('HL2SDKTF2', '2.tf2', '11', 'TF2', WinLinuxMac, 'tf2'),
   'l4d':  SDK('HL2SDKL4D', '2.l4d', '12', 'LEFT4DEAD', WinLinuxMac, 'l4d'),
   'nucleardawn': SDK('HL2SDKND', '2.nd', '13', 'NUCLEARDAWN', WinLinuxMac, 'nucleardawn'),
+  'contagion':  SDK('HL2SDKCONTAGION', '2.contagion', '14', 'CONTAGION', WinOnly, 'contagion'),
   'l4d2': SDK('HL2SDKL4D2', '2.l4d2', '15', 'LEFT4DEAD2', WinLinuxMac, 'l4d2'),
-  'darkm':  SDK('HL2SDK-DARKM', '2.darkm', '2', 'DARKMESSIAH', WinOnly, 'darkm'),
   'swarm':  SDK('HL2SDK-SWARM', '2.swarm', '16', 'ALIENSWARM', WinOnly, 'swarm'),
-  'bgt':  SDK('HL2SDK-BGT', '2.bgt', '4', 'BLOODYGOODTIME', WinOnly, 'bgt'),
-  'eye':  SDK('HL2SDK-EYE', '2.eye', '5', 'EYE', WinOnly, 'eye'),
-  'csgo': SDK('HL2SDKCSGO', '2.csgo', '20', 'CSGO', WinLinuxMac, 'csgo'),
-  'dota': SDK('HL2SDKDOTA', '2.dota', '21', 'DOTA', [], 'dota'),
   'portal2':  SDK('HL2SDKPORTAL2', '2.portal2', '17', 'PORTAL2', [], 'portal2'),
   'blade':  SDK('HL2SDKBLADE', '2.blade', '18', 'BLADE', WinLinux, 'blade'),
   'insurgency':  SDK('HL2SDKINSURGENCY', '2.insurgency', '19', 'INSURGENCY', WinLinuxMac, 'insurgency'),
-  'contagion':  SDK('HL2SDKCONTAGION', '2.contagion', '14', 'CONTAGION', WinOnly, 'contagion'),
-  'bms':  SDK('HL2SDKBMS', '2.bms', '10', 'BMS', WinLinux, 'bms'),
+  'csgo': SDK('HL2SDKCSGO', '2.csgo', '20', 'CSGO', WinLinuxMac, 'csgo'),
+  'dota': SDK('HL2SDKDOTA', '2.dota', '21', 'DOTA', [], 'dota'),
 }
 
 def ResolveEnvPath(env, folder):
@@ -102,9 +102,7 @@ class ExtensionConfig(object):
     if builder.options.sm_path:
       self.sm_root = builder.options.sm_path
     else:
-      self.sm_root = ResolveEnvPath('SOURCEMOD18', 'sourcemod-1.8')
-      if not self.sm_root:
-        self.sm_root = ResolveEnvPath('SOURCEMOD', 'sourcemod')
+      self.sm_root = ResolveEnvPath('SOURCEMOD', 'sourcemod')
       if not self.sm_root:
         self.sm_root = ResolveEnvPath('SOURCEMOD_DEV', 'sourcemod-central')
 
@@ -115,9 +113,7 @@ class ExtensionConfig(object):
     if builder.options.mms_path:
       self.mms_root = builder.options.mms_path
     else:
-      self.mms_root = ResolveEnvPath('MMSOURCE110', 'mmsource-1.10')
-      if not self.mms_root:
-        self.mms_root = ResolveEnvPath('MMSOURCE', 'metamod-1.10')
+      self.mms_root = ResolveEnvPath('MMSOURCE', 'metamod-1.10')
       if not self.mms_root:
         self.mms_root = ResolveEnvPath('MMSOURCE_DEV', 'mmsource-central')
 
@@ -156,6 +152,8 @@ class ExtensionConfig(object):
     # Finish up.
     cxx.includes += [
       os.path.join(self.sm_root, 'public'),
+      os.path.join(self.sm_root, 'public', 'extensions'),
+      os.path.join(self.sm_root, 'sourcepawn', 'include'),
     ]
 
   def configure_gcc(self, cxx):
@@ -333,13 +331,8 @@ class ExtensionConfig(object):
   def ConfigureForExtension(self, context, compiler):
     compiler.includes += [
       os.path.join(context.currentSourcePath, 'rcbot'),
-      os.path.join(context.currentSourcePath, 'asm',),
-	  os.path.join(context.currentSourcePath, 'CDetour',),
-	  os.path.join(context.currentSourcePath, 'CEntity',),
-	  os.path.join(context.currentSourcePath, 'sdk',),
-      os.path.join(self.sm_root, 'public'),
-      os.path.join(self.sm_root, 'public', 'extensions'),
-      os.path.join(self.sm_root, 'sourcepawn', 'include'),
+	  os.path.join(context.currentSourcePath, 'sdk'),
+	  os.path.join(context.currentSourcePath, 'lib'),
     ]
     return compiler
 
@@ -444,7 +437,7 @@ class ExtensionConfig(object):
       compiler.linkflags.append('-liconv')
       dynamic_libs = ['libtier0.dylib', 'libvstdlib.dylib']
     elif builder.target.platform == 'windows':
-      libs = ['tier0', 'tier1', 'vstdlib', 'mathlib']
+      libs = ['tier0', 'tier1', 'tier2', 'vstdlib', 'mathlib']
       if sdk.name in ['swarm', 'blade', 'insurgency', 'csgo', 'dota']:
         libs.append('interfaces')
       for lib in libs:

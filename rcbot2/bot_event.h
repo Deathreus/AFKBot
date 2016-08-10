@@ -39,7 +39,6 @@ using namespace std;
 class CBotEventInterface;
 class IBotEventInterface;
 
-class KeyValues;
 class IGameEvent;
 
 class CBotEvent

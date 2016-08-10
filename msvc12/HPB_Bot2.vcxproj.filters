@@ -23,9 +23,6 @@
     <ClCompile Include="..\rcbot2\bot_client.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\rcbot2\bot_commands.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\rcbot2\bot_configfile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -44,12 +41,6 @@
     <ClCompile Include="..\rcbot2\bot_globals.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\rcbot2\bot_kv.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\rcbot2\bot_menu.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\rcbot2\bot_mods.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -57,9 +48,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\rcbot2\bot_schedule.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\rcbot2\bot_sigscan.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\rcbot2\bot_squads.cpp">
@@ -104,6 +92,9 @@
     <ClCompile Include="..\sdk\smsdk_ext.cpp">
       <Filter>Extension</Filter>
     </ClCompile>
+    <ClCompile Include="..\rcbot2\bot_gamerules.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\rcbot2\bot.h">
@@ -116,9 +107,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\rcbot2\bot_client.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\rcbot2\bot_commands.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\rcbot2\bot_configfile.h">
@@ -148,12 +136,6 @@
     <ClInclude Include="..\rcbot2\bot_globals.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\rcbot2\bot_kv.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\rcbot2\bot_menu.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\rcbot2\bot_mods.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -164,9 +146,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\rcbot2\bot_schedule.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\rcbot2\bot_sigscan.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\rcbot2\bot_squads.h">
@@ -199,9 +178,6 @@
     <ClInclude Include="..\rcbot2\bot_weapons.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\rcbot2\bot_wpt_color.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\rcbot2\bot_wpt_dist.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -226,12 +202,15 @@
     <ClInclude Include="..\sdk\smsdk_ext.h">
       <Filter>Extension</Filter>
     </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_gamerules.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <Library Include="..\lib\public\mathlib.lib" />
+    <Library Include="..\lib\public\tier0.lib" />
+    <Library Include="..\lib\public\tier1.lib" />
     <Library Include="..\lib\public\vstdlib.lib" />
     <Library Include="..\lib\public\tier2.lib" />
-    <Library Include="..\lib\public\tier1.lib" />
-    <Library Include="..\lib\public\tier0.lib" />
-    <Library Include="..\lib\public\mathlib.lib" />
   </ItemGroup>
 </Project>

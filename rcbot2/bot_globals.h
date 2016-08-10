@@ -36,15 +36,10 @@
 
 #include "bot_mods.h"
 #include "bot_const.h" // for Mod id
-#include "bot_commands.h" // for main rcbot command
 
 #ifdef _WIN32
 #include <ctype.h>
 #endif
-
-#define MAX_MAP_STRING_LEN 64
-#define MAX_PATH_LEN 512
-#define MAX_ENTITIES 2048
 
 class CBotGlobals
 {
@@ -64,11 +59,9 @@ public:
 
 	static inline bool IsPlayer(edict_t *pEdict)
 	{
-		static int index;
+		static int index = ENTINDEX(pEdict);
 
-		index = ENTINDEX(pEdict);
-
-		return (index > 0) && (index <= gpGlobals->maxClients);
+		return (index > 0) && (index <= MaxClients());
 	}
 
 	static bool WalkableFromTo(edict_t *pPlayer, Vector v_src, Vector v_dest);
@@ -209,9 +202,6 @@ public:
 	static bool IsBreakableOpen(edict_t *pBreakable);
 
 	static Vector GetVelocity(edict_t *pPlayer);
-
-	////////
-	static CBotCommandContainer *m_pCommands;
 
 	static void ReadRCBotFolder();
 

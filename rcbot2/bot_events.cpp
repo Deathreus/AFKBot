@@ -31,7 +31,6 @@
 
 #include "../extension.h"
 
-#include "igameevents.h"
 #include "bot.h"
 #include "bot_event.h"
 #include "bot_strings.h"
@@ -429,7 +428,7 @@ void CBulletImpactEvent::Execute(IBotEventInterface *pEvent)
 
 	if (pBot)
 	{
-		pBot->Shotmiss();
+		pBot->ShotMiss();
 	}
 }
 /////////////////////////////////////////
@@ -974,7 +973,7 @@ int userid = szCappers[0];
 int team = 0;
 
 // find the team - should be a player index
-if ( (userid >= 0) && (userid <= gpGlobals->maxClients) )
+if ( (userid >= 0) && (userid <= MAX_PLAYERS) )
 {
 pPlayer = INDEXENT(userid);
 team = CClassInterface::GetTeam(pPlayer);
@@ -1126,10 +1125,12 @@ void CBotEvents::SetupEvents()
 	AddEvent(new CBulletImpactEvent());
 	AddEvent(new CFlagEvent());
 	AddEvent(new CPlayerSpawnEvent());
+
 	////////////// css
 	/*AddEvent(new CRoundStartEvent());
 	AddEvent(new CBombPickupEvent());
 	AddEvent(new CBombDroppedEvent());*/
+
 	////////////// dods
 	/*AddEvent(new CDODChangeClass());
 	AddEvent(new CDODBombPlanted());
@@ -1141,6 +1142,7 @@ void CBotEvents::SetupEvents()
 	AddEvent(new CDODRoundActive());
 	AddEvent(new CDODRoundWin());
 	AddEvent(new CDODRoundOver());*/
+
 	////////////// tf2
 	AddEvent(new CTF2BuiltObjectEvent());
 	AddEvent(new CTF2ChangeClass());
@@ -1165,18 +1167,6 @@ void CBotEvents::SetupEvents()
 	AddEvent(new CTF2RoundActive());
 	AddEvent(new CTF2PointStartTouch());
 	AddEvent(new CTF2PointEndTouch());
-
-	/*
-	pumpkin_lord_summoned
-	merasmus_summoned
-	eyeball_boss_summoned
-
-	pumpkin_lord_killed
-	merasmus_killed
-	merasmus_escaped
-	eyeball_boss_killed
-	eyeball_boss_escaped
-	*/
 
 	AddEvent(new CBossSummonedEvent("pumpkin_lord_summoned"));
 	AddEvent(new CBossSummonedEvent("merasmus_summoned"));

@@ -488,7 +488,7 @@ CBotWeapon *CBotWeapons::AddWeapon(CWeapon *pWeaponInfo, int iId, edict_t *pent,
 	}
 	else // find the weapon entity
 	{
-		for (i = (gpGlobals->maxClients + 1); i <= gpGlobals->maxEntities; i++)
+		for (i = (MAX_PLAYERS + 1); i <= MAX_ENTITIES; i++)
 		{
 			pEnt = INDEXENT(i);
 

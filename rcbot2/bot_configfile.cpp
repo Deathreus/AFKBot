@@ -44,7 +44,6 @@
 #include "eiface.h"
 #include "icvar.h"
 #include "bot.h"
-#include "bot_commands.h"
 #include "bot_client.h"
 #include "bot_globals.h"
 #include "bot_accessclient.h"

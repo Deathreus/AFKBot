@@ -37,27 +37,6 @@
 #include "bot_genclass.h"
 #include "bot_waypoint.h"
 
-/*#define WAYPOINT_LOC(x)\
-	{\
-	m_iLocations[i][j][k].x;\
-	}\
-
-#define EACH_WAYPOINT_LOC(x)\
-	{\
-			int i,j,k;\
-\
-		for ( i = 0; i < MAX_WPT_BUCKETS; i ++ )\
-		{\
-			for ( j = 0; j < MAX_WPT_BUCKETS; j ++ )\
-			{\
-				for ( k = 0; k < MAX_WPT_BUCKETS; k ++ )\
-				{\
-					x;\
-				}\
-			}\
-		}\
-	}\*/
-
 class CWaypoint;
 
 class CWaypointLocations

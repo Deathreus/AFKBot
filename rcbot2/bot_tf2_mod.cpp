@@ -45,9 +45,8 @@
 #include "bot_navigator.h"
 #include "bot_waypoint.h"
 #include "bot_waypoint_locations.h"
-//#include "bot_perceptron.h"
 #include "bot_tf2_points.h"
-#include "bot_sigscan.h"
+#include "bot_gamerules.h"
 
 #ifdef GetClassName
 #undef GetClassName
@@ -119,13 +118,19 @@ bool CTeamFortress2Mod::IsSuddenDeath()
 	// Bot weapon Randomizer -- leonardo
 	if (!mp_stalemate_enable || !mp_stalemate_enable->GetBool() || IsMapType(TF_MAP_ARENA))
 		return false;
-	
-	return CClassInterface::TF2_GetRoundState(GetGameRules()) == RoundState_Stalemate;
+
+	if (!CGameRulesObject::GetGameRules())
+		return false;
+
+	return CGameRulesObject::GameRules_GetProp("m_iRoundState") == RoundState_Stalemate;
 }
 
 bool CTeamFortress2Mod::IsMedievalMode()
 {
-	return CClassInterface::TF2_IsMedievalMode(GetGameRules());
+	if (!CGameRulesObject::GetGameRules())
+		return false;
+
+	return CGameRulesObject::GameRules_GetProp("m_bPlayingMedieval") == 1;
 }
 
 bool CTeamFortress2Mod::CheckWaypointForTeam(CWaypoint *pWpt, int iTeam)
@@ -177,27 +182,11 @@ void CTeamFortress2Mod::ModFrame()
 		}
 		else
 			CTeamFortress2Mod::m_ObjectiveResource.Think();
-		/*
-		if (m_pGameRules.Get() == NULL)
-		{
-		//m_pGameRules = CClassInterface::FindEntityByClassnameNearest(Vector(0, 0, 0), "tf_gamerules_data", 99999.0f, NULL);
-		m_pGameRules = CClassInterface::FindEntityByNetClass(MAX_PLAYERS + 1, "CTFGameRulesProxy");
-
-		if (m_pGameRules.Get())
-		{
-		const char *classname = m_pGameRules.Get()->GetClassName();
-
-		CBotGlobals::botMessage(NULL, 0, "Found gamerules %s", classname);
-		}
-		}*/
 	}
 }
 
 void CTeamFortress2Mod::InitMod()
 {
-	//	unsigned int i;
-	// Setup Weapons
-
 	CBots::ControlBotSetup(true);
 
 	CWeapons::LoadWeapons((m_szWeaponListName == NULL) ? "TF2" : m_szWeaponListName, TF2Weaps);
@@ -208,8 +197,6 @@ void CTeamFortress2Mod::InitMod()
 	CWeapons::addWeapon(new CWeapon(TF2Weaps[i++]));//.iSlot,TF2Weaps[i].szWeaponName,TF2Weaps[i].iId,TF2Weaps[i].m_iFlags,TF2Weaps[i].m_iAmmoIndex,TF2Weaps[i].minPrimDist,TF2Weaps[i].maxPrimDist,TF2Weaps[i].m_iPreference,TF2Weaps[i].m_fProjSpeed));
 	*/
 	CRCBotTF2UtilFile::LoadConfig();
-
-	//memset(g_fBotUtilityPerturb,0,sizeof(float)*TF_CLASS_MAX*BOT_UTIL_MAX);
 }
 
 
@@ -218,9 +205,8 @@ void CTeamFortress2Mod::MapInit()
 	CBotMod::MapInit();
 
 	unsigned int i = 0;
-	string_t mapname = gpGlobals->mapname;
 
-	const char *szmapname = mapname.ToCStr();
+	const char *szmapname = STRING(gpGlobals->mapname);
 
 	m_pResourceEntity = NULL;
 	m_ObjectiveResource.m_ObjectiveResource = NULL;
@@ -610,7 +596,7 @@ void CTeamFortress2Mod::FindMediGun(edict_t *pPlayer)
 
 	vOrigin = CBotGlobals::EntityOrigin(pPlayer);
 
-	for (i = (MAX_PLAYERS + 1); i < gpGlobals->maxEntities; i++)
+	for (i = (MAX_PLAYERS + 1); i < MAX_ENTITIES; i++)
 	{
 		pEnt = INDEXENT(i);
 

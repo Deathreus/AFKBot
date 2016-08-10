@@ -36,13 +36,9 @@
 #include "bot.h"
 #include "bot_genclass.h"
 #include "bot_client.h"
-#include "bot_wpt_color.h"
-
-//#include "bot_navigator.h"
 
 class CWaypointVisibilityTable;
 class CClient;
-
 
 class CWaypointAuthorInfo
 {
@@ -68,24 +64,13 @@ typedef struct
 	Vector v_ground;
 }edict_wpt_pair_t;
 
-enum
-{
-	DRAWTYPE_EFFECTS = 0,
-	DRAWTYPE_DEBUGENGINE,
-	DRAWTYPE_DEBUGENGINE2,
-	DRAWTYPE_DEBUGENGINE3,
-	DRAWTYPE_BELIEF,
-	DRAWTYPE_MAX
-};
-
 class CWaypoint;
-
 
 class CWaypointType
 {
 public:
 
-	CWaypointType(int iBit, const char *szName, const char *szDescription, WptColor vColour, int iModBits = BITS_MOD_ALL, int iImportance = 0);
+	CWaypointType(int iBit, const char *szName, const char *szDescription, int iModBits = BITS_MOD_ALL, int iImportance = 0);
 
 	inline const char *GetName() { return m_szName; }
 	inline const char *GetDescription() { return m_szDescription; }
@@ -94,7 +79,6 @@ public:
 	inline int GetBits() { return m_iBit; }
 	inline void SetMods(int iMods){ m_iMods = iMods; }// input bitmask of mods (32 max)
 	inline bool ForMod(int iMod) { return ((1 << iMod)&m_iMods) == (1 << iMod); }
-	inline WptColor GetColour() { return m_vColour; }
 	inline int GetImportance() { return m_iImportance; }
 
 	bool operator < (CWaypointType *other)
@@ -111,7 +95,6 @@ private:
 	char *m_szName; // e.g. "jump"/"ladder"
 	char *m_szDescription; // e.g. "will jump here"/"will climb here"
 	int m_iImportance;
-	WptColor m_vColour;
 };
 
 
@@ -175,17 +158,11 @@ public:
 
 	static void PrintInfo(CWaypoint *pWpt, edict_t *pPrintTo, float duration = 6.0f);
 
-	static void DisplayTypesMenu(edict_t *pPrintTo);
-
 	static CWaypointType *GetType(const char *szType);
-
-	static void ShowTypesOnConsole(edict_t *pPrintTo);
 
 	static void SelectedType(CClient *pClient);
 
 	static void FreeMemory();
-
-	static WptColor GetColour(int iFlags);
 
 	static CWaypointType *GetTypeByIndex(unsigned int iIndex);
 
@@ -304,8 +281,6 @@ public:
 	// methods
 	void Touched();
 
-	void Draw(edict_t *pEdict, bool bDrawPaths, unsigned short int iDrawType);
-
 	bool AddPathTo(int iWaypointIndex);
 	void RemovePathTo(int iWaypointIndex);
 
@@ -333,10 +308,6 @@ public:
 
 	inline int GetArea() { return m_iArea; }
 	inline void SetArea(int area) { m_iArea = area; }
-
-	void DrawPaths(edict_t *pEdict, unsigned short int iDrawType);
-
-	void DrawPathBeam(CWaypoint *to, unsigned short int iDrawType);
 
 	inline void SetUsed(bool bUsed){ m_bUsed = bUsed; }
 
@@ -420,8 +391,6 @@ public:
 
 	static void DrawWaypoints(CClient *pClient);
 
-	static int AddWaypoint(CClient *pClient, const char *type1, const char *type2, const char *type3, const char *type4, bool bUseTemplate = false);
-
 	static int AddWaypoint(edict_t *pPlayer, Vector vOrigin, int iFlags = CWaypointTypes::W_FL_NONE, bool bAutoPath = false, int iYaw = 0, int iArea = 0, float fRadius = 0);
 
 	static void RemoveWaypoint(int iIndex);
@@ -458,10 +427,6 @@ public:
 	{
 		return ((iIndex >= 0) && (iIndex < m_iNumWaypoints));
 	}
-
-	static void PrecacheWaypointTexture();
-
-	static int WaypointTexture() { return m_iWaypointTexture; }
 
 	static void DeleteWaypoint(int iIndex);
 

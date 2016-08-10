@@ -10,25 +10,39 @@ typedef enum
 typedef enum
 {
 	GETPROP_UNDEF = -1,
-	GETPROP_ENTITY_FLAGS = 0,
-	GETPROP_ALL_ENTOWNER,
-	GETPROP_GROUND_ENTITY,
-	GETPROP_ORIGIN,
-	GETPROP_TAKEDAMAGE,
-	GETPROP_WATERLEVEL,
-	GETPROP_SIMULATIONTIME,
+	GETPROP_TF2SCORE = 0,
+	GETPROP_ENTITY_FLAGS,
 	GETPROP_TEAM,
 	GETPROP_PLAYERHEALTH,
 	GETPROP_EFFECTS,
 	GETPROP_AMMO,
-	GETPROP_MOVETYPE,
+	GETPROP_TF2_NUMHEALERS,
+	GETPROP_TF2_CONDITIONS,
 	GETPROP_VELOCITY,
+	GETPROP_TF2CLASS,
+	GETPROP_TF2SPYMETER, // CTFPlayer::
+	GETPROP_TF2SPYDISGUISED_TEAM, //CTFPlayer::m_nDisguiseTeam
+	GETPROP_TF2SPYDISGUISED_CLASS, //CTFPlayer::m_nDisguiseClass
+	GETPROP_TF2SPYDISGUISED_TARGET_INDEX, //CTFPlayer::m_iDisguiseTargetIndex
+	GETPROP_TF2SPYDISGUISED_DIS_HEALTH, //CTFPlayer::m_iDisguiseHealth
+	GETPROP_TF2MEDIGUN_HEALING,
+	GETPROP_TF2MEDIGUN_TARGETTING,
+	//SETPROP_SET_TICK_BASE,
+	GETPROP_TF2TELEPORTERMODE,
 	GETPROP_CURRENTWEAPON,
+	GETPROP_TF2UBERCHARGE_LEVEL,
+	GETPROP_TF2SENTRYHEALTH,
+	GETPROP_TF2DISPENSERHEALTH,
+	GETPROP_TF2TELEPORTERHEALTH,
+	GETPROP_TF2OBJECTCARRIED,
+	GETPROP_TF2OBJECTUPGRADELEVEL,
+	GETPROP_TF2OBJECTUPGRADEMETAL,
+	GETPROP_TF2OBJECTMAXHEALTH,
+	GETPROP_TF2DISPMETAL,
+	GETPROP_TF2MINIBUILDING,
 	GETPROP_MAXSPEED,
 	GETPROP_CONSTRAINT_SPEED,
-	GETPROP_ENTITYFLAGS,
-	GETPROP_SEQUENCE,
-	GETPROP_CYCLE,
+	GETPROP_TF2OBJECTBUILDING,
 	GETPROP_HL2DM_PHYSCANNON_ATTACHED,
 	GETPROP_HL2DM_PHYSCANNON_OPEN,
 	GETPROP_HL2DM_PLAYER_AUXPOWER,
@@ -43,6 +57,9 @@ typedef enum
 	GETPROP_DOD_DES_PLAYERCLASS,
 	GETPROP_DOD_STAMINA,
 	GETPROP_DOD_PRONE,
+	GETPROP_SEQUENCE,
+	GETPROP_CYCLE,
+	GETPROP_ENTITYFLAGS,
 	GETPROP_DOD_CP_NUMCAPS,
 	GETPROP_DOD_CP_POSITIONS,
 	GETPROP_DOD_CP_ALLIES_REQ_CAP,
@@ -54,6 +71,7 @@ typedef enum
 	GETPROP_DOD_MACHINEGUN_DEPLOYED,
 	GETPROP_DOD_ROCKET_DEPLOYED,
 	GETPROP_DOD_SEMI_AUTO,
+	GETPROP_MOVETYPE,
 	GETPROP_DOD_GREN_THROWER,
 	GETPROP_DOD_SCORE,
 	GETPROP_DOD_OBJSCORE,
@@ -70,35 +88,17 @@ typedef enum
 	GETPROP_DOD_BOMBSREMAINING,
 	GETPROP_DOD_PLANTINGBOMB,
 	GETPROP_DOD_DEFUSINGBOMB,
+	GETPROP_ALL_ENTOWNER,
 	GETPROP_DOD_BOMB_STATE,
 	GETPROP_DOD_BOMB_TEAM,
 	GETPROP_DOD_CP_VISIBLE,
-	GETPROP_TF2_NUMHEALERS,
-	GETPROP_TF2_CONDITIONS,
-	GETPROP_TF2CLASS,
-	GETPROP_TF2SPYMETER,
-	GETPROP_TF2SPYDISGUISED_TEAM,
-	GETPROP_TF2SPYDISGUISED_CLASS,
-	GETPROP_TF2SPYDISGUISED_TARGET_INDEX,
-	GETPROP_TF2SPYDISGUISED_DIS_HEALTH,
-	GETPROP_TF2MEDIGUN_HEALING,
-	GETPROP_TF2MEDIGUN_TARGETTING,
-	GETPROP_TF2TELEPORTERMODE,
-	GETPROP_TF2UBERCHARGE_LEVEL,
-	GETPROP_TF2SENTRYHEALTH,
-	GETPROP_TF2DISPENSERHEALTH,
-	GETPROP_TF2TELEPORTERHEALTH,
-	GETPROP_TF2OBJECTCARRIED,
-	GETPROP_TF2OBJECTUPGRADELEVEL,
-	GETPROP_TF2OBJECTUPGRADEMETAL,
-	GETPROP_TF2OBJECTMAXHEALTH,
+	GETPROP_GROUND_ENTITY,
+	GETPROP_ORIGIN,
+	GETPROP_TAKEDAMAGE,
+	GETPROP_SENTRY_ENEMY,
+	GETPROP_WATERLEVEL,
 	GETPROP_TF2OBJECTSHELLS,
 	GETPROP_TF2OBJECTROCKETS,
-	GETPROP_TF2DISPMETAL,
-	GETPROP_TF2OBJECTBUILDING,
-	GETPROP_TF2MINIBUILDING,
-	GETPROP_TF2SCORE,
-	GETPROP_SENTRY_ENEMY,
 	GETPROP_TF2_TELEPORT_RECHARGETIME,
 	GETPROP_TF2_TELEPORT_RECHARGEDURATION,
 	GETPROP_TF2_OBJTR_m_vCPPositions,
@@ -130,10 +130,10 @@ typedef enum
 	GETPROP_TF2_RNDTM_m_nSetupTimeLength,
 	GETPROP_TF2_RNDTM_m_bInSetup,
 	GETPROP_PIPEBOMB_OWNER,
-	GETPROP_SENTRYGUN_PLACING,
 	GETPROP_TF2_TAUNTYAW,
 	GETPROP_TF2_HIGHFIVE,
 	GETPROP_TF2_HIGHFIVE_PARTNER,
+	GETPROP_SENTRYGUN_PLACING,
 	GETPROP_TF2_ISCARRYINGOBJ,
 	GETPROP_TF2_GETCARRIEDOBJ,
 	GETPROP_TF2_ATTRIBUTELIST,
@@ -143,6 +143,7 @@ typedef enum
 	GETPROP_TF2_RAGEMETER,
 	GETPROP_TF2_RAGEDRAINING,
 	GETPROP_TF2_ENTITYQUALITY,
+	GETPROP_SIMULATIONTIME,
 	GETPROP_TF2_WEAPON_INITIALIZED,
 	GETPROP_TF2_INUPGRADEZONE,
 	GETPROP_TF2_EXTRAWEARABLE,
@@ -154,7 +155,7 @@ typedef enum
 	GETPROP_TF2_BUILDER_MODE,
 	GETPROP_TF2_CHARGE_RESIST_TYPE,
 	GETPROP_TF2_ROUNDSTATE,
-	GETPROP_TF2DESIREDCLASS,
+	GETPROP_TF2DESIREDCLASS, //Jrob
 	GET_PROPDATA_MAX
 }getpropdata_id;
 
@@ -370,7 +371,6 @@ public:
 	inline static float GetPlayerHealth(edict_t *edict) { return g_GetProps[GETPROP_PLAYERHEALTH].GetFloatFromInt(edict, 0); }
 	inline static int GetEffects(edict_t *edict) { return g_GetProps[GETPROP_EFFECTS].GetInt(edict, 0); }
 	inline static int *GetAmmoList(edict_t *edict) { return g_GetProps[GETPROP_AMMO].GetIntPointer(edict); }
-	//static unsigned int FindOffset(const char *szType,const char *szClass);
 	inline static int GetTF2NumHealers(edict_t *edict) { return g_GetProps[GETPROP_TF2_NUMHEALERS].GetInt(edict, 0); }
 	inline static int GetTF2Conditions(edict_t *edict) { return g_GetProps[GETPROP_TF2_CONDITIONS].GetInt(edict, 0); }
 	inline static bool GetVelocity(edict_t *edict, Vector *v) { return g_GetProps[GETPROP_VELOCITY].GetVector(edict, v); }
@@ -398,6 +398,10 @@ public:
 		*pitype = itype;
 		//, ]
 	}
+	inline static int GetChargeResistType(edict_t *pMedigun)
+	{
+		return g_GetProps[GETPROP_TF2_CHARGE_RESIST_TYPE].GetInt(pMedigun, 0);
+	}
 	inline static void TF2_SetBuilderMode(edict_t *pBuilder, int imode)
 	{
 		int *pitype = g_GetProps[GETPROP_TF2_BUILDER_MODE].GetIntPointer(pBuilder);
@@ -405,18 +409,14 @@ public:
 		*pitype = imode;
 		//GETPROP_TF2_BUILDER_MODE, ]
 	}
-	inline static int GetChargeResistType(edict_t *pMedigun)
-	{
-		return g_GetProps[GETPROP_TF2_CHARGE_RESIST_TYPE].GetInt(pMedigun, 0);
-	}
+	//Jrob
 	inline static int GetTF2DesiredClass(edict_t *edict) { return g_GetProps[GETPROP_TF2DESIREDCLASS].GetInt(edict, 0); }
 	inline static void SetTF2Class(edict_t *edict, int _class)
 	{
 		int* p = g_GetProps[GETPROP_TF2DESIREDCLASS].GetIntPointer(edict);
 		if (p != NULL) *p = _class;
 	}
-	inline static bool TF2_IsMedievalMode(void*gamerules) { if (!gamerules) return false; return g_GetProps[GETPROP_TF2_MEDIEVALMODE].GetBool(gamerules, false, false); }
-	inline static int TF2_GetRoundState(void *gamerules) { if (!gamerules) return false; return g_GetProps[GETPROP_TF2_ROUNDSTATE].GetInt(gamerules, 0, 0); }
+	//end Jrob
 	inline static float GetTF2SpyCloakMeter(edict_t *edict) { return g_GetProps[GETPROP_TF2SPYMETER].GetFloat(edict, 0); }
 	inline static int GetWaterLevel(edict_t *edict) { return g_GetProps[GETPROP_WATERLEVEL].GetInt(edict, 0); }
 	inline static void UpdateSimulationTime(edict_t *edict)
@@ -474,11 +474,10 @@ public:
 	inline static edict_t *GetSentryEnemy(edict_t *edict) { return g_GetProps[GETPROP_SENTRY_ENEMY].GetEntity(edict); }
 	inline static edict_t *GetOwner(edict_t *edict) { return g_GetProps[GETPROP_ALL_ENTOWNER].GetEntity(edict); }
 	inline static bool IsMedigunTargetting(edict_t *pgun, edict_t *ptarget) { return (g_GetProps[GETPROP_TF2MEDIGUN_TARGETTING].GetEntity(pgun) == ptarget); }
-	//static void SetTickBase ( edict_t *edict, int tickbase ) { return ;
+	//static void SetTickBase (edict_t *edict, int tickbase) { return ; }
 	inline static int IsTeleporterMode(edict_t *edict, eTeleMode mode) { return (g_GetProps[GETPROP_TF2TELEPORTERMODE].GetInt(edict, -1) == (int)mode); }
 	inline static edict_t *GetCurrentWeapon(edict_t *player) { return g_GetProps[GETPROP_CURRENTWEAPON].GetEntity(player); }
 	inline static int GetUberChargeLevel(edict_t *pWeapon) { return (int)(g_GetProps[GETPROP_TF2UBERCHARGE_LEVEL].GetFloat(pWeapon, 0)*100.0); }
-	//static void Test ();
 	inline static float GetSentryHealth(edict_t *edict) { return g_GetProps[GETPROP_TF2SENTRYHEALTH].GetFloatFromInt(edict, 100); }
 	inline static float GetDispenserHealth(edict_t *edict) { return g_GetProps[GETPROP_TF2DISPENSERHEALTH].GetFloatFromInt(edict, 100); }
 	inline static float GetTeleporterHealth(edict_t *edict) { return g_GetProps[GETPROP_TF2TELEPORTERHEALTH].GetFloatFromInt(edict, 100); }

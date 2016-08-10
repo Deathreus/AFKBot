@@ -209,15 +209,6 @@ void CBot::RunPlayerMove()
 
 	m_iSelectWeapon = 0;
 	m_iImpulse = 0;
-
-	if (CClients::ClientsDebugging(BOT_DEBUG_BUTTONS))
-	{
-		char dbg[512];
-
-		sprintf(dbg, "m_pButtons = %d/%x, Weapon Select = %d, impulse = %d", m_pCmd.buttons, m_pCmd.buttons, m_pCmd.weaponselect, m_pCmd.impulse);
-
-		CClients::ClientDebugMsg(BOT_DEBUG_BUTTONS, dbg, this);
-	}
 }
 
 bool CBot::StartGame()
@@ -603,18 +594,6 @@ CBotWeapon *CBot::GetBestWeapon(edict_t *pEnemy, bool bAllowMelee, bool bAllowMe
 bool CBot::IsHoldingPrimaryAttack()
 {
 	return m_pButtons->HoldingButton(IN_ATTACK);
-}
-
-void CBot::DebugMsg(int iLev, const char *szMsg)
-{
-	if (CClients::ClientsDebugging())
-	{
-		char szMsg2[512];
-
-		sprintf(szMsg2, "(%s):%s", m_pPI->GetName(), szMsg);
-
-		CClients::ClientDebugMsg(iLev, szMsg2, this);
-	}
 }
 
 void CBot::SquadInPosition()
@@ -1420,7 +1399,7 @@ void CBot::Killed(edict_t *pVictim, char *weapon)
 }
 
 // called when bot shoots a wall or similar object -i.e. not the enemy
-void CBot::Shotmiss()
+void CBot::ShotMiss()
 {
 
 }
@@ -1621,27 +1600,27 @@ void CBot::DebugBot(char *msg)
 		m_pSchedules->GetCurrentTask()->DebugString(task_string);
 
 	sprintf(msg, "Debugging bot: %s\n \
-				 				 		Current Util: %s \n \
-																		Current Schedule: %s\n \
-																												Current Task: {%s}\n \
-																																								Look Task:%s\n \
-																																																						Current Waypoint:%d\n \
-																																																																						Current Goal: %d\n \
-																																																																																								Danger: %0.2f pc\n \
-																																																																																																												Enemy: %s (name = '%s')\n \
-																																																																																																																																		---CONDITIONS---\n%s",
-																																																																																																																																		m_szBotName,
-																																																																																																																																		(m_CurrentUtil >= 0) ? g_szUtils[m_CurrentUtil] : "none",
-																																																																																																																																		m_pSchedules->IsEmpty() ? "none" : m_pSchedules->GetCurrentSchedule()->GetIDString(),
-																																																																																																																																		bHastask ? task_string : "none",
-																																																																																																																																		g_szLookTaskToString[m_iLookTask],
-																																																																																																																																		m_pNavigator->HasNextPoint() ? m_pNavigator->GetCurrentWaypointID() : -1,
-																																																																																																																																		m_pNavigator->HasNextPoint() ? m_pNavigator->GetCurrentGoalID() : -1,
-																																																																																																																																		(m_fCurrentDanger / MAX_BELIEF) * 100,
-																																																																																																																																		(pEnemy != NULL) ? pEnemy->GetClassName() : "none",
-																																																																																																																																		(p != NULL) ? p->GetName() : "none",
-																																																																																																																																		szConditions
-																																																																																																																																		);
+				 Current Util: %s \n \
+				 Current Schedule: %s\n \
+				 Current Task: {%s}\n \
+				 Look Task:%s\n \
+				 Current Waypoint:%d\n \
+				 Current Goal: %d\n \
+				 Danger: %0.2f pc\n \
+				 Enemy: %s (name = '%s')\n \
+				 ---CONDITIONS---\n%s",
+				 m_szBotName,
+				 (m_CurrentUtil >= 0) ? g_szUtils[m_CurrentUtil] : "none",
+				 m_pSchedules->IsEmpty() ? "none" : m_pSchedules->GetCurrentSchedule()->GetIDString(),
+				 bHastask ? task_string : "none",
+				 g_szLookTaskToString[m_iLookTask],
+				 m_pNavigator->HasNextPoint() ? m_pNavigator->GetCurrentWaypointID() : -1,
+				 m_pNavigator->HasNextPoint() ? m_pNavigator->GetCurrentGoalID() : -1,
+				 (m_fCurrentDanger / MAX_BELIEF) * 100,
+				 (pEnemy != NULL) ? pEnemy->GetClassName() : "none",
+				 (p != NULL) ? p->GetName() : "none",
+				 szConditions
+				 );
 
 }
 
@@ -1738,7 +1717,7 @@ void CBot::UpdateStatistics()
 
 		m_StatsCanUse.data = m_Stats.data;
 		m_Stats.data = 0;
-		m_iStatsIndex = 1; // reset to be sure in case of m_iStatsIndex > gpGlobals->maxClients
+		m_iStatsIndex = 1; // reset to be sure in case of m_iStatsIndex > maxClients
 
 		if (!m_uSquadDetail.b1.said_area_clear && (m_StatsCanUse.stats.m_iEnemiesInRange == 0) && (m_StatsCanUse.stats.m_iEnemiesVisible == 0) && (m_StatsCanUse.stats.m_iTeamMatesInRange > 0))
 		{
@@ -2044,21 +2023,6 @@ void CBot::DoMove()
 						m_fAvoidSideSwitch = engine->Time() + RandomFloat(2.0f, 3.0f);
 						m_bAvoidRight = !m_bAvoidRight;
 					}
-#ifndef __linux__
-					if (CClients::ClientsDebugging(BOT_DEBUG_THINK))
-					{
-						debugoverlay->AddLineOverlay(GetOrigin(), m_vAvoidOrigin, 0, 0, 255, false, 0.05f);
-						debugoverlay->AddLineOverlay(GetOrigin(), m_bAvoidRight ? (GetOrigin() + (vLeft*bot_avoid_strength.GetFloat())) : (GetOrigin() - (vLeft*bot_avoid_strength.GetFloat())), 0, 255, 0, false, 0.05f);
-						debugoverlay->AddLineOverlay(GetOrigin(), GetOrigin() + ((vMove / vMove.Length())*bot_avoid_strength.GetFloat()), 255, 0, 0, false, 0.05f);
-						debugoverlay->AddTextOverlayRGB(GetOrigin() + Vector(0, 0, 100), 0, 0.05, 255, 255, 255, 255, "Avoiding: %s", m_pAvoidEntity.Get()->GetClassName());
-					}
-#endif
-
-					//*/
-					//debugoverlay->AddLineOverlay (getOrigin(), m_vAvoidOrigin, 0,0,255, false, 0.05f);
-					//debugoverlay->AddLineOverlay (getOrigin(), m_bAvoidRight ? (getOrigin()+(vLeft*bot_avoid_strength.GetFloat())):(getOrigin()-(vLeft*bot_avoid_strength.GetFloat())), 0,255,0, false, 0.05f);
-					//debugoverlay->AddLineOverlay (getOrigin(), m_vMoveTo, 255,0,0, false, 0.05f);
-
 
 					if (m_bAvoidRight)
 						m_vMoveTo = GetOrigin() + ((vMove / vMove.Length())*bot_avoid_strength.GetFloat()) + (vLeft*bot_avoid_strength.GetFloat());
@@ -2243,24 +2207,6 @@ Vector CBot::GetAimVector(edict_t *pEntity)
 
 	m_fNextUpdateAimVector = engine->Time() + (1.0f - m_pProfile->m_fAimSkill)*0.2f;
 
-#ifndef __linux__
-	if (CClients::ClientsDebugging(BOT_DEBUG_AIM) && CClients::IsListenServerClient(CClients::Get(0)))
-	{
-		if (CClients::Get(0)->GetDebugBot() == GetEdict())
-		{
-			int line = 0;
-			float ftime = m_fNextUpdateAimVector - engine->Time();
-
-			debugoverlay->AddTextOverlayRGB(m_vAimVector, line++, ftime, 255, 200, 100, 230, "x Aiming Info");
-			debugoverlay->AddTextOverlayRGB(m_vAimVector, line++, ftime, 255, 200, 100, 230, "fDist = %0.2f", fDist);
-			debugoverlay->AddTextOverlayRGB(m_vAimVector, line++, ftime, 255, 200, 100, 230, "fSensitivity = %0.2f", fSensitivity);
-			debugoverlay->AddTextOverlayRGB(m_vAimVector, line++, ftime, 255, 200, 100, 230, "v_size = (%0.2f,%0.2f,%0.2f)", v_size.x, v_size.y, v_size.z);
-			debugoverlay->AddTextOverlayRGB(m_vAimVector, line++, ftime, 255, 200, 100, 230, "v_desired_offset = (%0.2f,%0.2f,%0.2f)", v_desired_offset.x, v_desired_offset.y, v_desired_offset.z);
-			debugoverlay->AddTextOverlayRGB(m_vAimVector, line++, ftime, 255, 200, 100, 230, "m_vAimOffset = (%0.2f,%0.2f,%0.2f)", m_vAimOffset.x, m_vAimOffset.y, m_vAimOffset.z);
-		}
-	}
-#endif
-
 	return m_vAimVector;
 }
 
@@ -2373,13 +2319,6 @@ Vector CBot::Snipe(Vector &vAiming)
 			fTime = RandomFloat(3.0f, 7.0f);
 
 		m_fLookAroundTime = engine->Time() + fTime;
-#ifndef __linux__
-		if (CClients::ClientsDebugging(BOT_DEBUG_NAV))
-		{
-			debugoverlay->AddLineOverlay(GetOrigin(), m_vWaypointAim, 255, 100, 100, false, fTime);
-			debugoverlay->AddLineOverlay(GetOrigin(), m_vWaypointAim + m_vLookAroundOffset, 255, 40, 40, false, fTime);
-		}
-#endif
 
 		//m_vWaypointAim = m_vWaypointAim + m_vLookAroundOffset;
 	}
@@ -2391,24 +2330,16 @@ void CBot::GetLookAtVector()
 {
 	static bool bDebug = false;
 
-	bDebug = CClients::ClientsDebugging(BOT_DEBUG_LOOK);
-
 	switch (m_iLookTask)
 	{
 	case LOOK_NONE:
 	{
 		StopLooking();
-
-		if (bDebug)
-			CClients::ClientDebugMsg(BOT_DEBUG_LOOK, "LOOK_NONE", this);
 	}
 	break;
 	case LOOK_VECTOR:
 	{
 		SetLookAt(m_vLookVector);
-
-		if (bDebug)
-			CClients::ClientDebugMsg(BOT_DEBUG_LOOK, "LOOK_VECTOR", this);
 	}
 	break;
 	case LOOK_EDICT:
@@ -2416,17 +2347,12 @@ void CBot::GetLookAtVector()
 		if (m_pLookEdict)
 			SetLookAt(GetAimVector(m_pLookEdict));
 		//setLookAt(CBotGlobals::entityOrigin(m_pLookEdict)+Vector(0,0,32));
-
-		if (bDebug)
-			CClients::ClientDebugMsg(BOT_DEBUG_LOOK, "LOOK_EDICT", this);
 	}
 	break;
 	case LOOK_GROUND:
 	{
 		SetLookAt(m_vMoveTo);
 		//setLookAt(getOrigin()-Vector(0,0,64));
-		if (bDebug)
-			CClients::ClientDebugMsg(BOT_DEBUG_LOOK, "LOOK_GROUND", this);
 	}
 	break;
 	case LOOK_ENEMY:
@@ -2437,9 +2363,6 @@ void CBot::GetLookAtVector()
 		}
 		else if (m_pLastEnemy)
 			SetLookAt(m_vLastSeeEnemy);
-
-		if (bDebug)
-			CClients::ClientDebugMsg(BOT_DEBUG_LOOK, "LOOK_ENEMY", this);
 	}
 	break;
 	case LOOK_LAST_ENEMY:
@@ -2448,8 +2371,6 @@ void CBot::GetLookAtVector()
 			SetLookAt(m_vLastSeeEnemy);
 		//else
 		// LOOK_WAYPOINT, below
-		if (bDebug)
-			CClients::ClientDebugMsg(BOT_DEBUG_LOOK, "LOOK_LAST_ENEMY", this);
 	}
 	break;
 	case LOOK_WAYPOINT_NEXT_ONLY:
@@ -2487,8 +2408,6 @@ void CBot::GetLookAtVector()
 			else {
 				vLook = m_pNavigator->GetPreviousPoint();
 				SetLookAt(vLook);
-
-				CClients::ClientDebugMsg(BOT_DEBUG_AIM, "no valid route point", this);
 			}
 		}
 		else if ((m_pLastEnemy.Get() != NULL) && ((m_fLastSeeEnemy + 5.0f) > engine->Time()))
@@ -2502,23 +2421,13 @@ void CBot::GetLookAtVector()
 			vLook = m_pNavigator->GetPreviousPoint();
 			SetLookAt(vLook);
 		}
-
-		if (bDebug)
-			CClients::ClientDebugMsg(BOT_DEBUG_LOOK, "LOOK_WAYPOINT", this);
 	}
 	break;
 	case LOOK_WAYPOINT_AIM:
 		SetLookAt(m_vWaypointAim);
-		if (bDebug)
-			CClients::ClientDebugMsg(BOT_DEBUG_LOOK, "LOOK_WAYPOINT_AIM", this);
 		break;
 	case LOOK_BUILD:
 	{
-		//if ( m_pEnemy && hasSomeConditions(CONDITION_SEE_CUR_ENEMY) )
-		//{
-		//	setLookAtTask((LOOK_ENEMY));
-		//	return;
-		//}
 		if (m_fLookAroundTime < engine->Time())
 		{
 			float fTime = RandomFloat(2.0f, 4.0f);
@@ -2528,17 +2437,11 @@ void CBot::GetLookAtVector()
 		}
 
 		SetLookAt(m_vWaypointAim + m_vLookAroundOffset);
-
-		if (bDebug)
-			CClients::ClientDebugMsg(BOT_DEBUG_LOOK, "LOOK_BUILD", this);
 	}
 	break;
 	case LOOK_SNIPE:
 	{
 		SetLookAt(Snipe(m_vWaypointAim));
-
-		if (bDebug)
-			CClients::ClientDebugMsg(BOT_DEBUG_LOOK, "LOOK_SNIPE", this);
 	}
 	break;
 	case LOOK_NOISE:
@@ -2555,9 +2458,6 @@ void CBot::GetLookAtVector()
 		}
 
 		SetLookAt(m_vListenPosition);
-
-		if (bDebug)
-			CClients::ClientDebugMsg(BOT_DEBUG_LOOK, "LOOK_NOISE", this);
 	}
 	break;
 
@@ -2577,18 +2477,11 @@ void CBot::GetLookAtVector()
 		}
 
 		SetLookAt(m_vLookAroundOffset);
-
-		if (bDebug)
-			CClients::ClientDebugMsg(BOT_DEBUG_LOOK, "LOOK_AROUND", this);
 	}
 	break;
 	case LOOK_HURT_ORIGIN:
 	{
 		SetLookAt(m_vHurtOrigin);
-
-
-		if (bDebug)
-			CClients::ClientDebugMsg(BOT_DEBUG_LOOK, "LOOK_HURT_ORIGIN", this);
 	}
 	break;
 	default:
@@ -3133,8 +3026,6 @@ void CBots::BotThink()
 	extern ConVar bot_stop;
 	extern ConVar bot_command;
 
-	bool bBotStop = bot_stop.GetInt() > 0;
-
 #ifdef _DEBUG
 	CProfileTimer *CBotsBotThink;
 	CProfileTimer *CBotThink;
@@ -3155,7 +3046,7 @@ void CBots::BotThink()
 
 		if (pBot->InUse())
 		{
-			if (!bBotStop)
+			if (!bot_stop.GetBool())
 			{
 #ifdef _DEBUG
 
@@ -3201,13 +3092,13 @@ void CBots::BotThink()
 #endif
 	/*if (NeedToKickBot())
 	{
-		KickRandomBot();
+	KickRandomBot();
 
-		if (m_iMaxBots >= 0)
-		{
-			m_iMaxBots--;
-			CBotGlobals::BotMessage(NULL, 0, "max bots changed to %d", m_iMaxBots);
-		}
+	if (m_iMaxBots >= 0)
+	{
+	m_iMaxBots--;
+	CBotGlobals::BotMessage(NULL, 0, "max bots changed to %d", m_iMaxBots);
+	}
 	}*/
 }
 
@@ -3305,88 +3196,88 @@ void CBots::MapInit()
 
 /*bool CBots::NeedToAddBot()
 {
-	int iClients = CBotGlobals::NumClients();
+int iClients = CBotGlobals::NumClients();
 
-	return (((m_iMinBots != -1) && (CBots::NumBots() < m_iMinBots)) || ((iClients < m_iMaxBots) && (m_iMaxBots != -1)));
+return (((m_iMinBots != -1) && (CBots::NumBots() < m_iMinBots)) || ((iClients < m_iMaxBots) && (m_iMaxBots != -1)));
 }
 
 bool CBots::NeedToKickBot()
 {
-	if (m_flAddKickBotTime < engine->Time())
-	{
-		if (((m_iMinBots != -1) && (CBots::NumBots() <= m_iMinBots)))
-			return false;
+if (m_flAddKickBotTime < engine->Time())
+{
+if (((m_iMinBots != -1) && (CBots::NumBots() <= m_iMinBots)))
+return false;
 
-		if ((m_iMaxBots > 0) && (CBotGlobals::NumClients() > m_iMaxBots))
-			return true;
-	}
+if ((m_iMaxBots > 0) && (CBotGlobals::NumClients() > m_iMaxBots))
+return true;
+}
 
-	return false;
+return false;
 }
 
 void CBots::KickRandomBot()
 {
-	dataUnconstArray<int> list;
-	int index;
-	CBot *tokick;
-	char szCommand[512];
-	//gather list of bots
-	for (short int i = 0; i < MAX_PLAYERS; i++)
-	{
-		if (m_Bots[i]->InUse())
-			list.Add(i);
-	}
+dataUnconstArray<int> list;
+int index;
+CBot *tokick;
+char szCommand[512];
+//gather list of bots
+for (short int i = 0; i < MAX_PLAYERS; i++)
+{
+if (m_Bots[i]->InUse())
+list.Add(i);
+}
 
-	if (list.IsEmpty())
-	{
-		CBotGlobals::BotMessage(NULL, 0, "kickRandomBot() : No bots to kick");
-		return;
-	}
+if (list.IsEmpty())
+{
+CBotGlobals::BotMessage(NULL, 0, "kickRandomBot() : No bots to kick");
+return;
+}
 
-	index = list.Random();
-	list.Clear();
+index = list.Random();
+list.Clear();
 
-	tokick = m_Bots[index];
+tokick = m_Bots[index];
 
-	sprintf(szCommand, "kickid %d\n", tokick->GetPlayerID());
+sprintf(szCommand, "kickid %d\n", tokick->GetPlayerID());
 
-	m_flAddKickBotTime = engine->Time() + 2.0f;
+m_flAddKickBotTime = engine->Time() + 2.0f;
 
-	engine->ServerCommand(szCommand);
+engine->ServerCommand(szCommand);
 }
 
 void CBots::KickRandomBotOnTeam(int team)
 {
-	dataUnconstArray<int> list;
-	int index;
-	CBot *tokick;
-	char szCommand[512];
-	//gather list of bots
-	for (short int i = 0; i < MAX_PLAYERS; i++)
-	{
-		if (m_Bots[i]->InUse())
-		{
-			if (m_Bots[i]->GetTeam() == team)
-				list.Add(i);
-		}
-	}
+dataUnconstArray<int> list;
+int index;
+CBot *tokick;
+char szCommand[512];
+//gather list of bots
+for (short int i = 0; i < MAX_PLAYERS; i++)
+{
+if (m_Bots[i]->InUse())
+{
+if (m_Bots[i]->GetTeam() == team)
+list.Add(i);
+}
+}
 
-	if (list.IsEmpty())
-	{
-		CBotGlobals::BotMessage(NULL, 0, "kickRandomBotOnTeam() : No bots to kick");
-		return;
-	}
+if (list.IsEmpty())
+{
+CBotGlobals::BotMessage(NULL, 0, "kickRandomBotOnTeam() : No bots to kick");
+return;
+}
 
-	index = list.Random();
-	list.Clear();
+index = list.Random();
+list.Clear();
 
-	tokick = m_Bots[index];
+tokick = m_Bots[index];
 
-	sprintf(szCommand, "kickid %d\n", tokick->GetPlayerID());
+sprintf(szCommand, "kickid %d\n", tokick->GetPlayerID());
 
-	m_flAddKickBotTime = engine->Time() + 2.0f;
+m_flAddKickBotTime = engine->Time() + 2.0f;
 
-	engine->ServerCommand(szCommand);
+engine->ServerCommand(szCommand);
 }*/
 ////////////////////////
 
