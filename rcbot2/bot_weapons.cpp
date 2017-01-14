@@ -30,7 +30,7 @@
  */
 #include "engine_wrappers.h"
 
-#include "bot.h"
+#include "bot_base.h"
 #include "bot_globals.h"
 #include "bot_weapons.h"
 #include "bot_getprop.h"
@@ -38,6 +38,8 @@
 #ifdef GetClassName
 #undef GetClassName
 #endif
+
+extern IFileSystem* filesystem;
 
 const char *g_szDODWeapons[] =
 {
@@ -564,7 +566,7 @@ void CWeapons::LoadWeapons(const char *szWeaponListName, WeaponsData_t *pDefault
 		KeyValues *kv = new KeyValues("Weapons");
 		char szFilename[1024];
 
-		CBotGlobals::BuildFileName(szFilename, "weapons", BOT_CONFIG_FOLDER, "ini", false);
+		smutils->BuildPath(Path_SM, szFilename, sizeof(szFilename), "data\\afkbot\\%s\\weapons.%s", BOT_CONFIG_FOLDER, BOT_CONFIG_EXTENSION);
 
 		if (kv)
 		{
@@ -717,9 +719,6 @@ bool CBotWeaponGravGun::OutOfAmmo (CBot *pBot)
 */
 bool CBotWeapon::OutOfAmmo(CBot *pBot)
 {
-	if (m_pWeaponInfo->IsGravGun() && m_pEnt)
-		return (CClassInterface::GravityGunObject(m_pEnt) == NULL);
-
 	// if I have something in my clip now
 	// I am okay, otherwise return ammo in list
 	if (m_iClip1 && (*m_iClip1 > 0))

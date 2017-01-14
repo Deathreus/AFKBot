@@ -32,7 +32,7 @@
  */
 #include "engine_wrappers.h"
 
-#include "bot.h"
+#include "bot_base.h"
 #include "bot_utility.h"
 #include "bot_getprop.h"
 #include "bot_configfile.h"

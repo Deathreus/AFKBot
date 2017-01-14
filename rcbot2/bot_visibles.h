@@ -31,7 +31,7 @@
 #ifndef __BOT_VISIBLES_H__
 #define __BOT_VISIBLES_H__
 
-#include "bot.h"
+#include "bot_base.h"
 #include "bot_globals.h"
 #include "bot_genclass.h"
 

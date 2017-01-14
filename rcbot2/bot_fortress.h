@@ -33,6 +33,7 @@
 #ifndef __BOT_FORTRESS_H__
 #define __BOT_FORTRESS_H__
 
+#include "bot_base.h"
 #include "bot_utility.h"
 
 //#include <stack>
@@ -472,6 +473,8 @@ public:
 	virtual bool SetVisible(edict_t *pEntity, bool bVisible);
 
 	virtual void SetClass(TFClass _class);
+
+	virtual int GetClassCount(TFClass _class);
 
 	inline edict_t *SeeFlag(bool reset = false) { if (reset) { m_pFlag = NULL; } return m_pFlag; }
 

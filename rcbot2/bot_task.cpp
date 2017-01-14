@@ -33,7 +33,7 @@
 #include "engine_wrappers.h"
 
 //#include "bot_mtrand.h"
-#include "bot.h"
+#include "bot_base.h"
 #include "bot_schedule.h"
 #include "bot_task.h"
 #include "bot_navigator.h"
@@ -50,6 +50,10 @@
 #include "bot_waypoint_vIsibility.h"
 
 extern ConVar *sv_gravity;
+
+extern IPlayerInfoManager* playerinfomanager;
+extern IServerPluginHelpers* helpers;
+
 // desx and desy must be normalized
 // desx = dIstance (should be 2d)
 // desy = height offSet

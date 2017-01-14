@@ -1,7 +1,7 @@
 /**
  * =============================================================================
- * TF2 Items Extension
- * Copyright (C) 2009-2010 AzuiSleet, Asher Baker (asherkin).  All rights reserved.
+ * AFK Bot Extension
+ * Copyright (C) 2016 Deathreus.  All rights reserved.
  * =============================================================================
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -16,14 +16,6 @@
  * You should have received a copy of the GNU General Public License along with
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * As a special exception, AlliedModders LLC gives you permission to link the
- * code of this program (as well as its derivative works) to "Half-Life 2," the
- * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
- * by the Valve Corporation.  You must obey the GNU General Public License in
- * all respects for all other code used.  Additionally, AlliedModders LLC grants
- * this exception to all derivative works.  AlliedModders LLC defines further
- * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
- * or <http://www.sourcemod.net/license.php>.
  */
 
 #ifndef _INCLUDE_SOURCEMOD_EXTENSION_CONFIG_H_
@@ -56,7 +48,7 @@
 #define SMEXT_CONF_METAMOD		
 
 /** Enable interfaces you want to use here by uncommenting lines */
-//#define SMEXT_ENABLE_FORWARDSYS
+#define SMEXT_ENABLE_FORWARDSYS
 //#define SMEXT_ENABLE_HANDLESYS
 #define SMEXT_ENABLE_PLAYERHELPERS
 //#define SMEXT_ENABLE_DBMANAGER
@@ -69,9 +61,9 @@
 //#define SMEXT_ENABLE_MENUS
 //#define SMEXT_ENABLE_ADTFACTORY
 //#define SMEXT_ENABLE_PLUGINSYS
-//#define SMEXT_ENABLE_ADMINSYS
-//#define SMEXT_ENABLE_TEXTPARSERS
-//#define SMEXT_ENABLE_USERMSGS
+#define SMEXT_ENABLE_ADMINSYS
+#define SMEXT_ENABLE_TEXTPARSERS
+#define SMEXT_ENABLE_USERMSGS
 //#define SMEXT_ENABLE_TRANSLATOR
 //#define SMEXT_ENABLE_NINVOKE
 

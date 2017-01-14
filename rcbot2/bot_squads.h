@@ -37,7 +37,7 @@
 
 #define SQUAD_DEFAULT_SPREAD 80.0// say 50 units between each member...?
 
-typedef enum eSquadForm
+enum eSquadForm
 {
 	SQUAD_FORM_NONE = 0,
 	SQUAD_FORM_WEDGE,
@@ -48,7 +48,7 @@ typedef enum eSquadForm
 	SQUAD_FORM_VEE
 };
 
-typedef enum eCombatType
+enum eCombatType
 {
 	COMBAT_NONE = 0,
 	COMBAT_STEALTH,
@@ -57,7 +57,7 @@ typedef enum eCombatType
 	COMBAT_PRONE
 };
 
-typedef enum eTacticType
+enum eTacticType
 {
 	TACTIC_FREE = 0,
 	TACTIC_IDLE,

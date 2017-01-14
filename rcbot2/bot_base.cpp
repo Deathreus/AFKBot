@@ -352,9 +352,9 @@ bool CBot::FVisible(edict_t *pEdict, bool bCheckHead)
 /*#if defined(_DEBUG) && !defined(__linux__)
 		else if (CClients::clientsDebugging(BOT_DEBUG_VIS) && (CBotGlobals::GetTraceResult()->m_pEnt != NULL))
 		{
-			extern IServerGameEnts *servergameents;
+			extern IServerGameEnts *gameents;
 
-			edict_t *edict = servergameents->BaseEntityToEdict(CBotGlobals::GetTraceResult()->m_pEnt);
+			edict_t *edict = gameents->BaseEntityToEdict(CBotGlobals::GetTraceResult()->m_pEnt);
 
 			if (edict)
 				debugoverlay->AddTextOverlay(CBotGlobals::GetTraceResult()->endpos, 2.0f, "Traceline hit %s", edict->GetClassName());

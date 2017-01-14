@@ -30,7 +30,7 @@
  */
 #include "engine_wrappers.h"
 
-#include "bot.h"
+#include "bot_base.h"
 #include "bot_waypoint.h"
 #include "bot_waypoint_visibility.h"
 #include "bot_globals.h"
@@ -155,7 +155,7 @@ bool CWaypointVisibilityTable::SaveToFile(void)
 	char filename[1024];
 	wpt_vis_header_t header;
 
-	CBotGlobals::BuildFileName(filename, CBotGlobals::GetMapName(), BOT_WAYPOINT_FOLDER, "rcv", true);
+	smutils->BuildPath(Path_SM, filename, sizeof(filename), "data\\afkbot\\%s\\%s.%s", BOT_WAYPOINT_FOLDER, CBotGlobals::GetMapName(), BOT_WAYPOINT_VISIBILITY_EXTENSION);
 
 	FILE *bfp = CBotGlobals::OpenFile(filename, "wb");
 
@@ -183,7 +183,7 @@ bool CWaypointVisibilityTable::ReadFromFile(int numwaypoints)
 
 	wpt_vis_header_t header;
 
-	CBotGlobals::BuildFileName(filename, CBotGlobals::GetMapName(), BOT_WAYPOINT_FOLDER, "rcv", true);
+	smutils->BuildPath(Path_SM, filename, sizeof(filename), "data\\afkbot\\%s\\%s.%s", BOT_WAYPOINT_FOLDER, CBotGlobals::GetMapName(), BOT_WAYPOINT_VISIBILITY_EXTENSION);
 
 	FILE *bfp = CBotGlobals::OpenFile(filename, "rb");
 

@@ -29,7 +29,7 @@
  *
  */
 
-#include "bot.h"
+#include "bot_base.h"
 
 #include "bot_waypoint.h"
 #include "bot_waypoint_visibility.h"
@@ -68,8 +68,8 @@ unsigned char *CWaypointLocations::ResetFailedWaypoints(dataUnconstArray<int> *i
 	return g_iFailedWaypoints;
 }
 
-#define CLAMP_TO_ZERO(x) x=(x<0)?0:x
-#define CLAMP_TO(x,clamp) x=(x>clamp)?clamp:x
+#define CLAMP_TO_ZERO(x) x = (x < 0) ? 0:x
+#define CLAMP_TO(x, iclamp) x = (x > iclamp) ? iclamp:x
 
 void CWaypointLocations::GetMinMaxs(int iLoc, int jLoc, int kLoc,
 	int *iMinLoci, int *iMinLocj, int *iMinLock,

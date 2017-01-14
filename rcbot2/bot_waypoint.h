@@ -33,9 +33,8 @@
 
 #include <stdio.h>
 
-#include "bot.h"
+#include "bot_base.h"
 #include "bot_genclass.h"
-#include "bot_client.h"
 
 class CWaypointVisibilityTable;
 class CClient;

@@ -33,10 +33,12 @@
 #include "vector.h"
 
 #include "bot_const.h"
-#include "bot.h"
+#include "bot_base.h"
 #include "bot_globals.h"
 #include "bot_squads.h"
 #include "bot_getprop.h"
+
+extern IPlayerInfoManager* playerinfomanager;
 
 dataStack<CBotSquad*> CBotSquads::m_theSquads;
 

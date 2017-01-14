@@ -61,12 +61,10 @@ public:
 	{
 		static int index = ENTINDEX(pEdict);
 
-		return (index > 0) && (index <= MaxClients());
+		return (index > 0) && (index <= MAX_PLAYERS);
 	}
 
 	static bool WalkableFromTo(edict_t *pPlayer, Vector v_src, Vector v_dest);
-
-	static void TeleportPlayer(edict_t *pPlayer, Vector v_dest);
 
 	static float YawAngleFromEdict(edict_t *pEntity, Vector vOrigin);
 	//static float getAvoidAngle(edict_t *pEdict,Vector origin);
@@ -81,6 +79,7 @@ public:
 	static void AddDirectoryDelimiter(char *szString);
 	// print a message to client pEntity with bot formatting
 	static void BotMessage(edict_t *pEntity, int iErr, char *fmt, ...);
+	static void PrintToChat(int client, const char* fmt, ...);
 
 	static void FixFloatAngle(float *fAngle);
 
@@ -173,8 +172,6 @@ public:
 	static int NumClients();
 	static void LevelInit();
 
-	static inline void SetClientMax(int iMaxClients) { m_iMaxClients = iMaxClients; }
-
 	static inline void SetEventVersion(int iVersion){ m_iEventVersion = iVersion; }
 
 	static inline bool IsEventVersion(int iVersion){ return (m_iEventVersion == iVersion); }
@@ -188,8 +185,6 @@ public:
 	static inline char *GameFolder(){ return m_szGameFolder; }
 
 	static inline char *ModFolder(){ return m_szModFolder; }
-
-	static inline int MaxClients() { return m_iMaxClients; }
 
 	static edict_t *PlayerByUserId(int iUserId);
 

@@ -1,5 +1,5 @@
 #include "engine_wrappers.h"
-#include "bot.h"
+#include "bot_base.h"
 #include "bot_getprop.h"
 #include "bot_fortress.h"
 #include "bot_tf2_points.h"
@@ -297,9 +297,9 @@ CTeamControlPointRound *CTeamControlPointMaster::GetCurrentRound()
 
 	CBaseEntity *pent = m_ControlPointRounds[m_iCurrentRoundIndex];
 
-	//extern IServerGameEnts *servergameents;
+	//extern IServerGameEnts *gameents;
 
-	//edict_t *p = servergameents->BaseEntityToEdict(pent);
+	//edict_t *p = gameents->BaseEntityToEdict(pent);
 
 	extern ConVar bot_const_round_offset;
 	/*

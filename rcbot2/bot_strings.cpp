@@ -31,7 +31,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "bot.h"
+#include "bot_base.h"
 #include "bot_strings.h"
 #include <vector>    //bir3yk
 

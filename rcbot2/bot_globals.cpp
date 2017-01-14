@@ -34,22 +34,18 @@
 #include <windows.h>
 #define WIN32_LEAN_AND_MEAN
 
-#ifdef GetClassName
-#undef GetClassName
-#endif
-
 #include <conio.h>
 
 #endif
 
-#include "bot.h"
+#include "bot_base.h"
 #include "bot_globals.h"
 #include "bot_strings.h"
 #include "bot_waypoint_locations.h"
 #include "bot_getprop.h"
 #include "bot_weapons.h"
 
-#include "ndebugoverlay.h"
+#include <ndebugoverlay.h>
 
 #ifndef __linux__
 #include <direct.h> // for mkdir
@@ -75,6 +71,9 @@ char *CBotGlobals::m_szRCBotFolder = NULL;
 ///////////
 
 extern IVDebugOverlay *debugoverlay;
+extern IPlayerInfoManager *playerinfomanager;
+extern IServerGameClients* gameclients;
+extern IEngineTrace *enginetrace;
 
 class CTraceFilterVis : public CTraceFilter
 {
@@ -171,14 +170,13 @@ void CBotGlobals::ReadRCBotFolder()
 	char folder[256] = "\0";
 	const char *szRCBotFolder = "\0";
 
-	snprintf(folder, sizeof(folder), "%s/addons/sourcemod/configs/afkbot", CBotGlobals::ModFolder());
+	snprintf(folder, sizeof(folder), "%s/addons/sourcemod/data/afkbot", CBotGlobals::ModFolder());
 
 	szRCBotFolder = CStrings::GetString(folder);
-	CBotGlobals::BotMessage(NULL, 0, "RCBot Folder -> trying %s", szRCBotFolder);
 
 	if (str_is_empty(szRCBotFolder))
 	{
-		CBotGlobals::BotMessage(NULL, 0, "RCBot Folder -> not found ...");
+		CBotGlobals::BotMessage(NULL, 0, "Bot Folder -> not found ...");
 	}
 
 	m_szRCBotFolder = CStrings::GetString(szRCBotFolder);
@@ -234,7 +232,7 @@ edict_t *CBotGlobals::FindPlayerByTruncName(const char *name)
 	IPlayerInfo *pInfo;
 	int i;
 
-	for (i = 1; i <= MaxClients(); i++)
+	for (i = 1; i <= MAX_PLAYERS; i++)
 	{
 		pent = INDEXENT(i);
 
@@ -299,21 +297,12 @@ public:
 		if (m_pPassEnt2 == pHandleEntity)
 			return false;
 #if defined(_DEBUG) && !defined(__linux__)
-		if ( CClients::clientsDebugging(BOT_DEBUG_VIS) )
-		{
-			static edict_t *edict;
-
-			edict = INDEXENT(pHandleEntity->GetRefEHandle().GetEntryIndex());
-
-			debugoverlay->AddTextOverlayRGB(CBotGlobals::entityOrigin(edict),0,2.0f,255,100,100,200,"Traceline hit %s",edict->GetClassName());
-		}
+		static edict_t *edict;
+		edict = INDEXENT(pHandleEntity->GetRefEHandle().GetEntryIndex());
+		debugoverlay->AddTextOverlayRGB(CBotGlobals::EntityOrigin(edict),0,2.0f,255,100,100,200,"Traceline hit %s",edict->GetClassName());
 #endif
 		return true;
 	}
-	//virtual void SetPassEntity( const IHandleEntity *pPassEntity ) { m_pPassEnt = pPassEntity; }
-	//virtual void SetCollisionGroup( int iCollisionGroup ) { m_collisionGroup = iCollisionGroup; }
-
-	//const IHandleEntity *GetPassEntity( void ){ return m_pPassEnt;}
 
 private:
 	const IHandleEntity *m_pPassEnt1;
@@ -353,8 +342,6 @@ bool CBotGlobals::IsVisible(edict_t *pPlayer, Vector vSrc, Vector vDest)
 
 bool CBotGlobals::IsVisible(edict_t *pPlayer, Vector vSrc, edict_t *pDest)
 {
-	//CTraceFilterWorldAndPropsOnly filter;//	CTraceFilterHitAll filter;
-
 	CTraceFilterWorldAndPropsOnly filter;
 
 	TraceLine(vSrc, EntityOrigin(pDest), MASK_SOLID_BRUSHONLY | CONTENTS_OPAQUE, &filter);
@@ -364,8 +351,6 @@ bool CBotGlobals::IsVisible(edict_t *pPlayer, Vector vSrc, edict_t *pDest)
 
 bool CBotGlobals::IsShotVisible(edict_t *pPlayer, Vector vSrc, Vector vDest, edict_t *pDest)
 {
-	//CTraceFilterWorldAndPropsOnly filter;//	CTraceFilterHitAll filter;
-
 	CTraceFilterVis filter = CTraceFilterVis(pPlayer, pDest);
 
 	TraceLine(vSrc, vDest, MASK_SHOT, &filter);
@@ -452,7 +437,8 @@ bool CBotGlobals::TraceVisible(edict_t *pEnt)
 	return (m_TraceResult.fraction >= 1.0) || (m_TraceResult.m_pEnt && pEnt && (m_TraceResult.m_pEnt == pEnt->GetUnknown()->GetBaseEntity()));
 }
 
-bool CBotGlobals::InitModFolder() {
+bool CBotGlobals::InitModFolder()
+{
 	char szGameFolder[512];
 	engine->GetGameDir(szGameFolder, 512);
 
@@ -470,35 +456,15 @@ bool CBotGlobals::InitModFolder() {
 
 bool CBotGlobals::GameStart()
 {
-	char szGameFolder[512];
-	engine->GetGameDir(szGameFolder, 512);
-	char szSteamFolder[512];
+	const char *szGameFolder;
+	const char *szSteamFolder;
 
-	V_GetCurrentDirectory(szSteamFolder, 512);
+	szGameFolder = smutils->GetGameFolderName();
+	szSteamFolder = smutils->GetGamePath();
 
-	int iLength = strlen(szSteamFolder);
+	m_szGameFolder = CStrings::GetString(szSteamFolder);
 
-	int pos = iLength - 1;
-
-	while ((pos > 0) && (szSteamFolder[pos] != '\\') && (szSteamFolder[pos] != '/'))
-	{
-		pos--;
-	}
-	pos++;
-
-	m_szGameFolder = CStrings::GetString(&szSteamFolder[pos]);
-
-	iLength = strlen(CStrings::GetString(szGameFolder));
-
-	pos = iLength - 1;
-
-	while ((pos > 0) && (szGameFolder[pos] != '\\') && (szGameFolder[pos] != '/'))
-	{
-		pos--;
-	}
-	pos++;
-
-	m_szModFolder = CStrings::GetString(&szGameFolder[pos]);
+	m_szModFolder = CStrings::GetString(szGameFolder);
 
 	CBotMods::ReadMods();
 
@@ -532,7 +498,7 @@ int CBotGlobals::CountTeamMatesNearOrigin(Vector vOrigin, float fRange, int iTea
 	int iCount = 0;
 	IPlayerInfo *p;
 
-	for (int i = 1; i <= CBotGlobals::MaxClients(); i++)
+	for (int i = gpGlobals->maxClients; i > 0; i--)
 	{
 		edict_t *pEdict = INDEXENT(i);
 
@@ -563,7 +529,7 @@ int CBotGlobals::NumClients()
 {
 	int iCount = 0;
 
-	for (int i = 1; i <= CBotGlobals::MaxClients(); i++)
+	for (int i = gpGlobals->maxClients; i > 0; i--)
 	{
 		edict_t *pEdict = INDEXENT(i);
 
@@ -598,7 +564,7 @@ bool CBotGlobals::EntityIsAlive(edict_t *pEntity)
 
 edict_t *CBotGlobals::PlayerByUserId(int iUserId)
 {
-	for (int i = 1; i <= MaxClients(); i++)
+	for (int i = gpGlobals->maxClients; i > 0; i--)
 	{
 		edict_t *pEdict = INDEXENT(i);
 
@@ -662,7 +628,6 @@ bool CBotGlobals::WalkableFromTo(edict_t *pPlayer, Vector v_src, Vector v_dest)
 	extern ConVar bot_wptplace_width;
 	CTraceFilterVis filter = CTraceFilterVis(pPlayer);
 	float fDistance = sqrt((v_dest - v_src).LengthSqr());
-	CClient *pClient = CClients::Get(pPlayer);
 	Vector vcross = v_dest - v_src;
 	Vector vleftsrc, vleftdest, vrightsrc, vrightdest;
 	float fWidth = bot_wptplace_width.GetFloat();
@@ -673,9 +638,6 @@ bool CBotGlobals::WalkableFromTo(edict_t *pPlayer, Vector v_src, Vector v_dest)
 	// minimum
 	if (fWidth < 2.0f)
 		fWidth = 2.0f;
-
-	if (pClient->AutoWaypointOn())
-		fWidth = 4.0f;
 
 	vcross = vcross / vcross.Length();
 	vcross = vcross.Cross(Vector(0, 0, 1));
@@ -873,6 +835,34 @@ void CBotGlobals::BotMessage(edict_t *pEntity, int iErr, char *fmt, ...)
 	}
 }
 
+void CBotGlobals::PrintToChat(int client, const char* fmt, ...)
+{
+	static int iChatText = NULL;
+	cell_t pClient[] = { client };
+	if (!iChatText) iChatText = usermsgs->GetMessageIndex("SayText2");
+
+	va_list argptr; char string[253];
+	va_start(argptr, fmt);
+	vsprintf(string, fmt, argptr);
+	va_end(argptr);
+
+	char buffer[253];
+	smutils->Format(buffer, sizeof(buffer), string);
+
+	// Break if we are printing to server
+	if (!client)
+	{
+		META_CONPRINT(buffer);
+		return;
+	}
+
+	bf_write *pBitBuf = usermsgs->StartBitBufMessage(iChatText, pClient, 1, USERMSG_RELIABLE);
+	pBitBuf->WriteByte(0);
+	pBitBuf->WriteString(buffer);
+	pBitBuf->WriteByte(1);
+	usermsgs->EndMessage();
+}
+
 bool CBotGlobals::MakeFolders(char *szFile)
 {
 #ifndef __linux__
@@ -938,12 +928,9 @@ bool CBotGlobals::IsBreakableOpen(edict_t *pBreakable)
 
 Vector CBotGlobals::GetVelocity(edict_t *pPlayer)
 {
-	CClient *pClient = CClients::Get(pPlayer);
-
-	if (pClient)
-		return pClient->GetVelocity();
-
-	return Vector(0, 0, 0);
+	Vector vVelocity;
+	CClassInterface::GetVelocity(pPlayer, &vVelocity);
+	return vVelocity;
 }
 
 FILE *CBotGlobals::OpenFile(char *szFile, char *szMode)
@@ -1053,10 +1040,11 @@ float CBotGlobals::YawAngleFromEdict(edict_t *pEntity, Vector vOrigin)
 {
 	float fAngle;
 	float fYaw;
-	QAngle qBotAngles = PlayerAngles(pEntity);
-	Vector vPlayerOrigin = playerinfomanager->GetPlayerInfo(pEntity)->GetAbsOrigin();
 	QAngle qAngles;
 	Vector vAngles;
+
+	QAngle qBotAngles = PlayerAngles(pEntity);
+	Vector vPlayerOrigin; gameclients->ClientEarPosition(pEntity, &vPlayerOrigin);
 
 	vAngles = vOrigin - vPlayerOrigin;
 
@@ -1070,12 +1058,4 @@ float CBotGlobals::YawAngleFromEdict(edict_t *pEntity, Vector vOrigin)
 	CBotGlobals::FixFloatAngle(&fAngle);
 
 	return fAngle;
-}
-
-void CBotGlobals::TeleportPlayer(edict_t *pPlayer, Vector v_dest)
-{
-	CClient *pClient = CClients::Get(pPlayer);
-
-	if (pClient)
-		pClient->TeleportTo(v_dest);
 }

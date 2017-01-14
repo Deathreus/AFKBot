@@ -5,8 +5,6 @@
 
 #define WPT_DIST_VER 0x03
 
-#define BOT_WAYPOINT_DST_EXTENSION "rcd"
-
 class CWaypointDistances
 {
 public:

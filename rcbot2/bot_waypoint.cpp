@@ -31,12 +31,11 @@
 
 #include "engine_wrappers.h"
 
-#include "bot.h"
+#include "bot_base.h"
 
 #include "in_buttons.h"
 
 #include "bot_globals.h"
-#include "bot_client.h"
 #include "bot_navigator.h"
 #include "bot_waypoint.h"
 #include "bot_waypoint_locations.h"
@@ -62,6 +61,9 @@ char CWaypoints::m_szModifiedBy[32];
 char CWaypoints::m_szWelcomeMessage[128];
 
 extern ConVar bot_belief_fade;
+
+extern IPlayerInfoManager *playerinfomanager;
+extern IVDebugOverlay* debugoverlay;
 
 ///////////////////////////////////////////////////////////////
 // initialise
@@ -99,14 +101,10 @@ bool CWaypointNavigator::BeliefLoad()
 
 	char filename[1024];
 
-	char mapname[512];
-
 	m_bLoadBelief = false;
 	m_iBeliefTeam = m_pBot->GetTeam();
 
-	sprintf(mapname, "%s%d", CBotGlobals::GetMapName(), m_iBeliefTeam);
-
-	CBotGlobals::BuildFileName(filename, mapname, BOT_WAYPOINT_FOLDER, "rcb", true);
+	smutils->BuildPath(Path_SM, filename, sizeof(filename), "data\\afkbot\\%s\\%s%d.%s", BOT_WAYPOINT_FOLDER, CBotGlobals::GetMapName(), m_iBeliefTeam, BOT_WAYPOINT_BELIEF_EXTENTION);
 
 	FILE *bfp = CBotGlobals::OpenFile(filename, "rb");
 
@@ -157,7 +155,6 @@ bool CWaypointNavigator::BeliefSave(bool bOverride)
 	register unsigned short int num;
 	unsigned short int filebelief[CWaypoints::MAX_WAYPOINTS];
 	char filename[1024];
-	char mapname[512];
 
 	if ((m_pBot->GetTeam() == m_iBeliefTeam) && !bOverride)
 		return false;
@@ -167,8 +164,7 @@ bool CWaypointNavigator::BeliefSave(bool bOverride)
 	// m_iBeliefTeam is the team we've been using -- we might have changed team now
 	// so would need to change files if a different team
 	// stick to the current team we've been using
-	sprintf(mapname, "%s%d", CBotGlobals::GetMapName(), m_iBeliefTeam);
-	CBotGlobals::BuildFileName(filename, mapname, BOT_WAYPOINT_FOLDER, "rcb", true);
+	smutils->BuildPath(Path_SM, filename, sizeof(filename), "data\\afkbot\\%s\\%s%d.%s", BOT_WAYPOINT_FOLDER, CBotGlobals::GetMapName(), m_iBeliefTeam, BOT_WAYPOINT_BELIEF_EXTENTION);
 
 	FILE *bfp = CBotGlobals::OpenFile(filename, "rb");
 
@@ -448,7 +444,7 @@ CWaypoint *CWaypointNavigator::ChooseBestFromBelief(dataUnconstArray<CWaypoint*>
 
 			if (iSearchFlags & WPT_SEARCH_AVOID_SENTRIES)
 			{
-				for (int j = 1; j <= MAX_PLAYERS; j++)
+				for (int j = gpGlobals->maxClients; j > 0; j--)
 				{
 					edict_t *pSentry = CTeamFortress2Mod::GetSentryGun(j - 1);
 
@@ -464,9 +460,9 @@ CWaypoint *CWaypointNavigator::ChooseBestFromBelief(dataUnconstArray<CWaypoint*>
 
 			if (iSearchFlags & WPT_SEARCH_AVOID_SNIPERS)
 			{
-				for (int j = 1; j <= MAX_PLAYERS; j++)
+				for (int j = gpGlobals->maxClients; j > 0; j--)
 				{
-					edict_t *pPlayer = INDEXENT(i);
+					edict_t *pPlayer = INDEXENT(j);
 
 					if ((pPlayer != NULL) && !pPlayer->IsFree() && (CClassInterface::GetTF2Class(pPlayer) == TF_CLASS_SNIPER))
 					{
@@ -483,9 +479,9 @@ CWaypoint *CWaypointNavigator::ChooseBestFromBelief(dataUnconstArray<CWaypoint*>
 
 			if (iSearchFlags & WPT_SEARCH_AVOID_TEAMMATE)
 			{
-				for (int j = 1; j <= MAX_PLAYERS; j++)
+				for (int j = gpGlobals->maxClients; j > 0; j--)
 				{
-					edict_t *pPlayer = INDEXENT(i);
+					edict_t *pPlayer = INDEXENT(j);
 
 					if ((pPlayer != NULL) && !pPlayer->IsFree())
 					{
@@ -522,7 +518,7 @@ CWaypoint *CWaypointNavigator::ChooseBestFromBelief(dataUnconstArray<CWaypoint*>
 
 			if (iSearchFlags & WPT_SEARCH_AVOID_SENTRIES)
 			{
-				for (int j = 0; j < MAX_PLAYERS; j++)
+				for (int j = gpGlobals->maxClients; j > 0; j--)
 				{
 					edict_t *pSentry = CTeamFortress2Mod::GetSentryGun(j);
 
@@ -538,9 +534,9 @@ CWaypoint *CWaypointNavigator::ChooseBestFromBelief(dataUnconstArray<CWaypoint*>
 
 			if (iSearchFlags & WPT_SEARCH_AVOID_SNIPERS)
 			{
-				for (int j = 1; j <= MAX_PLAYERS; j++)
+				for (int j = gpGlobals->maxClients; j > 0; j--)
 				{
-					edict_t *pPlayer = INDEXENT(i);
+					edict_t *pPlayer = INDEXENT(j);
 
 					if ((pPlayer != NULL) && !pPlayer->IsFree() && (CClassInterface::GetTF2Class(pPlayer) == TF_CLASS_SNIPER))
 					{
@@ -554,7 +550,7 @@ CWaypoint *CWaypointNavigator::ChooseBestFromBelief(dataUnconstArray<CWaypoint*>
 
 			if (iSearchFlags & WPT_SEARCH_AVOID_TEAMMATE)
 			{
-				for (int j = 1; j <= MAX_PLAYERS; j++)
+				for (int j = gpGlobals->maxClients; j > 0; j--)
 				{
 					edict_t *pPlayer = INDEXENT(i);
 
@@ -869,7 +865,6 @@ bool CWaypointNavigator::WorkRoute(Vector vFrom,
 	int iGoalId,
 	int iConditions, int iDangerId)
 {
-	extern ConVar bot_pathrevs;
 	extern ConVar bot_debug_show_route;
 
 	if (bRestart)
@@ -950,7 +945,7 @@ bool CWaypointNavigator::WorkRoute(Vector vFrom,
 	///////////////////////////////
 
 	int iLoops = 0;
-	int iMaxLoops = bot_pathrevs.GetInt(); //this->m_pBot->GetProfile()->GetPathTicks();//IBotNavigator::MAX_PATH_TICKS;
+	int iMaxLoops = this->m_pBot->GetProfile()->m_iPathTicks;
 
 	if (iMaxLoops <= 0)
 		iMaxLoops = 200;
@@ -1360,8 +1355,6 @@ void CWaypointNavigator::UpdatePosition()
 
 				if (pWaypoint)
 				{
-					if (iWaypointFlagsPrev & CWaypointTypes::W_FL_TELEPORT_CHEAT)
-						CBotGlobals::TeleportPlayer(m_pBot->GetEdict(), pWaypoint->GetOrigin() - (CWaypoint::WAYPOINT_HEIGHT / 2));
 				}
 				if (m_iCurrentWaypoint != -1)
 				{ // random point, but more chance of choosing the most dangerous point
@@ -1506,7 +1499,7 @@ bool CWaypoints::Save(bool bVisiblityMade, edict_t *pPlayer, const char *pszAuth
 	char filename[1024];
 	char szAuthorName[32];
 
-	CBotGlobals::BuildFileName(filename, CBotGlobals::GetMapName(), BOT_WAYPOINT_FOLDER, BOT_WAYPOINT_EXTENSION, true);
+	smutils->BuildPath(Path_SM, filename, sizeof(filename), "data\\afkbot\\%s\\%s.%s", BOT_WAYPOINT_FOLDER, CBotGlobals::GetMapName(), BOT_WAYPOINT_EXTENSION);
 
 	FILE *bfp = CBotGlobals::OpenFile(filename, "wb");
 
@@ -1555,7 +1548,7 @@ bool CWaypoints::Save(bool bVisiblityMade, edict_t *pPlayer, const char *pszAuth
 
 		if (pPlayer != NULL)
 		{
-			strcpy(szAuthorName, CClients::Get(pPlayer)->GetName());
+			strcpy(szAuthorName, playerinfomanager->GetPlayerInfo(pPlayer)->GetName());
 		}
 
 		if (authorinfo.szAuthor[0] == 0) // no author
@@ -1606,9 +1599,9 @@ bool CWaypoints::Load(const char *szMapName)
 
 	// open explicit map name waypoints
 	if (szMapName == NULL)
-		CBotGlobals::BuildFileName(filename, CBotGlobals::GetMapName(), BOT_WAYPOINT_FOLDER, BOT_WAYPOINT_EXTENSION, true);
+		smutils->BuildPath(Path_SM, filename, sizeof(filename), "data\\afkbot\\%s\\%s.%s", BOT_WAYPOINT_FOLDER, CBotGlobals::GetMapName(), BOT_WAYPOINT_EXTENSION);
 	else
-		CBotGlobals::BuildFileName(filename, szMapName, BOT_WAYPOINT_FOLDER, BOT_WAYPOINT_EXTENSION, true);
+		smutils->BuildPath(Path_SM, filename, sizeof(filename), "data\\afkbot\\%s\\%s.%s", BOT_WAYPOINT_FOLDER, szMapName, BOT_WAYPOINT_EXTENSION);
 
 	FILE *bfp = CBotGlobals::OpenFile(filename, "rb");
 

@@ -30,12 +30,11 @@
  */
 #include "engine_wrappers.h"
 
-#include "bot.h"
+#include "bot_base.h"
 #include "bot_visibles.h"
 #include "bot_genclass.h"
 #include "bot_globals.h"
 #include "bot_profile.h"
-#include "bot_client.h"
 //#include "bot_profiling.h"
 #include "bot_getprop.h"
 
@@ -133,7 +132,7 @@ void CBotVisibles::Reset()
 {
 	memset(m_iIndicesVisible, 0, sizeof(unsigned char)*m_iMaxSize);
 	m_VisibleList.Destroy();
-	m_iCurrentIndex = CBotGlobals::MaxClients() + 1;
+	m_iCurrentIndex = gpGlobals->maxClients + 1;
 	m_iCurPlayer = 1;
 }
 
@@ -287,7 +286,7 @@ void CBotVisibles::UpdateVisibles()
 
 		m_iCurPlayer++;
 
-		if (m_iCurPlayer > CBotGlobals::MaxClients())
+		if (m_iCurPlayer > gpGlobals->maxClients)
 			m_iCurPlayer = 1;
 
 		if (iStartPlayerIndex == m_iCurPlayer)
@@ -337,7 +336,7 @@ void CBotVisibles::UpdateVisibles()
 		m_iCurrentIndex++;
 
 		if (m_iCurrentIndex >= m_iMaxIndex)
-			m_iCurrentIndex = CBotGlobals::MaxClients() + 1; // back to start of non clients
+			m_iCurrentIndex = gpGlobals->maxClients + 1; // back to start of non clients
 
 		if (m_iCurrentIndex == iStartIndex)
 			break; // back to where we started

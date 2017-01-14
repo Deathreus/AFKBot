@@ -31,7 +31,7 @@
 #ifndef __BOT_CONST_H__
 #define __BOT_CONST_H__
 
-#include <shareddefs.h>
+#include "shareddefs.h"
 
 #define BOT_DEFAULT_FOV 75.0f
 
@@ -85,11 +85,13 @@ typedef enum
 extern const char *g_szLookTaskToString[LOOK_MAX];
 
 #define BOT_CONFIG_FOLDER "config"
-#define BOT_MOD_FILE "bot_mods"
 #define BOT_WAYPOINT_FOLDER "waypoints"
 #define BOT_CONFIG_EXTENSION "cfg"
 
-#define BOT_WAYPOINT_EXTENSION "rcw" // extension for waypoint files
+#define BOT_WAYPOINT_EXTENSION "rcw"
+#define BOT_WAYPOINT_DISTANCE_EXTENSION "rcd"
+#define BOT_WAYPOINT_VISIBILITY_EXTENSION "rcv"
+#define BOT_WAYPOINT_BELIEF_EXTENTION "rcb"
 #define BOT_WAYPOINT_FILE_TYPE "RCBot2\0" // for waypoint file header
 
 #define BOT_TAG "[AFKBot] " // for printing messages

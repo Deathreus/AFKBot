@@ -31,7 +31,7 @@
 
 #include "../extension.h"
 
-#include "bot.h"
+#include "bot_base.h"
 #include "bot_event.h"
 #include "bot_strings.h"
 #include "bot_globals.h"
@@ -46,6 +46,8 @@
 
 vector<CBotEvent*> CBotEvents::m_theEvents;
 extern ConVar bot_use_vc_commands;
+
+extern IPlayerInfoManager* playerinfomanager;
 ///////////////////////////////////////////////////////
 
 class CBotSeeFriendlyKill : public IBotFunction
@@ -234,9 +236,9 @@ private:
 ////////////////////////////////////////////////
 
 
-/*void CRoundStartEvent :: Execute ( IBotEventInterface *pEvent )
+/*void CRoundStartEvent::Execute ( IBotEventInterface *pEvent )
 {
-CBots::roundStart();
+	CBots::RoundStart();
 }*/
 
 void CPlayerHurtEvent::Execute(IBotEventInterface *pEvent)
@@ -302,65 +304,6 @@ void CPlayerDeathEvent::Execute(IBotEventInterface *pEvent)
 	int iAttacker = pEvent->GetInt("attacker", 0);
 
 	edict_t *pAttacker = (iAttacker > 0) ? CBotGlobals::PlayerByUserId(iAttacker) : NULL;
-
-	if (pAttacker && ((CBotGlobals::EntityOrigin(pAttacker) - CBotGlobals::EntityOrigin(m_pActivator)).Length() > 512.0f))
-	{
-		// killer
-		CClient *pClient = CClients::Get(pAttacker);
-
-		if (pClient && pClient->AutoWaypointOn())
-		{
-			CWeapon *pWeapon = CWeapons::GetWeaponByShortName(weapon);
-
-			if (pWeapon != NULL)
-			{
-				if (pWeapon->IsScoped())
-				{
-					pClient->AutoEventWaypoint(CWaypointTypes::W_FL_SNIPER, 100.0f);
-				}
-				else if (pWeapon->IsDeployable())
-				{
-					// non OO hack here
-					if (CBotGlobals::IsCurrentMod(MOD_DOD))
-					{
-						edict_t *pentWeapon = CWeapons::FindWeapon(pAttacker, pWeapon->GetWeaponName());
-
-						if (CClassInterface::IsMachineGunDeployed(pentWeapon))
-						{
-							bool bIsProne;
-							float flStamina;
-
-							CClassInterface::GetPlayerInfoDOD(pAttacker, &bIsProne, &flStamina);
-
-							if (!bIsProne)
-							{
-								pClient->AutoEventWaypoint(CWaypointTypes::W_FL_MACHINEGUN, 100.0f);
-							}
-						}
-					}
-					//CClassInterface::IsMachineGunDeployed(pWeapon->Get)
-					//pWeapon->IsDeployed()
-				}
-			}
-		}
-
-		// victim
-		pClient = CClients::Get(m_pActivator);
-
-		if (CBotGlobals::IsPlayer(pAttacker) && pClient && pClient->AutoWaypointOn())
-		{
-			CWeapon *pWeapon = CWeapons::GetWeaponByShortName(weapon);
-
-			if (pWeapon != NULL)
-			{
-				if (pWeapon->IsScoped())
-				{
-					pClient->AutoEventWaypoint(CWaypointTypes::W_FL_SNIPER, 200.0f, true, CClassInterface::GetTeam(pAttacker), CBotGlobals::EntityOrigin(pAttacker) + Vector(0, 0, 32.0f));
-				}
-			}
-		}
-
-	}
 
 	if (pBot)
 		pBot->Died(pAttacker, weapon);
@@ -629,29 +572,14 @@ void CTF2BuiltObjectEvent::Execute(IBotEventInterface *pEvent)
 	edict_t *pBuilding = INDEXENT(index);
 	CBot *pBot = CBots::GetBotPointer(m_pActivator);
 
-	CClient *pClient = CClients::Get(m_pActivator);
-
 	if (type == ENGI_TELE)
 	{
 		CTeamFortress2Mod::TeleporterBuilt(m_pActivator, type, pBuilding);
-
-		if (pClient && pClient->AutoWaypointOn())
-		{
-			if (CTeamFortress2Mod::IsTeleporterEntrance(pBuilding, CTeamFortress2Mod::GetTeam(m_pActivator)))
-				pClient->AutoEventWaypoint(CWaypointTypes::W_FL_TELE_ENTRANCE, 400.0f);
-			else
-				pClient->AutoEventWaypoint(CWaypointTypes::W_FL_TELE_EXIT, 400.0f);
-		}
 	}
 
 	if (type == ENGI_SENTRY)
 	{
 		CTeamFortress2Mod::SentryBuilt(m_pActivator, type, pBuilding);
-
-		if (pClient && pClient->AutoWaypointOn())
-		{
-			pClient->AutoEventWaypoint(CWaypointTypes::W_FL_SENTRY, 400.0f);
-		}
 	}
 
 	if (type == ENGI_DISP)
@@ -735,7 +663,6 @@ void CTF2PointBlockedCapture::Execute(IBotEventInterface *pEvent)
 void CTF2PointUnlocked::Execute(IBotEventInterface *pEvent)
 {
 	CTeamFortress2Mod::SetPointOpenTime(0);
-	//
 }
 
 void CTF2PointLocked::Execute(IBotEventInterface *pEvent)
@@ -862,21 +789,8 @@ void CFlagEvent::Execute(IBotEventInterface *pEvent)
 		if (pPlayer)
 		{
 			int iTeam = CTeamFortress2Mod::GetTeam(pPlayer);
-
-			if (CTeamFortress2Mod::IsFlagAtDefaultState())
-			{
-				CClient *pClient;
-
-				pClient = CClients::Get(pPlayer);
-
-				if (pClient && pClient->AutoWaypointOn())
-					pClient->AutoEventWaypoint(CWaypointTypes::W_FL_FLAG, 200.0f, false);
-			}
-
 			CTeamFortress2Mod::FlagPickedUp(iTeam, pPlayer);
-
 		}
-
 
 		break;
 	case FLAG_CAPTURED: // captured
@@ -904,13 +818,6 @@ void CFlagEvent::Execute(IBotEventInterface *pEvent)
 		{
 			int iTeam = CTeamFortress2Mod::GetTeam(pPlayer);
 			CTeamFortress2Mod::FlagDropped(iTeam, Vector(0, 0, 0));
-
-			CClient *pClient;
-
-			pClient = CClients::Get(pPlayer);
-
-			if (pClient && pClient->AutoWaypointOn())
-				pClient->AutoEventWaypoint(CWaypointTypes::W_FL_CAPPOINT, 200.0f, false);
 		}
 
 		CTeamFortress2Mod::ResetFlagStateToDefault();
@@ -1194,18 +1101,13 @@ void CBotEvents::FreeMemory()
 	m_theEvents.clear();
 }
 
-void CBotEvents::ExecuteEvent(void *pEvent, eBotEventType iType)
+void CBotEvents::ExecuteEvent(IGameEvent *pEvent, eBotEventType iType)
 {
 	CBotEvent *pFound;
 	int iEventId = -1;
 	bool bFound;
 
-	IBotEventInterface *pInterface = NULL;
-
-	if (iType == TYPE_KEYVALUES)
-		pInterface = new CGameEventInterface1((KeyValues*)pEvent);
-	else if (iType == TYPE_IGAMEEVENT)
-		pInterface = new CGameEventInterface2((IGameEvent*)pEvent);
+	IBotEventInterface *pInterface = new CGameEventInterface2(pEvent);
 
 	if (pInterface == NULL)
 		return;
@@ -1216,11 +1118,6 @@ void CBotEvents::ExecuteEvent(void *pEvent, eBotEventType iType)
 	for (register unsigned short int i = 0; i < m_theEvents.size(); i++)
 	{
 		pFound = m_theEvents[i];
-
-		// if it has an pEvent id stored just check that
-		//if ( ( iType != TYPE_IGAMEEVENT ) && pFound->hasEventId() )
-		//	bFound = pFound->isEventId(iEventId);
-		//else
 		bFound = pFound->ForCurrentMod() && pFound->IsType(pInterface->GetName());
 
 		if (bFound)

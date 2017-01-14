@@ -22,7 +22,7 @@ void CWaypointDistances::Load()
 
 	if (szMapName  && *szMapName)
 	{
-		CBotGlobals::BuildFileName(filename, szMapName, BOT_WAYPOINT_FOLDER, BOT_WAYPOINT_DST_EXTENSION, true);
+		smutils->BuildPath(Path_SM, filename, sizeof(filename), "data\\afkbot\\waypoints\\%s.%s", szMapName, BOT_WAYPOINT_DISTANCE_EXTENSION);
 
 		FILE *bfp = CBotGlobals::OpenFile(filename, "rb");
 
@@ -55,7 +55,7 @@ void CWaypointDistances::Save()
 	{
 		wpt_dist_hdr_t hdr;
 
-		CBotGlobals::BuildFileName(filename, szMapName, BOT_WAYPOINT_FOLDER, BOT_WAYPOINT_DST_EXTENSION, true);
+		smutils->BuildPath(Path_SM, filename, sizeof(filename), "data\\afkbot\\%s\\%s.%s", BOT_WAYPOINT_FOLDER, szMapName, BOT_WAYPOINT_DISTANCE_EXTENSION);
 
 		FILE *bfp = CBotGlobals::OpenFile(filename, "wb");
 

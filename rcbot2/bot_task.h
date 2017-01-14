@@ -36,7 +36,7 @@ class CBotSquad;
 class CBotSchedule;
 struct edict_t;
 
-#include "bot.h"
+#include "bot_base.h"
 #include "bot_const.h"
 #include "bot_fortress.h"
 

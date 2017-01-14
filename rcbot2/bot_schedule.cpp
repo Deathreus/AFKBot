@@ -31,14 +31,14 @@
  *
  */
 
-#include "bot.h"
+#include "bot_base.h"
 #include "bot_schedule.h"
 #include "bot_task.h"
-#include "bot_client.h"
 #include "bot_weapons.h"
 #include "bot_globals.h"
 #include "bot_getprop.h"
 #include "bot_waypoint_locations.h"
+
 ////////////////////////////////////
 // these must match the SCHED IDs
 const char *szSchedules[SCHED_MAX + 1] =
@@ -687,34 +687,14 @@ void CBotTF2MessAroundSched::Init()
 CBotFollowLastEnemy::CBotFollowLastEnemy(CBot *pBot, edict_t *pEnemy, Vector vLastSee)
 {
 	Vector vVelocity = Vector(0, 0, 0);
-	CClient *pClient = CClients::Get(pEnemy);
+	CClassInterface::GetVelocity(pEnemy, &vVelocity);
 
 	CFindPathTask *pFindPath = new CFindPathTask(vLastSee, LOOK_LAST_ENEMY);
-
-	if (CClassInterface::GetVelocity(pEnemy, &vVelocity))
-	{
-		if (pClient && (vVelocity == Vector(0, 0, 0)))
-			vVelocity = pClient->GetVelocity();
-	}
-	else if (pClient)
-		vVelocity = pClient->GetVelocity();
-
 	pFindPath->SetCompleteInterrupt(CONDITION_SEE_CUR_ENEMY);
-
 	AddTask(pFindPath);
-
-	/*if ( pBot->isTF2() )
-	{
-	int playerclass = ((CBotTF2*)pBot)->getClass();
-
-	if ( ( playerclass == TF_CLASS_SOLDIER ) || (playerclass == TF_CLASS_DEMOMAN) )
-	AddTask(new CBotTF2ShootLastEnemyPosition(vLastSee,pEnemy,vVelocity));
-	}*/
+	pFindPath->SetNoInterruptions();
 
 	AddTask(new CFindLastEnemy(vLastSee, vVelocity));
-
-	//////////////
-	pFindPath->SetNoInterruptions();
 }
 ///////////////////////////////////////////////////
 void CBotFollowLastEnemy::Init()

@@ -34,14 +34,9 @@
 #include <vector>
 using namespace std;
 
-
-
 extern const char *g_szTF2Weapons[];
 
-#include "shareddefs.h"
-
 class CBot;
-
 
 extern int m_TF2AmmoIndices[];
 

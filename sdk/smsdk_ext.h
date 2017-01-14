@@ -323,7 +323,7 @@ extern IServerGameDLL *gamedll;
 #define SM_MKIFACE(name) SMINTERFACE_##name##_NAME, SMINTERFACE_##name##_VERSION
 /** Automates retrieving SourceMod interfaces */
 #define SM_GET_IFACE(prefix, addr) \
-	if (!g_pShareSys->RequestInterface(SM_MKIFACE(prefix), myself, (SMInterface **)&addr)) \
+	if (!sharesys->RequestInterface(SM_MKIFACE(prefix), myself, (SMInterface **)&addr)) \
 	{ \
 		if (error != NULL && maxlength) \
 		{ \
@@ -337,7 +337,7 @@ extern IServerGameDLL *gamedll;
 	}
 /** Automates retrieving SourceMod interfaces when needed outside of SDK_OnLoad() */
 #define SM_GET_LATE_IFACE(prefix, addr) \
-	g_pShareSys->RequestInterface(SM_MKIFACE(prefix), myself, (SMInterface **)&addr)
+	sharesys->RequestInterface(SM_MKIFACE(prefix), myself, (SMInterface **)&addr)
 /** Validates a SourceMod interface pointer */
 #define SM_CHECK_IFACE(prefix, addr) \
 	if (!addr) \

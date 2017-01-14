@@ -29,7 +29,7 @@
  *
  */
 
-#include "bot.h"
+#include "bot_base.h"
 #include "bot_buttons.h"
 #include "in_buttons.h"
 

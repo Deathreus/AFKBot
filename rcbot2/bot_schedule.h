@@ -31,7 +31,7 @@
 #ifndef __RCBOT_SCHEDULE_H__
 #define __RCBOT_SCHEDULE_H__
 
-#include "bot.h"
+#include "bot_base.h"
 #include "bot_task.h"
 #include "bot_genclass.h"
 //#include "bot_fortress.h"
