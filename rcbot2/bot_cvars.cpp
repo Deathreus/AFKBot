@@ -1,11 +1,7 @@
 
-#include "icvar.h"
 #include "convar.h"
 
 #include "bot_cvars.h"
-
-static ICvar *s_pCVar;
-
 
 ConVar bot_cmd_enable_wpt_sounds("afkbot_enable_wpt_sounds", "1", 0, "Enable/disable sound effects when editing waypoints");
 ConVar bot_command("afkbot_cmd", "", 0, "issues a command to all bots");
@@ -84,17 +80,26 @@ ConVar bot_tf2_payload_dist_retreat("afkbot_tf2_payload_dist_retreat", "512.0", 
 ConVar bot_spy_runaway_health("afkbot_spy_runaway_health", "70", 0, "health which spies run away after attacking");
 
 // Default offsets
-ConVar bot_const_point_master_offset("afkbot_const_mstr_offset", "852", 0, "TF2 OFFSET for Point Master Class");
-ConVar bot_const_round_offset("afkbot_const_round_offset", "852", 0, "TF2 OFFSET for Round Class");
+ConVar bot_const_point_master_offset("afkbot_const_mstr_offset", "856", 0, "TF2 OFFSET for Point Master Class");
+ConVar bot_const_round_offset("afkbot_const_round_offset", "856", 0, "TF2 OFFSET for Round Class");
 
 
 // Default skill settings
-ConVar bot_skill("afkbot_aimskill", "0.5", FCVAR_NOTIFY, "aim skill level", true, 0.0f, true, 1.0f);
-ConVar bot_sensitivity("afkbot_sensitivity", "8.0", FCVAR_NOTIFY, "turning sensitivity");
-ConVar bot_braveness("afkbot_braveness", "0.5", FCVAR_NOTIFY, "braveness", true, 0.0f, true, 1.0f);
-ConVar bot_visrevs("afkbot_visrevs", "4", FCVAR_NOTIFY, "vision revisions");
-ConVar bot_visrevs_client("afkbot_visrevs_client", "6", FCVAR_NOTIFY, "client vision revisions");
-ConVar bot_pathrevs("afkbot_pathrevs", "128", FCVAR_NOTIFY, "path revisions");
+ConVar bot_skill_randomize("afkbot_randomizeskill", "1", FCVAR_NOTIFY, "randomize a bots skill level on activation?", true, 0.0f, true, 1.0f);
+ConVar bot_skill_min("afkbot_aimskill_min", "0.5", FCVAR_NOTIFY, "minimum aim skill level", true, 0.0f, true, 1.0f);
+ConVar bot_skill_max("afkbot_aimskill_max", "1.0", FCVAR_NOTIFY, "maximum aim skill level", true, 0.0f, true, 1.0f);
+ConVar bot_sensitivity_min("afkbot_sensitivity_min", "8.0", FCVAR_NOTIFY, "minimum turning sensitivity", true, 0.0f, false, 0.0f);
+ConVar bot_sensitivity_max("afkbot_sensitivity_max", "12.0", FCVAR_NOTIFY, "maximum turning sensitivity", true, 0.0f, false, 0.0f);
+ConVar bot_braveness_min("afkbot_braveness_min", "0.5", FCVAR_NOTIFY, "minimum braveness", true, 0.0f, true, 1.0f);
+ConVar bot_braveness_max("afkbot_braveness_max", "1.0", FCVAR_NOTIFY, "maximum braveness", true, 0.0f, true, 1.0f);
+ConVar bot_visrevs_min("afkbot_visrevs_min", "4", FCVAR_NOTIFY, "minimum vision revisions", true, 0.0f, false, 0.0f);
+ConVar bot_visrevs_max("afkbot_visrevs_max", "8", FCVAR_NOTIFY, "maximum vision revisions", true, 0.0f, false, 0.0f);
+ConVar bot_visrevs_client_min("afkbot_visrevs_client_min", "6", FCVAR_NOTIFY, "minimum client vision revisions", true, 0.0f, false, 0.0f);
+ConVar bot_visrevs_client_max("afkbot_visrevs_client_max", "9", FCVAR_NOTIFY, "maximum client vision revisions", true, 0.0f, false, 0.0f);
+ConVar bot_pathrevs_min("afkbot_pathrevs_min", "128", FCVAR_NOTIFY, "minimum path revisions", true, 0.0f, false, 0.0f);
+ConVar bot_pathrevs_max("afkbot_pathrevs_max", "160", FCVAR_NOTIFY, "maximum path revisions", true, 0.0f, false, 0.0f);
+
+// TODO : Make these per bot?
 ConVar bot_defrate("afkbot_defrate", "0.24", FCVAR_NOTIFY, "rate for bots to defend");
 ConVar bot_beliefmulti("afkbot_beliefmulti", "20.0", FCVAR_NOTIFY, "multiplier for increasing bot belief");
 ConVar bot_belief_fade("afkbot_belief_fade", "0.75", FCVAR_NOTIFY, "the multiplayer rate bot belief decreases");

@@ -76,12 +76,20 @@ extern ConVar bot_spy_runaway_health;
 extern ConVar bot_const_point_master_offset;
 extern ConVar bot_const_round_offset;
 
-extern ConVar bot_skill;
-extern ConVar bot_sensitivity;
-extern ConVar bot_braveness;
-extern ConVar bot_visrevs;
-extern ConVar bot_visrevs_client;
-extern ConVar bot_pathrevs;
+extern ConVar bot_skill_randomize;
+extern ConVar bot_skill_min;
+extern ConVar bot_skill_max;
+extern ConVar bot_sensitivity_min;
+extern ConVar bot_sensitivity_max;
+extern ConVar bot_braveness_min;
+extern ConVar bot_braveness_max;
+extern ConVar bot_visrevs_min;
+extern ConVar bot_visrevs_max;
+extern ConVar bot_visrevs_client_min;
+extern ConVar bot_visrevs_client_max;
+extern ConVar bot_pathrevs_min;
+extern ConVar bot_pathrevs_max;
+
 extern ConVar bot_defrate;
 extern ConVar bot_beliefmulti;
 extern ConVar bot_belief_fade;

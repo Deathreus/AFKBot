@@ -28,79 +28,59 @@
  *    version.
  *
  */
-#include "bot.h"
+#include "bot_base.h"
 #include "bot_strings.h"
 #include "bot_globals.h"
 #include "bot_profile.h"
-#include "bot_genclass.h"
-#include "bot_visibles.h"
-#include "bot_navigator.h"
 
-vector <CBotProfile*> CBotProfiles::m_Profiles;
+CBotProfile **CBotProfiles::m_Profiles = NULL;
 CBotProfile *CBotProfiles::m_pDefaultProfile = NULL;
 
-CBotProfile::CBotProfile(CBotProfile &other)
-{
-	*this = other;
-
-	m_szName = CStrings::GetString(other.m_szName);
-	m_szModel = CStrings::GetString(other.m_szModel);
-}
+extern ConVar bot_skill_min;
+extern ConVar bot_sensitivity_min;
+extern ConVar bot_braveness_min;
+extern ConVar bot_visrevs_min;
+extern ConVar bot_visrevs_client_min;
+extern ConVar bot_pathrevs_min;
 
 CBotProfile::CBotProfile(
-	const char *szModel,
 	int iVisionTicks,
 	int iPathTicks,
 	int iVisionTicksClients,
 	int iSensitivity,
 	float fBraveness,
-	float fAimSkill,
-	int iClass)
+	float fAimSkill)
 {
 	m_iVisionTicksClients = iVisionTicksClients;
 	m_iSensitivity = iSensitivity;
 	m_fBraveness = fBraveness;
 	m_fAimSkill = fAimSkill;
-	m_szModel = CStrings::GetString(szModel);
 	m_iPathTicks = iPathTicks;
 	m_iVisionTicks = iVisionTicks;
-	m_iClass = iClass;
 }
 
 void CBotProfiles::DeleteProfiles()
 {
-	for (unsigned int i = 0; i < m_Profiles.size(); i++)
+	for (short int i = 0; i < gpGlobals->maxClients; i++)
 	{
 		delete m_Profiles[i];
 		m_Profiles[i] = NULL;
 	}
 
-	m_Profiles.clear();
-
 	delete m_pDefaultProfile;
 	m_pDefaultProfile = NULL;
 }
 
-// find profiles and setup list
-void CBotProfiles::SetupProfiles()
+// Setup Default profile
+void CBotProfiles::SetupProfile()
 {
-	extern ConVar bot_skill;
-	extern ConVar bot_sensitivity;
-	extern ConVar bot_braveness;
-	extern ConVar bot_visrevs;
-	extern ConVar bot_visrevs_client;
-	extern ConVar bot_pathrevs;
-
-	// Setup Default profile
 	m_pDefaultProfile = new CBotProfile(
-		"default", // model (team in HL2DM)
-		bot_visrevs.GetInt(), // vis ticks
-		bot_pathrevs.GetInt(), // path ticks
-		bot_visrevs_client.GetInt(), // visrevs clients
-		bot_sensitivity.GetFloat(), // sensitivity
-		bot_braveness.GetFloat(), // braveness
-		bot_skill.GetFloat(), // aim skill
-		-1 // class
+		bot_visrevs_min.GetInt(), // vis ticks
+		bot_pathrevs_min.GetInt(), // path ticks
+		bot_visrevs_client_min.GetInt(), // visrevs clients
+		bot_sensitivity_min.GetFloat(), // sensitivity
+		bot_braveness_min.GetFloat(), // braveness
+		bot_skill_min.GetFloat() // aim skill
 		);
 
 }
@@ -112,28 +92,3 @@ CBotProfile *CBotProfiles::GetDefaultProfile()
 
 	return m_pDefaultProfile;
 }
-
-// return a profile unused by a bot
-CBotProfile *CBotProfiles::GetRandomFreeProfile()
-{
-	unsigned int i;
-	dataUnconstArray<int> iList;
-	CBotProfile *found = NULL;
-
-	for (i = 0; i < m_Profiles.size(); i++)
-	{
-		if (!CBots::FindBotByProfile(m_Profiles[i]))
-			iList.Add(i);
-	}
-
-	if (iList.IsEmpty())
-		return NULL;
-
-	found = m_Profiles[iList.Random()];
-	iList.Clear();
-
-	return found;
-}
-
-
-

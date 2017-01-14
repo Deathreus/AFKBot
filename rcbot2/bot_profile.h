@@ -11,26 +11,23 @@ public:
 	{
 		memset(this, 0, sizeof(CBotProfile));
 	}
-	CBotProfile(CBotProfile &other);
+
+	CBotProfile operator =(CBotProfile &other)
+	{
+		*this = other;
+	}
+
 	// setup profile
 	CBotProfile(
-		const char *szModel,
 		int iVisionTicks,
 		int iPathTicks,
 		int iVisionTicksClients,
 		int iSensitivity,
 		float fBraveness,
-		float fAimSkill,
-		int iClass = 0);
+		float fAimSkill);
 
-	// bot's name
-	char *m_szName;
-	char *m_szModel;
-	// bot's team
-	int m_iTeam;				// preferred player team
 	int m_iVisionTicks;			// speed of finding non players (npcs/teleporters etc)
 	int m_iPathTicks;			// speed of finding a path
-	int m_iClass;				// preferred player class
 	int m_iVisionTicksClients;	// speed of finding other players and enemy players
 	int m_iSensitivity;		// 1 to 20 sensitivity of bot's "mouse" (angle speed)
 	float m_fBraveness;			// 0.0 to 1.0 sensitivity to danger (brave = less sensitive)
@@ -42,16 +39,12 @@ class CBotProfiles
 public:
 	static void DeleteProfiles();
 
-	// find profiles and setup list
-	static void SetupProfiles();
-
-	// return a profile unused by a bot
-	static CBotProfile *GetRandomFreeProfile();
+	static void SetupProfile();
 
 	static CBotProfile *GetDefaultProfile();
 
 private:
-	static vector <CBotProfile*> m_Profiles;
+	static CBotProfile **m_Profiles;
 	static CBotProfile *m_pDefaultProfile;
 };
 
