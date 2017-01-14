@@ -45,7 +45,7 @@
 #include "vstdlib/random.h" // for random functions
 #include "iservernetworkable.h" // may come in handy
 
-#include "bot.h"
+#include "bot_base.h"
 #include "bot_schedule.h"
 #include "bot_buttons.h"
 #include "bot_navigator.h"
@@ -69,7 +69,6 @@
 #include "bot_squads.h"
 //#include "bot_mtrand.h"
 #include "bot_getprop.h"
-#include "bot_client.h"
 
 #ifdef GetClassName
 #undef GetClassName
@@ -88,9 +87,13 @@ const float CBot::m_fAttackLowestHoldTime = 0.1f;
 const float CBot::m_fAttackHighestHoldTime = 0.6f;
 const float CBot::m_fAttackLowestLetGoTime = 0.1f;
 const float CBot::m_fAttackHighestLetGoTime = 0.5f;
-bool CBots::m_bControlBotsOnly = false;
-bool CBots::m_bControlNext = false;
 queue<edict_t*> CBots::m_ControlQueue;
+
+extern IPlayerInfoManager *playerinfomanager;
+extern IServerPluginHelpers *helpers;
+extern IServerGameClients* gameclients;
+
+extern IForward *forwardOnAFK;
 
 /*	to be used...
 int CBots::m_iMaxBots = -1;
@@ -102,6 +105,19 @@ int CBots::m_iMinBots = -1;
 
 extern ConVar bot_use_vc_commands;
 extern ConVar bot_dont_move;
+extern ConVar bot_skill_randomize;
+extern ConVar bot_skill_min;
+extern ConVar bot_skill_max;
+extern ConVar bot_sensitivity_min;
+extern ConVar bot_sensitivity_max;
+extern ConVar bot_braveness_min;
+extern ConVar bot_braveness_max;
+extern ConVar bot_visrevs_min;
+extern ConVar bot_visrevs_max;
+extern ConVar bot_visrevs_client_min;
+extern ConVar bot_visrevs_client_max;
+extern ConVar bot_pathrevs_min;
+extern ConVar bot_pathrevs_max;
 
 const char *g_szLookTaskToString[LOOK_MAX] =
 {
@@ -291,8 +307,8 @@ bool CBot::CreateBotFromEdict(edict_t *pEdict, CBotProfile *pProfile)
 
 	m_pProfile = pProfile;
 
-	m_iDesiredTeam = pProfile->m_iTeam;
-	m_iDesiredClass = pProfile->m_iClass;
+	m_iDesiredTeam = RandomInt(2, 3);
+	m_iDesiredClass = RandomInt(1, 9);
 
 	return true;
 }
@@ -302,7 +318,6 @@ bool CBot::FVisible(Vector &vOrigin, edict_t *pDest)
 	//return CBotGlobals::isVisible(m_pEdict,getEyePosition(),vOrigin);
 	// fix bots seeing through gates/doors
 	return CBotGlobals::IsVisibleHitAllExceptPlayer(m_pEdict, GetEyePosition(), vOrigin, pDest);
-
 }
 
 bool CBot::FVisible(edict_t *pEdict, bool bCheckHead)
@@ -334,18 +349,17 @@ bool CBot::FVisible(edict_t *pEdict, bool bCheckHead)
 
 			return true;
 		}
-		/*
-#if defined(_DEBUG) && !defined(__linux__)
+/*#if defined(_DEBUG) && !defined(__linux__)
 		else if (CClients::clientsDebugging(BOT_DEBUG_VIS) && (CBotGlobals::GetTraceResult()->m_pEnt != NULL))
 		{
-		extern IServerGameEnts *servergameents;
+			extern IServerGameEnts *servergameents;
 
-		edict_t *edict = servergameents->BaseEntityToEdict(CBotGlobals::GetTraceResult()->m_pEnt);
+			edict_t *edict = servergameents->BaseEntityToEdict(CBotGlobals::GetTraceResult()->m_pEnt);
 
-		if (edict)
-		debugoverlay->AddTextOverlay(CBotGlobals::GetTraceResult()->endpos, 2.0f, "Traceline hit %s", edict->GetClassName());
+			if (edict)
+				debugoverlay->AddTextOverlay(CBotGlobals::GetTraceResult()->endpos, 2.0f, "Traceline hit %s", edict->GetClassName());
 		}
-		#endif */
+#endif*/
 		if (m_pEnemy == pEdict)
 		{
 			if (FVisible(vOrigin, pEdict))
@@ -366,7 +380,7 @@ bool CBot::FVisible(edict_t *pEdict, bool bCheckHead)
 	eye = GetEyePosition();
 
 	// use typical traceline for non players
-	return CBotGlobals::IsVisible(m_pEdict, eye, pEdict);//CBotGlobals::entityOrigin(pEdict)+Vector(0,0,50.0f));
+	return CBotGlobals::IsVisible(m_pEdict, eye, pEdict);
 }
 
 inline QAngle CBot::EyeAngles()
@@ -1030,11 +1044,9 @@ void CBot::UpdateConditions()
 				else
 					RemoveCondition(CONDITION_SEE_SQUAD_LEADER);
 
-				float fSpeed = 0.0f;
-				CClient *pClient = CClients::Get(pLeader);
-
-				if (pClient)
-					fSpeed = pClient->GetSpeed();
+				Vector vVel;
+				CClassInterface::GetVelocity(pLeader, &vVel);
+				float fSpeed = vVel.Length();
 
 				// update squad idle condition. If squad is idle, bot can move around a small radius 
 				// around the leader and do what they want, e.g. defend or snipe
@@ -1517,34 +1529,34 @@ int CBot::GetTeam()
 
 const char *pszConditionsDebugStrings[CONDITION_MAX_BITS + 1] =
 { "CONDITION_ENEMY_OBSCURED",
-"CONDITION_NO_WEAPON",
-"CONDITION_OUT_OF_AMMO",
-"CONDITION_SEE_CUR_ENEMY",
-"CONDITION_ENEMY_DEAD",
-"CONDITION_SEE_WAYPOINT",
-"CONDITION_NEED_AMMO",
-"CONDITION_NEED_HEALTH",
-"CONDITION_SEE_LOOK_VECTOR",
-"CONDITION_POINT_CAPTURED",
-"CONDITION_PUSH",
-"CONDITION_LIFT",
-"CONDITION_SEE_HEAL",
-"CONDITION_SEE_LAST_ENEMY_POS",
-"CONDITION_CHANGED",
-"CONDITION_COVERT",
-"CONDITION_RUN",
-"CONDITION_GREN",
-"CONDITION_NEED_BOMB",
-"CONDITION_SEE_ENEMY_HEAD",
-"CONDITION_PRONE",
-"CONDITION_PARANOID",
-"CONDITION_SEE_SQUAD_LEADER",
-"CONDITION_SQUAD_LEADER_DEAD",
-"CONDITION_SQUAD_LEADER_INRANGE",
-"CONDITION_SQUAD_IDLE",
-"CONDITION_DEFENSIVE",
-"CONDITION_BUILDING_SAPPED",
-"CONDITION_SEE_ENEMY_GROUND" };
+  "CONDITION_NO_WEAPON",
+  "CONDITION_OUT_OF_AMMO",
+  "CONDITION_SEE_CUR_ENEMY",
+  "CONDITION_ENEMY_DEAD",
+  "CONDITION_SEE_WAYPOINT",
+  "CONDITION_NEED_AMMO",
+  "CONDITION_NEED_HEALTH",
+  "CONDITION_SEE_LOOK_VECTOR",
+  "CONDITION_POINT_CAPTURED",
+  "CONDITION_PUSH",
+  "CONDITION_LIFT",
+  "CONDITION_SEE_HEAL",
+  "CONDITION_SEE_LAST_ENEMY_POS",
+  "CONDITION_CHANGED",
+  "CONDITION_COVERT",
+  "CONDITION_RUN",
+  "CONDITION_GREN",
+  "CONDITION_NEED_BOMB",
+  "CONDITION_SEE_ENEMY_HEAD",
+  "CONDITION_PRONE",
+  "CONDITION_PARANOID",
+  "CONDITION_SEE_SQUAD_LEADER",
+  "CONDITION_SQUAD_LEADER_DEAD",
+  "CONDITION_SQUAD_LEADER_INRANGE",
+  "CONDITION_SQUAD_IDLE",
+  "CONDITION_DEFENSIVE",
+  "CONDITION_BUILDING_SAPPED",
+  "CONDITION_SEE_ENEMY_GROUND" };
 
 void CBot::ClearSquad()
 {
@@ -1774,9 +1786,8 @@ void CBot::ListenForPlayers()
 	//m_fNextListenTime = engine->Time() + randomFloat(0.5f,2.0f);
 
 	edict_t *pListenNearest = NULL;
-	CClient *pClient;
 	edict_t *pPlayer;
-	IPlayerInfo *p;
+	IPlayerInfo *pPL;
 	float fFactor = 0;
 	float fMaxFactor = 0;
 	//float fMinDist = 1024.0f;
@@ -1805,15 +1816,10 @@ void CBot::ListenForPlayers()
 		if (pPlayer->IsFree())
 			continue;
 
-		pClient = CClients::Get(pPlayer);
-
-		if (!pClient->IsUsed())
-			continue;
-
-		p = playerinfomanager->GetPlayerInfo(pPlayer);
+		pPL = playerinfomanager->GetPlayerInfo(pPlayer);
 
 		// 05/07/09 fix crash bug
-		if (!p || !p->IsConnected() || p->IsDead() || p->IsObserver() || !p->IsPlayer())
+		if (!pPL || !pPL->IsConnected() || pPL->IsDead() || pPL->IsObserver() || !pPL->IsPlayer())
 			continue;
 
 		fDist = DistanceFrom(pPlayer);
@@ -2705,14 +2711,11 @@ void CBot::GetTasks(unsigned int iIgnore)
 	{
 		if (WantToFollowEnemy())
 		{
-			Vector vVelocity = Vector(0, 0, 0);
-			CClient *pClient = CClients::Get(m_pLastEnemy);
+			Vector vVelocity;
+			CClassInterface::GetVelocity(m_pLastEnemy, &vVelocity);
 			CBotSchedule *pSchedule = new CBotSchedule();
 
 			CFindPathTask *pFindPath = new CFindPathTask(m_vLastSeeEnemy);
-
-			if (pClient)
-				vVelocity = pClient->GetVelocity();
 
 			pSchedule->AddTask(pFindPath);
 			pSchedule->AddTask(new CFindLastEnemy(m_vLastSeeEnemy, vVelocity));
@@ -2739,177 +2742,9 @@ void CBot::GetTasks(unsigned int iIgnore)
 
 }
 
-///////////////////////
-
-/*bool CBots :: controlBot ( edict_t *pEdict )
-{
-CBotProfile *pBotProfile = CBotProfiles::getRandomFreeProfile();
-
-if ( m_Bots[slotOfEdict(pEdict)]->getEdict() == pEdict )
-{
-return false;
-}
-
-if ( pBotProfile == NULL )
-{
-CBotGlobals::botMessage(NULL,0,"No bot profiles are free, creating a default bot...");
-
-pBotProfile = CBotProfiles::getDefaultProfile();
-
-if ( pBotProfile == NULL )
-return false;
-}
-
-m_Bots[slotOfEdict(pEdict)]->createBotFromEdict(pEdict,pBotProfile);
-
-return true;
-}*/
-
+//////////////////////
 #define SET_PROFILE_DATA_INT(varname,membername) if ( varname && *varname ) { pBotProfile->membername = atoi(varname); }
 #define SET_PROFILE_STRING(varname,localname,membername) if ( varname && *varname ) { localname = (char*)varname; } else { localname = pBotProfile->membername; }
-
-/*bool CBots :: controlBot ( const char *szOldName, const char *szName, const char *szTeam, const char *szClass )
-{
-edict_t *pEdict;
-CBotProfile *pBotProfile;
-
-char *szOVName = "";
-
-if ( (pEdict = CBotGlobals::findPlayerByTruncName(szOldName)) == NULL )
-{
-CBotGlobals::botMessage(NULL,0,"Can't find player");
-return false;
-}
-
-if ( m_Bots[slotOfEdict(pEdict)]->getEdict() == pEdict )
-{
-CBotGlobals::botMessage(NULL,0,"already controlling player");
-return false;
-}
-
-if ( (m_iMaxBots != -1) && (CBotGlobals::numClients() >= m_iMaxBots) )
-{
-CBotGlobals::botMessage(NULL,0,"Can't create bot, max_bots reached");
-return false;
-}
-
-m_flAddKickBotTime = engine->Time() + 2.0f;
-
-pBotProfile = CBotProfiles::getRandomFreeProfile();
-
-if ( pBotProfile == NULL )
-{
-CBotGlobals::botMessage(NULL,0,"No bot profiles are free, creating a default bot...");
-
-pBotProfile = CBotProfiles::getDefaultProfile();
-
-if ( pBotProfile == NULL )
-return false;
-}
-SET_PROFILE_DATA_INT(szClass,m_iClass);
-SET_PROFILE_DATA_INT(szTeam,m_iTeam);
-SET_PROFILE_STRING(szName,szOVName,m_szName);
-
-//IBotController *p = g_pBotManager->GetBotController(pEdict);
-
-return m_Bots[slotOfEdict(pEdict)]->createBotFromEdict(pEdict,pBotProfile);
-
-}*/
-
-/*bool CBots :: createBot (const char *szClass, const char *szTeam, const char *szName)
-{
-edict_t *pEdict;
-CBotProfile *pBotProfile;
-CBotMod *pMod = CBotGlobals::getCurrentMod();
-extern ConVar bot_addbottime;
-
-char *szOVName = "";
-
-if ( (m_iMaxBots != -1) && (CBotGlobals::numClients() >= m_iMaxBots) )
-CBotGlobals::botMessage(NULL,0,"Can't create bot, max_bots reached");
-
-m_flAddKickBotTime = engine->Time() + bot_addbottime.GetFloat();
-
-pBotProfile = CBotProfiles::getRandomFreeProfile();
-
-if ( pBotProfile == NULL )
-{
-CBotGlobals::botMessage(NULL,0,"No bot profiles are free, creating a default bot...");
-
-pBotProfile = CBotProfiles::getDefaultProfile();
-
-if ( pBotProfile == NULL )
-return false;
-}
-
-SET_PROFILE_DATA_INT(szClass,m_iClass);
-SET_PROFILE_DATA_INT(szTeam,m_iTeam);
-SET_PROFILE_STRING(szName,szOVName,m_szName);
-
-if ( CBots::controlBots() )
-{
-extern ConVar bot_sv_cheats_auto;
-
-char cmd[128];
-memset(cmd, 0, sizeof(cmd));
-
-extern ConCommandBase *puppet_bot_cmd;
-
-// Attempt to make puppet bot command cheat free
-if ( puppet_bot_cmd != NULL )
-{
-if ( /*bot_cmd_nocheats.GetBool() &&*/ /*puppet_bot_cmd->IsFlagSet(FCVAR_CHEAT) )
-{
-int *m_nFlags = (int*)((unsigned long)puppet_bot_cmd + BOT_CONVAR_FLAGS_OFFSET); // 20 is offset to flags
-//nPrevFlags = *m_nFlags;
-*m_nFlags &= ~FCVAR_CHEAT;
-//bChangedFlags = true;
-}
-}
-
-extern ConVar *sv_cheats;
-
-// const char *pparg[1];
-// pparg[0] = cmd;
-
-sprintf(cmd,"%s -name \"%s\"\n",BOT_ADD_PUPPET_COMMAND,szOVName);
-
-// CCommand *com = new CCommand(1,pparg);
-
-int *m_nFlags = (int*)((unsigned long)sv_cheats + BOT_CONVAR_FLAGS_OFFSET); // 20 is offset to flags
-
-if ( sv_cheats->IsFlagSet(FCVAR_NOTIFY) )
-*m_nFlags &= ~FCVAR_NOTIFY;
-
-if ( pMod->needCheatsHack() )
-sv_cheats->SetValue(1);
-
-m_bControlNext = true;
-
-engine->ServerCommand(cmd);
-engine->ServerExecute();
-
-// ((ConCommand*)puppet_bot_cmd)->Dispatch(*com);
-
-if ( pMod->needCheatsHack() )
-sv_cheats->SetValue(0);
-
-*m_nFlags |= FCVAR_NOTIFY;
-
-// delete com;
-
-return true;
-}
-else
-{
-pEdict = g_pBotManager->CreateBot( szOVName );
-
-if ( pEdict == NULL )
-return false;
-
-return ( m_Bots[slotOfEdict(pEdict)]->createBotFromEdict(pEdict,pBotProfile) );
-}
-}*/
 
 void CBots::BotFunction(IBotFunction *function)
 {
@@ -2930,7 +2765,6 @@ void CBots::Init()
 	unsigned int i;
 
 	m_Bots = new CBot*[MAX_PLAYERS];
-	//m_Bots = (CBot**)malloc(sizeof(CBot*) * MAX_PLAYERS);
 
 	for (i = 0; i < MAX_PLAYERS; i++)
 	{
@@ -2939,30 +2773,30 @@ void CBots::Init()
 			/*case BOTTYPE_DOD:
 				m_Bots[i] = new CDODBot();
 				break;
-				case BOTTYPE_CSS:
+			case BOTTYPE_CSS:
 				m_Bots[i] = new CCSSBot();
 				break;
-				case BOTTYPE_HL2DM:
+			case BOTTYPE_HL2DM:
 				m_Bots[i] = new CHLDMBot();
 				break;
-				case BOTTYPE_HL1DM:
+			case BOTTYPE_HL1DM:
 				m_Bots[i] = new CHL1DMSrcBot();
 				break;
-				case BOTTYPE_COOP:
+			case BOTTYPE_COOP:
 				m_Bots[i] = new CBotCoop();
 				break;*/
-		case BOTTYPE_TF2:
-			m_Bots[i] = new CBotTF2();
-			break;
+			case BOTTYPE_TF2:
+				m_Bots[i] = new CBotTF2();
+				break;
 			/*case BOTTYPE_FF:
 				m_Bots[i] = new CBotFF();
 				break;
-				case BOTTYPE_ZOMBIE:
+			case BOTTYPE_ZOMBIE:
 				m_Bots[i] = new CBotZombie();
 				break;*/
-		default:
-			m_Bots[i] = new CBot();
-			break;
+			default:
+				m_Bots[i] = new CBot();
+				break;
 		}
 	}
 }
@@ -3033,7 +2867,7 @@ void CBots::BotThink()
 	CBotsBotThink = CProfileTimers::GetTimer(BOTS_THINK_TIMER);
 	CBotThink = CProfileTimers::GetTimer(BOT_THINK_TIMER);
 
-	if ( CClients::clientsDebugging(BOT_DEBUG_PROFILE) )
+	if ( CClients::ClientsDebugging(BOT_DEBUG_PROFILE) )
 	{
 		CBotsBotThink->Start();
 	}
@@ -3092,32 +2926,66 @@ void CBots::BotThink()
 #endif
 	/*if (NeedToKickBot())
 	{
-	KickRandomBot();
-
-	if (m_iMaxBots >= 0)
-	{
-	m_iMaxBots--;
-	CBotGlobals::BotMessage(NULL, 0, "max bots changed to %d", m_iMaxBots);
-	}
+		KickRandomBot();
 	}*/
 }
 
 void CBots::MakeBot(edict_t *pEdict)
 {
-	CBotProfile *pBotProfile;
+	if (forwardOnAFK != NULL)
+	{
+		if (forwardOnAFK->GetFunctionCount())
+		{
+			forwardOnAFK->PushCell(ENTINDEX(pEdict));
+			forwardOnAFK->PushCell(true);
 
-	pBotProfile = CBotProfiles::GetRandomFreeProfile();
+			cell_t result = 0;
+			forwardOnAFK->Execute(&result);
 
-	if (pBotProfile == NULL)
+			if (result >= Pl_Handled)
+			{
+				return;
+			}
+		}
+	}
+
+	CBotProfile *pBotProfile = NULL;
+	if (!bot_skill_randomize.GetBool())
+	{
 		pBotProfile = CBotProfiles::GetDefaultProfile();
+	}
+	else
+	{
+		int iVisionTicks = RandomInt(bot_visrevs_min.GetInt(), bot_visrevs_max.GetInt());
+		int iPathTicks = RandomInt(bot_pathrevs_min.GetInt(), bot_pathrevs_max.GetInt());
+		int iVisionTicksClients = RandomInt(bot_visrevs_client_min.GetInt(), bot_visrevs_client_max.GetInt());
+		int iSensitivity = RandomInt(bot_sensitivity_min.GetInt(), bot_sensitivity_max.GetInt());
+		float fBraveness = RandomFloat(bot_braveness_min.GetFloat(), bot_braveness_max.GetFloat());
+		float fAimSkill = RandomFloat(bot_skill_min.GetFloat(), bot_skill_max.GetFloat());
+		pBotProfile = new CBotProfile(iVisionTicks,
+		                              iPathTicks,
+			                          iVisionTicksClients,
+			                          iSensitivity,
+			                          fBraveness,
+			                          fAimSkill);
+	}
 
 	m_Bots[SlotOfEdict(pEdict)]->CreateBotFromEdict(pEdict, pBotProfile);
 }
 
 void CBots::MakeNotBot(edict_t *pEdict)
 {
-	CBot *pBot = CBots::GetBotPointer(pEdict);
+	if (forwardOnAFK != NULL)
+	{
+		if (forwardOnAFK->GetFunctionCount())
+		{
+			forwardOnAFK->PushCell(ENTINDEX(pEdict));
+			forwardOnAFK->PushCell(false);
+			forwardOnAFK->Execute(NULL);
+		}
+	}
 
+	CBot *pBot = CBots::GetBotPointer(pEdict);
 	if (pBot != NULL)
 	{
 		if (pBot->InUse())
@@ -3191,112 +3059,10 @@ void CBots::RoundStart()
 
 void CBots::MapInit()
 {
-	//m_flAddKickBotTime = engine->Time() + 10.0f;
+	
 }
 
-/*bool CBots::NeedToAddBot()
-{
-int iClients = CBotGlobals::NumClients();
-
-return (((m_iMinBots != -1) && (CBots::NumBots() < m_iMinBots)) || ((iClients < m_iMaxBots) && (m_iMaxBots != -1)));
-}
-
-bool CBots::NeedToKickBot()
-{
-if (m_flAddKickBotTime < engine->Time())
-{
-if (((m_iMinBots != -1) && (CBots::NumBots() <= m_iMinBots)))
-return false;
-
-if ((m_iMaxBots > 0) && (CBotGlobals::NumClients() > m_iMaxBots))
-return true;
-}
-
-return false;
-}
-
-void CBots::KickRandomBot()
-{
-dataUnconstArray<int> list;
-int index;
-CBot *tokick;
-char szCommand[512];
-//gather list of bots
-for (short int i = 0; i < MAX_PLAYERS; i++)
-{
-if (m_Bots[i]->InUse())
-list.Add(i);
-}
-
-if (list.IsEmpty())
-{
-CBotGlobals::BotMessage(NULL, 0, "kickRandomBot() : No bots to kick");
-return;
-}
-
-index = list.Random();
-list.Clear();
-
-tokick = m_Bots[index];
-
-sprintf(szCommand, "kickid %d\n", tokick->GetPlayerID());
-
-m_flAddKickBotTime = engine->Time() + 2.0f;
-
-engine->ServerCommand(szCommand);
-}
-
-void CBots::KickRandomBotOnTeam(int team)
-{
-dataUnconstArray<int> list;
-int index;
-CBot *tokick;
-char szCommand[512];
-//gather list of bots
-for (short int i = 0; i < MAX_PLAYERS; i++)
-{
-if (m_Bots[i]->InUse())
-{
-if (m_Bots[i]->GetTeam() == team)
-list.Add(i);
-}
-}
-
-if (list.IsEmpty())
-{
-CBotGlobals::BotMessage(NULL, 0, "kickRandomBotOnTeam() : No bots to kick");
-return;
-}
-
-index = list.Random();
-list.Clear();
-
-tokick = m_Bots[index];
-
-sprintf(szCommand, "kickid %d\n", tokick->GetPlayerID());
-
-m_flAddKickBotTime = engine->Time() + 2.0f;
-
-engine->ServerCommand(szCommand);
-}*/
 ////////////////////////
-
-/*bool CBots :: handlePlayerJoin ( edict_t *pEdict, const char *name )
-{
-static int botnum;
-
-if ( m_bControlNext &&
-((strcmp(&name[strlen(name)-strlen(m_szNextName)],m_szNextName) == 0) || (sscanf(name,"Bot%d",&botnum) == 1)) )
-{
-m_ControlQueue.push(pEdict);
-m_bControlNext = false;
-
-return true;
-}
-
-return false;
-}*/
-
 CBotLastSee::CBotLastSee(edict_t *pEdict)
 {
 	m_pLastSee = pEdict;

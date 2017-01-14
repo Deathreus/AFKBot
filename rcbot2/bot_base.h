@@ -40,18 +40,18 @@
 #ifndef __RCBOT2_H__
 #define __RCBOT2_H__
 
-#include "eiface.h"
+#include <eiface.h>
 
-#include "usercmd.h"
+#include <usercmd.h>
 #include <queue>
 
 #include "bot_utility.h"
 #include "bot_const.h"
 #include "bot_ehandle.h"
 
-#include "vstdlib\random.h"
+#include <vstdlib\random.h>
 
-#include "PlayerState.h"
+#include <PlayerState.h>
 
 #include "..\extension.h"
 
@@ -556,6 +556,7 @@ public:
 	inline bool CurrentEnemy(edict_t *pEntity) { return m_pEnemy == pEntity; }
 
 	Vector GetAimVector(edict_t *pEntity);
+
 	virtual void ModAim(edict_t *pEntity, Vector &v_origin,
 		Vector *v_desired_offset, Vector &v_size,
 		float fDist, float fDist2D);
@@ -692,7 +693,7 @@ public:
 	inline float GetTouchDistance() { return m_fWaypointTouchDistance; }
 
 	inline CUserCmd *GetUserCMD() { return &m_pCmd; }
-	inline void SetUserCMD(CUserCmd cmd) { m_pCmd = cmd; }
+	inline void SetUserCMD(const CUserCmd &cmd) { m_pCmd = cmd; }
 
 	inline CPlayerState *GetPlayerState() { return &m_pPS; }
 
@@ -1022,17 +1023,6 @@ public:
 
 	static void Init();
 
-	static void ControlBotSetup(bool m_bSetting) { m_bControlBotsOnly = m_bSetting; }
-
-	// If true, then a puppet bot must be added to be controlled
-	static bool ControlBots() { return m_bControlBotsOnly; }
-
-	static bool ControlBot(edict_t *pEdict);
-
-	static bool ControlBot(const char *szOldName, const char *szName, const char *szTeam, const char *szClass);
-
-	static bool CreateBot(const char *szClass, const char *szTeam, const char *szName);
-
 	static int NumBots();
 
 	static bool HandlePlayerJoin(edict_t *pEdict, const char *name);
@@ -1047,25 +1037,9 @@ public:
 
 	static void MapInit();
 
-	//static bool NeedToAddBot();
-
-	//static bool NeedToKickBot();
-
-	//static void SetMaxBots(int iMax) { m_iMaxBots = iMax; }
-
-	//static int GetMaxBots() { return m_iMaxBots; }
-
-	//static void SetMinBots(int iMin) { m_iMinBots = iMin; }
-
-	//static int GetMinBots() { return m_iMinBots; }
-
 	static void BotFunction(IBotFunction *function);
 
-	static void HandleAutomaticControl();
-
 	static void RunPlayerMoveAll();
-
-	static bool AddBot(const char *szClass, const char *szTeam, const char *szName);
 
 	static void MakeBot(edict_t *pPlayer);
 	static void MakeNotBot(edict_t *pPlayer);
@@ -1075,37 +1049,14 @@ public:
 
 private:
 	static CBot **m_Bots;
-
-	//config
-	//static int m_iMaxBots;
-	//static int m_iMinBots;
-
-	// Workaround for add bot bug
-	//
-	static bool m_bControlBotsOnly;
-	static bool m_bControlNext;
-	// End - workaround
-
-	// add or kick bot time
-	//static float m_flAddKickBotTime;
-
 	static queue<edict_t*> m_ControlQueue;
 
 };
-
-void DrawLine(const Vector &origin, const Vector &target, int r, int g, int b, bool noDepthTest, float duration);
-
-void WriteUsercmd(bf_write *buf, CUserCmd *cmd);
-// useful helper funcs...
 
 inline bool FStrEq(const char *sz1, const char *sz2)
 {
 	return (sz1 == sz2 || Q_stricmp(sz1, sz2) == 0);
 }
-
-float VectorDistance(Vector &vec);
-
-int Ceiling(float fVal);
 
 bool FNullEnt(const edict_t* pent);
 
