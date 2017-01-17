@@ -316,6 +316,7 @@ PLUGIN_GLOBALVARS();
 #ifndef META_NO_HL2SDK
 extern IVEngineServer *engine;
 extern IServerGameDLL *gamedll;
+extern CGlobalVars *gpGlobals;
 #endif //META_NO_HL2SDK
 #endif
 

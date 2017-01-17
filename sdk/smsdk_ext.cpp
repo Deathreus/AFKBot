@@ -304,6 +304,7 @@ ISmmAPI *g_SMAPI = NULL;					/**< SourceMM API pointer */
 #ifndef META_NO_HL2SDK
 IVEngineServer *engine = NULL;				/**< IVEngineServer pointer */
 IServerGameDLL *gamedll = NULL;				/**< IServerGameDLL pointer */
+CGlobalVars *gpGlobals = NULL;				/**< CGlobalVars pointer */
 #endif
 
 /** Exposes the extension to Metamod */
@@ -363,6 +364,7 @@ bool SDKExtension::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, 
 	GET_V_IFACE_CURRENT(GetEngineFactory, engine, IVEngineServer, INTERFACEVERSION_VENGINESERVER);
 #endif // TF2 / CSS / DODS / HL2DM / SDK2013
 #endif // !METAMOD_PLAPI_VERSION
+	gpGlobals = ismm->GetCGlobals();
 #endif //META_NO_HL2SDK
 
 	m_SourceMMLoaded = true;
