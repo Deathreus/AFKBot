@@ -1,550 +1,391 @@
-//	NavMesh parser and functions written by -W3E- El Diablo
-
 #ifndef __RCBOT_NAVMESH_H__
 #define __RCBOT_NAVMESH_H__
 
 #include "bot_navigator.h"
+#include "bot_getprop.h"
+#include "server_class.h"
+#include "engine_wrappers.h"
+#include "..\NavMesh\List.h"
+#include "..\NavMesh\NavMesh.h"
+#include "..\NavMesh\NavMeshArea.h"
+#include "..\NavMesh\NavMeshGrid.h"
+#include "..\NavMesh\NavMeshLoader.h"
 
-enum eNavCorner
+const float StepHeight = 18.0f;					/*< if delta Z is greater than this, we have to jump to get up*/
+const float JumpHeight = 41.8f;					/*< if delta Z is less than this, we can jump up on it*/
+const float JumpCrouchHeight = 58.0f;			/*< (48) if delta Z is less than or equal to this, we can jumpcrouch up on it*/
+
+const float DeathDrop = 200.0f;					/*< (300) distance at which we will die if we fall - should be about 600, and pay attention to fall damage during pathfind*/
+
+const float HalfHumanWidth = 16.0f;
+const float HalfHumanHeight = 36.0f;
+const float HumanHeight = 72.0f;
+
+const float GridCellSize = 300.0f;				/* defines the extent for a single grid blocks size, used for collecting nav areas*/
+
+typedef IList<INavMeshArea*> SurroundingList;
+typedef IList<INavMeshArea*> AdjacentList;
+typedef IList<INavMeshLadder*> LadderList;
+typedef IList<INavMeshArea*> GridList;
+
+enum eNavAttrib
 {
-	NAV_CORNER_NORTH_WEST = 0,
-	NAV_CORNER_NORTH_EAST = 1,
-	NAV_CORNER_SOUTH_EAST = 2,
-	NAV_CORNER_SOUTH_WEST = 3,
-
-	NAV_CORNER_COUNT
+	NAV_MESH_CROUCH = 0x0001,			/*< must crouch to use this node/area*/
+	NAV_MESH_JUMP = 0x0002,				/*< must jump to traverse this area*/
+	NAV_MESH_PRECISE = 0x0004,			/*< do not adjust for obstacles, just move along area*/
+	NAV_MESH_NO_JUMP = 0x0008,			/*< inhibit discontinuity jumping*/
+	NAV_MESH_STOP = 0x0010,				/*< must stop when entering this area*/
+	NAV_MESH_RUN = 0x0020,				/*< must run to traverse this area*/
+	NAV_MESH_WALK = 0x0040,				/*< must walk to traverse this area*/
+	NAV_MESH_AVOID = 0x0080,			/*< avoid this area unless alternatives are too dangerous*/
+	NAV_MESH_TRANSIENT = 0x0100,		/*< area may become blocked, and should be periodically checked*/
+	NAV_MESH_DONT_HIDE = 0x0200,		/*< area should not be considered for hiding spot generation*/
+	NAV_MESH_STAND = 0x0400,			/*< bots hiding in this area should stand*/
+	NAV_MESH_NO_HOSTAGES = 0x0800,		/*< hostages shouldn't use this area*/ /*< used in the extension to determine special lifts*/
 };
 
-enum eNavDir
+enum eHidingAttrib
 {
-	NAV_DIR_NORTH = 0,
-	NAV_DIR_EAST = 1,
-	NAV_DIR_SOUTH = 2,
-	NAV_DIR_WEST = 3,
-
-	NAV_DIR_COUNT
+	IN_COVER = 0x01,					/*< in a corner with good hard cover nearby*/
+	GOOD_SNIPER_SPOT = 0x02,			/*< had at least one decent sniping corridor*/
+	IDEAL_SNIPER_SPOT = 0x04,			/*< can see either very far, or a large area, or both*/
+	EXPOSED = 0x08						/*< spot in the open, usually on a ledge or cliff*/
 };
 
-enum eNavLadder
+enum eRouteType
 {
-	NAV_LADDER_DIR_UP = 0,
-	NAV_LADDER_DIR_DOWN = 1,
-
-	NAV_LADDER_DIR_COUNT
+	FASTEST_ROUTE,
+	SAFEST_ROUTE,
 };
 
-class CNavMeshNavigator : public IBotNavigator
+extern IServerGameEnts *gameents;
+
+extern INavMesh *m_pNavMesh;
+
+// Most of this converted from work by Kit o' Rifty and the Source SDK
+class CNavMeshNavigator : public INavMeshNavigator
 {
 public:
-	bool Init(char *error, size_t maxlen);
+	CNavMeshNavigator(CBot *pBot)
+	{
+		m_pBot = pBot;
+		m_CurrWaypoint = NULL;
+		m_GoalWaypoint = NULL;
+		m_PrevWaypoint = NULL;
+		m_NextWaypoint = NULL;
+		m_bWorkingRoute = false;
+		m_iBeliefTeam = -1;
+		m_bLoadBelief = true;
+		m_bBeliefChanged = false;
+		Q_memset(&m_fBelief, 0, sizeof(float)*m_pNavMesh->GetAreas()->Size());
+		Q_memset(&m_fDanger, 0, sizeof(float)*m_pNavMesh->GetAreas()->Size());
+	}
+	~CNavMeshNavigator()
+	{
+		m_pBot = NULL;
+		Q_memset(&m_fBelief, 0, sizeof(float)*m_pNavMesh->GetAreas()->Size());
+		Q_memset(&m_fDanger, 0, sizeof(float)*m_pNavMesh->GetAreas()->Size());
+	}
 
+	static bool Init(char *error, size_t maxlen);
+	static void FreeMemory();
 	void FreeMapMemory();
-	void FreeAllMemory();
+
+	bool WorkRoute(Vector vFrom, Vector vTo, bool *bFail, bool bRestart = true, bool bNoInterruptions = false, INavMeshArea *goal = NULL, int iConditions = 0, int iDangerId = -1);
+
+	INavMeshArea *ChooseBestFromBelief(IList<INavMeshArea*> *goals, bool bHighDanger = false, int iSearchFlags = 0, int iTeam = 0);
+	INavMeshArea *ChooseBestFromBeliefBetweenAreas(IList<INavMeshArea*> *goals, bool bHighDanger = false, bool bIgnoreBelief = false);
+
+	bool GetNextRoutePoint(Vector *vPoint);
+
+	void Clear();
+
+	Vector GetNextPoint();
+
+	void UpdatePosition();
+
+	void FailMove();
+
+	bool HasNextPoint();
+
+	bool NextPointIsOnLadder();
+
+	bool CanGetTo(Vector vOrigin);
+
+	bool RouteFound();
+
+	void RollBackPosition();
+
+	float DistanceTo(Vector vOrigin);
+	float DistanceTo(INavMeshArea *area);
+
+	// nearest cover position to vOrigin only
+	bool GetCoverPosition(Vector vCoverOrigin, Vector *vCover);
+	// nearest cover postion to both vectors
+	bool GetHideSpotPosition(Vector vCoverOrigin, Vector *vCover);
+
+	inline INavMeshArea *GetCurrentWaypoint() { return m_CurrWaypoint; }
+	inline INavMeshArea *GetCurrentGoal() { return m_GoalWaypoint; }
+
+	int GetCurrentFlags();
+
+	bool BeliefLoad();
+	bool BeliefSave(bool bOverride = false);
+	bool WantToSaveBelief();
+	void Belief(Vector origin, Vector vOther, float fBelief, float fStrength, BotBelief iType);
+	void BeliefOne(int iAreaID, BotBelief iBeliefType, float fDist);
+	float GetCurrentBelief();
+	float GetBelief(int iAreaID);
+
+	bool CalculateAimVector(QAngle *vAim);
+
+	template< typename CostFunctor >
+	bool BuildPath(INavMeshArea *startArea, INavMeshArea *goalArea, const Vector *vGoalPos, CostFunctor &func, INavMeshArea **closestArea = NULL, float fMaxPathLength = 0.0f, float fMaxAng = 0.0f, bool bIgnoreBlockedNav = false);
+
+	INavMeshArea *GetArea(const Vector &vPos, float fBeneathLimit = 120.0f);
+	INavMeshArea *GetNearestArea(const Vector &vPos, bool bAnyZ = false, float fMaxDist = 10000.0f, bool bCheckLOS = false, bool bCheckGround = true, int iTeam = -2);
+	INavMeshArea *GetAreaByID(const unsigned int iAreaIndex);
+	
+	int WorldToGridX(float flWX);
+	int WorldToGridY(float flWY);
+
+	static Vector GetExtentLow(INavMeshArea *area);
+	static Vector GetExtentHigh(INavMeshArea *area);
+	static Vector GetCenter(INavMeshArea *area);
+	static Vector GetClosestPointOnArea(INavMeshArea *area, const Vector &vPos);
+	static bool GetGroundHeight(const Vector vPos, float *fHeight, Vector *vNormal);
+
+	bool IsConnected(INavMeshArea *fromArea, INavMeshArea *toArea);
+	
+	SurroundingList *CollectSurroundingAreas(INavMeshArea *fromArea, float fTravelDistanceLimit = 1500.0f, float fMaxStepUpLimit = StepHeight, float fMaxDropDownLimit = DeathDrop);
+	AdjacentList *GetAdjacentList(INavMeshArea *fromArea, eNavDir iDirection);
+	LadderList *GetLadderList(INavMeshArea *fromArea, eNavLadderDir iLadderDirection);
+	GridList *GetAreasOnGrid(int x, int y);
+	
+	bool IsOverlapping(INavMeshArea *area, const Vector vPos, float fTolerance = 0.0f);
+	bool IsOverlapping(INavMeshArea *fromArea, INavMeshArea *toArea);
+	bool Contains(INavMeshArea *area, const Vector vPos);
+	bool IsEdge(INavMeshArea *area, eNavDir iDirection);
+
+	static float GetZ(INavMeshArea *area, const Vector &vPos);
+	static float GetZ(INavMeshArea *area, float flX, float flY);
+
+	bool ComputePortal(INavMeshArea *fromArea, INavMeshArea *toArea, eNavDir iDirection, Vector *vCenter, float *fHalfWidth);
+	bool ComputeClosestPointInPortal(INavMeshArea *fromArea, INavMeshArea *toArea, eNavDir iNavDirection, const Vector &vFromPos, Vector *vClosestPos);
+	bool ComputeNormal(INavMeshArea *area, Vector *vNormal, bool bAlternate);
+	bool ComputeDirection(INavMeshArea *area, const Vector &vPos, eNavDir *iDirection);
+
+	float GetLightIntensity(INavMeshArea *area, const Vector &vPos);
+
+	float ComputeAdjacentAreaHeightChange(INavMeshArea *fromArea, INavMeshArea *toArea);
+	eNavDir OppositeDirection(eNavDir iDirection);
+	float DirectionToAngle(eNavDir iDirection);
+	eNavDir AngleToDirection(float fAngle);
+
+	bool IsWalkableTraceLineClear(Vector vFrom, Vector vTo, unsigned int iFlags);
+
+	void AddAreaToOpenList(INavMeshArea *area, INavMeshArea *parent, const Vector &vStart, float fMaxRange = -1.0f);
+
+	template< typename CostFunctor >
+	float TravelDistance(const Vector &vStart, const Vector &vGoal, CostFunctor &func);
+	template< typename CostFunctor >
+	float TravelDistance(INavMeshArea *fromArea, INavMeshArea *toArea, CostFunctor &func);
 
 private:
-	INavMesh *m_pNavMesh;
+	CBot *m_pBot;
+
+	INavMeshArea *m_CurrWaypoint;
+	INavMeshArea *m_PrevWaypoint;
+	INavMeshArea *m_NextWaypoint;
+	INavMeshArea *m_GoalWaypoint;
+
+	float *m_fBelief;
+	float *m_fDanger;
+
+	bool m_bWorkingRoute;
+
+	IList<Vector> *m_vGoals;
+
+	Vector m_vOffset;
+	bool m_bOffsetApplied;
 };
 
-template <class T>
-class IList
+/**
+* Functor used with CNavMeshNavigator::BuildPath()
+*/
+class ShortestPathCost
 {
 public:
-	virtual bool Insert(T item, unsigned int index) = 0;
-	virtual void Append(T item) = 0;
-	virtual void Prepend(T item) = 0;
-	virtual T At(unsigned int index) = 0;
-	virtual size_t Size() = 0;
-	virtual unsigned int Find(T item) = 0;
-};
-
-class INavMesh
-{
-public:
-	virtual unsigned int GetMagicNumber() = 0;
-	virtual unsigned int GetVersion() = 0;
-	virtual unsigned int GetSubVersion() = 0;
-	virtual unsigned int GetSaveBSPSize() = 0;
-	virtual bool IsMeshAnalyzed() = 0;
-	virtual IList<INavMeshPlace*> *GetPlaces() = 0;
-	virtual IList<INavMeshArea*> *GetAreas() = 0;
-	virtual IList<INavMeshLadder*> *GetLadders() = 0;
-};
-
-class INavMeshArea
-{
-public:
-	virtual unsigned int GetID() = 0;
-	virtual unsigned int GetFlags() = 0;
-	virtual unsigned int GetPlaceID() = 0;
-
-	virtual float GetNWExtentX() = 0;
-	virtual float GetNWExtentY() = 0;
-	virtual float GetNWExtentZ() = 0;
-
-	virtual float GetSEExtentX() = 0;
-	virtual float GetSEExtentY() = 0;
-	virtual float GetSEExtentZ() = 0;
-
-	virtual float GetEarliestOccupyTimeFirstTeam() = 0;
-	virtual float GetEarliestOccupyTimeSecondTeam() = 0;
-
-	virtual float GetNECornerZ() = 0;
-	virtual float GetSWCornerZ() = 0;
-
-	virtual IList<INavMeshConnection*> *GetConnections() = 0;
-	virtual IList<INavMeshHidingSpot*> *GetHidingSpots() = 0;
-	virtual IList<INavMeshEncounterPath*> *GetEncounterPaths() = 0;
-	virtual IList<INavMeshLadderConnection*> *GetLadderConnections() = 0;
-	virtual IList<INavMeshCornerLightIntensity*> *GetCornerLightIntensities() = 0;
-	virtual IList<INavMeshVisibleArea*> *GetVisibleAreas() = 0;
-
-	virtual unsigned int GetInheritVisibilityFromAreaID() = 0;
-
-	virtual unsigned char GetUnk01() = 0;
-};
-
-class INavMeshConnection
-{
-public:
-	virtual unsigned int GetConnectingAreaID() = 0;
-	virtual eNavDir GetDirection() = 0;
-};
-
-class INavMeshCornerLightIntensity
-{
-public:
-	virtual eNavCorner GetCornerType() = 0;
-	virtual float GetLightIntensity() = 0;
-};
-
-class INavMeshEncounterPath
-{
-public:
-	virtual unsigned int GetFromAreaID() = 0;
-	virtual eNavDir GetFromDirection() = 0;
-	virtual unsigned int GetToAreaID() = 0;
-	virtual eNavDir GetToDirection() = 0;
-	virtual IList<INavMeshEncounterSpot*> *GetEncounterSpots() = 0;
-};
-
-class INavMeshEncounterSpot
-{
-public:
-	virtual unsigned int GetOrderID() = 0;
-	virtual float GetParametricDistance() = 0;
-};
-
-class INavMeshHidingSpot
-{
-public:
-	virtual unsigned int GetID() = 0;
-
-	virtual float GetX() = 0;
-	virtual float GetY() = 0;
-	virtual float GetZ() = 0;
-
-	virtual unsigned char GetFlags() = 0;
-};
-
-class INavMeshLadder
-{
-public:
-	virtual unsigned int GetID() = 0;
-	virtual float GetWidth() = 0;
-	virtual float GetLength() = 0;
-
-	virtual float GetTopX() = 0;
-	virtual float GetTopY() = 0;
-	virtual float GetTopZ() = 0;
-
-	virtual float GetBottomX() = 0;
-	virtual float GetBottomY() = 0;
-	virtual float GetBottomZ() = 0;
-
-	virtual eNavDir GetDirection() = 0;
-
-	virtual unsigned int GetTopForwardAreaID() = 0;
-	virtual unsigned int GetTopLeftAreaID() = 0;
-	virtual unsigned int GetTopRightAreaID() = 0;
-	virtual unsigned int GetTopBehindAreaID() = 0;
-
-	virtual unsigned int GetBottomAreaID() = 0;
-};
-
-class INavMeshLadderConnection
-{
-public:
-	virtual unsigned int GetConnectingLadderID() = 0;
-	virtual eNavLadder GetDirection() = 0;
-};
-
-class INavMeshPlace
-{
-public:
-	virtual const char *GetName() = 0;
-	virtual unsigned int GetID() = 0;
-};
-
-class INavMeshVisibleArea
-{
-public:
-	virtual unsigned int GetVisibleAreaID() = 0;
-	virtual unsigned char GetAttributes() = 0;
-};
-
-class INavMeshLoader
-{
-public:
-	virtual INavMesh *Load(char *error, size_t errorMaxlen) = 0;
-};
-
-template <class T>
-class List : public IList<T>
-{
-public:
-	List() { this->items = new SourceHook::CVector<T>(); }
-
-	~List() { delete this->items; }
-
-	bool Insert(T item, unsigned int index)
+	float operator() (INavMeshArea *area, INavMeshArea *fromArea, INavMeshLadder *ladder)
 	{
-		size_t size = this->items->size();
+		if (fromArea == NULL)
+		{
+			// first area in path, no cost
+			return 0.0f;
+		}
+		else
+		{
+			float fDist; // compute distance travelled along path so far
+			if (ladder != NULL)
+				fDist = ladder->GetLength();
+			else
+				fDist = (CNavMeshNavigator::GetCenter(area) - CNavMeshNavigator::GetCenter(fromArea)).Length();
 
-		if (index < 0 || index > size)
-			return false;
+			float flCost = fDist + area->GetCostSoFar();
 
-		this->items->insert(this->items->iterAt(index), item);
+			// if this is a "crouch" area, add penalty
+			if (area->GetFlags() & NAV_MESH_CROUCH)
+			{
+				const float flCrouchPenalty = 20.0f;
+				flCost += flCrouchPenalty * fDist;
+			}
+
+			// if this is a "jump" area, add penalty
+			if (area->GetFlags() & NAV_MESH_JUMP)
+			{
+				const float flJumpPenalty = 5.0f;
+				flCost += flJumpPenalty * fDist;
+			}
+
+			return flCost;
+		}
+	}
+};
+
+#define WALK_THRU_PROP_DOORS		0x01
+#define WALK_THRU_FUNC_DOORS		0x02
+#define WALK_THRU_DOORS				(WALK_THRU_PROP_DOORS | WALK_THRU_FUNC_DOORS)
+#define WALK_THRU_BREAKABLES		0x04
+#define WALK_THRU_TOGGLE_BRUSHES	0x08
+#define WALK_THRU_EVERYTHING		(WALK_THRU_DOORS | WALK_THRU_BREAKABLES | WALK_THRU_TOGGLE_BRUSHES)
+
+inline bool IsEntityWalkable(CBaseEntity *pEntity, unsigned int flags)
+{
+	const char *name = gamehelpers->GetEntityClassname(pEntity);
+	edict_t *pEdict = gameents->BaseEntityToEdict(pEntity);
+
+	if (!strcmp(name, "worldspawn"))
+		return false;
+
+	if (!strcmp(name, "player"))
+		return false;
+
+	// if we hit a door, assume its walkable because it will open when we touch it
+	if (!strstr(name, "prop_door") || !strstr(name, "func_door"))
+		return (flags & WALK_THRU_DOORS) ? true : false;
+
+	// if we hit a clip brush, ignore it if it is not BRUSHSOLID_ALWAYS
+	if (!strcmp(name, "func_brush"))
+	{
+		int solidity = CEntData::GetEntData(pEdict, "m_iSolidity");
+		switch (solidity)
+		{
+			case 2:	// SOLID_ALWAYS
+				return false;
+			case 1:	// SOLID_NEVER
+				return true;
+			case 0:	// SOLID_TOGGLE
+				return (flags & WALK_THRU_TOGGLE_BRUSHES) ? true : false;
+		}
+	}
+
+	// if we hit a breakable object, assume its walkable because we will shoot it when we touch it
+	if (!strcmp(name, "func_breakable"))
+	{
+		if (CEntData::GetEntData(pEdict, "m_iHealth") && CEntData::GetEntData(pEdict, "m_takedamage") == DAMAGE_YES)
+			return (flags & WALK_THRU_BREAKABLES) ? true : false;
+	}
+
+	if (!strcmp(name, "func_playerinfected_clip"))
+	{
 		return true;
 	}
 
-	void Append(T item) { this->items->insert(this->items->end(), item); }
+	return false;
+}
 
-	void Prepend(T item) { this->items->insert(this->items->begin(), item); }
+class CTraceFilterNoPlayers : public CTraceFilter
+{
+public:
+	CTraceFilterNoPlayers(const IHandleEntity *pEntity, int collisionGroup)
+		: m_pPassEnt(pEntity), m_collisionGroup(collisionGroup) {}
 
-	T At(unsigned int index) { return this->items->at(index); }
-
-	size_t Size() { return this->items->size(); }
-
-	unsigned int Find(T item)
+	virtual bool ShouldHitEntity(IHandleEntity *pEntity, int contentsMask)
 	{
-		size_t size = this->items->size();
+		edict_t *pEdict = INDEXENT(pEntity->GetRefEHandle().GetEntryIndex());
+		if (!pEdict || pEdict->IsFree())
+			return false;
 
-		for (unsigned int i = 0; i < size; i++)
-		{
-			if (this->items->at(i) != item)
-				continue;
+		if (pEntity == m_pPassEnt)
+			return false;
 
-			return i;
-		}
+		IGamePlayer *pPlayer = playerhelpers->GetGamePlayer(pEdict);
+		IPlayerInfo *pInfo = pPlayer->GetPlayerInfo();
+		if (pPlayer != NULL || (pInfo != NULL && pInfo->IsPlayer()))
+			return false;
 
-		return -1;
+		return true;
 	}
 
 private:
-	SourceHook::CVector<T> *items;
+	const IHandleEntity *m_pPassEnt;
+	int m_collisionGroup;
 };
 
-class CNavMesh : public INavMesh
+class CTraceFilterWalkableEntities : public CTraceFilterNoPlayers
 {
 public:
-	CNavMesh(unsigned int magicNumber, unsigned int version, unsigned int subVersion, unsigned int saveBSPSize, bool isMeshAnalyzed,
-		IList<INavMeshPlace*> *places, IList<INavMeshArea*> *areas, IList<INavMeshLadder*> *ladders);
+	CTraceFilterWalkableEntities(const IHandleEntity *passentity, int collisionGroup, unsigned int flags)
+		: CTraceFilterNoPlayers(passentity, collisionGroup), m_flags(flags) {}
 
-	~CNavMesh();
+	virtual bool ShouldHitEntity(IHandleEntity *pEntity, int contentsMask)
+	{
+		if (CTraceFilterNoPlayers::ShouldHitEntity(pEntity, contentsMask))
+		{
+			edict_t *pEdict = INDEXENT(pEntity->GetRefEHandle().GetEntryIndex());
+			CBaseEntity *pEntity = gameents->EdictToBaseEntity(pEdict);
+			return (!IsEntityWalkable(pEntity, m_flags));
+		}
 
-	unsigned int GetMagicNumber();
-	unsigned int GetVersion();
-	unsigned int GetSubVersion();
-	unsigned int GetSaveBSPSize();
-
-	bool IsMeshAnalyzed();
-
-	IList<INavMeshPlace*> *GetPlaces();
-	IList<INavMeshArea*> *GetAreas();
-	IList<INavMeshLadder*> *GetLadders();
+		return false;
+	}
 
 private:
-	unsigned int magicNumber;
-	unsigned int version;
-	unsigned int subVersion;
-	unsigned int saveBSPSize;
-	bool isMeshAnalyzed;
-	IList<INavMeshPlace*> *places;
-	IList<INavMeshArea*> *areas;
-	IList<INavMeshLadder*> *ladders;
+	unsigned int m_flags;
 };
 
-class CNavMeshArea : public INavMeshArea
+class CTraceFilterCustom : public ITraceFilter
 {
 public:
-	CNavMeshArea(unsigned int id, unsigned int flags, unsigned int placeID,
-		float nwExtentX, float nwExtentY, float nwExtentZ,
-		float seExtentX, float seExtentY, float seExtentZ,
-		float neCornerZ, float swCornerZ,
-		IList<INavMeshConnection*> *connections, IList<INavMeshHidingSpot*> *hidingSpots, IList<INavMeshEncounterPath*> *encounterPaths,
-		IList<INavMeshLadderConnection*> *ladderConnections, IList<INavMeshCornerLightIntensity*> *cornerLightIntensities,
-		IList<INavMeshVisibleArea*> *visibleAreas, unsigned int inheritVisibilityFromAreaID,
-		float earliestOccupyTimeFirstTeam, float earliestOccupyTimeSecondTeam, unsigned char unk01);
-
-	~CNavMeshArea();
-
-	unsigned int GetID();
-	unsigned int GetFlags();
-	unsigned int GetPlaceID();
-
-	float GetNWExtentX();
-	float GetNWExtentY();
-	float GetNWExtentZ();
-
-	float GetSEExtentX();
-	float GetSEExtentY();
-	float GetSEExtentZ();
-
-	float GetEarliestOccupyTimeFirstTeam();
-	float GetEarliestOccupyTimeSecondTeam();
-
-	float GetNECornerZ();
-	float GetSWCornerZ();
-
-	IList<INavMeshConnection*> *GetConnections();
-	IList<INavMeshHidingSpot*> *GetHidingSpots();
-	IList<INavMeshEncounterPath*> *GetEncounterPaths();
-	IList<INavMeshLadderConnection*> *GetLadderConnections();
-	IList<INavMeshCornerLightIntensity*> *GetCornerLightIntensities();
-	IList<INavMeshVisibleArea*> *GetVisibleAreas();
-
-	unsigned int GetInheritVisibilityFromAreaID();
-
-	unsigned char GetUnk01();
-
-private:
-	unsigned int id;
-	unsigned int flags;
-	unsigned int placeID;
-
-	float nwExtentX;
-	float nwExtentY;
-	float nwExtentZ;
-
-	float seExtentX;
-	float seExtentY;
-	float seExtentZ;
-
-	float neCornerZ;
-	float swCornerZ;
-
-	IList<INavMeshConnection*> *connections;
-	IList<INavMeshHidingSpot*> *hidingSpots;
-	IList<INavMeshEncounterPath*> *encounterPaths;
-	IList<INavMeshLadderConnection*> *ladderConnections;
-	IList<INavMeshCornerLightIntensity*> *cornerLightIntensities;
-	IList<INavMeshVisibleArea*> *visibleAreas;
-
-	float earliestOccupyTimeFirstTeam;
-	float earliestOccupyTimeSecondTeam;
-
-	unsigned int inheritVisibilityFromAreaID;
-
-	unsigned char unk01;
-};
-
-class CNavMeshConnection : public INavMeshConnection
-{
-public:
-	CNavMeshConnection(unsigned int connectingAreaID, eNavDir direction);
-	~CNavMeshConnection();
-
-	unsigned int GetConnectingAreaID();
-
-	eNavDir GetDirection();
-
-private:
-	unsigned int connectingAreaID;
-	eNavDir direction;
-};
-
-class CNavMeshCornerLightIntensity : public INavMeshCornerLightIntensity
-{
-public:
-	CNavMeshCornerLightIntensity(eNavCorner cornerType, float lightIntensity);
-	~CNavMeshCornerLightIntensity();
-
-	eNavCorner GetCornerType();
-
-	float GetLightIntensity();
-
-private:
-	eNavCorner cornerType;
-	float lightIntensity;
-};
-
-class CNavMeshEncounterPath : public INavMeshEncounterPath
-{
-public:
-	CNavMeshEncounterPath(unsigned int fromAreaID, eNavDir fromDirection, unsigned int toAreaID, eNavDir toDirection, IList<INavMeshEncounterSpot*> *encounterSpots);
-	~CNavMeshEncounterPath();
-
-	unsigned int GetFromAreaID();
-	eNavDir GetFromDirection();
-
-	unsigned int GetToAreaID();
-	eNavDir GetToDirection();
-
-	IList<INavMeshEncounterSpot*> *GetEncounterSpots();
-
-private:
-	unsigned int fromAreaID;
-	eNavDir fromDirection;
-	unsigned int toAreaID;
-	eNavDir toDirection;
-	IList<INavMeshEncounterSpot*> *encounterSpots;
-};
-
-class CNavMeshEncounterSpot : public INavMeshEncounterSpot
-{
-public:
-	CNavMeshEncounterSpot(unsigned int orderID, float parametricDistance);
-	~CNavMeshEncounterSpot();
-
-	unsigned int GetOrderID();
-
-	float GetParametricDistance();
-
-private:
-	unsigned int orderID;
-	float parametricDistance;
-};
-
-class CNavMeshHidingSpot : public INavMeshHidingSpot
-{
-public:
-	CNavMeshHidingSpot(unsigned int id, float x, float y, float z, unsigned char flags);
-	~CNavMeshHidingSpot();
-
-	unsigned int GetID();
-
-	float GetX();
-	float GetY();
-	float GetZ();
-
-	unsigned char GetFlags();
-
-private:
-	unsigned int id;
-	float x;
-	float y;
-	float z;
-	unsigned char flags;
-};
-
-class CNavMeshLadder : public INavMeshLadder
-{
-public:
-	CNavMeshLadder(unsigned int id, float width, float length, float topX, float topY, float topZ,
-		float bottomX, float bottomY, float bottomZ, eNavDir direction,
-		unsigned int topForwardAreaID, unsigned int topLeftAreaID, unsigned int topRightAreaID, unsigned int topBehindAreaID, unsigned int bottomAreaID);
-
-	~CNavMeshLadder();
-
-	unsigned int GetID();
-
-	float GetWidth();
-	float GetLength();
-
-	float GetTopX();
-	float GetTopY();
-	float GetTopZ();
-
-	float GetBottomX();
-	float GetBottomY();
-	float GetBottomZ();
-
-	eNavDir GetDirection();
-
-	unsigned int GetTopForwardAreaID();
-	unsigned int GetTopLeftAreaID();
-	unsigned int GetTopRightAreaID();
-	unsigned int GetTopBehindAreaID();
-
-	unsigned int GetBottomAreaID();
-
-private:
-	unsigned int id;
-	float width;
-	float length;
-	float topX;
-	float topY;
-	float topZ;
-	float bottomX;
-	float bottomY;
-	float bottomZ;
-	eNavDir direction;
-	unsigned int topForwardAreaID;
-	unsigned int topLeftAreaID;
-	unsigned int topRightAreaID;
-	unsigned int topBehindAreaID;
-	unsigned int bottomAreaID;
-};
-
-class CNavMeshLadderConnection : public INavMeshLadderConnection
-{
-public:
-	CNavMeshLadderConnection(unsigned int connectingLadderID, eNavLadder direction);
-	~CNavMeshLadderConnection();
-
-	unsigned int GetConnectingLadderID();
-
-	eNavLadder GetDirection();
-
-private:
-	unsigned int connectingLadderID;
-	eNavLadder direction;
-};
-
-class CNavMeshPlace : public INavMeshPlace
-{
-public:
-	CNavMeshPlace(unsigned int id, const char *name);
-	~CNavMeshPlace();
-
-	const char *GetName();
-
-	unsigned int GetID();
-
-private:
-	unsigned int id;
-	char name[256];
-};
-
-class CNavMeshVisibleArea : public INavMeshVisibleArea
-{
-public:
-	CNavMeshVisibleArea(unsigned int visibleAreaID, unsigned char attributes);
-	~CNavMeshVisibleArea();
-
-	unsigned int GetVisibleAreaID();
-
-	unsigned char GetAttributes();
-
-private:
-	unsigned int visibleAreaID;
-	unsigned char attributes;
-};
-
-class CNavMeshLoader : public INavMeshLoader
-{
-public:
-	CNavMeshLoader(const char *mapName);
-	~CNavMeshLoader();
-
-	INavMesh *Load(char *error, size_t errorMaxlen);
-
-private:
-	unsigned int ReadData(void *output, unsigned int elementSize, unsigned int elementCount, FILE *fileHandle);
-
-private:
-	char mapName[100];
-	unsigned int bytesRead;
+	CTraceFilterCustom() {}
+
+	bool ShouldHitEntity(IHandleEntity *entity, int contentmask)
+	{
+		edict_t *pEdict = INDEXENT(entity->GetRefEHandle().GetEntryIndex());
+		if (pEdict == NULL || pEdict->IsFree())
+			return false;
+
+		if (ENTINDEX(pEdict)-1 > 0 || ENTINDEX(pEdict)-1 <= gpGlobals->maxClients)
+			return false;
+
+		IServerNetworkable *pNetwork = pEdict->GetNetworkable();
+		if (pNetwork == NULL)
+			return false;
+
+		ServerClass *pClass = pNetwork->GetServerClass();
+		if (pClass == NULL)
+			return false;
+
+		const char *name = pClass->GetName();
+		if (!strcmp(name, "CBaseDoor") || !strcmp(name, "CTFBaseBoss") || !strcmp(name, "CFuncRespawnRoomVisualizer"))
+			return false;
+
+		return true;
+	}
+	virtual TraceType_t GetTraceType() const
+	{
+		return TRACE_EVERYTHING_FILTER_PROPS;
+	}
 };
 
 #endif

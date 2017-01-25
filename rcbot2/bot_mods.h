@@ -40,6 +40,10 @@
 #include "bot_waypoint.h"
 #include "bot_tf2_points.h"
 
+#ifdef CreateFile
+#undef CreateFile
+#endif
+
 #define MAX_CAP_POINTS 32
 
 //#define DOD_MAPTYPE_UNKNOWN 0 
@@ -128,7 +132,7 @@ public:
 
 	virtual void MapInit();
 
-	virtual bool PlayerSpawned(edict_t *pPlayer);
+	virtual bool PlayerSpawned(CBaseEntity *pPlayer);
 
 	virtual void ClientCommand(edict_t *pEntity, int argc, const char *pcmd, const char *arg1, const char *arg2) {};
 
@@ -764,7 +768,7 @@ typedef enum
 	TF_MAP_CARTRACE,
 	TF_MAP_ARENA,
 	TF_MAP_KOTH,
-	TF_MAP_SD, // special delivery : added 15 jul 12
+	TF_MAP_SD,
 	TF_MAP_TR,
 	TF_MAP_MVM,
 	TF_MAP_RD,
@@ -835,13 +839,16 @@ class CTeamFortress2Mod : public CBotMod
 public:
 	CTeamFortress2Mod()
 	{
-		Setup("tf", "team fortress 2", MOD_TF2, BOTTYPE_TF2, "TF2");
+		const char *steamfolder = smutils->GetGamePath();
+		Setup("tf", steamfolder, MOD_TF2, BOTTYPE_TF2, "TF2");
 
 		m_pResourceEntity = NULL;
 		m_bBotCommand_NeedCheatsHack = true;
 	}
 
 	void MapInit();
+
+	eTFMapType GetMapType();
 
 	void ModFrame();
 
@@ -1065,7 +1072,7 @@ public:
 
 	static edict_t *GetSentryOwner(edict_t *pSentry)
 	{
-		for (short int i = 1; i <= MAX_PLAYERS; i++)
+		for (int i = 1; i <= MAX_PLAYERS; i++)
 		{
 			if (m_SentryGuns[i].sentry.Get() == pSentry)
 				return INDEXENT(i);
@@ -1332,7 +1339,7 @@ public:
 	CTeamFortress2ModDedicated()
 	{
 #ifdef __linux__
-		Setup("tf","orangebox",MOD_TF2,BOTTYPE_TF2,"TF2");    //bir3yk
+		Setup("tf", "orangebox", MOD_TF2, BOTTYPE_TF2, "TF2");    //bir3yk
 #else
 		Setup("tf", "source dedicated server", MOD_TF2, BOTTYPE_TF2, "TF2");
 #endif

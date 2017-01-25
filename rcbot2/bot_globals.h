@@ -59,9 +59,9 @@ public:
 
 	static inline bool IsPlayer(edict_t *pEdict)
 	{
-		static int index = ENTINDEX(pEdict);
+		IGamePlayer *pPlayer = playerhelpers->GetGamePlayer(pEdict);
 
-		return (index > 0) && (index <= MAX_PLAYERS);
+		return (pPlayer != NULL && pPlayer->IsInGame());
 	}
 
 	static bool WalkableFromTo(edict_t *pPlayer, Vector v_src, Vector v_dest);
@@ -80,6 +80,9 @@ public:
 	// print a message to client pEntity with bot formatting
 	static void BotMessage(edict_t *pEntity, int iErr, char *fmt, ...);
 	static void PrintToChat(int client, const char* fmt, ...);
+	static void PrintToChatAll(const char* fmt, ...);
+	static void PrintHintText(int client, const char* fmt, ...);
+	static void PrintHintTextAll(const char* fmt, ...);
 
 	static void FixFloatAngle(float *fAngle);
 
@@ -170,6 +173,7 @@ public:
 	static bool EntityIsAlive(edict_t *pEntity);
 	static int CountTeamMatesNearOrigin(Vector vOrigin, float fRange, int iTeam, edict_t *pIgnore = NULL);
 	static int NumClients();
+	static int NumBots();
 	static void LevelInit();
 
 	static inline void SetEventVersion(int iVersion){ m_iEventVersion = iVersion; }

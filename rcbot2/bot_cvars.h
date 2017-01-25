@@ -35,6 +35,7 @@ extern ConVar bot_debug_notasks;
 extern ConVar bot_debug_dont_shoot;
 extern ConVar bot_debug_show_route;
 extern ConVar bot_supermode;
+extern ConVar bot_printstatus;
 
 extern ConVar bot_nocapturing;
 extern ConVar bot_prone_enemy_only;

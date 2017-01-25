@@ -29,115 +29,60 @@
  *
  *///=================================================================================//
 
-/// NOT WORKING
-
-#include <stdio.h>
-#include <time.h>
-
-//#include "cbase.h"
-//#include "baseentity.h"
-#include "interface.h"
-#ifdef __linux__
-#include "shake.h"    //bir3yk
-#endif
-#include "tier2/tier2.h"
-#include "eiface.h"
-#include "icvar.h"
-#include "bot.h"
-#include "bot_client.h"
+#include "bot_base.h"
 #include "bot_globals.h"
-#include "bot_accessclient.h"
-#include "bot_waypoint_visibility.h" // for initializing table
-#include "bot_event.h"
-#include "bot_profile.h"
+#include "bot_strings.h"
 #include "bot_weapons.h"
-#include "bot_mods.h"
-//#include "bot_profiling.h"
-#include "vstdlib/random.h" // for random  seed 
-
-#include "bot_wpt_dist.h"
 
 #include "bot_configfile.h"
-#include "bot_strings.h"
 
-#include "bot_fortress.h"
+#include <convar.h>
 
-vector <char *> CBotConfigFile::m_Commands;
-unsigned int CBotConfigFile::m_iCmd = 0; // current command (time delayed)
-float CBotConfigFile::m_fNextCommandTime = 0.0f;
 
-// 
 bot_util_t CRCBotTF2UtilFile::m_fUtils[UTIL_TYPE_MAX][BOT_UTIL_MAX][9];
 
 void CBotConfigFile::Load()
 {
-	char filename[512];
-	char line[256];
-	//int len;
-	m_Commands.clear();
+	char filePath[PLATFORM_MAX_PATH];
+	smutils->BuildPath(Path_SM, filePath, sizeof(filePath), "data\\afkbot\\config\\config.%s", BOT_CONFIG_EXTENSION);
 
-	CBotGlobals::BuildFileName(filename, "config", BOT_CONFIG_FOLDER, BOT_CONFIG_EXTENSION);
-
-	FILE *fp = CBotGlobals::OpenFile(filename, "r");
-
-	if (!fp)
+	char error[64];
+	IBotConfigSMC *config = new CBotConfigSMC();
+	if (textparsers->ParseSMCFile(filePath, config, NULL, error, sizeof(error)) != SMCError_Okay)
 	{
-		CBotGlobals::BotMessage(NULL, 0, "config file not found");
-		return;
-	}
-
-	while (fgets(line, 255, fp) != NULL)
-	{
-		if (line[0] == '#')
-			continue;
-
-		size_t len = strlen(line);
-
-		if (line[len - 1] == '\n') {
-			line[--len] = '\0';
-		}
-
-		if (line[len - 1] == '\r') {
-			line[--len] = '\0';
-		}
-
-		//CBotGlobals::botMessage(NULL, 0, line);
-		m_Commands.push_back(CStrings::GetString(line));
-	}
-
-	fclose(fp);
-
-}
-
-void CBotConfigFile::DoNextCommand()
-{
-	char cmd[64] = { 0 };
-
-	if ((m_fNextCommandTime < engine->Time()) && (m_iCmd < m_Commands.size()))
-	{
-		snprintf(cmd, sizeof(cmd), "%s\n", m_Commands[m_iCmd]);
-		engine->ServerCommand(cmd);
-
-		//CBotGlobals::botMessage(NULL,0,"Bot Command '%s' executed",m_Commands[m_iCmd]);
-		m_iCmd++;
-		m_fNextCommandTime = engine->Time() + 0.1f;
+		smutils->LogError(myself, "[SM] Error reading data/afkbot/config/config.%s: %s", BOT_CONFIG_EXTENSION, error);
+		delete config;
 	}
 }
 
-void CBotConfigFile::ExecuteCommands()
+CBotConfigSMC::CBotConfigSMC() {}
+CBotConfigSMC::~CBotConfigSMC() {}
+
+SMCResult CBotConfigSMC::ReadSMC_NewSection(const SMCStates *states, const char *name)
 {
-	char cmd[64] = { 0 };
-
-	while ((m_iCmd < m_Commands.size()))
+	if (!FStrEq(name, "botcfg"))
 	{
-		snprintf(cmd, sizeof(cmd), "%s\n", m_Commands[m_iCmd]);
-		engine->ServerCommand(cmd);
-
-		//CBotGlobals::botMessage(NULL,0,"Bot Command '%s' executed",m_Commands[m_iCmd]);
-		m_iCmd++;
+		smutils->LogError(myself, "Config Error: Expected to find section \"botcfg\", found \"%s\"", name);
+		return SMCResult_HaltFail;
 	}
 
-	engine->ServerExecute();
+	return SMCResult_Continue;
+}
+
+SMCResult CBotConfigSMC::ReadSMC_KeyValue(const SMCStates *states, const char *key, const char *value)
+{
+	ConVarRef *cvar = new ConVarRef(key);
+	if (cvar->IsValid())
+	{
+		cvar->SetValue(value);
+	}
+	else
+	{
+		smutils->LogError(myself, "Config Error: \"%s\" is not a cvar.", key);
+		return SMCResult_HaltFail;
+	}
+
+	return SMCResult_Continue;
 }
 
 void CRCBotTF2UtilFile::Init()
@@ -189,7 +134,7 @@ void CRCBotTF2UtilFile::LoadConfig()
 			sprintf(szFilename, "normal_util.csv");
 		}
 
-		CBotGlobals::BuildFileName(szFullFilename, szFilename, BOT_CONFIG_FOLDER);
+		smutils->BuildPath(Path_SM, szFullFilename, sizeof(szFullFilename), "data\\afkbot\\config\\%s", szFilename);
 		fp = CBotGlobals::OpenFile(szFullFilename, "r");
 
 		if (fp)

@@ -318,7 +318,7 @@ public:
 
 	float *m_flTimerEndTime;
 	int *m_nSetupTimeLength;
-	bool *m_bInSetup;
+	bool m_bInSetup;
 };
 
 class variant_t

@@ -1384,11 +1384,11 @@ void CWaypointNavigator::UpdatePosition()
 
 	/*if ( !m_pBot->HasEnemy() && (fBelief >= (fPrevBelief+10.0f)) )
 		m_pBot->setLookAtTask(LOOK_LAST_ENEMY);
-		else if ( !m_pBot->HasEnemy() && (fPrevBelief > (fBelief+10.0f)) )
-		{
+	else if ( !m_pBot->HasEnemy() && (fPrevBelief > (fBelief+10.0f)) )
+	{
 		m_pBot->SetLookVector(pWaypoint->GetOrigin() + pWaypoint->ApplyRadius());
-		m_pBot->SetLookAtTask(LOOK_VECTOR,RandomFloat(1.0f,2.0f));
-		}*/
+		m_pBot->SetLookAtTask(LOOK_VECTOR, RandomFloat(1.0f,2.0f));
+	}*/
 }
 
 void CWaypointNavigator::Clear()
@@ -2002,16 +2002,12 @@ void CWaypoints::DeletePathsFrom(int iWpt)
 int CWaypoints::AddWaypoint(edict_t *pPlayer, Vector vOrigin, int iFlags, bool bAutoPath, int iYaw, int iArea, float fRadius)
 {
 	int iIndex = FreeWaypointIndex();
-	extern ConVar bot_wpt_autoradius;
 
 	if (iIndex == -1)
 	{
 		Msg("Waypoints full!");
 		return -1;
 	}
-
-	if ((fRadius == 0) && (bot_wpt_autoradius.GetFloat() > 0))
-		fRadius = bot_wpt_autoradius.GetFloat();
 
 	///////////////////////////////////////////////////
 	m_theWaypoints[iIndex] = CWaypoint(vOrigin, iFlags);
@@ -2862,7 +2858,7 @@ bool CWaypoint::ForTeam(int iTeam)
 	return pMod->CheckWaypointForTeam(this, iTeam);
 }
 
-class CTestBot : public CBotTF2
+/*class CTestBot : public CBotTF2
 {
 public:
 	CTestBot(edict_t *pEdict, int iTeam, int iClass)
@@ -2969,4 +2965,4 @@ void CWaypointTest::Go(edict_t *pPlayer)
 
 	delete pBots[0];
 	delete pBots[1];
-}
+}*/

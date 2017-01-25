@@ -35,9 +35,6 @@
 
 #include "bot_utility.h"
 
-#include <vector>
-using namespace std;
-
 typedef enum
 {
 	BOT_ATT_UTIL = 0,
@@ -54,34 +51,36 @@ typedef struct
 class CRCBotTF2UtilFile
 {
 public:
-	static void AddUtilPerturbation (eBotAction iAction, eTF2UtilType iUtil, float fUtility[9][2]);
+	static void AddUtilPerturbation(eBotAction iAction, eTF2UtilType iUtil, float fUtility[9][2]);
 
-	static void Init ();
+	static void Init();
 
-	static void LoadConfig ();
+	static void LoadConfig();
 	// 2 Teams / 2 Types Attack/Defend / 
 	static bot_util_t m_fUtils[UTIL_TYPE_MAX][BOT_UTIL_MAX][9];
 };
 
-
 class CBotConfigFile
 {
 public:
-	static void Load ();
+	static void Load();
+};
 
-	static void Reset ()
-	{
-		m_iCmd = 0;
-		m_fNextCommandTime = 0.0f;
-	}
+class IBotConfigSMC : public ITextListener_SMC
+{
+public:
+	virtual SMCResult ReadSMC_NewSection(const SMCStates *states, const char *name) = 0;
+	virtual SMCResult ReadSMC_KeyValue(const SMCStates *states, const char *key, const char *value) = 0;
+};
 
-	static void DoNextCommand ();
-	static void ExecuteCommands ();
+class CBotConfigSMC : public IBotConfigSMC
+{
+public:
+	CBotConfigSMC();
+	~CBotConfigSMC();
 
-private:
-	static vector <char *> m_Commands;
-	static unsigned int m_iCmd; // current command (time delayed)
-	static float m_fNextCommandTime;
+	SMCResult ReadSMC_NewSection(const SMCStates *states, const char *name);
+	SMCResult ReadSMC_KeyValue(const SMCStates *states, const char *key, const char *value);
 };
 
 #endif

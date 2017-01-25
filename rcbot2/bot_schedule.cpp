@@ -686,8 +686,7 @@ void CBotTF2MessAroundSched::Init()
 
 CBotFollowLastEnemy::CBotFollowLastEnemy(CBot *pBot, edict_t *pEnemy, Vector vLastSee)
 {
-	Vector vVelocity = Vector(0, 0, 0);
-	CClassInterface::GetVelocity(pEnemy, &vVelocity);
+	Vector vVelocity = CBotGlobals::GetVelocity(pEnemy);
 
 	CFindPathTask *pFindPath = new CFindPathTask(vLastSee, LOOK_LAST_ENEMY);
 	pFindPath->SetCompleteInterrupt(CONDITION_SEE_CUR_ENEMY);

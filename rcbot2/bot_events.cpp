@@ -826,7 +826,7 @@ void CFlagEvent::Execute(IBotEventInterface *pEvent)
 	break;
 	case FLAG_DROPPED: // drop
 	{
-		IPlayerInfo *p = playerinfomanager->GetPlayerInfo(pPlayer);
+		IPlayerInfo *p = playerhelpers->GetGamePlayer(pPlayer)->GetPlayerInfo();
 		Vector vLoc;
 
 		if (p)

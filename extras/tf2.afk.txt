@@ -1,38 +1,228 @@
 "Games"
 {
-	"tf"
+	"#default"
 	{
 		"Offsets"
 		{
-			"g_pGameRules"
+			//Shared
+			"GetServerClass"
 			{
-				"windows"	"5"
+				"windows"	"9"
+				"linux"		"10"
 			}
+			"GetDataDescMap"
+			{
+				"windows"	"11"
+				"linux"		"12"
+			}
+			"Spawn"
+			{
+				"windows"	"22"
+				"linux"		"23"
+			}
+			"AcceptInput"
+			{
+				"windows"	"36"
+				"linux"		"37"
+			}
+			"Think"
+			{
+				"windows"	"47"
+				"linux"		"48"
+			}
+			"OnTakeDamage"
+			{
+				"windows"	"62"
+				"linux"		"63"
+			}
+			"GetServerVehicle"
+			{
+				"windows"	"89"
+				"linux"		"90"
+			}
+			"StartTouch"
+			{
+				"windows"	"98"
+				"linux"		"99"
+			}
+			"Touch"
+			{
+				"windows"	"99"
+				"linux"		"100"
+			}
+			"EndTouch"
+			{
+				"windows"	"100"
+				"linux"		"101"
+			}
+			"UpdateOnRemove"
+			{
+				"windows"	"105"
+				"linux"		"106"
+			}
+			"Teleport"
+			{
+				"windows"	"108"
+				"linux"		"109"
+			}
+			"GetSoundEmissionOrigin"
+			{
+				"windows"	"150"
+				"linux"		"151"
+			}
+			"VPhysicsTakeDamage"
+			{
+				"windows"	"158"
+				"linux"		"159"
+			}
+			"VPhysicsGetObjectList"
+			{
+				"windows"	"164"
+				"linux"		"165"
+			}
+			
+			//CBaseEntity
+			"EyePosition"
+			{
+				"windows"	"130"
+				"linux"		"131"
+			}
+			"EyeAngles"
+			{
+				"windows"	"131"
+				"linux"		"132"
+			}
+			
+			//CBasePlayer
+			"FVisible"
+			{
+				"windows"	"142"
+				"linux"		"142"
+			}
+			"RemovePlayerItem"
+			{
+				"windows"	"271"
+				"linux"		"272"
+			}
+			"Jump"
+			{
+				"windows"	"331"
+				"linux"		"332"
+			}
+			"Duck"
+			{
+				"windows"	"332"
+				"linux"		"333"
+			}
+			"PreThink"
+			{
+				"windows"	"333"
+				"linux"		"334"
+			}
+			"PostThink"
+			{
+				"windows"	"334"
+				"linux"		"335"
+			}
+			"LeaveVehicle"
+			{
+				"windows"	"396"
+				"linux"		"397"
+			}
+			"ProcessUsercmds"
+			{
+				"windows"	"420"
+				"linux"		"421"
+			}
+			
+			//CTFPlayer
 			"Weapon_Equip"
 			{
-				"linux"		"263"
-				"mac"		"263"
 				"windows"	"262"
+				"linux"		"263"
+			}
+			"Weapon_Switch"
+			{
+				"windows"	"265"
+				"linux"		"266"
 			}
 			"Weapon_GetSlot"
 			{
-				"linux"		"270"
-				"mac"		"270"
 				"windows"	"269"
+				"linux"		"270"
+			}
+			"OnTakeDamage_Alive"
+			{
+				"windows"	"273"
+				"linux"		"274"
+			}
+			"ShouldGib"
+			{
+				"windows"	"287"
+				"linux"		"288"
 			}
 			"PlayerRunCommand"
 			{
-				"linux"		"420"
-				"mac"		"420"
-				"windows"	"419"
+				"windows"	"421"
+				"linux"		"422"
+			}
+			"IsReadyToSpawn"
+			{
+				"windows"	"436"
+				"linux"		"437"
+			}
+			"CanSpeakVoiceCommand"
+			{
+				"windows"	"462"
+				"linux"		"463"
+			}
+			"GiveNamedItem"
+			{
+				"windows"	"474"
+				"linux"		"481"
+			}
+			
+			//CBaseAnimating
+			"StudioFrameAdvance"
+			{
+				"windows"	"191"
+				"linux"		"192"
 			}
 		}
+	}
+	"#default"
+	{
 		"Signatures"
 		{
-			"CreateGameRulesObject"
+			"EntityFactory"
 			{
 				"library"	"server"
-				"windows"	"\x55\x8B\xEC\x8B\x0D\x2A\x2A\x2A\x2A\x85\xC9\x74\x07"
+				"windows"	"\xB8\x01\x00\x00\x00\x84\x2A\x2A\x2A\x2A\x2A\x75\x1D\x09\x2A\x2A\x2A\x2A\x2A\xB9\x2A\x2A\x2A\x2A\xE8\x2A\x2A\x2A\x2A\x68\x2A\x2A\x2A\x2A\xE8\x2A\x2A\x2A\x2A\x83\xC4\x04\xB8\x2A\x2A\x2A\x2A\xC3"
+				"linux"		"@_Z23EntityFactoryDictionaryv"
+			}
+			"FireOutput"
+			{
+				"library"	"server"
+				"windows"	"\x81\xEC\x1C\x01\x00\x00\x53\x55\x56\x8B\x71\x14\x85\xF6"
+				"linux"		"@_ZN17CBaseEntityOutput10FireOutputE9variant_tP11CBaseEntityS2_f"
+			}
+			"PhysIsInCallback"
+			{
+				"library"	"server"
+				"windows"	"\x8B\x0D\x2A\x2A\x2A\x2A\x85\xC9\x74\x0E\x8B\x01\x8B\x90\x8C\x00\x00\x00\xFF\xD2\x84\xC0\x75\x09\x83\x3D\x2A\x2A\x2A\x2A\x00\x7E\x03\xB0\x01\xC3"
+				"linux"		"@_Z16PhysIsInCallbackv"
+			}
+			"HandleCommand_JoinClass"
+			{
+				"library"	"server"
+				"windows"	"\xA1\x2A\x2A\x2A\x2A\x83\xEC\x0C\x83\xB8\x2A\x03\x00\x00\x08\x56"
+				"linux"		"@_ZN9CTFPlayer23HandleCommand_JoinClassEPKcb"
+			}
+			"Dissolve"
+			{
+				"library"	"server"
+				"windows"	"\x83\xEC\x0C\x80\x7C\x24\x18\x00\x57\x8B\xF9\x74\x15\xF7\x87"
+				"linux"		"@_ZN14CBaseAnimating8DissolveEPKcfbi6Vectori"
 			}
 		}
 	}

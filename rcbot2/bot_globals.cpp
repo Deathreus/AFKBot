@@ -46,6 +46,7 @@
 #include "bot_weapons.h"
 
 #include <ndebugoverlay.h>
+#include <IEngineTrace.h>
 
 #ifndef __linux__
 #include <direct.h> // for mkdir
@@ -73,7 +74,7 @@ char *CBotGlobals::m_szRCBotFolder = NULL;
 extern IVDebugOverlay *debugoverlay;
 extern IPlayerInfoManager *playerinfomanager;
 extern IServerGameClients* gameclients;
-extern IEngineTrace *enginetrace;
+extern IEngineTrace *engtrace;
 
 class CTraceFilterVis : public CTraceFilter
 {
@@ -372,7 +373,7 @@ void CBotGlobals::TraceLine(Vector vSrc, Vector vDest, unsigned int mask, ITrace
 	Ray_t ray;
 	memset(&m_TraceResult, 0, sizeof(trace_t));
 	ray.Init(vSrc, vDest);
-	enginetrace->TraceRay(ray, mask, pFilter, &m_TraceResult);
+	engtrace->TraceRay(ray, mask, pFilter, &m_TraceResult);
 }
 
 float CBotGlobals::QuickTraceline(edict_t *pIgnore, Vector vSrc, Vector vDest)
@@ -382,7 +383,7 @@ float CBotGlobals::QuickTraceline(edict_t *pIgnore, Vector vSrc, Vector vDest)
 	Ray_t ray;
 	memset(&m_TraceResult, 0, sizeof(trace_t));
 	ray.Init(vSrc, vDest);
-	enginetrace->TraceRay(ray, MASK_NPCSOLID_BRUSHONLY, &filter, &m_TraceResult);
+	engtrace->TraceRay(ray, MASK_NPCSOLID_BRUSHONLY, &filter, &m_TraceResult);
 	return m_TraceResult.fraction;
 }
 
@@ -543,6 +544,20 @@ int CBotGlobals::NumClients()
 	return iCount;
 }
 
+int CBotGlobals::NumBots()
+{
+	int iCount = 0;
+
+	for (int i = gpGlobals->maxClients; i > 0; i--)
+	{
+		CBot *pBot = CBots::Get(i-1);
+		if (pBot && pBot->InUse())
+			iCount++;
+	}
+
+	return iCount;
+}
+
 bool CBotGlobals::EntityIsAlive(edict_t *pEntity)
 {
 	static short int index;
@@ -551,7 +566,7 @@ bool CBotGlobals::EntityIsAlive(edict_t *pEntity)
 
 	if (index && (index <= MAX_PLAYERS))
 	{
-		IPlayerInfo *p = playerinfomanager->GetPlayerInfo(pEntity);
+		IPlayerInfo *p = playerhelpers->GetGamePlayer(pEntity)->GetPlayerInfo();
 
 		if (!p)
 			return false;
@@ -580,7 +595,7 @@ edict_t *CBotGlobals::PlayerByUserId(int iUserId)
 
 int CBotGlobals::GetTeam(edict_t *pEntity)
 {
-	IPlayerInfo *p = playerinfomanager->GetPlayerInfo(pEntity);
+	IPlayerInfo *p = playerhelpers->GetGamePlayer(pEntity)->GetPlayerInfo();
 	return p->GetTeamIndex();
 }
 
@@ -656,8 +671,8 @@ bool CBotGlobals::WalkableFromTo(edict_t *pPlayer, Vector v_src, Vector v_dest)
 	//	return false;
 
 	// can swim there?
-	if ((enginetrace->GetPointContents(v_src) == CONTENTS_WATER) &&
-		(enginetrace->GetPointContents(v_dest) == CONTENTS_WATER))
+	if ((engtrace->GetPointContents(v_src) == CONTENTS_WATER) &&
+		(engtrace->GetPointContents(v_dest) == CONTENTS_WATER))
 	{
 		return true;
 	}
@@ -841,13 +856,10 @@ void CBotGlobals::PrintToChat(int client, const char* fmt, ...)
 	cell_t pClient[] = { client };
 	if (!iChatText) iChatText = usermsgs->GetMessageIndex("SayText2");
 
-	va_list argptr; char string[253];
+	va_list argptr; char buffer[253];
 	va_start(argptr, fmt);
-	vsprintf(string, fmt, argptr);
+	smutils->FormatArgs(buffer, sizeof(buffer), fmt, argptr);
 	va_end(argptr);
-
-	char buffer[253];
-	smutils->Format(buffer, sizeof(buffer), string);
 
 	// Break if we are printing to server
 	if (!client)
@@ -861,6 +873,56 @@ void CBotGlobals::PrintToChat(int client, const char* fmt, ...)
 	pBitBuf->WriteString(buffer);
 	pBitBuf->WriteByte(1);
 	usermsgs->EndMessage();
+}
+
+void CBotGlobals::PrintToChatAll(const char *fmt, ...)
+{
+	va_list argptr; char string[253];
+	va_start(argptr, fmt);
+	smutils->FormatArgs(string, sizeof(string), fmt, argptr);
+	va_end(argptr);
+
+	for (int iClient = 1; iClient <= MAX_PLAYERS; iClient++)
+	{
+		IGamePlayer *pPlayer = playerhelpers->GetGamePlayer(iClient);
+		if (pPlayer == NULL || !pPlayer->IsConnected() || !pPlayer->IsInGame())
+			continue;
+
+		PrintToChat(iClient, string);
+	}
+}
+
+void CBotGlobals::PrintHintText(int client, const char* fmt, ...)
+{
+	static int iHintText = NULL;
+	cell_t pClient[] = { client };
+	if (!iHintText) iHintText = usermsgs->GetMessageIndex("HintText");
+
+	va_list argptr; char buffer[253];;
+	va_start(argptr, fmt);
+	smutils->FormatArgs(buffer, sizeof(buffer), fmt, argptr);
+	va_end(argptr);
+
+	bf_write *pBitBuf = usermsgs->StartBitBufMessage(iHintText, pClient, 1, USERMSG_RELIABLE);
+	pBitBuf->WriteString(buffer);
+	usermsgs->EndMessage();
+}
+
+void CBotGlobals::PrintHintTextAll(const char* fmt, ...)
+{
+	va_list argptr; char string[253];
+	va_start(argptr, fmt);
+	smutils->FormatArgs(string, sizeof(string), fmt, argptr);
+	va_end(argptr);
+
+	for (int iClient = 1; iClient <= MAX_PLAYERS; iClient++)
+	{
+		IGamePlayer *pPlayer = playerhelpers->GetGamePlayer(iClient);
+		if (pPlayer == NULL || !pPlayer->IsConnected() || !pPlayer->IsInGame())
+			continue;
+
+		PrintHintText(iClient, string);
+	}
 }
 
 bool CBotGlobals::MakeFolders(char *szFile)
@@ -928,8 +990,7 @@ bool CBotGlobals::IsBreakableOpen(edict_t *pBreakable)
 
 Vector CBotGlobals::GetVelocity(edict_t *pPlayer)
 {
-	Vector vVelocity;
-	CClassInterface::GetVelocity(pPlayer, &vVelocity);
+	Vector vVelocity = CEntData::GetEntDataVector(pPlayer, "m_vecVelocity");
 	return vVelocity;
 }
 

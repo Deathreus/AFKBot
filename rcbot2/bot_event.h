@@ -93,36 +93,13 @@ private:
 	eModId m_iModId;
 };
 
-/*class CRoundStartEvent : public CBotEvent
-{
-public:
-CRoundStartEvent()
-{
-SetType("round_start");
-SetMod(MOD_CSS);
-}
-
-void Execute (IBotEventInterface *pEvent);
-};*/
-
-class CTF2RoundWinEvent : public CBotEvent
-{
-public:
-	CTF2RoundWinEvent()
-	{
-		SetType("teamplay_round_win");
-		SetMod(MOD_TF2);
-	}
-
-	void Execute(IBotEventInterface *pEvent);
-};
-
 class CPlayerHurtEvent : public CBotEvent
 {
 public:
 	CPlayerHurtEvent()
 	{
 		SetType("player_hurt");
+		SetMod(MOD_ANY);
 	}
 
 	void Execute(IBotEventInterface *pEvent);
@@ -134,22 +111,11 @@ public:
 	CPlayerDeathEvent()
 	{
 		SetType("player_death");
+		SetMod(MOD_ANY);
 	}
 
 	void Execute(IBotEventInterface *pEvent);
 };
-
-/*class CBombPickupEvent : public CBotEvent
-{
-public:
-CBombPickupEvent()
-{
-SetType("bomb_pickup");
-SetMod(MOD_CSS);
-}
-
-void Execute ( IBotEventInterface *pEvent );
-};*/
 
 class CPlayerFootstepEvent : public CBotEvent
 {
@@ -157,6 +123,7 @@ public:
 	CPlayerFootstepEvent()
 	{
 		SetType("player_footstep");
+		SetMod(MOD_ANY);
 	}
 
 	void Execute(IBotEventInterface *pEvent);
@@ -174,17 +141,29 @@ public:
 	void Execute(IBotEventInterface *pEvent);
 };
 
-/*class CBombDroppedEvent : public CBotEvent
+class CWeaponFireEvent : public CBotEvent
 {
 public:
-CBombDroppedEvent()
-{
-SetType("bomb_dropped");
-SetMod(MOD_CSS);
-}
+	CWeaponFireEvent()
+	{
+		SetType("weapon_fire");
+		SetMod(MOD_ANY);
+	}
 
-void Execute ( IBotEventInterface *pEvent );
-};*/
+	void Execute(IBotEventInterface *pEvent);
+};
+
+class CFlagEvent : public CBotEvent
+{
+public:
+	CFlagEvent()
+	{
+		SetType("teamplay_flag_event");
+		SetMod(MOD_TF2);
+	}
+
+	void Execute(IBotEventInterface *pEvent);
+};
 
 class COverTimeBegin : public CBotEvent
 {
@@ -210,6 +189,30 @@ public:
 	void Execute(IBotEventInterface *pEvent);
 };
 
+class CBulletImpactEvent : public CBotEvent
+{
+public:
+	CBulletImpactEvent()
+	{
+		SetType("bullet_impact");
+		SetMod(MOD_TF2);
+	}
+
+	void Execute(IBotEventInterface *pEvent);
+};
+
+class CTF2RoundWinEvent : public CBotEvent
+{
+public:
+	CTF2RoundWinEvent()
+	{
+		SetType("teamplay_round_win");
+		SetMod(MOD_TF2);
+	}
+
+	void Execute(IBotEventInterface *pEvent);
+};
+
 class CPlayerTeleported : public CBotEvent
 {
 public:
@@ -217,17 +220,6 @@ public:
 	{
 		SetType("player_teleported");
 		SetMod(MOD_TF2);
-	}
-
-	void Execute(IBotEventInterface *pEvent);
-};
-
-class CWeaponFireEvent : public CBotEvent
-{
-public:
-	CWeaponFireEvent()
-	{
-		SetType("weapon_fire");
 	}
 
 	void Execute(IBotEventInterface *pEvent);
@@ -280,8 +272,6 @@ public:
 
 	void Execute(IBotEventInterface *pEvent);
 };
-
-
 
 class CTF2PointStopCapture : public CBotEvent
 {
@@ -392,18 +382,6 @@ public:
 	void Execute(IBotEventInterface *pEvent);
 };
 
-class CBulletImpactEvent : public CBotEvent
-{
-public:
-	CBulletImpactEvent()
-	{
-		SetType("bullet_impact");
-		SetMod(MOD_TF2);
-	}
-
-	void Execute(IBotEventInterface *pEvent);
-};
-
 class CTF2ObjectDestroyedEvent : public CBotEvent
 {
 public:
@@ -446,6 +424,7 @@ public:
 	CTF2ChangeClass()
 	{
 		SetType("player_changeclass");
+		SetMod(MOD_TF2);
 	}
 
 	void Execute(IBotEventInterface *pEvent);
@@ -457,6 +436,7 @@ public:
 	CBossSummonedEvent(char *psztype)
 	{
 		SetType(psztype);
+		SetMod(MOD_TF2);
 	}
 
 	void Execute(IBotEventInterface *pEvent);
@@ -468,6 +448,7 @@ public:
 	CBossKilledEvent(char *psztype)
 	{
 		SetType(psztype);
+		SetMod(MOD_TF2);
 	}
 
 	void Execute(IBotEventInterface *pEvent);
@@ -510,19 +491,6 @@ public:
 	void Execute(IBotEventInterface *pEvent);
 };
 
-
-class CFlagEvent : public CBotEvent
-{
-public:
-	CFlagEvent()
-	{
-		SetType("teamplay_flag_event");
-		SetMod(MOD_TF2);
-	}
-
-	void Execute(IBotEventInterface *pEvent);
-};
-
 class CFlagCaptured : public CBotEvent
 {
 public:
@@ -535,7 +503,43 @@ public:
 	void Execute(IBotEventInterface *pEvent);
 };
 
-/*class CDODFireWeaponEvent : public CBotEvent
+/*class CRoundStartEvent : public CBotEvent
+{
+public:
+CRoundStartEvent()
+{
+SetType("round_start");
+SetMod(MOD_CSS);
+}
+
+void Execute (IBotEventInterface *pEvent);
+};
+
+class CBombPickupEvent : public CBotEvent
+{
+public:
+CBombPickupEvent()
+{
+SetType("bomb_pickup");
+SetMod(MOD_CSS);
+}
+
+void Execute ( IBotEventInterface *pEvent );
+};
+
+class CBombDroppedEvent : public CBotEvent
+{
+public:
+CBombDroppedEvent()
+{
+SetType("bomb_dropped");
+SetMod(MOD_CSS);
+}
+
+void Execute ( IBotEventInterface *pEvent );
+};
+
+class CDODFireWeaponEvent : public CBotEvent
 {
 public:
 CDODFireWeaponEvent()
@@ -742,7 +746,7 @@ class CBotEvents
 public:
 	static void SetupEvents();
 
-	static void ExecuteEvent(void *pEvent, eBotEventType iType);
+	static void ExecuteEvent(IGameEvent *pEvent, eBotEventType iType);
 
 	static void FreeMemory();
 

@@ -30,7 +30,7 @@
  *    version.
  *
  */
-#include "bot.h"
+#include "bot_base.h"
 
 #include "ndebugoverlay.h"
 
@@ -55,9 +55,7 @@
 #include "bot_squads.h"
 //#include "bot_hooks.h"
 
-#ifdef GetClassName
-#undef GetClassName
-#endif
+#include <IEngineTrace.h>
 
 extern ConVar bot_beliefmulti;
 extern ConVar bot_spyknifefov;
@@ -73,13 +71,18 @@ extern ConVar bot_tf2_spy_kill_on_cap_dist;
 extern ConVar bot_speed_boost;
 extern ConVar bot_projectile_tweak;
 
+#ifdef GetClassName
+#undef GetClassName
+#endif
+
 #define TF2_SPY_CLOAK_BELIEF 40
 #define TF2_HWGUY_REV_BELIEF 60
 //extern float g_fBotUtilityPerturb [TF_CLASS_MAX][BOT_UTIL_MAX];
 
 // Payload stuff by   The_Shadow
 
-//#include "vstdlib/random.h" // for random functions
+extern IServerPluginHelpers* helpers;
+extern IPlayerInfoManager* playerinfomanager;
 
 void CBroadcastOvertime::Execute(CBot*pBot)
 {
@@ -324,7 +327,8 @@ bool CBotFortress::StartGame()
 	{
 		SelectTeam();
 	}
-	else if (m_iDesiredClass == -1) // invalid class
+
+	if (m_iDesiredClass == -1) // invalid class
 	{
 		ChooseClass();
 	}
@@ -391,7 +395,7 @@ float CBotFortress::GetHealFactor(edict_t *pPlayer)
 
 	CClassInterface::GetVelocity(pPlayer, &vVel);
 
-	IPlayerInfo *p = playerinfomanager->GetPlayerInfo(pPlayer);
+	IPlayerInfo *p = playerhelpers->GetGamePlayer(pPlayer)->GetPlayerInfo();
 	TFClass iClass = (TFClass)CClassInterface::GetTF2Class(pPlayer);
 
 	if (!CBotGlobals::EntityIsAlive(pPlayer) || !p || p->IsDead() || p->IsObserver() || !p->IsConnected())
@@ -1227,7 +1231,7 @@ bool CBotFortress::IsEnemy(edict_t *pEdict, bool bCheckWeapons)
 	if (pEdict == m_pEdict)
 		return false;
 
-	if (!ENTINDEX(pEdict) || (ENTINDEX(pEdict) > CBotGlobals::MaxClients()))
+	if (!ENTINDEX(pEdict) || (ENTINDEX(pEdict) > MAX_PLAYERS))
 		return false;
 
 	if (CBotGlobals::GetTeam(pEdict) == GetTeam())
@@ -1400,6 +1404,36 @@ void CBotFortress::ModThink()
 			m_pSchedules->AddFront(pSchedule);
 		}
 	}
+
+	/*if (CTeamFortress2Mod::IsMapType(TF_MAP_MVM))
+	{
+		if (CClassInterface::TF2_MVMMinPlayersToReady())
+		{
+			int readycount = 0;
+			for (int i = 1; i <= MAX_PLAYERS; i++)
+			{
+				edict_t *pClient = INDEXENT(i);
+				if (!pClient->IsFree())
+				{
+					IPlayerInfo *pl = playerhelpers->GetGamePlayer(pClient)->GetPlayerInfo();
+					if (pl && pl->IsConnected() && !pl->IsFakeClient())
+					{
+						if (CClassInterface::TF2_MVMIsPlayerReady(i))
+							readycount++;
+					}
+				}
+
+				CBot *pBot = CBots::Get(pClient);
+				if (pBot->InUse())
+				{
+					if (readycount > 0)
+						helpers->ClientCommand(pClient, "tournament_player_readystate 1");
+					else
+						helpers->ClientCommand(pClient, "tournament_player_readystate 0");
+				}
+			}
+		}
+	}*/
 }
 
 
@@ -1461,11 +1495,107 @@ bool CBotFortress::IsTeleporterUseful(edict_t *pTele)
 	return false;
 }
 
+void CBotFortress::ChooseClass()
+{
+	float fClassFitness[10];
+	float fTotalFitness = 0;
+	float fRandom;
+
+	int iNumMedics = 0;
+	int i = 0;
+	int iTeam = GetTeam();
+	int iClass;
+	edict_t *pPlayer;
+
+	for (i = 1; i < 10; i++)
+		fClassFitness[i] = 1.0f;
+
+	if ((m_iClass >= 0) && (m_iClass < 10))
+		fClassFitness[m_iClass] = 0.1f;
+
+	for (i = 1; i <= MAX_PLAYERS; i++)
+	{
+		pPlayer = INDEXENT(i);
+
+		if (CBotGlobals::EntityIsValid(pPlayer) && (CTeamFortress2Mod::GetTeam(pPlayer) == iTeam))
+		{
+			iClass = CClassInterface::GetTF2Class(pPlayer);
+
+			if (iClass == TF_CLASS_MEDIC)
+				iNumMedics++;
+
+			if ((iClass >= 0) && (iClass < 10))
+				fClassFitness[iClass] *= 0.6f;
+		}
+	}
+
+	if (CTeamFortress2Mod::IsMapType(TF_MAP_MVM))
+	{
+		fClassFitness[TF_CLASS_ENGINEER] *= 1.5;
+		fClassFitness[TF_CLASS_SPY] *= 0.6;
+		fClassFitness[TF_CLASS_SCOUT] *= 0.6;
+		fClassFitness[TF_CLASS_HWGUY] *= 1.5;
+		fClassFitness[TF_CLASS_MEDIC] *= 1.1;
+		fClassFitness[TF_CLASS_SOLDIER] *= 1.5;
+		fClassFitness[TF_CLASS_DEMOMAN] *= 1.4;
+		fClassFitness[TF_CLASS_PYRO] *= 1.6;
+		// attacking team?
+	}
+	else if (CTeamFortress2Mod::IsAttackDefendMap())
+	{
+		if (GetTeam() == TF2_TEAM_BLUE)
+		{
+			fClassFitness[TF_CLASS_ENGINEER] *= 0.75;
+			fClassFitness[TF_CLASS_SPY] *= 1.25;
+			fClassFitness[TF_CLASS_SCOUT] *= 1.05;
+		}
+		else
+		{
+			fClassFitness[TF_CLASS_ENGINEER] *= 2.0;
+			fClassFitness[TF_CLASS_SCOUT] *= 0.5;
+			fClassFitness[TF_CLASS_HWGUY] *= 1.5;
+			fClassFitness[TF_CLASS_MEDIC] *= 1.1;
+		}
+	}
+	else if (CTeamFortress2Mod::IsMapType(TF_MAP_CP))
+		fClassFitness[TF_CLASS_SCOUT] *= 1.2f;
+
+	if (m_pLastEnemySentry.Get() != NULL)
+	{
+		fClassFitness[TF_CLASS_SPY] *= 1.25;
+		fClassFitness[TF_CLASS_DEMOMAN] *= 1.3;
+	}
+
+	if (iNumMedics == 0)
+		fClassFitness[TF_CLASS_MEDIC] *= 2.0f;
+
+
+	for (int i = 1; i < 10; i++)
+		fTotalFitness += fClassFitness[i];
+
+	fRandom = RandomFloat(0, fTotalFitness);
+
+	fTotalFitness = 0;
+
+	m_iDesiredClass = 0;
+
+	for (int i = 1; i < 10; i++)
+	{
+		fTotalFitness += fClassFitness[i];
+
+		if (fRandom <= fTotalFitness)
+		{
+			m_iDesiredClass = i;
+			break;
+		}
+	}
+}
+
 void CBotFortress::SelectTeam()
 {
 	char buffer[32];
 
-	int team = RandomInt(1, 2);
+	int team = CTeamFortress2Mod::IsMapType(TF_MAP_MVM) ? 1 : RandomInt(1, 2);
 
 	sprintf(buffer, "jointeam %d", team);
 
@@ -1481,6 +1611,72 @@ void CBotFortress::SelectClass()
 		_class = (TFClass)RandomInt(1, 9);
 	else
 		_class = (TFClass)m_iDesiredClass;
+
+	/*if (CBotGlobals::NumClients() > 3)
+	{
+		if (_class != TF_CLASS_SCOUT)
+		{
+			if (CTeamFortress2Mod::IsMapType(TF_MAP_MVM))
+			{
+				if (CTeamFortress2Mod::NumClassOnTeam(TF2_TEAM_RED, (int)TF_CLASS_SCOUT) < 1)
+					_class = TF_CLASS_SCOUT;
+			}
+			else if (CTeamFortress2Mod::IsMapType(TF_MAP_CART) || CTeamFortress2Mod::IsMapType(TF_MAP_CP))
+			{
+				if (CClassInterface::GetTeam(m_pEdict) == TF2_TEAM_BLUE)
+					if (CTeamFortress2Mod::NumClassOnTeam(TF2_TEAM_BLUE, (int)TF_CLASS_SCOUT) < 2)
+						_class = TF_CLASS_SCOUT;
+			}
+			else
+			{
+				if (CTeamFortress2Mod::NumClassOnTeam(CClassInterface::GetTeam(m_pEdict), (int)TF_CLASS_SCOUT) < RandomInt(1, 2))
+					_class = TF_CLASS_SCOUT;
+			}
+
+			if (_class == TF_CLASS_SCOUT)
+				choseClass = true;
+		}
+
+		if (_class != TF_CLASS_MEDIC)
+		{
+			if (CTeamFortress2Mod::IsMapType(TF_MAP_MVM))
+			{
+				if (CTeamFortress2Mod::NumClassOnTeam(TF2_TEAM_RED, (int)TF_CLASS_MEDIC) < 1)
+					_class = TF_CLASS_MEDIC;
+			}
+			else
+			{
+				if (CTeamFortress2Mod::NumClassOnTeam(CClassInterface::GetTeam(m_pEdict), (int)TF_CLASS_MEDIC) < 2)
+					_class = TF_CLASS_MEDIC;
+			}
+
+			if (_class == TF_CLASS_MEDIC)
+				choseClass = true;
+		}
+
+		if (_class != TF_CLASS_ENGINEER)
+		{
+			if (CTeamFortress2Mod::IsMapType(TF_MAP_MVM))
+			{
+				if (CTeamFortress2Mod::NumClassOnTeam(TF2_TEAM_RED, (int)TF_CLASS_ENGINEER) < 1)
+					_class = TF_CLASS_ENGINEER;
+			}
+			else if (CTeamFortress2Mod::IsMapType(TF_MAP_CART) || CTeamFortress2Mod::IsMapType(TF_MAP_CP))
+			{
+				if (CClassInterface::GetTeam(m_pEdict) == TF2_TEAM_RED)
+					if (CTeamFortress2Mod::NumClassOnTeam(TF2_TEAM_RED, (int)TF_CLASS_ENGINEER) < 3)
+						_class = TF_CLASS_ENGINEER;
+			}
+			else
+			{
+				if (CTeamFortress2Mod::NumClassOnTeam(CClassInterface::GetTeam(m_pEdict), (int)TF_CLASS_ENGINEER) < RandomInt(1, 2))
+					_class = TF_CLASS_ENGINEER;
+			}
+
+			if (_class == TF_CLASS_ENGINEER)
+				choseClass = true;
+		}
+	}*/
 
 	m_iClass = _class;
 
@@ -2530,102 +2726,6 @@ void CBotTF2::SpyCloak()
 	}
 }
 
-void CBotFortress::ChooseClass()
-{
-	float fClassFitness[10];
-	float fTotalFitness = 0;
-	float fRandom;
-
-	int iNumMedics = 0;
-	int i = 0;
-	int iTeam = GetTeam();
-	int iClass;
-	edict_t *pPlayer;
-
-	for (i = 1; i < 10; i++)
-		fClassFitness[i] = 1.0f;
-
-	if ((m_iClass >= 0) && (m_iClass < 10))
-		fClassFitness[m_iClass] = 0.1f;
-
-	for (i = 1; i <= MAX_PLAYERS; i++)
-	{
-		pPlayer = INDEXENT(i);
-
-		if (CBotGlobals::EntityIsValid(pPlayer) && (CTeamFortress2Mod::GetTeam(pPlayer) == iTeam))
-		{
-			iClass = CClassInterface::GetTF2Class(pPlayer);
-
-			if (iClass == TF_CLASS_MEDIC)
-				iNumMedics++;
-
-			if ((iClass >= 0) && (iClass < 10))
-				fClassFitness[iClass] *= 0.6f;
-		}
-	}
-
-	if (CTeamFortress2Mod::IsMapType(TF_MAP_MVM))
-	{
-		fClassFitness[TF_CLASS_ENGINEER] *= 1.5;
-		fClassFitness[TF_CLASS_SPY] *= 0.6;
-		fClassFitness[TF_CLASS_SCOUT] *= 0.6;
-		fClassFitness[TF_CLASS_HWGUY] *= 1.5;
-		fClassFitness[TF_CLASS_MEDIC] *= 1.1;
-		fClassFitness[TF_CLASS_SOLDIER] *= 1.5;
-		fClassFitness[TF_CLASS_DEMOMAN] *= 1.4;
-		fClassFitness[TF_CLASS_PYRO] *= 1.6;
-		// attacking team?
-	}
-	else if (CTeamFortress2Mod::IsAttackDefendMap())
-	{
-		if (GetTeam() == TF2_TEAM_BLUE)
-		{
-			fClassFitness[TF_CLASS_ENGINEER] *= 0.75;
-			fClassFitness[TF_CLASS_SPY] *= 1.25;
-			fClassFitness[TF_CLASS_SCOUT] *= 1.05;
-		}
-		else
-		{
-			fClassFitness[TF_CLASS_ENGINEER] *= 2.0;
-			fClassFitness[TF_CLASS_SCOUT] *= 0.5;
-			fClassFitness[TF_CLASS_HWGUY] *= 1.5;
-			fClassFitness[TF_CLASS_MEDIC] *= 1.1;
-		}
-	}
-	else if (CTeamFortress2Mod::IsMapType(TF_MAP_CP))
-		fClassFitness[TF_CLASS_SCOUT] *= 1.2f;
-
-	if (m_pLastEnemySentry.Get() != NULL)
-	{
-		fClassFitness[TF_CLASS_SPY] *= 1.25;
-		fClassFitness[TF_CLASS_DEMOMAN] *= 1.3;
-	}
-
-	if (iNumMedics == 0)
-		fClassFitness[TF_CLASS_MEDIC] *= 2.0f;
-
-
-	for (int i = 1; i < 10; i++)
-		fTotalFitness += fClassFitness[i];
-
-	fRandom = RandomFloat(0, fTotalFitness);
-
-	fTotalFitness = 0;
-
-	m_iDesiredClass = 0;
-
-	for (int i = 1; i < 10; i++)
-	{
-		fTotalFitness += fClassFitness[i];
-
-		if (fRandom <= fTotalFitness)
-		{
-			m_iDesiredClass = i;
-			break;
-		}
-	}
-}
-
 void CBotFortress::UpdateConditions()
 {
 	CBot::UpdateConditions();
@@ -3239,10 +3339,6 @@ bool CBotTF2::WantToInvestigateSound()
 
 bool CBotTF2::WantToListenToPlayerFootsteps(edict_t *pPlayer)
 {
-	extern ConVar bot_notarget;
-	if (bot_notarget.GetBool() && (CClients::Get(pPlayer)->IsUsed()))
-		return false;
-
 	switch (CClassInterface::GetTF2Class(pPlayer))
 	{
 	case TF_CLASS_MEDIC:
@@ -3280,38 +3376,40 @@ bool CBotTF2::WantToListenToPlayerAttack(edict_t *pPlayer, int iWeaponID)
 
 	switch (CClassInterface::GetTF2Class(pPlayer))
 	{
-	case TF_CLASS_MEDIC:
-	{
-		// don't listen to mediguns
-		if (!strcmp("medigun", &szWeaponClassname[10]))
-			return false;
-	}
-	break;
-	case TF_CLASS_ENGINEER:
-	{
-		// don't listen to engis upgrading stuff
-		if (!strcmp("wrench", &szWeaponClassname[10]))
-			return false;
-		else if (!strcmp("builder", &szWeaponClassname[10]))
-			return false;
-	}
-	break;
-	case TF_CLASS_SPY:
-	{
-		// don't listen to cloaked spies
-		if (CTeamFortress2Mod::TF2_IsPlayerCloaked(pPlayer))
-			return false;
-		if (!strcmp("knife", &szWeaponClassname[10]))
+		case TF_CLASS_MEDIC:
 		{
-			// only hear spy knives if they know there are spies around
-			// in 15% of cases
-			return HasSomeConditions(CONDITION_PARANOID) && (RandomFloat(0.0f, 1.0f) <= 0.15f);
+			// don't listen to mediguns
+			if (!strcmp("medigun", &szWeaponClassname[10]))
+				return false;
+			break;
 		}
-	}
-	break;
+	
+		case TF_CLASS_ENGINEER:
+		{
+			// don't listen to engis upgrading stuff
+			if (!strcmp("wrench", &szWeaponClassname[10]))
+				return false;
+			else if (!strcmp("builder", &szWeaponClassname[10]))
+				return false;
+			break;
+		}
+	
+		case TF_CLASS_SPY:
+		{
+			// don't listen to cloaked spies
+			if (CTeamFortress2Mod::TF2_IsPlayerCloaked(pPlayer))
+				return false;
+			if (!strcmp("knife", &szWeaponClassname[10]))
+			{
+				// only hear spy knives if they know there are spies around
+				// in 15% of cases
+				return HasSomeConditions(CONDITION_PARANOID) && (RandomFloat(0.0f, 1.0f) <= 0.15f);
+			}
+			break;
+		}
 
-	default:
-		break;
+		default:
+			break;
 	}
 
 	return true;
@@ -3328,7 +3426,7 @@ void CBotTF2::CheckStuckonSpy(void)
 	float fDistance;
 	float fMaxDistance = 80;
 
-	for (i = 1; i <= CBotGlobals::MaxClients(); i++)
+	for (i = 1; i < MAX_PLAYERS; i++)
 	{
 		pPlayer = INDEXENT(i);
 
@@ -3372,7 +3470,7 @@ bool CBotFortress::IsClassOnTeam(int iClass, int iTeam)
 	int i = 0;
 	edict_t *pPlayer;
 
-	for (i = 1; i <= CBotGlobals::MaxClients(); i++)
+	for (i = 1; i < MAX_PLAYERS; i++)
 	{
 		pPlayer = INDEXENT(i);
 
@@ -3510,7 +3608,7 @@ int CBotFortress::GetSpyDisguiseClass(int iTeam)
 	float fTotal;
 	float fRand;
 
-	for (i = 1; i <= CBotGlobals::MaxClients(); i++)
+	for (i = 1; i < MAX_PLAYERS; i++)
 	{
 		pPlayer = INDEXENT(i);
 
@@ -3652,7 +3750,7 @@ bool CBotTF2::SetVisible(edict_t *pEntity, bool bVisible)
 			m_NearestEnemyRocket = NULL;
 	}
 
-	if ((ENTINDEX(pEntity) <= CBotGlobals::MaxClients()) && (ENTINDEX(pEntity) > 0))
+	if ((ENTINDEX(pEntity) <= MAX_PLAYERS) && (ENTINDEX(pEntity) > 0))
 	{
 		if (bVisible)
 		{
@@ -3718,12 +3816,11 @@ bool CBotTF2::SetVisible(edict_t *pEntity, bool bVisible)
 
 void CBotTF2::CheckBeingHealed()
 {
-	static short i;
-	static edict_t *p;
+	static edict_t *pPlayer;
 	static edict_t *pWeapon;
-	static IPlayerInfo *pi;
+	static IPlayerInfo *pPI;
+	static IGamePlayer *pPl;
 	static const char *szWeaponName;
-
 
 	if (m_fCheckHealTime > engine->Time())
 		return;
@@ -3733,22 +3830,24 @@ void CBotTF2::CheckBeingHealed()
 	m_bIsBeingHealed = false;
 	m_bCanBeUbered = false;
 
-	for (i = 1; i <= MAX_PLAYERS; i++)
+	for (short int i = 1; i <= MAX_PLAYERS; i++)
 	{
-		p = INDEXENT(i);
+		pPlayer = INDEXENT(i);
 
-		if (p == m_pEdict)
+		if (pPlayer == m_pEdict)
 			continue;
 
-		pi = playerinfomanager->GetPlayerInfo(p);
+		pPl = playerhelpers->GetGamePlayer(pPlayer);
+		if (!pPl || !pPl->IsInGame() || !pPl->IsConnected())
+			continue;
 
-		if (p && pi && (pi->GetTeamIndex() == GetTeam()) && CBotGlobals::EntityIsValid(p) && p->GetNetworkable()->GetClassName())
+		pPI = pPl->GetPlayerInfo();
+		if (pPlayer && !pPlayer->IsFree() && pPI && !pPI->IsDead() && pPI->GetTeamIndex() == GetTeam())
 		{
-			szWeaponName = pi->GetWeaponName();
-
-			if (szWeaponName && *szWeaponName && strcmp(szWeaponName, "tf_weapon_medigun") == 0)
+			szWeaponName = pPI->GetWeaponName();
+			if (szWeaponName && !strcmp(szWeaponName, "tf_weapon_medigun"))
 			{
-				pWeapon = CTeamFortress2Mod::GetMediGun(p);
+				pWeapon = CTeamFortress2Mod::GetMediGun(pPlayer);
 
 				if (!pWeapon)
 					continue;
@@ -3759,12 +3858,11 @@ void CBotTF2::CheckBeingHealed()
 						m_bCanBeUbered = true;
 
 					m_bIsBeingHealed = true;
-					m_pHealer = p;
+					m_pHealer = pPlayer;
 				}
 			}
 		}
 	}
-
 }
 
 // Preconditions :  Current weapon is Medigun
@@ -3773,7 +3871,7 @@ void CBotTF2::CheckBeingHealed()
 bool CBotTF2::HealPlayer()
 {
 	static CBotWeapon *pWeap;
-	static IPlayerInfo *p;
+	static IPlayerInfo *pPl;
 	static edict_t *pWeapon;
 	static Vector vOrigin;
 	static Vector vForward;
@@ -3792,9 +3890,9 @@ bool CBotTF2::HealPlayer()
 
 	//if ( (distanceFrom(vOrigin) > 250) && !isVisible(m_pHeal) ) 
 	//	return false;
-	p = playerinfomanager->GetPlayerInfo(m_pHeal);
+	pPl = playerhelpers->GetGamePlayer(m_pHeal)->GetPlayerInfo();
 
-	if (!p || p->IsDead() || !p->IsConnected() || p->IsObserver())
+	if (!pPl || pPl->IsDead() || !pPl->IsConnected() || pPl->IsObserver())
 		return false;
 
 	if (m_fMedicUpdatePosTime < engine->Time())
@@ -3804,14 +3902,13 @@ bool CBotTF2::HealPlayer()
 
 		fRand = RandomFloat(1.0f, 2.0f);
 
-		pClient = CClients::Get(m_pHeal);
-
-		if (pClient)
-			fSpeed = pClient->GetSpeed();
+		Vector vVelocity;
+		CClassInterface::GetVelocity(m_pHeal, &vVelocity);
+		fSpeed = vVelocity.Length();
 
 		m_fMedicUpdatePosTime = engine->Time() + (fRand * (1.0f - (fSpeed / 320)));
 
-		if (p && (p->GetLastUserCommand().buttons & IN_ATTACK))
+		if (pPl && (pPl->GetLastUserCommand().buttons & IN_ATTACK))
 		{
 			// keep out of cross fire
 			eyes = CBotGlobals::PlayerAngles(m_pHeal);
@@ -3888,7 +3985,7 @@ bool CBotTF2::HealPlayer()
 	edict_t *pPlayer = NULL;
 
 	// Find the player I'm currently healing
-	for (unsigned short i = 1; i <= MAX_PLAYERS; i++)
+	for (int i = 1; i <= MAX_PLAYERS; i++)
 	{
 		pent = INDEXENT(i);
 
@@ -3952,7 +4049,7 @@ float CBotTF2::GetEnemyFactor(edict_t *pEnemy)
 	if (CBotGlobals::IsPlayer(pEnemy))
 	{
 		const char *szModel = pEnemy->GetIServerEntity()->GetModelName().ToCStr();
-		IPlayerInfo *p = playerinfomanager->GetPlayerInfo(pEnemy);
+		IPlayerInfo *p = playerhelpers->GetGamePlayer(pEnemy)->GetPlayerInfo();
 
 		if (CTeamFortress2Mod::IsFlagCarrier(pEnemy))
 		{
@@ -6152,7 +6249,7 @@ bool CBotTF2::ExecuteAction(CBotUtility *util)//eBotAction id, CWaypoint *pWaypo
 		float fMaxDistance = 500;
 		float fDistance;
 
-		for (i = 1; i <= CBotGlobals::MaxClients(); i++)
+		for (i = 1; i < MAX_PLAYERS; i++)
 		{
 			pEdict = INDEXENT(i);
 
@@ -6353,16 +6450,8 @@ void CBotTF2::ModAim(edict_t *pEntity, Vector &v_origin, Vector *v_desired_offse
 				if (pWp->GetProjectileSpeed() > 0)
 				{
 					extern ConVar *sv_gravity;
-					CClient *pClient = CClients::Get(pEntity);
 					Vector vVelocity;
-
-					if (CClassInterface::GetVelocity(pEntity, &vVelocity))
-					{
-						if (pClient && (vVelocity == Vector(0, 0, 0)))
-							vVelocity = pClient->GetVelocity();
-					}
-					else if (pClient)
-						vVelocity = pClient->GetVelocity();
+					CClassInterface::GetVelocity(pEntity, &vVelocity);
 
 					// the arrow will arc
 					fTime = fDist2D / (pWp->GetProjectileSpeed()*0.707);
@@ -6422,16 +6511,8 @@ void CBotTF2::ModAim(edict_t *pEntity, Vector &v_origin, Vector *v_desired_offse
 			case TF2_WEAPON_GRENADELAUNCHER:
 			{
 				extern ConVar *sv_gravity;
-				CClient *pClient = CClients::Get(pEntity);
 				Vector vVelocity;
-
-				if (CClassInterface::GetVelocity(pEntity, &vVelocity))
-				{
-					if (pClient && (vVelocity == Vector(0, 0, 0)))
-						vVelocity = pClient->GetVelocity();
-				}
-				else if (pClient)
-					vVelocity = pClient->GetVelocity();
+				CClassInterface::GetVelocity(pEntity, &vVelocity);
 
 				if (pWp->GetProjectileSpeed() > 0)
 				{
@@ -7181,7 +7262,7 @@ bool CBotFF::IsEnemy(edict_t *pEdict, bool bCheckWeapons)
 	if (pEdict == m_pEdict)
 		return false;
 
-	if (!ENTINDEX(pEdict) || (ENTINDEX(pEdict) > CBotGlobals::MaxClients()))
+	if (!ENTINDEX(pEdict) || (ENTINDEX(pEdict) > MAX_PLAYERS))
 		return false;
 
 	if (CBotGlobals::GetTeam(pEdict) == GetTeam())

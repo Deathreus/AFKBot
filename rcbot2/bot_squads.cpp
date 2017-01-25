@@ -303,7 +303,7 @@ void CBotSquad::Init()
 
 	if ((pLeader = GetLeader()) != NULL)
 	{
-		IPlayerInfo *p = playerinfomanager->GetPlayerInfo(pLeader);
+		IPlayerInfo *p = playerhelpers->GetGamePlayer(pLeader)->GetPlayerInfo();
 		m_vLeaderAngle = p->GetLastUserCommand().viewangles;
 	}
 }

@@ -32,7 +32,7 @@
 
 //#include "server_class.h"
 
-#include "bot.h"
+#include "bot_base.h"
 
 #include "in_buttons.h"
 
@@ -99,6 +99,9 @@ int CTeamFortress2Mod::m_iFlagPointWptID = -1;
 vector<CTF2Loadout*> CTeamFortress2Mod::m_pLoadoutWeapons[TF2_SLOT_MAX][9];
 
 extern ConVar bot_use_disp_dist;
+
+extern IServerGameEnts *gameents;
+extern IServerTools *servertools;
 
 CTF2Loadout::CTF2Loadout(const char *pszClassname, int iIndex, int iQuality, int iMinLevel, int iMaxLevel)
 {
@@ -187,18 +190,82 @@ void CTeamFortress2Mod::ModFrame()
 
 void CTeamFortress2Mod::InitMod()
 {
-	CBots::ControlBotSetup(true);
-
 	CWeapons::LoadWeapons((m_szWeaponListName == NULL) ? "TF2" : m_szWeaponListName, TF2Weaps);
-	//CWeapons::loadWeapons("TF2", TF2Weaps);
-	/*
-	i = 0;
-	while ( TF2Weaps[i].szWeaponName[0] != '\0' )  //for ( i = 0; i < TF2_WEAPON_MAX; i ++ )
-	CWeapons::addWeapon(new CWeapon(TF2Weaps[i++]));//.iSlot,TF2Weaps[i].szWeaponName,TF2Weaps[i].iId,TF2Weaps[i].m_iFlags,TF2Weaps[i].m_iAmmoIndex,TF2Weaps[i].minPrimDist,TF2Weaps[i].maxPrimDist,TF2Weaps[i].m_iPreference,TF2Weaps[i].m_fProjSpeed));
-	*/
 	CRCBotTF2UtilFile::LoadConfig();
 }
 
+eTFMapType CTeamFortress2Mod::GetMapType()
+{
+	if (CGameRulesObject::GameRules_GetProp("m_bIsInTraining"))
+		return TF_MAP_TR;
+
+	if (CGameRulesObject::GameRules_GetProp("m_bPlayingSpecialDeliveryMode"))
+		return TF_MAP_SD;
+	
+	if (CGameRulesObject::GameRules_GetProp("m_bPlayingMannVsMachine"))
+		return TF_MAP_MVM;
+
+	if (CGameRulesObject::GameRules_GetProp("m_bPlayingKoth"))
+		return TF_MAP_KOTH;
+
+	if (CGameRulesObject::GameRules_GetProp("m_bPlayingRobotDestructionMode"))
+		return TF_MAP_RD;
+
+	// Cases not caught by the above
+	int iGameType = CGameRulesObject::GameRules_GetProp("m_nGameType");
+	switch (iGameType)
+	{
+		case 1:
+		{
+			return TF_MAP_CTF;
+		}
+		case 2:
+		{
+			int iRoundCount = 0;
+			CBaseEntity *pRoundCP = NULL;
+			int iPriority = -1;
+
+			int iRestrictWinner = -1;
+			int iRestrictCount = 0;
+
+			while ((pRoundCP = servertools->FindEntityByClassname(pRoundCP, "team_control_point_round")) != NULL)
+			{
+				iRoundCount++;
+
+				edict_t *pEdict = gameents->BaseEntityToEdict(pRoundCP);
+				iRestrictWinner = CEntData::GetEntData(pEdict, "m_iInvalidCapWinner");
+				if (iRestrictWinner > 1)
+					iRestrictCount++;
+
+				int iNewPriority = CEntData::GetEntData(pEdict, "m_nPriority");
+				if (iNewPriority > iPriority)
+					iPriority = iNewPriority;
+				else if (iNewPriority == iPriority)
+					return TF_MAP_TC;
+			}
+
+			if (iRoundCount > 1 && iRoundCount == iRestrictCount)
+				return TF_MAP_CP;
+			else if (iRoundCount > 1)
+				return TF_MAP_TC;
+
+			return TF_MAP_CP;
+		}
+		case 3:
+		{
+			if (servertools->FindEntityByClassname(NULL, "tf_logic_multiple_escort") != NULL)
+				return TF_MAP_CARTRACE;
+
+			return TF_MAP_CART;
+		}
+		case 4:
+		{
+			return TF_MAP_ARENA;
+		}
+	}
+
+	return TF_MAP_DM;
+}
 
 void CTeamFortress2Mod::MapInit()
 {
@@ -225,30 +292,7 @@ void CTeamFortress2Mod::MapInit()
 	m_iCapturePointWptID = -1;
 	m_iFlagPointWptID = -1;
 
-	if (strncmp(szmapname, "ctf_", 4) == 0)
-		m_MapType = TF_MAP_CTF; // capture the flag
-	else if (strncmp(szmapname, "cp_", 3) == 0)
-		m_MapType = TF_MAP_CP; // control point
-	else if (strncmp(szmapname, "tc_", 3) == 0)
-		m_MapType = TF_MAP_TC; // territory control
-	else if (strncmp(szmapname, "pl_", 3) == 0)
-		m_MapType = TF_MAP_CART; // pipeline
-	else if (strncmp(szmapname, "plr_", 4) == 0)
-		m_MapType = TF_MAP_CARTRACE; // pipeline racing
-	else if (strncmp(szmapname, "arena_", 6) == 0)
-		m_MapType = TF_MAP_ARENA; // arena mode
-	else if (strncmp(szmapname, "koth_", 5) == 0)
-		m_MapType = TF_MAP_KOTH; // king of the hill
-	else if (strncmp(szmapname, "sd_", 3) == 0)
-		m_MapType = TF_MAP_SD; // special delivery
-	else if (strncmp(szmapname, "tr_", 3) == 0)
-		m_MapType = TF_MAP_TR; // training mode
-	else if (strncmp(szmapname, "mvm_", 4) == 0)
-		m_MapType = TF_MAP_MVM; // mann vs machine
-	else if (strncmp(szmapname, "rd_", 3) == 0)
-		m_MapType = TF_MAP_RD; // robot destruction
-	else
-		m_MapType = TF_MAP_DM;
+	m_MapType = GetMapType();
 
 	m_iArea = 0;
 
@@ -440,22 +484,12 @@ int CTeamFortress2Mod::GetTeam(edict_t *pEntity)
 
 int CTeamFortress2Mod::GetSentryLevel(edict_t *pSentry)
 {
-	string_t model = pSentry->GetIServerEntity()->GetModelName();
-	const char *szmodel = model.ToCStr();
-
-	return (szmodel[24] - '1') + 1;
+	return CClassInterface::GetTF2UpgradeLevel(pSentry);
 }
 
 int CTeamFortress2Mod::GetDispenserLevel(edict_t *pDispenser)
 {
-	string_t model = pDispenser->GetIServerEntity()->GetModelName();
-	const char *szmodel = model.ToCStr();
-
-	if (strcmp(szmodel, "models/buildables/dispenser_light.mdl") == 0)
-		return 1;
-
-	return (szmodel[31] - '1') + 1;
-	//if ( pSentry && pSentry->
+	return CClassInterface::GetTF2UpgradeLevel(pDispenser);
 }
 
 int CTeamFortress2Mod::GetEnemyTeam(int iTeam)
@@ -849,7 +883,7 @@ int CTeamFortress2Mod::GetHighestScore()
 {
 	short int highest = 0;
 	short int score;
-	short int i = 0;
+	int i = 0;
 	edict_t *edict;
 
 	for (i = 1; i <= MAX_PLAYERS; i++)
@@ -875,7 +909,7 @@ int CTeamFortress2Mod::GetHighestScore()
 bool CTeamFortress2Mod::BuildingNearby(int iTeam, Vector vOrigin)
 {
 	edict_t *pPlayer;
-	short int i;
+	int i;
 	short int sentryIndex;
 
 	for (i = 1; i <= MAX_PLAYERS; i++)
@@ -1054,12 +1088,6 @@ void CTeamFortress2Mod::AddWaypointFlags(edict_t *pPlayer, edict_t *pEdict, int 
 				*iFlags |= CWaypointTypes::W_FL_NOBLU;
 		}
 	}
-	// do this in the event code
-	/*else if ( strcmp(pEdict->GetClassName(),"item_teamflag") == 0 )
-	{
-	if ( !CTeamFortress2Mod::IsFlagCarrier(pPlayer) )
-	*iFlags |= CWaypointTypes::W_FL_FLAG;
-	}*/
 	else if (strcmp(pEdict->GetClassName(), "team_control_point") == 0)
 	{
 		*iFlags |= CWaypointTypes::W_FL_CAPPOINT;
@@ -1097,65 +1125,20 @@ void CTeamFortress2Mod::UpdatePointMaster()
 {
 	if (m_PointMasterResource.Get() == NULL)
 	{
-		edict_t *pMaster = CClassInterface::FindEntityByClassnameNearest(Vector(0, 0, 0), "team_control_point_master", 65535);
+		edict_t *pMaster = CClassInterface::FindEntityByClassname(MAX_PLAYERS, "team_control_point_master");
 
 		if (pMaster)
 		{
-#ifdef _WIN32
 			extern ConVar bot_const_point_master_offset;
-			extern IServerGameEnts *servergameents;
+			extern IServerGameEnts *gameents;
 
-			CBaseEntity *pMasterEntity = servergameents->EdictToBaseEntity(pMaster);
+			CBaseEntity *pMasterEntity = gameents->EdictToBaseEntity(pMaster);
 
 			unsigned long full_size = sizeof(pMasterEntity);
 			unsigned long mempoint = ((unsigned long)pMasterEntity) + bot_const_point_master_offset.GetInt();
 
 			m_PointMaster = (CTeamControlPointMaster*)mempoint;
 			m_PointMasterResource = pMaster;
-#else
-			extern ConVar bot_const_point_master_offset;
-			CBaseEntity *pent = pMaster->GetUnknown()->GetBaseEntity();
-			unsigned long mempoint = ((unsigned long)pent)+bot_const_point_master_offset.GetInt();
-
-			m_PointMaster = (CTeamControlPointMaster*)mempoint;
-			m_PointMasterResource = pMaster;
-#endif
-
-			extern ConVar bot_const_round_offset;
-
-			int idx = m_PointMaster->m_iCurrentRoundIndex;
-			int size = m_PointMaster->m_ControlPointRounds.Size();
-
-			if (idx >= 0 && size >= 0 && idx < 100 && size < 100) {
-				int infoCount = 0;
-
-				for (int r = 0; r < m_PointMaster->m_ControlPointRounds.Size(); ++r) {
-					CBaseEntity *pent = m_PointMaster->m_ControlPointRounds[r];
-					CTeamControlPointRound* pointRound = (CTeamControlPointRound*)((unsigned long)pent + (unsigned long)bot_const_round_offset.GetInt());
-
-					//CBotGlobals::botMessage(NULL, 0, "Control Points for Round %d", r);
-
-					for (int i = 0; i < pointRound->m_ControlPoints.Count(); ++i) {
-						CBaseHandle* handle = &pointRound->m_ControlPoints.Element(i);
-
-						if (handle->IsValid()) {
-							edict_t* edict = INDEXENT(handle->GetEntryIndex());
-
-							if (!edict->IsFree()) {
-								infoCount++;
-								//CBotGlobals::botMessage(NULL, 0, "%d, %d, %d, %s", r, i, handle->GetSerialNumber(), edict->GetClassName());
-							}
-						}
-					}
-				}
-
-				if (infoCount == 0) {
-					CBotGlobals::BotMessage(NULL, 0, "If you are playing cp_* maps, and you Get this message, something might be wrong with your mstr_offset!");
-				}
-			}
-			else {
-				CBotGlobals::BotMessage(NULL, 0, "If you are playing cp_* maps, and you Get this message, something might be wrong with your mstr_offset!");
-			}
 		}
 	}
 

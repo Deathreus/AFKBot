@@ -85,24 +85,24 @@ void GetGrenadeAngle(float v, float g, float desx, float desy, float *fa1, float
 	return;
 }
 
-float GetGrenadeZ(edict_t *pShooter, edict_t *pTarGet, Vector vOrigin, Vector vTarGet, float fInitialSpeed)
+float GetGrenadeZ(edict_t *pShooter, edict_t *pTarget, Vector vOrigin, Vector vTarget, float fInitialSpeed)
 {
 	float fAngle1, fAngle2;
 
 	Vector vForward;
 	QAngle angles;
 
-	Vector v_comp = (vTarGet - vOrigin);
+	Vector v_comp = (vTarget - vOrigin);
 
 	float fDIst2D = v_comp.Length2D();
 	float fDIst3D = v_comp.Length();
 
-	GetGrenadeAngle(fInitialSpeed, sv_gravity->GetFloat(), fDIst2D, vTarGet.z - vOrigin.z, &fAngle1, &fAngle2);
+	GetGrenadeAngle(fInitialSpeed, sv_gravity->GetFloat(), fDIst2D, vTarget.z - vOrigin.z, &fAngle1, &fAngle2);
 
 	angles = QAngle(0, 0, 0);
 	// do a quick traceline to Check which angle to choose (minimum angle = straight)
 
-	if (CBotGlobals::IsShotVisible(pShooter, vOrigin, vTarGet, pTarGet))
+	if (CBotGlobals::IsShotVisible(pShooter, vOrigin, vTarget, pTarget))
 		angles.x = -MIN(fAngle1, fAngle2);
 	else
 		angles.x = -MAX(fAngle1, fAngle2);
@@ -145,7 +145,7 @@ void CBotTF2MedicHeal::Execute(CBot *pBot, CBotSchedule *pSchedule)
 
 		if (!CClassInterface::GetVelocity(pHeal, &vVelocity) || (vVelocity.Length2D() > 1.0f))
 		{
-			IPlayerInfo *p = playerinfomanager->GetPlayerInfo(pHeal);
+			IPlayerInfo *p = playerhelpers->GetGamePlayer(pHeal)->GetPlayerInfo();
 
 			if (p)
 			{
@@ -2419,16 +2419,10 @@ void CSpyCheckAir::Execute(CBot *pBot, CBotSchedule *pSchedule)
 	if (m_fTime == 0.0f)
 	{
 		// record the number of people I see now
-		int i;
+		short int i;
 		edict_t *pPlayer;
 		IPlayerInfo *p;
-		/*		edict_t *pDIsguIsed;
-
-				int iClass;
-				int iTeam;
-				int iIndex;
-				int iHealth;
-				*/
+		IGamePlayer *pPl;
 		seenlist = 0;
 		m_bHitPlayer = false;
 
@@ -2439,12 +2433,13 @@ void CSpyCheckAir::Execute(CBot *pBot, CBotSchedule *pSchedule)
 			if (pPlayer == pBot->GetEdict())
 				continue;
 
-			if (!CBotGlobals::EntityIsValid(pPlayer))
+			pPl = playerhelpers->GetGamePlayer(pPlayer);
+			if (!pPl || !pPl->IsConnected() || !pPl->IsInGame())
 				continue;
 
-			p = playerinfomanager->GetPlayerInfo(pPlayer);
+			p = pPl->GetPlayerInfo();
 
-			if (p->IsDead() || p->IsObserver())
+			if (!p || p->IsDead())
 				continue;
 
 			if (CClassInterface::GetTF2Class(pPlayer) == TF_CLASS_SPY)
@@ -2486,7 +2481,7 @@ void CSpyCheckAir::Execute(CBot *pBot, CBotSchedule *pSchedule)
 			if (!CBotGlobals::EntityIsValid(pPlayer))
 				continue;
 
-			p = playerinfomanager->GetPlayerInfo(pPlayer);
+			p = playerhelpers->GetGamePlayer(pPlayer)->GetPlayerInfo();
 
 			if (p->IsDead() || p->IsObserver())
 				continue;
@@ -2611,7 +2606,7 @@ void CSpyCheckAir::Execute(CBot *pBot, CBotSchedule *pSchedule)
 
 		if (m_pUnseenBefore && pBot->IsVisible(m_pUnseenBefore))
 		{
-			IPlayerInfo *p = playerinfomanager->GetPlayerInfo(m_pUnseenBefore);
+			IPlayerInfo *p = playerhelpers->GetGamePlayer(m_pUnseenBefore)->GetPlayerInfo();
 
 			// stop if I see the player im hitting attacking
 			if (p->GetLastUserCommand().buttons & IN_ATTACK)

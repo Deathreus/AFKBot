@@ -31,20 +31,20 @@
 #ifndef __RCBOT_NAVIGATOR_H__
 #define __RCBOT_NAVIGATOR_H__
 
-#include "bot_genclass.h"
-
 #include <vector>
 #include <queue>
 using namespace std;
 
-#include "bot.h"
+#include "bot_base.h"
 #include "bot_waypoint.h"
+#include "..\NavMesh\NavMesh.h"
 
 #include "bot_belief.h"
 #include "bot_genclass.h"
 
 class CNavMesh;
 class CWaypointVisibilityTable;
+class INavMeshArea;
 
 #define MAX_BELIEF 200.0f
 
@@ -151,6 +151,89 @@ protected:
 	bool m_bLoadBelief;
 };
 
+// Tries to mimic the old waypoint navigator as closely as possible
+class INavMeshNavigator
+{
+public:
+	virtual void FreeMapMemory() = 0;
+
+	virtual bool WorkRoute(Vector vFrom, Vector vTo, bool *bFail, bool bRestart = true, bool bNoInterruptions = false, INavMeshArea *goal = NULL, int iConditions = 0, int iDangerId = -1) = 0;
+
+	virtual INavMeshArea *ChooseBestFromBelief(IList<INavMeshArea*> *goals, bool bHighDanger = false, int iSearchFlags = 0, int iTeam = 0) = 0;
+	virtual INavMeshArea *ChooseBestFromBeliefBetweenAreas(IList<INavMeshArea*> *goals, bool bHighDanger = false, bool bIgnoreBelief = false) = 0;
+
+	virtual void RollBackPosition() = 0;
+
+	virtual void FailMove() = 0;
+
+	virtual Vector GetNextPoint() = 0;
+	inline Vector GetPreviousPoint() { return m_vPreviousPoint; }
+
+	virtual bool HasNextPoint() = 0;
+
+	virtual void UpdatePosition() = 0;
+
+	virtual INavMeshArea *GetCurrentWaypoint() = 0;
+	virtual INavMeshArea *GetCurrentGoal() = 0;
+
+	virtual bool GetNextRoutePoint(Vector *vPoint) = 0;
+
+	virtual bool NextPointIsOnLadder() = 0;
+
+	virtual bool CanGetTo(Vector vOrigin) = 0;
+
+	virtual int GetCurrentFlags() { return 0; }
+
+	virtual bool GetCoverPosition(Vector vCoverOrigin, Vector *vCover) = 0;
+	virtual bool GetHideSpotPosition(Vector vCoverOrigin, Vector *vCover) = 0;
+
+	virtual float DistanceTo(Vector vOrigin) = 0;
+	virtual float DistanceTo(INavMeshArea *area) = 0;
+
+	virtual bool BeliefLoad() { return false; };
+	virtual bool BeliefSave(bool bOverride = false) { return false; };
+	virtual void Belief(Vector vOrigin, Vector vOther, float fBelief, float fStrength, BotBelief iType) = 0;
+	virtual void BeliefOne(int iAreaID, BotBelief iBeliefType, float fDist) { return; }
+	virtual float GetBelief(int index) { return 0; }
+
+	inline Vector GetGoalOrigin() { return m_vGoal; }
+
+	float GetGoalDistance() { return m_fGoalDistance; }
+
+	bool GetDangerPoint(Vector *vec) { *vec = m_bDangerPoint ? m_vDangerPoint : Vector(0, 0, 0); return m_bDangerPoint; }
+
+	virtual bool CalculateAimVector(QAngle *qAim) = 0;
+
+	virtual INavMeshArea *GetArea(const Vector &vPos, float fBeneathLimit = 120.0f) = 0;
+	virtual INavMeshArea *GetNearestArea(const Vector &vPos, bool bAnyZ = false, float fMaxDist = 10000.0f, bool bCheckLOS = false, bool bCheckGround = true, int iTeam = -2) = 0;
+	virtual INavMeshArea *GetAreaByID(const unsigned int iAreaIndex) = 0;
+
+	virtual int WorldToGridX(float flWX) = 0;
+	virtual int WorldToGridY(float flWY) = 0;
+
+	virtual IList<INavMeshArea*> *CollectSurroundingAreas(INavMeshArea *fromArea, float fTravelDistanceLimit = 1500.0f, float fMaxStepUpLimit = 18.0f, float fMaxDropDownLimit = 100.0f) = 0;
+	virtual IList<INavMeshArea*> *GetAdjacentList(INavMeshArea *fromArea, eNavDir iDirection) = 0;
+	virtual IList<INavMeshLadder*> *GetLadderList(INavMeshArea *fromArea, eNavLadderDir iLadderDirection) = 0;
+	virtual IList<INavMeshArea*> *GetAreasOnGrid(int x, int y) = 0;
+
+	virtual bool IsWalkableTraceLineClear(Vector vFrom, Vector vTo, unsigned int iFlags) = 0;
+
+	bool WantToLoadBelief() { return m_bLoadBelief; }
+	virtual bool WantToSaveBelief() { return false; }
+
+	static const int MAX_PATH_TICKS = 200;
+
+protected:
+	Vector m_vGoal;
+	float m_fGoalDistance;
+	Vector m_vPreviousPoint;
+	Vector m_vDangerPoint;
+	bool m_bDangerPoint;
+	short int m_iBeliefTeam;
+	bool m_bBeliefChanged;
+	bool m_bLoadBelief;
+};
+
 #define FL_ASTAR_CLOSED		1
 #define FL_ASTAR_PARENT		2
 #define FL_ASTAR_OPEN		4
@@ -172,8 +255,8 @@ public:
 	inline bool HeuristicSet() { return HasFlag(FL_HEURISTIC_SET); }
 	inline const float GetHeuristic() { return m_fHeuristic; } const
 
-		////////////////////////////////////////////////////////
-		inline void SetFlag(int iFlag) { m_iFlags |= iFlag; }
+	////////////////////////////////////////////////////////
+	inline void SetFlag(int iFlag) { m_iFlags |= iFlag; }
 	inline bool HasFlag(int iFlag) { return ((m_iFlags & iFlag) == iFlag); }
 	inline void RemoveFlag(int iFlag) { m_iFlags &= ~iFlag; }
 	/////////////////////////////////////////////////////////
@@ -189,7 +272,7 @@ public:
 	}
 	////////////////////////////////////////////////////////
 	inline const float GetCost() { return m_fCost; } const
-		inline void SetCost(float fCost) { m_fCost = fCost; }
+	inline void SetCost(float fCost) { m_fCost = fCost; }
 	////////////////////////////////////////////////////////
 	// for comparison
 	bool Precedes(AStarNode *other) const
@@ -311,45 +394,45 @@ private:
 	AStarListNode *m_Head;
 };
 
-/*
-struct AstarNodeCompare : binary_function<AStarNode*, AStarNode*, bool>
+/*struct AstarNodeCompare : binary_function<AStarNode*, AStarNode*, bool>
 {
-// Other stuff...
-bool operator()(AStarNode* x, AStarNode* y) const
-{
-return y->betterCost(x);
-}
-};
-
-class AStarOpenList : public vector<AStarNode*>
-{
-AstarNodeCompare comp;
-public:
-AStarOpenList(AstarNodeCompare cmp = AstarNodeCompare()) : comp(cmp) {
-make_heap(begin(), end(), comp);
-}
-AStarNode* top() { return front(); }
-void push(AStarNode* x) {
-push_back(x);
-push_heap(begin(), end(), comp);
-}
-void pop() {
-pop_heap(begin(), end(), comp);
-pop_back();
-}
+	// Other stuff...
+	bool operator()(AStarNode* x, AStarNode* y) const
+	{
+		return y->betterCost(x);
+	}
 };*/
 
-
-/*
-bool operator<( const AStarNode & A, const AStarNode & B )
+/*class AStarOpenList : public vector<AStarNode*>
 {
-return A.betterCost(&B);
-}
+	AstarNodeCompare comp;
+public:
+	AStarOpenList(AstarNodeCompare cmp = AstarNodeCompare()) : comp(cmp)
+	{
+		make_heap(begin(), end(), comp);
+	}
+	AStarNode* top() { return front(); }
+	void push(AStarNode* x)
+	{
+		push_back(x);
+		push_heap(begin(), end(), comp);
+	}
+	void pop()
+	{
+		pop_heap(begin(), end(), comp);
+		pop_back();
+	}
 
-bool operator<( const AStarNode * A, const AStarNode * B )
-{
-return A->betterCost(B);
-}*/
+	bool operator<( const AStarNode & A, const AStarNode & B )
+	{
+		return A.betterCost(&B);
+	}
+
+	bool operator<( const AStarNode * A, const AStarNode * B )
+	{
+		return A->betterCost(B);
+	}
+};*/
 
 #define WPT_SEARCH_AVOID_SENTRIES 1
 #define WPT_SEARCH_AVOID_SNIPERS 2

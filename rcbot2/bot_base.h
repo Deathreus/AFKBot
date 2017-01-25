@@ -147,6 +147,7 @@ class CBotWeapon;
 class CWeapon;
 class CBotNeuralNet;
 class CTrainingSet;
+class INavMeshArea;
 
 #define MOVELOOK_DEFAULT 0
 #define MOVELOOK_THINK 1
@@ -637,6 +638,7 @@ public:
 	virtual void CheckCanPickup(edict_t *pPickup);
 
 	virtual void TouchedWpt(CWaypoint *pWaypoint, int iNextWaypoint = -1, int iPrevWaypoint = -1);
+	virtual void TouchedWpt(INavMeshArea *pWaypoint, int iNextWaypoint = -1, int iPrevWaypoint = -1);
 
 	inline void SetAiming(Vector aiming) { m_vWaypointAim = aiming; }
 
@@ -693,9 +695,8 @@ public:
 	inline float GetTouchDistance() { return m_fWaypointTouchDistance; }
 
 	inline CUserCmd *GetUserCMD() { return &m_pCmd; }
-	inline void SetUserCMD(const CUserCmd &cmd) { m_pCmd = cmd; }
-
-	inline CPlayerState *GetPlayerState() { return &m_pPS; }
+	inline IPlayerInfo *GetPlayerInfo() { return m_pPI; }
+	inline CPlayerState *GetPlayerState() { return m_pPS; }
 
 	inline float GetForwardMove() { return m_fForwardSpeed; }
 	inline float GetSideMove() { return m_fSideSpeed; }
@@ -729,6 +730,7 @@ public:
 	virtual void DebugBot(char *msg);
 
 	virtual bool WalkingTowardsWaypoint(CWaypoint *pWaypoint, bool *bOffsetApplied, Vector &vOffset);
+	virtual bool WalkingTowardsWaypoint(INavMeshArea *pWaypoint, bool *bOffsetApplied, Vector &vOffset);
 
 	void SetCoverFrom(edict_t *pCoverFrom) { m_pLastCoverFrom = MyEHandle(pCoverFrom); }
 
@@ -899,7 +901,7 @@ protected:
 	CBotWeapons *m_pWeapons;
 	////////////////////////////////////
 	IPlayerInfo *m_pPI;
-	CPlayerState m_pPS;
+	CPlayerState *m_pPS;
 	CUserCmd m_pCmd;
 	////////////////////////////////////
 	MyEHandle m_pEnemy; // current enemy
@@ -1011,7 +1013,7 @@ protected:
 class CBots
 {
 public:
-	static void BotThink();
+	static void BotThink(bool simulating);
 
 	static CBot *GetBotPointer(edict_t *pEdict);
 
@@ -1055,7 +1057,7 @@ private:
 
 inline bool FStrEq(const char *sz1, const char *sz2)
 {
-	return (sz1 == sz2 || Q_stricmp(sz1, sz2) == 0);
+	return (sz1 == sz2 || _stricmp(sz1, sz2) == 0);
 }
 
 bool FNullEnt(const edict_t* pent);

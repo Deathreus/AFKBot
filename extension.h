@@ -1,65 +1,49 @@
-/**
- * =============================================================================
- * TF2 Items Extension
- * Copyright (C) 2009-2010 AzuiSleet, Asher Baker (asherkin).  All rights reserved.
- * =============================================================================
- *
- * This program is free software; you can redistribute it and/or modify it under
- * the terms of the GNU General Public License, version 3.0, as published by the
- * Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
- * details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- */
+/*
+* ================================================================================
+* AFK Bot Extension
+* Copyright (C) 2016 Chris Moore (Deathreus).  All rights reserved.
+* ================================================================================
+*
+* This program is free software; you can redistribute it and/or modify it under
+* the terms of the GNU General Public License, version 3.0, as published by the
+* Free Software Foundation.
+*
+* This program is distributed in the hope that it will be useful, but WITHOUT
+* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+* FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public License along with
+* this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #ifndef _INCLUDE_SOURCEMOD_EXTENSION_PROPER_H_
 #define _INCLUDE_SOURCEMOD_EXTENSION_PROPER_H_
 
-/**
- * @file extension.h
- * @brief AFKBot extension code header.
- */
-
 #include "smsdk_ext.h"
-
-#include <ISmmPlugin.h>
-#include <sh_vector.h>
-
-#include "rcbot2/engine_wrappers.h"
 
 #include <convar.h>
 
-#include "iplayerinfo.h"
-#include "IEngineTrace.h"
-#include "filesystem.h"
-#include "IEffects.h"
-#include "igameevents.h"
-#include "engine/ivdebugoverlay.h"
-#include "irecipientfilter.h"
+#include <iplayerinfo.h>
+#include <IEngineSound.h>
+#include <IEngineTrace.h>
+#include <filesystem.h>
+#include <IEffects.h>
+#include <igameevents.h>
+#include <engine/ivdebugoverlay.h>
+#include <irecipientfilter.h>
+#include <itoolentity.h>
 
-#include "ISDKTools.h"
+#include <ISDKTools.h>
 
 class CUserCmd;
 class IMoveHelper;
 
-#if defined WIN32 && !defined snprintf
-#define snprintf _snprintf
-#endif
-
-/**
- * @brief Sample implementation of the SDK Extension.
- * Note: Uncomment one of the pre-defined virtual functions in order to use it.
- */
 class AFKBot : public SDKExtension,
 	public IConCommandBaseAccessor,
-	public IMetamodListener,
-	public IClientListener
+	public IGameEventListener2,
+	public IClientListener,
+	public ICommandTargetProcessor
 {
 public:
 	/**
@@ -129,57 +113,82 @@ public:
 	 */
 	//virtual bool SDK_OnMetamodPauseChange(bool paused, char *error, size_t maxlen);
 #endif
-public: //IConCommandBaseAccessor
-	bool RegisterConCommandBase(ConCommandBase *pCommand);
 
-public:
-	static CBaseEntity *TF2_GetPlayerWeaponSlot(edict_t *pPlayer, int iSlot);
-	static void TF2_EquipWeapon(edict_t *pPlayer, CBaseEntity *pWeapon);
-
-public:
+public: // ISmmAPI
 	bool LevelInit(char const *pMapName, char const *pMapEntities, char const *pOldLevel, char const *pLandmarkName, bool loadGame, bool background);
 	void LevelShutdown();
-
-	void ServerActivate(edict_t *pEdictList, int edictCount, int clientMax);
 
 	void GameFrame(bool simulating);
 
 	void PlayerRunCmd(CUserCmd *ucmd, IMoveHelper *moveHelper);
 
-	void ClientPutInServer(edict_t *pEntity, char const *playername);
-	void ClientDisconnect(edict_t *pEntity);
-	void ClientActive(edict_t *pEntity, bool bLoadGame);
+	bool FireEvent(IGameEvent *pEvent, bool bDontBroadcast);
 
-	void OnMaxPlayersChanged(int newvalue);
+public: // IGameEventListener2
+	void FireGameEvent(IGameEvent *pEvent);
 
-	bool FireGameEvent(IGameEvent *pEvent, bool bDontBroadcast);
+public: //IConCommandBaseAccessor
+	bool RegisterConCommandBase(ConCommandBase *pVar);
+
+public: //IClientListner
+	//void OnClientConnected(int iClient);
+	void OnClientPutInServer(int iClient);
+	void OnClientDisconnected(int iClient);
+	//void OnServerActivated(int max_clients);
+
+public:
+	#if SOURCE_ENGINE >= SE_ORANGEBOX
+		void OnClientCommand(edict_t *pEntity, const CCommand &args);
+	#else
+		void OnClientCommand(edict_t *pEntity);
+	#endif
+	#if SOURCE_ENGINE >= SE_ORANGEBOX
+		void OnSayCommand(const CCommand &args);
+	#else
+		void OnSayCommand();
+	#endif
+#if SOURCE_ENGINE == SE_CSS || SOURCE_ENGINE == SE_CSGO
+	void OnSendClientCommand(edict_t *pPlayer, const char *szFormat);
+#endif
+
+	void OnSetCommandClient(int client);
+
+public: //ICommandTargetProcessor
+	bool ProcessCommandTarget(cmd_target_info_t *info);
+
+
+private:
+	int m_iCommandClient;
 };
 
-extern AFKBot g_AFKBot;
+inline const char *_strstr(const char *str, const char *substr)
+{
+#ifdef PLATFORM_WINDOWS
+	return strstr(str, substr);
+#elif defined PLATFORM_LINUX || defined PLATFORM_APPLE
+	return (const char *)strstr(str, substr);
+#endif
+}
 
-extern CGlobalVars *gpGlobals;
+inline int strcont(const char *str, const char *substr)
+{
+	const char *pos = _strstr(str, substr);
+	if (pos)
+	{
+		return (pos - str);
+	}
 
-extern IGameEventManager2 *gameevents;
-extern IServerPluginCallbacks *vsp_callback;
+	return -1;
+}
+
 extern ICvar *icvar;
 extern IFileSystem *filesystem;
-extern IPlayerInfoManager *playerinfomanager;
-extern IServerPluginHelpers *helpers;
-extern IServerGameClients* gameclients;
-extern IEngineTrace *enginetrace;
-extern IEffects *effects;
-extern IServerGameEnts *servergameents;
-extern IVDebugOverlay *debugoverlay;
+
+extern ConVar bot_enabled;
 
 extern ISDKTools *g_pSDKTools;
 
-extern sp_nativeinfo_t g_ExtensionNatives[];
-
-extern ConVar bot_version;
-extern ConVar bot_enabled;
-
-static cell_t SetClientAFKBot(IPluginContext *pContext, const cell_t *params);
-static cell_t IsClientAFKBot(IPluginContext *pContext, const cell_t *params);
+extern IForward *forwardOnAFK;
 
 PLUGIN_GLOBALVARS();
 

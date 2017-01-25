@@ -610,8 +610,7 @@ cell_t Native_SetBraveness(IPluginContext *pContext, const cell_t *params)
 	return 1;
 }
 
-sp_nativeinfo_t g_ExtensionNatives[] =
-{
+sp_nativeinfo_t g_ExtensionNatives[] = {
 	{ "SetClientAFKBot",				Native_SetAFKBot },
 	{ "IsClientAFKBot",					Native_IsAFKBot },
 	/*{ "SetAFKBotMinMaxSkill",			Native_SetMinMaxSkill },
@@ -626,5 +625,5 @@ sp_nativeinfo_t g_ExtensionNatives[] =
 	{ "SetClientBotSensitivity",		Native_SetSensitivity },
 	{ "SetAFKBotMinMaxBraveness",		Native_SetMinMaxBraveness },
 	{ "SetClientBotBraveness",			Native_SetBraveness },*/
-	{ NULL, NULL }
+	{ NULL, 							NULL }
 };

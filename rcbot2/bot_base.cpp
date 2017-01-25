@@ -67,7 +67,7 @@
 #include "bot_waypoint_locations.h"
 #include "bot_waypoint.h"
 #include "bot_squads.h"
-//#include "bot_mtrand.h"
+#include "bot_navmesh.h"
 #include "bot_getprop.h"
 
 #ifdef GetClassName
@@ -261,11 +261,39 @@ bool CBot::WalkingTowardsWaypoint(CWaypoint *pWaypoint, bool *bOffsetApplied, Ve
 		*bOffsetApplied = true;
 
 		return true;
+	}
 
-		/*if ( CClients::clientsDebugging(BOT_DEBUG_NAV) )
-		{
-		debugoverlay->AddLineOverlay(m_pBot->GetOrigin(), pWaypoint->GetOrigin() + m_vOffset, 255, 255, 0, true, 5.0f);
-		}*/
+	return false;
+}
+
+bool CBot::WalkingTowardsWaypoint(INavMeshArea *pWaypoint, bool *bOffsetApplied, Vector &vOffset)
+{
+	if ((pWaypoint->GetFlags() & NAV_MESH_CROUCH))
+	{
+		Duck(true);
+	}
+
+	if ((pWaypoint->GetFlags() & NAV_MESH_NO_HOSTAGES))
+	{
+		UpdateCondition(CONDITION_LIFT);
+	}
+	else
+	{
+		RemoveCondition(CONDITION_LIFT);
+	}
+
+	if (!*bOffsetApplied)
+	{
+		float fRadius = (pWaypoint->GetSWCornerZ() - pWaypoint->GetNECornerZ());
+
+		if (fRadius > 0)
+			vOffset = Vector(RandomFloat(-fRadius, fRadius), RandomFloat(-fRadius, fRadius), 0);
+		else
+			vOffset = Vector(0, 0, 0);
+
+		*bOffsetApplied = true;
+
+		return true;
 	}
 
 	return false;
@@ -1357,6 +1385,22 @@ void CBot::TouchedWpt(CWaypoint *pWaypoint, int iNextWaypoint, int iPrevWaypoint
 	UpdateDanger(m_pNavigator->GetBelief(CWaypoints::GetWaypointIndex(pWaypoint)));
 }
 
+void CBot::TouchedWpt(INavMeshArea *pWaypoint, int iNextWaypoint, int iPrevWaypoint)
+{
+	ResetTouchDistance(48.0f);
+
+	m_fWaypointStuckTime = engine->Time() + RandomFloat(7.5f, 12.5f);
+
+	if (pWaypoint->GetFlags() & NAV_MESH_JUMP)
+		Jump();
+	if (pWaypoint->GetFlags() & NAV_MESH_CROUCH)
+		Duck();
+	if (pWaypoint->GetFlags() & NAV_MESH_RUN)
+		UpdateCondition(CONDITION_RUN);
+
+	UpdateDanger(m_pNavigator->GetBelief(pWaypoint->GetID()));
+}
+
 void CBot::UpdateDanger(float fBelief)
 {
 	m_fCurrentDanger = (m_fCurrentDanger * m_pProfile->m_fBraveness) + (fBelief * (1.0f - m_pProfile->m_fBraveness));
@@ -1524,7 +1568,8 @@ bool CBot::IsAlive()
 
 int CBot::GetTeam()
 {
-	return m_pPI->GetTeamIndex();
+	IPlayerInfo *p = playerhelpers->GetGamePlayer(m_pEdict)->GetPlayerInfo();
+	return p->GetTeamIndex();
 }
 
 const char *pszConditionsDebugStrings[CONDITION_MAX_BITS + 1] =
@@ -1605,7 +1650,7 @@ void CBot::DebugBot(char *msg)
 	iEnemyID = ENTINDEX(pEnemy);
 
 	if ((iEnemyID > 0) && (iEnemyID <= MAX_PLAYERS))
-		p = playerinfomanager->GetPlayerInfo(pEnemy);
+		p = playerhelpers->GetGamePlayer(pEnemy)->GetPlayerInfo();
 
 
 	if (bHastask)
@@ -1748,7 +1793,7 @@ void CBot::UpdateStatistics()
 	if (pPlayer == m_pEdict)
 		return; // don't listen to self
 
-	IPlayerInfo *p = playerinfomanager->GetPlayerInfo(pPlayer);
+	IPlayerInfo *p = playerhelpers->GetGamePlayer(pPlayer)->GetPlayerInfo();
 
 	// 05/07/09 fix crash bug
 	if (!p || !p->IsConnected() || p->IsDead() || p->IsObserver() || !p->IsPlayer())
@@ -1787,7 +1832,9 @@ void CBot::ListenForPlayers()
 
 	edict_t *pListenNearest = NULL;
 	edict_t *pPlayer;
-	IPlayerInfo *pPL;
+	IGamePlayer *pPl;
+	IPlayerInfo *pPI;
+	CBotCmd cmd;
 	float fFactor = 0;
 	float fMaxFactor = 0;
 	//float fMinDist = 1024.0f;
@@ -1806,7 +1853,7 @@ void CBot::ListenForPlayers()
 
 	m_bListenPositionValid = false;
 
-	for (register short int i = 1; i <= MAX_PLAYERS; i++)
+	for (int i = 1; i <= MAX_PLAYERS; i++)
 	{
 		pPlayer = INDEXENT(i);
 
@@ -1815,11 +1862,13 @@ void CBot::ListenForPlayers()
 
 		if (pPlayer->IsFree())
 			continue;
+		
+		pPl = playerhelpers->GetGamePlayer(pPlayer);
+		if (!pPl || !pPl->IsConnected() || !pPl->IsInGame())
+			continue;
 
-		pPL = playerinfomanager->GetPlayerInfo(pPlayer);
-
-		// 05/07/09 fix crash bug
-		if (!pPL || !pPL->IsConnected() || pPL->IsDead() || pPL->IsObserver() || !pPL->IsPlayer())
+		pPI = pPl->GetPlayerInfo();
+		if (pPI == NULL || pPI->IsDead() || pPI->IsObserver())
 			continue;
 
 		fDist = DistanceFrom(pPlayer);
@@ -1829,7 +1878,9 @@ void CBot::ListenForPlayers()
 
 		fFactor = 0.0f;
 
-		if ((m_pCmd.buttons & IN_ATTACK))
+		cmd = pPI->GetLastUserCommand();
+
+		if ((cmd.buttons & IN_ATTACK))
 		{
 			if (WantToListenToPlayerAttack(pPlayer))
 				fFactor += 1000.0f;
@@ -1856,7 +1907,7 @@ void CBot::ListenForPlayers()
 		{
 			fMaxFactor = fFactor;
 			pListenNearest = pPlayer;
-			bIsNearestAttacking = (m_pCmd.buttons & IN_ATTACK);
+			bIsNearestAttacking = (cmd.buttons & IN_ATTACK);
 		}
 	}
 
@@ -1878,7 +1929,7 @@ void CBot::ListenToPlayer(edict_t *pPlayer, bool bIsEnemy, bool bIsAttacking)
 
 	if (CBotGlobals::IsPlayer(pPlayer))
 	{
-		IPlayerInfo *p = playerinfomanager->GetPlayerInfo(pPlayer);
+		IPlayerInfo *p = playerhelpers->GetGamePlayer(pPlayer)->GetPlayerInfo();
 
 		if (bIsEnemy == false)
 			bIsEnemy = IsEnemy(pPlayer);
@@ -2853,85 +2904,37 @@ void CBots::RunPlayerMoveAll()
 
 #define CHECK_STRING(str) (((str)==NULL)?"NULL":(str))
 
-void CBots::BotThink()
+void CBots::BotThink(bool simulating)
 {
 	static CBot *pBot;
 
 	extern ConVar bot_stop;
-	extern ConVar bot_command;
-
-#ifdef _DEBUG
-	CProfileTimer *CBotsBotThink;
-	CProfileTimer *CBotThink;
-
-	CBotsBotThink = CProfileTimers::GetTimer(BOTS_THINK_TIMER);
-	CBotThink = CProfileTimers::GetTimer(BOT_THINK_TIMER);
-
-	if ( CClients::ClientsDebugging(BOT_DEBUG_PROFILE) )
+	if (!bot_stop.GetBool() && simulating)
 	{
-		CBotsBotThink->Start();
-	}
-
-#endif
-
-	for (short int i = 0; i < MAX_PLAYERS; i++)
-	{
-		pBot = m_Bots[i];
-
-		if (pBot->InUse())
+		for (short int i = 0; i < MAX_PLAYERS; i++)
 		{
-			if (!bot_stop.GetBool())
-			{
-#ifdef _DEBUG
+			pBot = m_Bots[i];
 
-				if ( CClients::ClientsDebugging(BOT_DEBUG_PROFILE) )
+			if (pBot->InUse())
+			{
+				if (!bot_stop.GetBool())
 				{
-					CBotThink->Start();
+					pBot->SetMoveLookPriority(MOVELOOK_THINK);
+					pBot->Think();
+					pBot->SetMoveLookPriority(MOVELOOK_EVENT);
 				}
 
-#endif
-
-				pBot->SetMoveLookPriority(MOVELOOK_THINK);
-				pBot->Think();
-				pBot->SetMoveLookPriority(MOVELOOK_EVENT);
-
-
-#ifdef _DEBUG
-
-				if ( CClients::ClientsDebugging(BOT_DEBUG_PROFILE) )
-				{
-					CBotThink->Stop();
-				}
-
-#endif
+				pBot->RunPlayerMove();
 			}
-			if (bot_command.GetString() && *bot_command.GetString())
-			{
-				helpers->ClientCommand(pBot->GetEdict(), bot_command.GetString());
-
-				bot_command.SetValue("");
-			}
-
-			pBot->RunPlayerMove();
 		}
+
+		CBotGlobals::GetCurrentMod()->ModFrame();
 	}
-
-#ifdef _DEBUG
-
-	if ( CClients::ClientsDebugging(BOT_DEBUG_PROFILE) )
-	{
-		CBotsBotThink->Stop();
-	}
-
-#endif
-	/*if (NeedToKickBot())
-	{
-		KickRandomBot();
-	}*/
 }
 
 void CBots::MakeBot(edict_t *pEdict)
 {
+	extern ConVar bot_printstatus;
 	if (forwardOnAFK != NULL)
 	{
 		if (forwardOnAFK->GetFunctionCount())
@@ -2971,10 +2974,14 @@ void CBots::MakeBot(edict_t *pEdict)
 	}
 
 	m_Bots[SlotOfEdict(pEdict)]->CreateBotFromEdict(pEdict, pBotProfile);
+
+	if (bot_printstatus.GetBool())
+		CBotGlobals::PrintToChatAll("[AFKBot] %s is now AFK", playerhelpers->GetGamePlayer(pEdict)->GetName());
 }
 
 void CBots::MakeNotBot(edict_t *pEdict)
 {
+	extern ConVar bot_printstatus;
 	if (forwardOnAFK != NULL)
 	{
 		if (forwardOnAFK->GetFunctionCount())
@@ -2991,6 +2998,9 @@ void CBots::MakeNotBot(edict_t *pEdict)
 		if (pBot->InUse())
 		{
 			pBot->FreeAllMemory();
+
+			if (bot_printstatus.GetBool())
+				CBotGlobals::PrintToChatAll("[AFKBot] %s is no longer AFK", playerhelpers->GetGamePlayer(pEdict)->GetName());
 		}
 	}
 }

@@ -40,7 +40,7 @@
 //using namespace std;
 
 #define TF2_ROCKETSPEED   1100
-#define TF2_GRENADESPEED  1065 // TF2 wiki
+#define TF2_GRENADESPEED  1216 // TF2 wiki
 #define TF2_MAX_SENTRYGUN_RANGE 1024
 #define TF2_STICKYGRENADE_MAX_DISTANCE 1600
 
@@ -73,137 +73,19 @@ class CBotUtility;
 #define TF2_DISPENSER_LEVEL2_HEALTH 180
 #define TF2_DISPENSER_LEVEL3_HEALTH 216
 
-// Naris @ Alliedmodders.net
-/*
-enum TFCond
-{
-TFCond_Slowed = 0,
-TFCond_Zoomed,
-TFCond_Disguising,
-TFCond_Disguised,
-TFCond_Cloaked,
-TFCond_Ubercharged,
-TFCond_TeleportedGlow,
-TFCond_Taunting,
-TFCond_UberchargeFading,
-TFCond_Unknown1, //9
-TFCond_CloakFlicker = 9,
-TFCond_Teleporting,
-TFCond_Kritzkrieged,
-TFCond_Unknown2, //12
-TFCond_TmpDamageBonus = 12,
-TFCond_DeadRingered,
-TFCond_Bonked,
-TFCond_Dazed,
-TFCond_Buffed,
-TFCond_Charging,
-TFCond_DemoBuff,
-TFCond_CritCola,
-TFCond_InHealRadius,
-TFCond_Healing,
-TFCond_OnFire,
-TFCond_Overhealed,
-TFCond_Jarated,
-TFCond_Bleeding,
-TFCond_DefenseBuffed,
-TFCond_Milked,
-TFCond_MegaHeal,
-TFCond_RegenBuffed,
-TFCond_MarkedForDeath,
-TFCond_NoHealingDamageBuff,
-TFCond_SpeedBuffAlly, // 32
-TFCond_HalloweenCritCandy,
-TFCond_CritCanteen,
-TFCond_CritDemoCharge,
-TFCond_CritHype,
-TFCond_CritOnFirstBlood,
-TFCond_CritOnWin,
-TFCond_CritOnFlagCapture,
-TFCond_CritOnKill,
-TFCond_RestrictToMelee,
-TFCond_DefenseBuffNoCritBlock,
-TFCond_Reprogrammed,
-TFCond_CritMmmph,
-TFCond_DefenseBuffMmmph,
-TFCond_FocusBuff,
-TFCond_DisguiseRemoved,
-TFCond_MarkedForDeathSilent,
-TFCond_DisguisedAsDispenser,
-TFCond_Sapped,
-TFCond_UberchargedHidden,
-TFCond_UberchargedCanteen,
-TFCond_HalloweenBombHead,
-TFCond_HalloweenThriller,
-TFCond_RadiusHealOnDamage,
-TFCond_CritOnDamage,
-TFCond_UberchargedOnTakeDamage,
-TFCond_UberBulletResist,
-TFCond_UberBlastResist,
-TFCond_UberFireResist,
-TFCond_SmallBulletResist,
-TFCond_SmallBlastResist,
-TFCond_SmallFireResist,
-TFCond_Stealthed, // 64
-TFCond_MedigunDebuff,
-TFCond_StealthedUserBuffFade,
-TFCond_BulletImmune,
-TFCond_BlastImmune,
-TFCond_FireImmune,
-TFCond_PreventDeath,
-TFCond_MVMBotRadiowave,
-TFCond_HalloweenSpeedBoost,
-TFCond_HalloweenQuickHeal,
-TFCond_HalloweenGiant,
-TFCond_HalloweenTiny,
-TFCond_HalloweenInHell,
-TFCond_HalloweenGhostMode,
-TFCond_MiniCritOnKill,
-TFCond_DodgeChance, //79
-TFCond_ObscuredSmoke = 79,
-TFCond_Parachute,
-TFCond_BlastJumping,
-TFCond_HalloweenKart,
-TFCond_HalloweenKartDash,
-TFCond_BalloonHead,
-TFCond_MeleeOnly,
-TFCond_SwimmingCurse,
-TFCond_HalloweenKartNoTurn, //87
-TFCond_FreezeInput = 87,
-TFCond_HalloweenKartCage,
-TFCond_HasRune,
-TFCond_RuneStrength,
-TFCond_RuneHaste,
-TFCond_RuneRegen,
-TFCond_RuneResist,
-TFCond_RuneVampire,
-TFCond_RuneWarlock,
-TFCond_RunePrecision, // 96
-TFCond_RuneAgility,
-TFCond_GrapplingHook,
-TFCond_GrapplingHookSafeFall,
-TFCond_GrapplingHookLatched,
-TFCond_GrapplingHookBleeding,
-TFCond_AfterburnImmune,
-TFCond_RuneKnockout,
-TFCond_RuneImbalance,
-TFCond_CritRuneTemp,
-TFCond_PasstimeInterception,
-TFCond_SwimmingNoEffects,
-};*/
-
-#define TF2_PLAYER_SLOWED       (1 << 0)	// 1
-#define TF2_PLAYER_ZOOMED       (1 << 1)	// 2
-#define TF2_PLAYER_DISGUISING   (1 << 2)	// 4
-#define TF2_PLAYER_DISGUISED	(1 << 3)	// 8
-#define TF2_PLAYER_CLOAKED      (1 << 4)	// 16
-#define TF2_PLAYER_INVULN       (1 << 5)	// 32
-#define TF2_PLAYER_TELEGLOW     (1 << 6)	// 64
-#define TF2_PLAYER_TAUNTING	    (1 << 7)	// 128
-#define TF2_PLAYER_TELEPORTING	(1 << 10)	// 1024 Player is teleporting
+#define TF2_PLAYER_SLOWED       (1 << 0)
+#define TF2_PLAYER_ZOOMED       (1 << 1)
+#define TF2_PLAYER_DISGUISING   (1 << 2)
+#define TF2_PLAYER_DISGUISED	(1 << 3)
+#define TF2_PLAYER_CLOAKED      (1 << 4)
+#define TF2_PLAYER_INVULN       (1 << 5)
+#define TF2_PLAYER_TELEGLOW     (1 << 6)
+#define TF2_PLAYER_TAUNTING	    (1 << 7)
+#define TF2_PLAYER_TELEPORTING	(1 << 10)
+#define TF2_PLAYER_KRITS		(1 << 11)
 #define TF2_PLAYER_BONKED		(1 << 14)
-#define TF2_PLAYER_KRITS		524288
-#define TF2_PLAYER_HEALING	    2097152    
-#define TF2_PLAYER_ONFIRE	    4194304		// fix may 2013
+#define TF2_PLAYER_HEALING	    (1 << 21)    
+#define TF2_PLAYER_ONFIRE	    (1 << 22)
 
 //#define TF2_SPY_FOV_KNIFEATTACK 90.0f
 
@@ -262,14 +144,13 @@ typedef enum
 	TF_CLASS_MAX
 }TFClass;
 
-/*enum
+typedef enum
 {
-TF_TEAM_SPEC = 0,
-TF_TEAM_BLUE = 1,
-TF_TEAM_RED = 2,
-TF_TEAM_GREEN = 3,
-TF_TEAM_YELLOW = 4
-};*/
+	TF_TEAM_UNASSIGNED = 0,
+	TF_TEAM_SPEC = 1,
+	TF_TEAM_BLUE = 2,
+	TF_TEAM_RED = 3
+}TFTeam;
 
 typedef enum
 {
@@ -473,8 +354,6 @@ public:
 	virtual bool SetVisible(edict_t *pEntity, bool bVisible);
 
 	virtual void SetClass(TFClass _class);
-
-	virtual int GetClassCount(TFClass _class);
 
 	inline edict_t *SeeFlag(bool reset = false) { if (reset) { m_pFlag = NULL; } return m_pFlag; }
 
