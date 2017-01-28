@@ -1602,8 +1602,8 @@ void CBotFortress::SelectTeam()
 	}
 	else
 	{
-		int numRed = CTeamFortress2Mod::NumPlayersOnTeam(TF2_TEAM_RED);
-		int numBlu = CTeamFortress2Mod::NumPlayersOnTeam(TF2_TEAM_BLUE);
+		int numRed = CBotGlobals::NumPlayersOnTeam(TF2_TEAM_RED, false);
+		int numBlu = CBotGlobals::NumPlayersOnTeam(TF2_TEAM_BLUE, false);
 		if (numRed < numBlu)
 			team = 1;
 		else if (numRed > numBlu)
