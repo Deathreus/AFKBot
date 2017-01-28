@@ -1053,7 +1053,6 @@ void CBotEvents::SetupEvents()
 
 void CBotEvents::AddEvent(CBotEvent *pEvent)
 {
-	extern IGameEventManager2 *gameeventmanager2;
 	m_theEvents.push_back(pEvent);
 }
 

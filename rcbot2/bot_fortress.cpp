@@ -1595,7 +1595,22 @@ void CBotFortress::SelectTeam()
 {
 	char buffer[32];
 
-	int team = CTeamFortress2Mod::IsMapType(TF_MAP_MVM) ? 1 : RandomInt(1, 2);
+	int team;
+	if (CTeamFortress2Mod::IsMapType(TF_MAP_MVM))
+	{
+		team = 1;
+	}
+	else
+	{
+		int numRed = CTeamFortress2Mod::NumPlayersOnTeam(TF2_TEAM_RED);
+		int numBlu = CTeamFortress2Mod::NumPlayersOnTeam(TF2_TEAM_BLUE);
+		if (numRed < numBlu)
+			team = 1;
+		else if (numRed > numBlu)
+			team = 2;
+		else
+			team = RandomInt(1, 2);
+	}
 
 	sprintf(buffer, "jointeam %d", team);
 
@@ -1614,29 +1629,6 @@ void CBotFortress::SelectClass()
 
 	/*if (CBotGlobals::NumClients() > 3)
 	{
-		if (_class != TF_CLASS_SCOUT)
-		{
-			if (CTeamFortress2Mod::IsMapType(TF_MAP_MVM))
-			{
-				if (CTeamFortress2Mod::NumClassOnTeam(TF2_TEAM_RED, (int)TF_CLASS_SCOUT) < 1)
-					_class = TF_CLASS_SCOUT;
-			}
-			else if (CTeamFortress2Mod::IsMapType(TF_MAP_CART) || CTeamFortress2Mod::IsMapType(TF_MAP_CP))
-			{
-				if (CClassInterface::GetTeam(m_pEdict) == TF2_TEAM_BLUE)
-					if (CTeamFortress2Mod::NumClassOnTeam(TF2_TEAM_BLUE, (int)TF_CLASS_SCOUT) < 2)
-						_class = TF_CLASS_SCOUT;
-			}
-			else
-			{
-				if (CTeamFortress2Mod::NumClassOnTeam(CClassInterface::GetTeam(m_pEdict), (int)TF_CLASS_SCOUT) < RandomInt(1, 2))
-					_class = TF_CLASS_SCOUT;
-			}
-
-			if (_class == TF_CLASS_SCOUT)
-				choseClass = true;
-		}
-
 		if (_class != TF_CLASS_MEDIC)
 		{
 			if (CTeamFortress2Mod::IsMapType(TF_MAP_MVM))
@@ -1649,12 +1641,8 @@ void CBotFortress::SelectClass()
 				if (CTeamFortress2Mod::NumClassOnTeam(CClassInterface::GetTeam(m_pEdict), (int)TF_CLASS_MEDIC) < 2)
 					_class = TF_CLASS_MEDIC;
 			}
-
-			if (_class == TF_CLASS_MEDIC)
-				choseClass = true;
 		}
-
-		if (_class != TF_CLASS_ENGINEER)
+		else if (_class != TF_CLASS_ENGINEER)
 		{
 			if (CTeamFortress2Mod::IsMapType(TF_MAP_MVM))
 			{
@@ -1672,9 +1660,25 @@ void CBotFortress::SelectClass()
 				if (CTeamFortress2Mod::NumClassOnTeam(CClassInterface::GetTeam(m_pEdict), (int)TF_CLASS_ENGINEER) < RandomInt(1, 2))
 					_class = TF_CLASS_ENGINEER;
 			}
-
-			if (_class == TF_CLASS_ENGINEER)
-				choseClass = true;
+		}
+		else if (_class != TF_CLASS_SCOUT)
+		{
+			if (CTeamFortress2Mod::IsMapType(TF_MAP_MVM))
+			{
+				if (CTeamFortress2Mod::NumClassOnTeam(TF2_TEAM_RED, (int)TF_CLASS_SCOUT) < 1)
+					_class = TF_CLASS_SCOUT;
+			}
+			else if (CTeamFortress2Mod::IsMapType(TF_MAP_CART) || CTeamFortress2Mod::IsMapType(TF_MAP_CP))
+			{
+				if (CClassInterface::GetTeam(m_pEdict) == TF2_TEAM_BLUE)
+					if (CTeamFortress2Mod::NumClassOnTeam(TF2_TEAM_BLUE, (int)TF_CLASS_SCOUT) < 2)
+						_class = TF_CLASS_SCOUT;
+			}
+			else
+			{
+				if (CTeamFortress2Mod::NumClassOnTeam(CClassInterface::GetTeam(m_pEdict), (int)TF_CLASS_SCOUT) < RandomInt(1, 2))
+					_class = TF_CLASS_SCOUT;
+			}
 		}
 	}*/
 
