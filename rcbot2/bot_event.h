@@ -117,36 +117,12 @@ public:
 	void Execute(IBotEventInterface *pEvent);
 };
 
-class CPlayerFootstepEvent : public CBotEvent
-{
-public:
-	CPlayerFootstepEvent()
-	{
-		SetType("player_footstep");
-		SetMod(MOD_ANY);
-	}
-
-	void Execute(IBotEventInterface *pEvent);
-};
-
 class CPlayerSpawnEvent : public CBotEvent
 {
 public:
 	CPlayerSpawnEvent()
 	{
 		SetType("player_spawn");
-		SetMod(MOD_ANY);
-	}
-
-	void Execute(IBotEventInterface *pEvent);
-};
-
-class CWeaponFireEvent : public CBotEvent
-{
-public:
-	CWeaponFireEvent()
-	{
-		SetType("weapon_fire");
 		SetMod(MOD_ANY);
 	}
 

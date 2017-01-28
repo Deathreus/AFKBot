@@ -45,16 +45,15 @@ void *m_pGameRules;
 
 bool CGameRulesObject::GetGameRules(char *error, size_t maxlen)
 {
-	m_pGameRules = g_pSDKTools->GetGameRules();
-	if (m_pGameRules == NULL)
+	if (!(m_pGameRules=g_pSDKTools->GetGameRules()))
 	{
-		snprintf(error, maxlen, "Could not fetch the gamerules entity!");
+		snprintf(error, maxlen, "Could not fetch the gamerules object!");
 		return false;
 	}
 	return true;
 }
 
-cell_t CGameRulesObject::GameRules_GetProp(const char *prop, int size, int element)
+int32_t CGameRulesObject::GameRules_GetProp(const char *prop, int size, int element)
 {
 	int offset;
 	int bit_count;

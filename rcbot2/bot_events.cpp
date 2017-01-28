@@ -250,21 +250,6 @@ void CPlayerHurtEvent::Execute(IBotEventInterface *pEvent)
 	if (iAttacker > 0)
 	{
 		edict_t *pAttacker = CBotGlobals::PlayerByUserId(iAttacker);
-		/*
-			if ( m_pActivator )
-			{
-			int *flags;
-
-			if ( (flags=CClassInterface::GetPlayerFlagsPointer(m_pActivator)) != NULL )
-			{
-			if ( *flags & FL_GODMODE )
-			{
-			pEvent->setInt("damage",0);
-			pEvent->setInt("health",100);
-			}
-			}
-			}
-			*/
 		if (m_pActivator != pAttacker)
 		{
 			if (pAttacker && (!pAttacker->m_pNetworkable || !pAttacker->m_NetworkSerialNumber))
@@ -313,7 +298,6 @@ void CPlayerDeathEvent::Execute(IBotEventInterface *pEvent)
 	if (pBot)
 	{
 		pBot->Killed(m_pActivator, (char*)weapon);
-
 		pBot->EnemyDown(m_pActivator);
 	}
 
@@ -330,22 +314,6 @@ void CPlayerDeathEvent::Execute(IBotEventInterface *pEvent)
 	{
 		CBotSquads::ChangeLeader(pPrevSquadLeadersSquad);
 	}
-}
-
-/*void CBombPickupEvent :: Execute ( IBotEventInterface *pEvent )
-{
-}*/
-
-void CPlayerFootstepEvent::Execute(IBotEventInterface *pEvent)
-{
-}
-
-/*void CBombDroppedEvent :: Execute ( IBotEventInterface *pEvent )
-{
-}*/
-
-void CWeaponFireEvent::Execute(IBotEventInterface *pEvent)
-{
 }
 
 void CPlayerSpawnEvent::Execute(IBotEventInterface *pEvent)
@@ -1027,8 +995,6 @@ void CBotEvents::SetupEvents()
 {
 	AddEvent(new CPlayerHurtEvent());
 	AddEvent(new CPlayerDeathEvent());
-	AddEvent(new CPlayerFootstepEvent());
-	AddEvent(new CWeaponFireEvent());
 	AddEvent(new CBulletImpactEvent());
 	AddEvent(new CFlagEvent());
 	AddEvent(new CPlayerSpawnEvent());

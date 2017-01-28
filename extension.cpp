@@ -95,7 +95,7 @@ ISDKTools *g_pSDKTools = NULL;	// to retrieve the CGameRules object
 
 CSharedEdictChangeInfo *g_pSharedChangeInfo = NULL;
 
-ConVar bot_version(BOT_VER_CVAR, SMEXT_CONF_VERSION, FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_DONTRECORD|FCVAR_NOTIFY, BOT_NAME_VER);
+ConVar bot_version("afkbot_version", SMEXT_CONF_VERSION, FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_DONTRECORD|FCVAR_NOTIFY, BOT_NAME_VER);
 ConVar bot_enabled("afkbot_enabled", "1", FCVAR_NOTIFY, "Enable turning players into bots?", true, 0.0f, true, 1.0f);
 ConVar bot_tags("afkbot_tag", "0", FCVAR_SPONLY|FCVAR_NOTIFY, "Add a tag onto the server to show it has this extension?", true, 0.0f, true, 1.0f);
 
@@ -280,7 +280,7 @@ bool AFKBot::SDK_OnLoad(char *error, size_t maxlength, bool late)
 
 	smutils->AddGameFrameHook(&CBots::BotThink);
 
-	ParamType params[] = { Param_Cell, Param_Cell }; // int client, bool enable
+	ParamType params[] = { Param_Cell, Param_Cell }; // int client, bool enabled
 	if ((forwardOnAFK = forwards->CreateForward("OnBotEnable", ET_Hook, 2, params)) == NULL)
 		smutils->LogError(myself, "Warning: Unable to initialize OnBotEnable forward");
 
@@ -362,25 +362,22 @@ void AFKBot::SDK_OnAllLoaded()
 		smutils->LogError(myself, "Unable to retrieve the SDKTools interface!");
 	}
 
-	mp_stalemate_enable = g_pCVar->FindVar("mp_stalemate_enable");
-	mp_stalemate_meleeonly = g_pCVar->FindVar("mp_stalemate_meleeonly");
-	sv_cheats = g_pCVar->FindVar("sv_cheats");
-	sv_gravity = g_pCVar->FindVar("sv_gravity");
-	mp_friendlyfire = g_pCVar->FindVar("mp_friendlyfire");
-	sv_tags = g_pCVar->FindVar("sv_tags");
-	mp_teamplay = g_pCVar->FindVar("mp_teamplay");
+	mp_stalemate_enable = icvar->FindVar("mp_stalemate_enable");
+	mp_stalemate_meleeonly = icvar->FindVar("mp_stalemate_meleeonly");
+	sv_cheats = icvar->FindVar("sv_cheats");
+	sv_gravity = icvar->FindVar("sv_gravity");
+	mp_friendlyfire = icvar->FindVar("mp_friendlyfire");
+	sv_tags = icvar->FindVar("sv_tags");
+	mp_teamplay = icvar->FindVar("mp_teamplay");
 
 	if (sv_tags != NULL && bot_tags.GetBool())
 	{
 		char sv_tags_str[512];
-
 		strcpy(sv_tags_str, sv_tags->GetString());
 
-		// fix
 		if (strstr(sv_tags_str, "afkbot") == NULL)
 		{
-
-			if (sv_tags_str[0] == 0)
+			if (sv_tags_str[0] == '\0')
 				strcat(sv_tags_str, "afkbot");
 			else
 				strcat(sv_tags_str, ",afkbot");
@@ -407,11 +404,11 @@ bool AFKBot::QueryRunning(char *error, size_t maxlength)
 		return false;
 	}
 
-	if (m_pNavMesh == NULL)
+	/*if (m_pNavMesh == NULL)
 	{
 		snprintf(error, maxlength, "The navmesh object is invalid.");
 		return false;
-	}
+	}*/
 
 	return true;
 }

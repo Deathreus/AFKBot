@@ -822,35 +822,20 @@ CWaypoint *CTeamFortress2Mod::GetBestWaypointMVM(CBot *pBot, int iFlags)
 }
 
 // check voice commands
-void CTeamFortress2Mod::ClientCommand(edict_t *pEntity, int argc, const char *pcmd, const char *arg1, const char *arg2)
+void CTeamFortress2Mod::ClientCommand(edict_t *pEntity, int argc, const char *cmd, const char *arg1, const char *arg2)
 {
-	if (argc > 2)
+	if (argc > 2 && !strcmp(cmd, "voicemenu"))
 	{
-		if (strcmp(pcmd, "voicemenu") == 0)
-		{
-			// somebody said a voice command
-			u_VOICECMD vcmd;
+		// somebody said a voice command
+		u_VOICECMD vcmd;
 
-			vcmd.voicecmd = 0;
-			vcmd.b1.v1 = atoi(arg1);
-			vcmd.b1.v2 = atoi(arg2);
+		vcmd.voicecmd = 0;
+		vcmd.b1.v1 = atoi(arg1);
+		vcmd.b1.v2 = atoi(arg2);
 
-			CBroadcastVoiceCommand voicecmd = CBroadcastVoiceCommand(pEntity, vcmd.voicecmd);
+		CBroadcastVoiceCommand voicecmd = CBroadcastVoiceCommand(pEntity, vcmd.voicecmd);
 
-			CBots::BotFunction(&voicecmd);
-		}
-	}
-	else
-	{
-		/*if ( strcmp(pcmd,"+use_action_slot_item") == 0 )
-		{
-		CClient *pClient = CClients::Get(pEntity);
-
-		if ( pClient != NULL )
-		{
-		pClient->monitorHighFive();
-		}
-		}*/
+		CBots::BotFunction(&voicecmd);
 	}
 }
 
@@ -883,10 +868,9 @@ int CTeamFortress2Mod::GetHighestScore()
 {
 	short int highest = 0;
 	short int score;
-	int i = 0;
 	edict_t *edict;
 
-	for (i = 1; i <= MAX_PLAYERS; i++)
+	for (short int i = 1; i <= MAX_PLAYERS; i++)
 	{
 		edict = INDEXENT(i);
 
@@ -909,10 +893,9 @@ int CTeamFortress2Mod::GetHighestScore()
 bool CTeamFortress2Mod::BuildingNearby(int iTeam, Vector vOrigin)
 {
 	edict_t *pPlayer;
-	int i;
 	short int sentryIndex;
 
-	for (i = 1; i <= MAX_PLAYERS; i++)
+	for (short int i = 1; i <= MAX_PLAYERS; i++)
 	{
 		pPlayer = INDEXENT(i);
 
@@ -960,10 +943,8 @@ bool CTeamFortress2Mod::BuildingNearby(int iTeam, Vector vOrigin)
 //Get the building
 edict_t *CTeamFortress2Mod::GetBuilding(eEngiBuild object, edict_t *pOwner)
 {
-	static short int i;
 	static tf_tele_t *tele;
-
-	i = ENTINDEX(pOwner) + 1;
+	short int i = ENTINDEX(pOwner) + 1;
 
 	switch (object)
 	{
@@ -983,7 +964,7 @@ edict_t *CTeamFortress2Mod::GetBuilding(eEngiBuild object, edict_t *pOwner)
 // Get the owner of 
 edict_t *CTeamFortress2Mod::GetBuildingOwner(eEngiBuild object, short index)
 {
-	static short int i;
+	short int i;
 	static tf_tele_t *tele;
 
 	switch (object)
@@ -1028,7 +1009,7 @@ edict_t *CTeamFortress2Mod::NearestDispenser(Vector vOrigin, int team)
 	float fDist;
 	float fNearest = bot_use_disp_dist.GetFloat();
 
-	for (unsigned int i = 0; i < MAX_PLAYERS; i++)
+	for (short int i = 0; i < MAX_PLAYERS; i++)
 	{
 		//m_Dispensers[i]
 		pDisp = m_Dispensers[i].disp.Get();
@@ -1053,10 +1034,7 @@ edict_t *CTeamFortress2Mod::NearestDispenser(Vector vOrigin, int team)
 
 void CTeamFortress2Mod::SapperPlaced(edict_t *pOwner, eEngiBuild type, edict_t *pSapper)
 {
-	static short int index;
-
-	index = ENTINDEX(pOwner) - 1;
-
+	short int index = ENTINDEX(pOwner) - 1;
 	if ((index >= 0) && (index < MAX_PLAYERS))
 	{
 		if (type == ENGI_TELE)
@@ -1098,9 +1076,7 @@ void CTeamFortress2Mod::AddWaypointFlags(edict_t *pPlayer, edict_t *pEdict, int 
 
 void CTeamFortress2Mod::SapperDestroyed(edict_t *pOwner, eEngiBuild type, edict_t *pSapper)
 {
-	static short int index;
-
-	for (index = 0; index < MAX_PLAYERS; index++)
+	for (short int index = 0; index < MAX_PLAYERS; index++)
 	{
 		if (type == ENGI_TELE)
 		{

@@ -99,6 +99,16 @@
 				"windows"	"142"
 				"linux"		"142"
 			}
+			"FInViewCone"
+			{
+				"windows"	"229"
+				"linux"		"229"
+			}
+			"FInAimCone"
+			{
+				"windows"	"231"
+				"linux"		"231"
+			}
 			"RemovePlayerItem"
 			{
 				"windows"	"271"
