@@ -1166,7 +1166,7 @@ bool CBot::HandleAttack(CBotWeapon *pWeapon, edict_t *pEnemy)
 			SetMoveTo(CBotGlobals::EntityOrigin(pEnemy));
 
 		if (pWeapon->MustHoldAttack())
-			PrimaryAttack(true);
+			PrimaryAttack(true, 0.65f);
 		else
 			PrimaryAttack();
 	}
@@ -2551,11 +2551,6 @@ int CBot::GetPlayerID()
 	return m_pPI->GetUserID();
 }
 
-void CBot::LetGoOfButton(int button)
-{
-	m_pButtons->LetGo(button);
-}
-
 void CBot::ChangeAngles(float fSpeed, float *fIdeal, float *fCurrent, float *fUpdate)
 {
 	float current = *fCurrent;
@@ -2723,11 +2718,18 @@ void CBot::TapButton(int iButton)
 {
 	m_pButtons->Tap(iButton);
 }
+
+void CBot::LetGoOfButton(int button)
+{
+	m_pButtons->LetGo(button);
+}
+
 void CBot::Reload()
 {
 	if (m_pButtons->CanPressButton(IN_RELOAD))
 		m_pButtons->Tap(IN_RELOAD);
 }
+
 void CBot::Use()
 {
 	if (m_pButtons->CanPressButton(IN_USE))

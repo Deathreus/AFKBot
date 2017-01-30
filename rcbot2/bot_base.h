@@ -300,7 +300,6 @@ public:
 		return m_pPI->GetAbsOrigin();
 	}
 
-	// linux fix 2
 	// return distance from this origin
 	inline float DistanceFrom(Vector vOrigin)
 	{
