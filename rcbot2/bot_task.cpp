@@ -4675,7 +4675,7 @@ void CBotTF2AttackSentryGunTask::Execute(CBot *pBot, CBotSchedule *pSchedule)
 
 	if (pBot->IsVisible(m_pSentryGun))
 	{
-		// use thIs shooting method below
+		// use this shooting method below
 		pBot->WantToShoot(false);
 		// attack
 		pBot->HandleAttack(m_pWeapon, m_pSentryGun);

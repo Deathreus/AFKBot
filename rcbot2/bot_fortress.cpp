@@ -2922,9 +2922,7 @@ void CBotTF2::ModThink()
 	case TF_CLASS_SNIPER:
 		if (CTeamFortress2Mod::TF2_IsPlayerZoomed(m_pEdict))
 		{
-			m_fFov = 20.0f; // Jagger
-
-			//if ( !wantToZoom() )
+			m_fFov = 35.0f; // Jagger
 
 			if (MoveToIsValid() && !HasEnemy())
 				SecondaryAttack();
