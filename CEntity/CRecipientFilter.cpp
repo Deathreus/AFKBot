@@ -85,7 +85,7 @@ void CRecipientFilter::AddAllPlayers(void)
 {
 	m_Recipients.RemoveAll();
 
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	for (short int i = 1; i < MAX_PLAYERS; i++)
 	{
 		CPlayer *pPlayer = pHelpers->UTIL_PlayerByIndex(i);
 		if (!pPlayer)
@@ -289,7 +289,7 @@ CTeamRecipientFilter::CTeamRecipientFilter(int team, bool isReliable)
 
 	RemoveAllRecipients();
 
-	for (int i = 1; i <= gpGlobals->maxClients; i++)
+	for (short int i = 1; i < MAX_PLAYERS; i++)
 	{
 		CPlayer *pPlayer = pHelpers->UTIL_PlayerByIndex(i);
 

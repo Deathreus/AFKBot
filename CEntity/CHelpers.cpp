@@ -241,8 +241,7 @@ void CHelpers::PrintCenterTextAll(const char *szText, ...)
 	if (!msgindex) msgindex = g_SMAPI->FindUserMessage("TextMsg");
 
 	cell_t *pClients;
-	int maxClients = playerhelpers->GetMaxClients();
-	for (int i = 1; i <= maxClients; i++)
+	for (short int i = 1; i < MAX_PLAYERS; i++)
 	{
 		IPlayerInfo *pPL = playerinfomanager->GetPlayerInfo(engine->PEntityOfEntIndex(i));
 		CPlayer *pPlayer = UTIL_PlayerByIndex(i);
@@ -296,8 +295,7 @@ void CHelpers::PrintHudTextAll(const hudtextparms_t &textparms, const char *szTe
 	if (!msgindex) msgindex = g_SMAPI->FindUserMessage("HudMsg");
 
 	cell_t *pClients;
-	int maxClients = playerhelpers->GetMaxClients();
-	for (int i = 1; i <= maxClients; i++)
+	for (short int i = 1; i < MAX_PLAYERS; i++)
 	{
 		IPlayerInfo *pPL = playerinfomanager->GetPlayerInfo(engine->PEntityOfEntIndex(i));
 		CPlayer *pPlayer = UTIL_PlayerByIndex(i);
@@ -352,8 +350,7 @@ void CHelpers::PrintToChatAll(CPlayer *pPlayer, const char *szText, ...)
 	if (!msgindex) msgindex = g_SMAPI->FindUserMessage("SayText2");
 
 	cell_t *pClients;
-	int maxClients = playerhelpers->GetMaxClients();
-	for (int i = 1; i <= maxClients; i++)
+	for (short int i = 1; i < MAX_PLAYERS; i++)
 	{
 		IPlayerInfo *pPL = playerinfomanager->GetPlayerInfo(engine->PEntityOfEntIndex(i));
 		CPlayer *pPlayer = UTIL_PlayerByIndex(i);
