@@ -278,6 +278,14 @@ copy "$(ProjectDir)\update.txt" "C:\Program Files (x86)\Steam\steamapps\paul.mur
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\CEntity\CEntity.cpp" />
+    <ClCompile Include="..\CEntity\CEntityBase.cpp" />
+    <ClCompile Include="..\CEntity\CEntityManager.cpp" />
+    <ClCompile Include="..\CEntity\CHelpers.cpp" />
+    <ClCompile Include="..\CEntity\CPlayer.cpp" />
+    <ClCompile Include="..\CEntity\CRecipientFilter.cpp" />
+    <ClCompile Include="..\CEntity\rtti.cpp" />
+    <ClCompile Include="..\CEntity\util.cpp" />
     <ClCompile Include="..\extension.cpp" />
     <ClCompile Include="..\natives.cpp" />
     <ClCompile Include="..\NavMesh\NavMesh.cpp" />
@@ -321,6 +329,16 @@ copy "$(ProjectDir)\update.txt" "C:\Program Files (x86)\Steam\steamapps\paul.mur
     <ClCompile Include="..\sdk\smsdk_ext.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\CEntity\CEntity.h" />
+    <ClInclude Include="..\CEntity\CEntityBase.h" />
+    <ClInclude Include="..\CEntity\CEntityManager.h" />
+    <ClInclude Include="..\CEntity\CHelpers.h" />
+    <ClInclude Include="..\CEntity\CPlayer.h" />
+    <ClInclude Include="..\CEntity\CRecipientFilter.h" />
+    <ClInclude Include="..\CEntity\IEntityFactory.h" />
+    <ClInclude Include="..\CEntity\macros.h" />
+    <ClInclude Include="..\CEntity\rtti.h" />
+    <ClInclude Include="..\CEntity\util.h" />
     <ClInclude Include="..\extension.h" />
     <ClInclude Include="..\NavMesh\List.h" />
     <ClInclude Include="..\NavMesh\NavCornerType.h" />
