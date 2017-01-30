@@ -22,15 +22,23 @@
 #include "in_buttons.h"
 
 SH_DECL_MANUALHOOK3(FVisible, 0, 0, 0, bool, CBaseEntity *, int, CBaseEntity **);
+SH_DECL_MANUALHOOK1(FInViewCone, 0, 0, 0, bool, CBaseEntity *);
+SH_DECL_MANUALHOOK1(FInAimCone, 0, 0, 0, bool, CBaseEntity *);
+SH_DECL_MANUALHOOK2(IsLookingTowards, 0, 0, 0, bool, const CBaseEntity *, float);
+SH_DECL_MANUALHOOK1(IsInFieldOfView, 0, 0, 0, bool, CBaseEntity *);
 SH_DECL_MANUALHOOK5_void(ProcessUsercmds, 0, 0, 0, CUserCmd *, int, int, int, bool);
 SH_DECL_MANUALHOOK0_void(Jump, 0, 0, 0);
 SH_DECL_MANUALHOOK0_void(Duck, 0, 0, 0);
-SH_DECL_MANUALHOOK2(Weapon_Switch, 0, 0, 0, bool, CBaseEntity */*CBaseCombatWeapon*/, int);
+SH_DECL_MANUALHOOK2(Weapon_Switch, 0, 0, 0, bool, CBaseEntity *, int);
 SH_DECL_MANUALHOOK1_void(Weapon_Equip, 0, 0, 0, CBaseEntity *);
 SH_DECL_MANUALHOOK1(Weapon_GetSlot, 0, 0, 0, CBaseEntity *, int);
 SH_DECL_MANUALHOOK0(EyeAngles, 0, 0, 0, QAngle *);
 
 DECLARE_HOOK(FVisible, CPlayer);
+DECLARE_HOOK(FInViewCone, CPlayer);
+DECLARE_HOOK(FInAimCone, CPlayer);
+DECLARE_HOOK(IsLookingTowards, CPlayer);
+DECLARE_HOOK(IsInFieldOfView, CPlayer);
 DECLARE_HOOK(ProcessUsercmds, CPlayer);
 DECLARE_HOOK(Jump, CPlayer);
 DECLARE_HOOK(Duck, CPlayer);
@@ -275,6 +283,178 @@ bool CPlayer::InternalFVisible(CBaseEntity *pEntity, int traceMask, CBaseEntity 
 
 	if (ppBlocker)
 		*ppBlocker = *pCopyBack;
+
+	return ret;
+}
+
+bool CPlayer::FInViewCone(CEntity *pEntity)
+{
+	if (!m_bInFInViewCone)
+	{
+		bool ret = SH_MCALL(BaseEntity(), FInViewCone)(*pEntity);
+		return ret;
+	}
+
+	SET_META_RESULT(MRES_IGNORED);
+	SH_GLOB_SHPTR->DoRecall();
+	SourceHook::EmptyClass *thisptr = reinterpret_cast<SourceHook::EmptyClass*>(SH_GLOB_SHPTR->GetIfacePtr());
+	bool ret = (thisptr->*(__SoureceHook_FHM_GetRecallMFPFInViewCone(thisptr)))(*pEntity);
+	SET_META_RESULT(MRES_SUPERCEDE);
+
+	return ret;
+}
+
+bool CPlayer::InternalFInViewCone(CBaseEntity *pEntity)
+{
+	SET_META_RESULT(MRES_SUPERCEDE);
+
+	CPlayer *pEnt = dynamic_cast<CPlayer *>(CEntity::Instance(META_IFACEPTR(CBaseEntity)));
+	if (!pEnt)
+	{
+		RETURN_META_VALUE(MRES_IGNORED, false);
+	}
+
+	CEntity *pFirstParam = CEntity::Instance(pEntity);
+	if (!pFirstParam)
+	{
+		//g_pSM->LogError(myself, "No matching CEntity found for *pEntity in CPlayer::InternalFVisible, aborting call.");
+		RETURN_META_VALUE(MRES_IGNORED, false);
+	}
+
+	int index = pEnt->entindex();
+	pEnt->m_bInFInViewCone = true;
+	bool ret = pEnt->FInViewCone(pFirstParam);
+	if (pEnt == CEntity::Instance(index))
+		pEnt->m_bInFInViewCone = false;
+
+	return ret;
+}
+
+bool CPlayer::FInAimCone(CEntity *pEntity)
+{
+	if (!m_bInFInAimCone)
+	{
+		bool ret = SH_MCALL(BaseEntity(), FInAimCone)(*pEntity);
+		return ret;
+	}
+
+	SET_META_RESULT(MRES_IGNORED);
+	SH_GLOB_SHPTR->DoRecall();
+	SourceHook::EmptyClass *thisptr = reinterpret_cast<SourceHook::EmptyClass*>(SH_GLOB_SHPTR->GetIfacePtr());
+	bool ret = (thisptr->*(__SoureceHook_FHM_GetRecallMFPFInAimCone(thisptr)))(*pEntity);
+	SET_META_RESULT(MRES_SUPERCEDE);
+
+	return ret;
+}
+
+bool CPlayer::InternalFInAimCone(CBaseEntity *pEntity)
+{
+	SET_META_RESULT(MRES_SUPERCEDE);
+
+	CPlayer *pEnt = dynamic_cast<CPlayer *>(CEntity::Instance(META_IFACEPTR(CBaseEntity)));
+	if (!pEnt)
+	{
+		RETURN_META_VALUE(MRES_IGNORED, false);
+	}
+
+	CEntity *pFirstParam = CEntity::Instance(pEntity);
+	if (!pFirstParam)
+	{
+		//g_pSM->LogError(myself, "No matching CEntity found for *pEntity in CPlayer::InternalFVisible, aborting call.");
+		RETURN_META_VALUE(MRES_IGNORED, false);
+	}
+
+	int index = pEnt->entindex();
+	pEnt->m_bInFInAimCone = true;
+	bool ret = pEnt->FInAimCone(pFirstParam);
+	if (pEnt == CEntity::Instance(index))
+		pEnt->m_bInFInAimCone = false;
+
+	return ret;
+}
+
+bool CPlayer::IsLookingTowards(const CEntity *pEntity, float fTolerance)
+{
+	if (!m_bInIsLookingTowards)
+	{
+		bool ret = SH_MCALL(BaseEntity(), IsLookingTowards)(*(CEntity *)pEntity, fTolerance);
+		return ret;
+	}
+
+	SET_META_RESULT(MRES_IGNORED);
+	SH_GLOB_SHPTR->DoRecall();
+	SourceHook::EmptyClass *thisptr = reinterpret_cast<SourceHook::EmptyClass*>(SH_GLOB_SHPTR->GetIfacePtr());
+	bool ret = (thisptr->*(__SoureceHook_FHM_GetRecallMFPIsLookingTowards(thisptr)))(*(CEntity *)pEntity, fTolerance);
+	SET_META_RESULT(MRES_SUPERCEDE);
+
+	return ret;
+}
+
+bool CPlayer::InternalIsLookingTowards(const CBaseEntity *pEntity, float fTolerance)
+{
+	SET_META_RESULT(MRES_SUPERCEDE);
+
+	CPlayer *pEnt = dynamic_cast<CPlayer *>(CEntity::Instance(META_IFACEPTR(CBaseEntity)));
+	if (!pEnt)
+	{
+		RETURN_META_VALUE(MRES_IGNORED, false);
+	}
+
+	CEntity *pFirstParam = CEntity::Instance((CBaseEntity *)pEntity);
+	if (!pFirstParam)
+	{
+		//g_pSM->LogError(myself, "No matching CEntity found for *pEntity in CPlayer::InternalFVisible, aborting call.");
+		RETURN_META_VALUE(MRES_IGNORED, false);
+	}
+
+	int index = pEnt->entindex();
+	pEnt->m_bInIsLookingTowards = true;
+	bool ret = pEnt->FInViewCone(pFirstParam);
+	if (pEnt == CEntity::Instance(index))
+		pEnt->m_bInIsLookingTowards = false;
+
+	return ret;
+}
+
+bool CPlayer::IsInFieldOfView(CEntity *pEntity)
+{
+	if (!m_bInIsInFieldOfView)
+	{
+		bool ret = SH_MCALL(BaseEntity(), IsInFieldOfView)(*pEntity);
+		return ret;
+	}
+
+	SET_META_RESULT(MRES_IGNORED);
+	SH_GLOB_SHPTR->DoRecall();
+	SourceHook::EmptyClass *thisptr = reinterpret_cast<SourceHook::EmptyClass*>(SH_GLOB_SHPTR->GetIfacePtr());
+	bool ret = (thisptr->*(__SoureceHook_FHM_GetRecallMFPIsInFieldOfView(thisptr)))(*pEntity);
+	SET_META_RESULT(MRES_SUPERCEDE);
+
+	return ret;
+}
+
+bool CPlayer::InternalIsInFieldOfView(CBaseEntity *pEntity)
+{
+	SET_META_RESULT(MRES_SUPERCEDE);
+
+	CPlayer *pEnt = dynamic_cast<CPlayer *>(CEntity::Instance(META_IFACEPTR(CBaseEntity)));
+	if (!pEnt)
+	{
+		RETURN_META_VALUE(MRES_IGNORED, false);
+	}
+
+	CEntity *pFirstParam = CEntity::Instance(pEntity);
+	if (!pFirstParam)
+	{
+		//g_pSM->LogError(myself, "No matching CEntity found for *pEntity in CPlayer::InternalFVisible, aborting call.");
+		RETURN_META_VALUE(MRES_IGNORED, false);
+	}
+
+	int index = pEnt->entindex();
+	pEnt->m_bInIsInFieldOfView = true;
+	bool ret = pEnt->FInViewCone(pFirstParam);
+	if (pEnt == CEntity::Instance(index))
+		pEnt->m_bInIsInFieldOfView = false;
 
 	return ret;
 }

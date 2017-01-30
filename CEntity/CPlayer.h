@@ -57,10 +57,14 @@ public:
 
 public: // CBasePlayer virtuals
 	virtual	bool FVisible(CEntity *pEntity, int traceMask = MASK_BLOCKLOS, CEntity **ppBlocker = NULL);
+	virtual bool FInViewCone(CEntity *pEntity);
+	virtual bool FInAimCone(CEntity *pEntity);
+	virtual bool IsLookingTowards(const CEntity *pEntity, float fTolerance);
+	virtual bool IsInFieldOfView(CEntity *pEntity);
 	virtual void ProcessUsercmds(CUserCmd *cmds, int numcmds, int totalcmds, int dropped_packets, bool paused);
 	virtual void Jump(void);
 	virtual void Duck(void);
-	virtual bool Weapon_Switch(CBaseEntity /*CBaseCombatWeapon*/ *pWeapon, int viewmodelindex);
+	virtual bool Weapon_Switch(CBaseEntity *pWeapon, int viewmodelindex);
 	virtual void HandleCommand_JoinClass(const char *pClass, bool bAllowSpawn);
 
 public: // CTFPlayer virtuals
@@ -69,6 +73,10 @@ public: // CTFPlayer virtuals
 
 public: //Autohandlers
 	DECLARE_DEFAULTHEADER(FVisible, bool, (CBaseEntity *pEntity, int traceMask, CBaseEntity **ppBlocker));
+	DECLARE_DEFAULTHEADER(FInViewCone, bool, (CBaseEntity *pEntity));
+	DECLARE_DEFAULTHEADER(FInAimCone, bool, (CBaseEntity *pEntity));
+	DECLARE_DEFAULTHEADER(IsLookingTowards, bool, (const CBaseEntity *pEntity, float fTolerance));
+	DECLARE_DEFAULTHEADER(IsInFieldOfView, bool, (CBaseEntity *pEntity));
 	DECLARE_DEFAULTHEADER(ProcessUsercmds, void, (CUserCmd *cmds, int numcmds, int totalcmds, int dropped_packets, bool paused));
 	DECLARE_DEFAULTHEADER(Jump, void, ());
 	DECLARE_DEFAULTHEADER(Duck, void, ());
