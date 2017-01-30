@@ -1853,7 +1853,7 @@ void CBot::ListenForPlayers()
 
 	m_bListenPositionValid = false;
 
-	for (int i = 1; i <= MAX_PLAYERS; i++)
+	for (short int i = 1; i < MAX_PLAYERS; i++)
 	{
 		pPlayer = INDEXENT(i);
 

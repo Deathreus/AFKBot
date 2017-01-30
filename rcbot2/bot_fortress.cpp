@@ -1410,26 +1410,29 @@ void CBotFortress::ModThink()
 		if (CClassInterface::TF2_MVMMinPlayersToReady())
 		{
 			int readycount = 0;
-			for (int i = 1; i <= MAX_PLAYERS; i++)
+			for (short int i = 1; i < MAX_PLAYERS; i++)
 			{
-				edict_t *pClient = INDEXENT(i);
-				if (!pClient->IsFree())
+				IGamePlayer *pClient = playerhelpers->GetGamePlayer(i);
+				if (pClient && pClient->IsInGame())
 				{
-					IPlayerInfo *pl = playerhelpers->GetGamePlayer(pClient)->GetPlayerInfo();
-					if (pl && pl->IsConnected() && !pl->IsFakeClient())
+					IPlayerInfo *pl = pClient->GetPlayerInfo();
+					if (pl && !pl->IsFakeClient())
 					{
 						if (CClassInterface::TF2_MVMIsPlayerReady(i))
 							readycount++;
 					}
 				}
+			}
 
-				CBot *pBot = CBots::Get(pClient);
+			for (short int i = 0; i < MAX_PLAYERS; i++)
+			{
+				CBot *pBot = CBots::Get(i);
 				if (pBot->InUse())
 				{
 					if (readycount > 0)
-						helpers->ClientCommand(pClient, "tournament_player_readystate 1");
+						helpers->ClientCommand(pBot->GetEdict(), "tournament_player_readystate 1");
 					else
-						helpers->ClientCommand(pClient, "tournament_player_readystate 0");
+						helpers->ClientCommand(pBot->GetEdict(), "tournament_player_readystate 0");
 				}
 			}
 		}
@@ -3832,7 +3835,7 @@ void CBotTF2::CheckBeingHealed()
 	m_bIsBeingHealed = false;
 	m_bCanBeUbered = false;
 
-	for (short int i = 1; i <= MAX_PLAYERS; i++)
+	for (short int i = 1; i < MAX_PLAYERS; i++)
 	{
 		pPlayer = INDEXENT(i);
 
@@ -3879,7 +3882,6 @@ bool CBotTF2::HealPlayer()
 	static Vector vForward;
 	static QAngle eyes;
 	static float fSpeed;
-	static CClient *pClient;
 
 	if (!m_pHeal)
 		return false;
@@ -3944,11 +3946,6 @@ bool CBotTF2::HealPlayer()
 		}
 	}
 
-	/*if ( CTeamFortress2Mod::hasRoundStarted() && (m_fHealingMoveTime + 8.0f < engine->Time()) )
-	{
-	m_pLastHeal
-	return false;
-	}*/
 	edict_t *pMedigun;
 
 	if ((pWeap->GetID() == TF2_WEAPON_MEDIGUN) && ((pMedigun = pWeap->GetWeaponEntity()) != NULL))
@@ -3972,22 +3969,12 @@ bool CBotTF2::HealPlayer()
 
 	m_bIncreaseSensitivity = true;
 
-	//!!!CRASH!!!
-	/*if ( !CClassInterface::GetMedigunHealing(pWeapon) )
-	{
-	if ( (m_fHealClickTime < engine->Time()) && (DotProductFromOrigin(vOrigin) > 0.98f) )
-	PrimaryAttack();
-	//else
-	//m_pButtons->LetGo(IN_ATTACK);
-	}
-	else
-	{*/
 	edict_t *pent;
 
 	edict_t *pPlayer = NULL;
 
 	// Find the player I'm currently healing
-	for (int i = 1; i <= MAX_PLAYERS; i++)
+	for (short int i = 1; i < MAX_PLAYERS; i++)
 	{
 		pent = INDEXENT(i);
 

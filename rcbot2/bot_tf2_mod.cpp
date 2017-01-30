@@ -870,7 +870,7 @@ int CTeamFortress2Mod::GetHighestScore()
 	short int score;
 	edict_t *edict;
 
-	for (short int i = 1; i <= MAX_PLAYERS; i++)
+	for (short int i = 1; i < MAX_PLAYERS; i++)
 	{
 		edict = INDEXENT(i);
 
@@ -895,7 +895,7 @@ bool CTeamFortress2Mod::BuildingNearby(int iTeam, Vector vOrigin)
 	edict_t *pPlayer;
 	short int sentryIndex;
 
-	for (short int i = 1; i <= MAX_PLAYERS; i++)
+	for (short int i = 1; i < MAX_PLAYERS; i++)
 	{
 		pPlayer = INDEXENT(i);
 

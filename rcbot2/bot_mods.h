@@ -1072,7 +1072,7 @@ public:
 
 	static edict_t *GetSentryOwner(edict_t *pSentry)
 	{
-		for (int i = 1; i <= MAX_PLAYERS; i++)
+		for (short int i = 1; i < MAX_PLAYERS; i++)
 		{
 			if (m_SentryGuns[i].sentry.Get() == pSentry)
 				return INDEXENT(i);
