@@ -20,7 +20,7 @@
 #ifndef _INCLUDE_SOURCEMOD_EXTENSION_PROPER_H_
 #define _INCLUDE_SOURCEMOD_EXTENSION_PROPER_H_
 
-#include "smsdk_ext.h"
+#include "sdk/smsdk_ext.h"
 
 #include <convar.h>
 

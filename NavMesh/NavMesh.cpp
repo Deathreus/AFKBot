@@ -15,13 +15,7 @@ CNavMesh::CNavMesh(unsigned int magicNumber, unsigned int version, unsigned int 
 	this->grid = grid;
 }
 
-CNavMesh::~CNavMesh()
-{
-	delete this->places;
-	delete this->areas;
-	delete this->ladders;
-	delete this->grid;
-}
+CNavMesh::~CNavMesh() {}
 
 unsigned int CNavMesh::GetMagicNumber() { return this->magicNumber; }
 

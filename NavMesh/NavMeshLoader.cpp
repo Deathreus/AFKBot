@@ -1,6 +1,7 @@
 #include "smsdk_ext.h"
 #include "List.h"
 #include "NavMeshLoader.h"
+#include "NavMesh.h"
 #include "NavMeshPlace.h"
 #include "NavMeshLadder.h"
 #include "NavMeshConnection.h"
@@ -12,7 +13,6 @@
 #include "NavMeshArea.h"
 #include "NavMeshVisibleArea.h"
 #include "NavMeshGrid.h"
-#include "NavMesh.h"
 
 
 CNavMeshLoader::CNavMeshLoader(const char *mapName)

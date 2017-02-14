@@ -23,51 +23,51 @@ private:
 	class CFileHandle
 	{
 	public:
-		CFileHandle(FILE *fp) : fp_(fp) {}
-		CFileHandle(FileHandle_t fh) : fh_(fh) {}
+		CFileHandle(FILE *fp) : fp(fp) {}
+		CFileHandle(FileHandle_t fh) : fh(fh) {}
 		~CFileHandle()
 		{
-			if (fp_)
+			if (fp)
 			{
-				fclose(fp_);
-				fp_ = NULL;
+				fclose(fp);
+				fp = NULL;
 			}
-			if (fh_)
+			if (fh)
 			{
-				filesystem->Close(fh_);
-				fh_ = NULL;
+				filesystem->Close(fh);
+				fh = NULL;
 			}
 		}
 
 		bool FileError()
 		{
-			return (fp_ == NULL || ferror(fp_));
+			return (fp == NULL || ferror(fp));
 		}
 
 		bool HandleError()
 		{
-			return (fh_ == NULL || !filesystem->IsOk(fh_));
+			return (fh == NULL || !filesystem->IsOk(fh));
 		}
 
 		size_t Read(void *output, int elementSize, int elementCount)
 		{
 			if (!FileError())
 			{
-				return fread(output, elementSize, elementCount, fp_);
+				return fread(output, elementSize, elementCount, fp);
 			}
 
 			if (!HandleError())
 			{
-				return (size_t)filesystem->Read(output, elementSize, fh_);
+				return (size_t)filesystem->Read(output, elementSize, fh);
 			}
 
 			smutils->LogError(myself, "Fatal error attempting to read file data!");
 			return 0;
 		}
 
-	private:
-		FILE *fp_;
-		FileHandle_t fh_;
+	protected:
+		FILE *fp;
+		FileHandle_t fh;
 	};
 };
 

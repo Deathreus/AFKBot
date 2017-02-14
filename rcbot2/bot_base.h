@@ -49,11 +49,11 @@
 #include "bot_const.h"
 #include "bot_ehandle.h"
 
-#include <vstdlib\random.h>
+#include <vstdlib/random.h>
 
 #include <PlayerState.h>
 
-#include "..\extension.h"
+#include "../extension.h"
 
 using namespace std;
 

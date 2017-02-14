@@ -2,7 +2,7 @@
 #define __war3source_inavmeshgrid_h__
 
 #include "../extension.h"
-#include "../core/logic/CellArray.h"
+#include "logic/CellArray.h"
 
 
 enum eGridAreas
