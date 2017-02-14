@@ -173,7 +173,8 @@ CEntity *CPlayer::GetAimTarget(bool playersOnly = false)
 	eye_angles.Init(angles->x, angles->y, angles->z);
 
 	trcontents_t *tr;
-	tr = pHelpers->TR_TraceRayFilter(eye_position, eye_angles, MASK_SHOT, RayType_Infinite, this);
+	CTraceFilterSkipPlayer filter(this->BaseEntity());
+	tr = pHelpers->TR_TraceRayFilter(eye_position, eye_angles, MASK_SHOT, filter);
 
 	if (tr->entity != NULL)
 	{

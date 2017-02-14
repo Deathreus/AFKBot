@@ -373,65 +373,15 @@ void CHelpers::PrintToChatAll(CPlayer *pPlayer, const char *szText, ...)
 //==========================================================================================
 // Purpose: TraceRay Functions
 //==========================================================================================
-/** Custom TraceFilter to skip a specific Player **/
-class CTraceFilterSkipPlayer : public CTraceFilter
+
+tr_contents *CHelpers::TR_TraceRay(const Vector &origin, const Vector &endpos, int flags)
 {
-public:
-	CTraceFilterSkipPlayer(CBaseEntity *pPlayerIgnore){ m_pPlayerIgnore = pPlayerIgnore; };
-
-	bool ShouldHitEntity(IHandleEntity *pServerEntity, int contentsMask)
-	{
-		//Get the entity were checking for permission to hit
-		IServerUnknown *pUnk = (IServerUnknown*)pServerEntity;
-		CBaseEntity *pEntity = pUnk->GetBaseEntity();
-
-		if (!pEntity || !m_pPlayerIgnore)
-			return true;
-
-		if (pEntity == m_pPlayerIgnore)
-			return false;
-
-		return true;
-	}
-	virtual TraceType_t	GetTraceType() const
-	{
-		return TRACE_EVERYTHING;
-	}
-
-private:
-	CBaseEntity *m_pPlayerIgnore;
-};
-
-tr_contents *CHelpers::TR_TraceRayFilter(const Vector origin, const QAngle angles, int flags, RayType rtype, CPlayer *pPlayer)
-{
-	CBaseEntity *pPlayerIgnore = pPlayer->BaseEntity();
-
 	Vector vecStartPos, vecEndPos;
-	CTraceFilterSkipPlayer filter(pPlayerIgnore);
+	CTraceFilterHitAll filter;
 	Ray_t ray;
 
 	vecStartPos.Init(origin.x, origin.y, origin.z);
-
-	switch (rtype)
-	{
-		case RayType_EndPoint:
-		{
-			//The angles param is our endpoint if we use this RayType
-			vecEndPos.Init(angles.x, angles.y, angles.z);
-			break;
-		}
-		case RayType_Infinite:
-		{
-			QAngle DirAngles;
-			DirAngles.Init(angles.x, angles.y, angles.z);
-			AngleVectors(DirAngles, &vecEndPos);
-
-			/* Make it unitary and get the ending point */
-			vecEndPos.NormalizeInPlace();
-			vecEndPos = vecStartPos + vecEndPos * MAX_TRACE_LENGTH;
-			break;
-		}
-	}
+	vecEndPos.Init(endpos.x, endpos.y, endpos.z);
 
 	trace_t trace;
 	ray.Init(vecStartPos, vecEndPos);
@@ -440,10 +390,98 @@ tr_contents *CHelpers::TR_TraceRayFilter(const Vector origin, const QAngle angle
 	if (trace.DidHit()) //did the trace collide with anything?
 	{
 		trcontents_t *contents = new trcontents_t;
-		contents->base = trace;
+		contents->base = &trace;
 		contents->entity = trace.m_pEnt;
 		contents->endpos = trace.endpos;
-		contents->fraction = trace.fraction;
+
+		return contents;
+	}
+
+	return NULL;
+}
+
+tr_contents *CHelpers::TR_TraceRay(const Vector &origin, const QAngle &angles, int flags)
+{
+	Vector vecStartPos, vecEndPos;
+	CTraceFilterHitAll filter;
+	Ray_t ray;
+
+	vecStartPos.Init(origin.x, origin.y, origin.z);
+
+	QAngle DirAngles;
+	DirAngles.Init(angles.x, angles.y, angles.z);
+	AngleVectors(DirAngles, &vecEndPos);
+
+	/* Make it unitary and get the ending point */
+	vecEndPos.NormalizeInPlace();
+	vecEndPos = vecStartPos + vecEndPos * MAX_TRACE_LENGTH;
+
+	trace_t trace;
+	ray.Init(vecStartPos, vecEndPos);
+	engtrace->TraceRay(ray, flags, &filter, &trace);
+
+	if (trace.DidHit())
+	{
+		trcontents_t *contents = new trcontents_t;
+		contents->base = &trace;
+		contents->entity = trace.m_pEnt;
+		contents->endpos = trace.endpos;
+
+		return contents;
+	}
+
+	return NULL;
+}
+
+tr_contents *CHelpers::TR_TraceRayFilter(const Vector &origin, const Vector &endpos, int flags, ITraceFilter &filter)
+{
+	Vector vecStartPos, vecEndPos;
+	Ray_t ray;
+
+	vecStartPos.Init(origin.x, origin.y, origin.z);
+	vecEndPos.Init(endpos.x, endpos.y, endpos.z);
+
+	trace_t trace;
+	ray.Init(vecStartPos, vecEndPos);
+	engtrace->TraceRay(ray, flags, &filter, &trace);
+
+	if (trace.DidHit())
+	{
+		trcontents_t *contents = new trcontents_t;
+		contents->base = &trace;
+		contents->entity = trace.m_pEnt;
+		contents->endpos = trace.endpos;
+
+		return contents;
+	}
+
+	return NULL;
+}
+
+tr_contents *CHelpers::TR_TraceRayFilter(const Vector &origin, const QAngle &angles, int flags, ITraceFilter &filter)
+{
+	Vector vecStartPos, vecEndPos;
+	Ray_t ray;
+
+	vecStartPos.Init(origin.x, origin.y, origin.z);
+
+	QAngle DirAngles;
+	DirAngles.Init(angles.x, angles.y, angles.z);
+	AngleVectors(DirAngles, &vecEndPos);
+
+	vecEndPos.NormalizeInPlace();
+	vecEndPos = vecStartPos + vecEndPos * MAX_TRACE_LENGTH;
+
+	trace_t trace;
+	ray.Init(vecStartPos, vecEndPos);
+	engtrace->TraceRay(ray, flags, &filter, &trace);
+
+	if (trace.DidHit())
+	{
+		trcontents_t *contents = new trcontents_t;
+		contents->base = &trace;
+		contents->entity = trace.m_pEnt;
+		contents->endpos = trace.endpos;
 
 		return contents;
 	}

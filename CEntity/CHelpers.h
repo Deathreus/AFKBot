@@ -79,19 +79,11 @@ enum
 	SNDCHAN_USER_BASE = 135		/**< Anything >= this is allocated to game code */
 };
 
-//RayTypes
-enum RayType
-{
-	RayType_EndPoint,
-	RayType_Infinite
-};
-
 typedef struct tr_contents
 {
-	trace_t			base;		// pointer to the full trace result if applicable
-	CBaseEntity		*entity;	//-1 if no entity hit
+	trace_t			*base;		// pointer to the full trace result if applicable
+	CBaseEntity		*entity;	// NULL if no entity hit
 	Vector			endpos;
-	float			fraction;	// 1.0 = nothing hit
 } trcontents_t;
 
 typedef struct hudtextparms_s
@@ -136,7 +128,10 @@ public: //Sound functions
 		int specialdsp = 0);
 
 public: //traceray functions
-	tr_contents *TR_TraceRayFilter(const Vector origin, const QAngle angles, int flags, RayType rtype, CPlayer *pPlayer);
+	tr_contents *TR_TraceRay(const Vector &origin, const Vector &endpos, int flags);
+	tr_contents *TR_TraceRay(const Vector &origin, const QAngle &angles, int flags);
+	tr_contents *TR_TraceRayFilter(const Vector &origin, const Vector &endpos, int flags, ITraceFilter &filter);
+	tr_contents *TR_TraceRayFilter(const Vector &origin, const QAngle &angles, int flags, ITraceFilter &filter);
 
 public: //Utilities
 	CPlayer* UTIL_PlayerByIndex(int playerIndex);
@@ -155,6 +150,34 @@ public: //Scanned Functions
 	int DispatchSpawn(CBaseEntity *pEntity);
 	void WeaponEquip(CBaseEntity *player, CBaseEntity *weapon);
 	//float PlayScene(CBaseEntity *player, const char *pszScene, float flDelay, AI_Response *response, IRecipientFilter *filter);
+};
+
+class CTraceFilterSkipPlayer : public CTraceFilter
+{
+public:
+	CTraceFilterSkipPlayer(CBaseEntity *pPlayerIgnore){ m_pPlayerIgnore = pPlayerIgnore; };
+
+	bool ShouldHitEntity(IHandleEntity *pServerEntity, int contentsMask)
+	{
+		//Get the entity were checking for permission to hit
+		IServerUnknown *pUnk = (IServerUnknown*)pServerEntity;
+		CBaseEntity *pEntity = pUnk->GetBaseEntity();
+
+		if (!pEntity || !m_pPlayerIgnore)
+			return true;
+
+		if (pEntity == m_pPlayerIgnore)
+			return false;
+
+		return true;
+	}
+	virtual TraceType_t	GetTraceType() const
+	{
+		return TRACE_EVERYTHING;
+	}
+
+private:
+	CBaseEntity *m_pPlayerIgnore;
 };
 
 extern CHelpers *pHelpers;
