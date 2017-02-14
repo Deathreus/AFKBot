@@ -151,8 +151,10 @@ class ExtensionConfig(object):
 
     # Finish up.
     cxx.includes += [
+      os.path.join(self.sm_root, 'core'),
       os.path.join(self.sm_root, 'public'),
       os.path.join(self.sm_root, 'public', 'extensions'),
+      os.path.join(self.sm_root, 'public', 'CDetour'),
 	  os.path.join(self.sm_root, 'sourcepawn'),
       os.path.join(self.sm_root, 'sourcepawn', 'include'),
     ]
