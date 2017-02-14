@@ -253,7 +253,6 @@ bool CNavMeshNavigator::WorkRoute(Vector vFrom, Vector vTo, bool *bFail, bool bR
 			BeliefLoad();
 
 		*bFail = false;
-
 		m_bWorkingRoute = true;
 
 		if (goal != NULL)
@@ -347,8 +346,13 @@ bool CNavMeshNavigator::WorkRoute(Vector vFrom, Vector vTo, bool *bFail, bool bR
 		}
 #endif
 
-
+		*bFail = false;
+		m_bWorkingRoute = false;
+		return true;
 	}
+
+	WorkRoute(vFrom, vTo, bFail, true, bNoInterruptions, goal, iConditions, iDangerId);
+	return false;
 }
 
 INavMeshArea *CNavMeshNavigator::ChooseBestFromBelief(IList<INavMeshArea*> *goals, bool bHighDanger, int iSearchFlags, int iTeam)
@@ -513,7 +517,7 @@ INavMeshArea *CNavMeshNavigator::ChooseBestFromBelief(IList<INavMeshArea*> *goal
 	}
 
 	if (ret == NULL)
-		ret = goals->At(RandomInt(0, goals->Size()));
+		ret = goals->At(RandomInt(0, goals->Size()-1));
 
 	return ret;
 }
@@ -572,7 +576,7 @@ INavMeshArea *CNavMeshNavigator::ChooseBestFromBeliefBetweenAreas(IList<INavMesh
 	}
 
 	if (ret == NULL)
-		ret = goals->At(RandomInt(0, goals->Size()));
+		ret = goals->At(RandomInt(0, goals->Size()-1));
 
 	return ret;
 }
@@ -717,12 +721,14 @@ void CNavMeshNavigator::UpdatePosition()
 	m_pBot->SetMoveTo(vWptOrigin + m_vOffset);
 
 	CalculateAimVector(&qAim);
-	AngleVectors(qAim, &vAim);
-	if (vAim.IsValid())
+	if (qAim.IsValid())
+	{
+		AngleVectors(qAim, &vAim);
 		m_pBot->SetAiming(vWptOrigin + (vAim * 1024));
+	}
 
 	/*if ( !m_pBot->HasEnemy() && (fBelief >= (fPrevBelief+10.0f)) )
-		m_pBot->setLookAtTask(LOOK_LAST_ENEMY);
+		m_pBot->SetLookAtTask(LOOK_LAST_ENEMY);
 	else if ( !m_pBot->HasEnemy() && (fPrevBelief > (fBelief+10.0f)) )
 	{
 		m_pBot->SetLookVector(pWaypoint->GetOrigin() + pWaypoint->ApplyRadius());
@@ -855,6 +861,79 @@ bool CNavMeshNavigator::CalculateAimVector(QAngle *qAim)
 
 	qAim->Invalidate();
 	return false;
+}
+
+INavMeshArea *CNavMeshNavigator::RandomGoalNearestArea(unsigned int iFlags, int iTeam, int iArea, bool bForceArea, CBot *pBot, bool bHighDanger, Vector *origin, int iIgnore, bool bIgnoreBelief, int iWpt)
+{
+	static unsigned int iSize;
+	INavMeshArea *pArea;
+
+	IList<INavMeshArea*> *goals = new CList<INavMeshArea*>();
+
+	IList<INavMeshArea*> *areas = m_pNavMesh->GetAreas();
+	iSize = areas->Size();
+
+	for (unsigned int i = 1; i < iSize; i++)
+	{
+		if (i == iIgnore)
+			continue;
+
+		pArea = areas->At(i);
+		if ((iFlags == -1) || (pArea->GetFlags() & iFlags) == iFlags)
+		{
+			goals->Push(pArea);
+		}
+	}
+
+	pArea = NULL;
+
+	if (goals->Size() > 0)
+	{
+		if (pBot)
+		{
+			INavMeshNavigator *pNav = (INavMeshNavigator *)pBot->GetNavigator();
+			pArea = pNav->ChooseBestFromBeliefBetweenAreas(goals, bHighDanger, bIgnoreBelief);
+		}
+		else
+			pArea = goals->At(RandomInt(1, goals->Size()-1));
+	}
+
+	return pArea;
+}
+
+INavMeshArea *CNavMeshNavigator::RandomGoalBetweenAreas(unsigned int iFlags, int iTeam, int iArea, bool bForceArea, CBot *pBot, bool bHighDanger, Vector *org1, Vector *org2, bool bIgnoreBelief, int iWpt1, int iWpt2)
+{
+	static unsigned int iSize;
+	INavMeshArea *pArea;
+
+	IList<INavMeshArea*> *goals = new CList<INavMeshArea*>();
+
+	IList<INavMeshArea*> *areas = m_pNavMesh->GetAreas();
+	iSize = areas->Size();
+
+	for (unsigned int i = 1; i < iSize; i++)
+	{
+		pArea = areas->At(i);
+		if ((iFlags == -1) || (pArea->GetFlags() & iFlags) == iFlags)
+		{
+			goals->Push(pArea);
+		}
+	}
+
+	pArea = NULL;
+
+	if (goals->Size() > 0)
+	{
+		if (pBot)
+		{
+			INavMeshNavigator *pNav = (INavMeshNavigator *)pBot->GetNavigator();
+			pArea = pNav->ChooseBestFromBeliefBetweenAreas(goals, bHighDanger, bIgnoreBelief);
+		}
+		else
+			pArea = goals->At(RandomInt(1, goals->Size()-1));
+	}
+
+	return pArea;
 }
 
 template< typename CostFunctor >

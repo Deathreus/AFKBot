@@ -139,6 +139,9 @@ public:
 
 	bool CalculateAimVector(QAngle *vAim);
 
+	static INavMeshArea *RandomGoalNearestArea(unsigned int iFlags, int iTeam, int iArea, bool bForceArea, CBot *pBot, bool bHighDanger, Vector *origin, int iIgnore, bool bIgnoreBelief, int iWpt);
+	static INavMeshArea *RandomGoalBetweenAreas(unsigned int iFlags, int iTeam, int iArea, bool bForceArea, CBot *pBot, bool bHighDanger, Vector *org1, Vector *org2, bool bIgnoreBelief, int iWpt1, int iWpt2);
+
 	template< typename CostFunctor >
 	bool BuildPath(INavMeshArea *startArea, INavMeshArea *goalArea, const Vector *vGoalPos, CostFunctor &func, INavMeshArea **closestArea = NULL, float fMaxPathLength = 0.0f, float fMaxAng = 0.0f, bool bIgnoreBlockedNav = false);
 
