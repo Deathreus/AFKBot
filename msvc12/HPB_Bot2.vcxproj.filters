@@ -12,18 +12,6 @@
     <Filter Include="Extension">
       <UniqueIdentifier>{e156eb5b-3411-428c-915a-392e6eeaa877}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Experimental">
-      <UniqueIdentifier>{565302e1-01c6-4f47-af60-dd7124314ccf}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="NavLoader">
-      <UniqueIdentifier>{476323a6-5875-484c-9020-854a8c95a5e4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="NavLoader\Header Files">
-      <UniqueIdentifier>{0cb56c17-5dbc-4b6e-9cac-9ab0cba26b27}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="NavLoader\Source Files">
-      <UniqueIdentifier>{a79ca03e-1e5d-4fa7-81f9-bd17c708122a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="CEntity">
       <UniqueIdentifier>{57167119-e9eb-4c4c-a20d-c5178e3ee60c}</UniqueIdentifier>
     </Filter>
@@ -32,6 +20,9 @@
     </Filter>
     <Filter Include="CEntity\Source Files">
       <UniqueIdentifier>{351f1f9d-3b28-416a-bdfe-d1483fd3936e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CDetour">
+      <UniqueIdentifier>{4bdece00-fe58-44ad-9141-8f9a194b7596}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -110,53 +101,11 @@
     <ClCompile Include="..\rcbot2\bot_gamerules.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\rcbot2\bot_navmesh.cpp">
-      <Filter>Experimental</Filter>
-    </ClCompile>
     <ClCompile Include="..\natives.cpp">
       <Filter>Extension</Filter>
     </ClCompile>
     <ClCompile Include="..\rcbot2\bot_base.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\NavMesh\NavMesh.cpp">
-      <Filter>NavLoader\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\NavMesh\NavMeshArea.cpp">
-      <Filter>NavLoader\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\NavMesh\NavMeshConnection.cpp">
-      <Filter>NavLoader\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\NavMesh\NavMeshCornerLightIntensity.cpp">
-      <Filter>NavLoader\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\NavMesh\NavMeshEncounterPath.cpp">
-      <Filter>NavLoader\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\NavMesh\NavMeshEncounterSpot.cpp">
-      <Filter>NavLoader\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\NavMesh\NavMeshGrid.cpp">
-      <Filter>NavLoader\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\NavMesh\NavMeshHidingSpot.cpp">
-      <Filter>NavLoader\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\NavMesh\NavMeshLadder.cpp">
-      <Filter>NavLoader\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\NavMesh\NavMeshLadderConnection.cpp">
-      <Filter>NavLoader\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\NavMesh\NavMeshLoader.cpp">
-      <Filter>NavLoader\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\NavMesh\NavMeshPlace.cpp">
-      <Filter>NavLoader\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\NavMesh\NavMeshVisibleArea.cpp">
-      <Filter>NavLoader\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\CEntity\rtti.cpp">
       <Filter>CEntity\Source Files</Filter>
@@ -181,6 +130,15 @@
     </ClCompile>
     <ClCompile Include="..\CEntity\CRecipientFilter.cpp">
       <Filter>CEntity\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rcbot2\bot_commands.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\AlliedModders\sourcemod\public\CDetour\detours.cpp">
+      <Filter>CDetour</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\..\AlliedModders\sourcemod\public\asm\asm.c">
+      <Filter>CDetour</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -283,104 +241,8 @@
     <ClInclude Include="..\rcbot2\bot_gamerules.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\rcbot2\bot_navmesh.h">
-      <Filter>Experimental</Filter>
-    </ClInclude>
     <ClInclude Include="..\rcbot2\bot_base.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\public\IList.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\public\INavMesh.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\public\INavMeshArea.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\public\INavMeshConnection.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\public\INavMeshCornerLightIntensity.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\public\INavMeshEncounterPath.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\public\INavMeshEncounterSpot.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\public\INavMeshGrid.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\public\INavMeshHidingSpot.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\public\INavMeshLadder.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\public\INavMeshLadderConnection.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\public\INavMeshLoader.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\public\INavMeshPlace.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\public\INavMeshVisibleArea.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\List.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\NavCornerType.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\NavDirType.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\NavLadderDirType.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\NavMesh.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\NavMeshArea.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\NavMeshConnection.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\NavMeshCornerLightIntensity.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\NavMeshEncounterPath.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\NavMeshEncounterSpot.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\NavMeshGrid.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\NavMeshHidingSpot.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\NavMeshLadder.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\NavMeshLadderConnection.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\NavMeshLoader.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\NavMeshPlace.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\NavMeshVisibleArea.h">
-      <Filter>NavLoader\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\CEntity\CEntity.h">
       <Filter>CEntity\Header Files</Filter>
@@ -411,6 +273,18 @@
     </ClInclude>
     <ClInclude Include="..\CEntity\util.h">
       <Filter>CEntity\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_commands.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\AlliedModders\sourcemod\public\CDetour\detourhelpers.h">
+      <Filter>CDetour</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\AlliedModders\sourcemod\public\CDetour\detours.h">
+      <Filter>CDetour</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\..\AlliedModders\sourcemod\public\asm\asm.h">
+      <Filter>CDetour</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

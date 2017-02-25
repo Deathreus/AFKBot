@@ -569,12 +569,12 @@ public:
 		return g_GetProps[GETPROP_SENTRYGUN_PLACING].GetBool(pSentry, false);
 	}
 
-	inline static bool TF2_MVMMinPlayersToReady()
+	inline static bool TF2_MvMMinPlayersToReady()
 	{
 		return CGameRulesObject::GameRules_GetProp("m_bHaveMinPlayersToEnableReady") == 1;
 	}
 
-	inline static bool TF2_MVMIsPlayerReady(int client)
+	inline static bool TF2_MvMIsPlayerReady(int client)
 	{
 		return CGameRulesObject::GameRules_GetProp("m_bPlayerReady", 4, client) == 1;
 	}

@@ -162,7 +162,7 @@
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>..;..\sdk;..\NavMesh;..\CEntity;$(SOURCEMOD)\public;$(SOURCEMOD)\public\extensions;$(SOURCEMOD)\public\CDetour;$(SOURCEMOD)\sourcepawn\include;$(HL2SDKOBVALVE)\public;$(HL2SDKOBVALVE)\public\mathlib;$(HL2SDKOBVALVE)\public\engine;$(HL2SDKOBVALVE)\public\tier0;$(HL2SDKOBVALVE)\public\tier1;$(HL2SDKOBVALVE)\public\toolframework;$(HL2SDKOBVALVE)\public\SoundEmitterSystem;$(HL2SDKOBVALVE)\game\shared;$(HL2SDKOBVALVE)\game\server;$(HL2SDKOBVALVE)\public\game\server;$(MMSOURCE)\core;$(MMSOURCE)\core\sourcehook;$(MMSOURCE)\public;%(AdditionIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..;..\sdk;..\NavMesh;..\CEntity;$(SOURCEMOD)\core;$(SOURCEMOD)\public;$(SOURCEMOD)\public\extensions;$(SOURCEMOD)\public\CDetour;$(SOURCEMOD)\sourcepawn\include;$(HL2SDKOBVALVE)\public;$(HL2SDKOBVALVE)\public\mathlib;$(HL2SDKOBVALVE)\public\engine;$(HL2SDKOBVALVE)\public\tier0;$(HL2SDKOBVALVE)\public\tier1;$(HL2SDKOBVALVE)\public\toolframework;$(HL2SDKOBVALVE)\public\SoundEmitterSystem;$(HL2SDKOBVALVE)\game\shared;$(HL2SDKOBVALVE)\game\server;$(HL2SDKOBVALVE)\public\game\server;$(MMSOURCE)\core;$(MMSOURCE)\core\sourcehook;$(MMSOURCE)\public;%(AdditionIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>SOURCE_ENGINE=11;WIN32;NDEBUG;_WINDOWS;_USRDLL;SDK_EXPORTS;_CRT_SECURE_NO_DEPRECATE;SOURCEMOD_BUILD;ORANGEBOX_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -278,6 +278,8 @@ copy "$(ProjectDir)\update.txt" "C:\Program Files (x86)\Steam\steamapps\paul.mur
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\..\..\AlliedModders\sourcemod\public\asm\asm.c" />
+    <ClCompile Include="..\..\..\..\..\..\AlliedModders\sourcemod\public\CDetour\detours.cpp" />
     <ClCompile Include="..\CEntity\CEntity.cpp" />
     <ClCompile Include="..\CEntity\CEntityBase.cpp" />
     <ClCompile Include="..\CEntity\CEntityManager.cpp" />
@@ -288,21 +290,9 @@ copy "$(ProjectDir)\update.txt" "C:\Program Files (x86)\Steam\steamapps\paul.mur
     <ClCompile Include="..\CEntity\util.cpp" />
     <ClCompile Include="..\extension.cpp" />
     <ClCompile Include="..\natives.cpp" />
-    <ClCompile Include="..\NavMesh\NavMesh.cpp" />
-    <ClCompile Include="..\NavMesh\NavMeshArea.cpp" />
-    <ClCompile Include="..\NavMesh\NavMeshConnection.cpp" />
-    <ClCompile Include="..\NavMesh\NavMeshCornerLightIntensity.cpp" />
-    <ClCompile Include="..\NavMesh\NavMeshEncounterPath.cpp" />
-    <ClCompile Include="..\NavMesh\NavMeshEncounterSpot.cpp" />
-    <ClCompile Include="..\NavMesh\NavMeshGrid.cpp" />
-    <ClCompile Include="..\NavMesh\NavMeshHidingSpot.cpp" />
-    <ClCompile Include="..\NavMesh\NavMeshLadder.cpp" />
-    <ClCompile Include="..\NavMesh\NavMeshLadderConnection.cpp" />
-    <ClCompile Include="..\NavMesh\NavMeshLoader.cpp" />
-    <ClCompile Include="..\NavMesh\NavMeshPlace.cpp" />
-    <ClCompile Include="..\NavMesh\NavMeshVisibleArea.cpp" />
     <ClCompile Include="..\rcbot2\bot_base.cpp" />
     <ClCompile Include="..\rcbot2\bot_buttons.cpp" />
+    <ClCompile Include="..\rcbot2\bot_commands.cpp" />
     <ClCompile Include="..\rcbot2\bot_configfile.cpp" />
     <ClCompile Include="..\rcbot2\bot_events.cpp" />
     <ClCompile Include="..\rcbot2\bot_fortress.cpp" />
@@ -310,7 +300,6 @@ copy "$(ProjectDir)\update.txt" "C:\Program Files (x86)\Steam\steamapps\paul.mur
     <ClCompile Include="..\rcbot2\bot_getprop.cpp" />
     <ClCompile Include="..\rcbot2\bot_globals.cpp" />
     <ClCompile Include="..\rcbot2\bot_mods.cpp" />
-    <ClCompile Include="..\rcbot2\bot_navmesh.cpp" />
     <ClCompile Include="..\rcbot2\bot_profile.cpp" />
     <ClCompile Include="..\rcbot2\bot_schedule.cpp" />
     <ClCompile Include="..\rcbot2\bot_squads.cpp" />
@@ -329,6 +318,9 @@ copy "$(ProjectDir)\update.txt" "C:\Program Files (x86)\Steam\steamapps\paul.mur
     <ClCompile Include="..\sdk\smsdk_ext.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\..\..\AlliedModders\sourcemod\public\asm\asm.h" />
+    <ClInclude Include="..\..\..\..\..\..\AlliedModders\sourcemod\public\CDetour\detourhelpers.h" />
+    <ClInclude Include="..\..\..\..\..\..\AlliedModders\sourcemod\public\CDetour\detours.h" />
     <ClInclude Include="..\CEntity\CEntity.h" />
     <ClInclude Include="..\CEntity\CEntityBase.h" />
     <ClInclude Include="..\CEntity\CEntityManager.h" />
@@ -340,40 +332,10 @@ copy "$(ProjectDir)\update.txt" "C:\Program Files (x86)\Steam\steamapps\paul.mur
     <ClInclude Include="..\CEntity\rtti.h" />
     <ClInclude Include="..\CEntity\util.h" />
     <ClInclude Include="..\extension.h" />
-    <ClInclude Include="..\NavMesh\List.h" />
-    <ClInclude Include="..\NavMesh\NavCornerType.h" />
-    <ClInclude Include="..\NavMesh\NavDirType.h" />
-    <ClInclude Include="..\NavMesh\NavLadderDirType.h" />
-    <ClInclude Include="..\NavMesh\NavMesh.h" />
-    <ClInclude Include="..\NavMesh\NavMeshArea.h" />
-    <ClInclude Include="..\NavMesh\NavMeshConnection.h" />
-    <ClInclude Include="..\NavMesh\NavMeshCornerLightIntensity.h" />
-    <ClInclude Include="..\NavMesh\NavMeshEncounterPath.h" />
-    <ClInclude Include="..\NavMesh\NavMeshEncounterSpot.h" />
-    <ClInclude Include="..\NavMesh\NavMeshGrid.h" />
-    <ClInclude Include="..\NavMesh\NavMeshHidingSpot.h" />
-    <ClInclude Include="..\NavMesh\NavMeshLadder.h" />
-    <ClInclude Include="..\NavMesh\NavMeshLadderConnection.h" />
-    <ClInclude Include="..\NavMesh\NavMeshLoader.h" />
-    <ClInclude Include="..\NavMesh\NavMeshPlace.h" />
-    <ClInclude Include="..\NavMesh\NavMeshVisibleArea.h" />
-    <ClInclude Include="..\NavMesh\public\IList.h" />
-    <ClInclude Include="..\NavMesh\public\INavMesh.h" />
-    <ClInclude Include="..\NavMesh\public\INavMeshArea.h" />
-    <ClInclude Include="..\NavMesh\public\INavMeshConnection.h" />
-    <ClInclude Include="..\NavMesh\public\INavMeshCornerLightIntensity.h" />
-    <ClInclude Include="..\NavMesh\public\INavMeshEncounterPath.h" />
-    <ClInclude Include="..\NavMesh\public\INavMeshEncounterSpot.h" />
-    <ClInclude Include="..\NavMesh\public\INavMeshGrid.h" />
-    <ClInclude Include="..\NavMesh\public\INavMeshHidingSpot.h" />
-    <ClInclude Include="..\NavMesh\public\INavMeshLadder.h" />
-    <ClInclude Include="..\NavMesh\public\INavMeshLadderConnection.h" />
-    <ClInclude Include="..\NavMesh\public\INavMeshLoader.h" />
-    <ClInclude Include="..\NavMesh\public\INavMeshPlace.h" />
-    <ClInclude Include="..\NavMesh\public\INavMeshVisibleArea.h" />
     <ClInclude Include="..\rcbot2\bot_base.h" />
     <ClInclude Include="..\rcbot2\bot_belief.h" />
     <ClInclude Include="..\rcbot2\bot_buttons.h" />
+    <ClInclude Include="..\rcbot2\bot_commands.h" />
     <ClInclude Include="..\rcbot2\bot_configfile.h" />
     <ClInclude Include="..\rcbot2\bot_const.h" />
     <ClInclude Include="..\rcbot2\bot_cvars.h" />
@@ -387,7 +349,6 @@ copy "$(ProjectDir)\update.txt" "C:\Program Files (x86)\Steam\steamapps\paul.mur
     <ClInclude Include="..\rcbot2\bot_globals.h" />
     <ClInclude Include="..\rcbot2\bot_mods.h" />
     <ClInclude Include="..\rcbot2\bot_navigator.h" />
-    <ClInclude Include="..\rcbot2\bot_navmesh.h" />
     <ClInclude Include="..\rcbot2\bot_perceptron.h" />
     <ClInclude Include="..\rcbot2\bot_profile.h" />
     <ClInclude Include="..\rcbot2\bot_schedule.h" />
