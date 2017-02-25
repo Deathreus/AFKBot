@@ -1313,6 +1313,35 @@ void CBotFortress::CurrentlyDead()
 	m_fUpdateClass = engine->Time() + 0.1f;
 }
 
+typedef struct timerdata {
+	CBot *bot = NULL;
+	int readycount = 0;
+}timerdata_t;
+
+class CReadyTimer : public ITimedEvent
+{
+	ResultType OnTimer(ITimer *pTimer, void *pData)
+	{
+		timerdata_t *pTData = (timerdata_t *)pData;
+		CBotTF2 *pBot = (CBotTF2 *)pTData->bot;
+		int readycount = pTData->readycount;
+
+		if (readycount > 0)
+			pBot->ReadyUp(true);
+		else
+			pBot->ReadyUp(false);
+
+		return Pl_Continue;
+	}
+
+	void OnTimerEnd(ITimer *pTimer, void *pData)
+	{
+		delete pData;
+		return;
+	}
+};
+static CReadyTimer m_ReadyTimer;
+
 void CBotFortress::ModThink()
 {
 	// get class
@@ -1405,40 +1434,62 @@ void CBotFortress::ModThink()
 		}
 	}
 
-	/*if (CTeamFortress2Mod::IsMapType(TF_MAP_MVM))
+	if (CTeamFortress2Mod::IsMapType(TF_MAP_MVM))
 	{
-		if (CClassInterface::TF2_MVMMinPlayersToReady())
+		if (CClassInterface::TF2_MvMMinPlayersToReady())
 		{
 			int readycount = 0;
 			for (short int i = 1; i < MAX_PLAYERS; i++)
 			{
+				CBot *pBot = CBots::GetBotPointer(INDEXENT(i));
+				if (pBot->InUse())
+					continue;
+
 				IGamePlayer *pClient = playerhelpers->GetGamePlayer(i);
 				if (pClient && pClient->IsInGame())
 				{
-					IPlayerInfo *pl = pClient->GetPlayerInfo();
-					if (pl && !pl->IsFakeClient())
+					IPlayerInfo *pPI = pClient->GetPlayerInfo();
+					if (pPI && !pPI->IsFakeClient())
 					{
-						if (CClassInterface::TF2_MVMIsPlayerReady(i))
+						if (CClassInterface::TF2_MvMIsPlayerReady(i))
 							readycount++;
 					}
 				}
 			}
 
-			for (short int i = 0; i < MAX_PLAYERS; i++)
+			for (short int i = 1; i < MAX_PLAYERS; i++)
 			{
-				CBot *pBot = CBots::Get(i);
+				CBot *pBot = CBots::GetBotPointer(INDEXENT(i));
 				if (pBot->InUse())
 				{
-					if (readycount > 0)
+					CBotTF2 *pTFBot = (CBotTF2 *)pBot;
+					if (!pTFBot->DidReadyUp())
+					{
+						timerdata_t *pTData = new timerdata_t;
+						pTData->bot = pBot;
+						pTData->readycount = readycount;
+
+						ITimer *pTimer = timersys->CreateTimer(&m_ReadyTimer,
+							RandomFloat(1.0f, 3.0f),
+							pTData,
+							TIMER_FLAG_NO_MAPCHANGE);
+						timersys->FireTimerOnce(pTimer, false);
+					}
+					else
+					{
+						if (readycount <= 0)
+							pTFBot->ReadyUp(false);
+					}
+
+					/*if (readycount > 0)
 						helpers->ClientCommand(pBot->GetEdict(), "tournament_player_readystate 1");
 					else
-						helpers->ClientCommand(pBot->GetEdict(), "tournament_player_readystate 0");
+						helpers->ClientCommand(pBot->GetEdict(), "tournament_player_readystate 0");*/
 				}
 			}
 		}
-	}*/
+	}
 }
-
 
 bool CBotFortress::IsTeleporterUseful(edict_t *pTele)
 {
@@ -6475,14 +6526,11 @@ void CBotTF2::ModAim(edict_t *pEntity, Vector &v_origin, Vector *v_desired_offse
 			{
 				extern ConVar bot_heavyaimoffset;
 
-				Vector vForward;
 				Vector vRight;
-				Vector vUp;
-
 				QAngle eyes = CBotGlobals::PlayerAngles(pEntity);
 
 				// in fov? Check angle to edict
-				AngleVectors(eyes, &vForward, &vRight, &vUp);
+				AngleVectors(eyes, NULL, &vRight, NULL);
 
 				*v_desired_offset = *v_desired_offset + (((vRight * 24) - Vector(0, 0, 24))* bot_heavyaimoffset.GetFloat());
 			}
@@ -7561,4 +7609,18 @@ bool CBotFortress::GetIgnoreBox(Vector *vLoc, float *fSize)
 	}
 
 	return false;
+}
+
+void CBotTF2::ReadyUp(bool bReady)
+{
+	if (bReady)
+	{
+		m_bMvMReady = true;
+		helpers->ClientCommand(this->GetEdict(), "tournament_player_readystate 1");
+	}
+	else
+	{
+		m_bMvMReady = false;
+		helpers->ClientCommand(this->GetEdict(), "tournament_player_readystate 0");
+	}
 }
