@@ -44,6 +44,7 @@
 #include "vstdlib/vstdlib.h"
 #include "vstdlib/random.h" // for random functions
 #include "iservernetworkable.h" // may come in handy
+#include <inetchannel.h>
 
 #include "bot_base.h"
 #include "bot_schedule.h"
@@ -2325,14 +2326,11 @@ void CBot::ModAim(edict_t *pEntity, Vector &v_origin, Vector *v_desired_offset, 
 	{
 		vel = (enemyvel - myvel); // relative velocity
 
-		vel = vel * fVelFactor;//0.003125f;
-
-		//fVelocityFactor = exp(-1.0f + ((vel.Length() * 0.003125f)*2)); // divide by max speed
+		vel = vel * fVelFactor;
 	}
 	else
 	{
 		vel = Vector(0.5f, 0.5f, 0.5f);
-		//fVelocityFactor = 1.0f;
 	}
 
 	// velocity
@@ -2343,6 +2341,12 @@ void CBot::ModAim(edict_t *pEntity, Vector &v_origin, Vector *v_desired_offset, 
 	// target
 	v_desired_offset->z += (fHeadOffset * m_pProfile->m_fAimSkill) + (RandomFloat(0.0, 1.0f - m_pProfile->m_fAimSkill)*fHeadOffset);
 
+	INetChannelInfo *pNetInfo = engine->GetPlayerNetInfo(ENTINDEX(m_pEdict));
+	float latency = pNetInfo->GetLatency(FLOW_INCOMING) + pNetInfo->GetLatency(FLOW_OUTGOING);
+
+	v_desired_offset->x -= (enemyvel.x * latency);
+	v_desired_offset->y -= (enemyvel.x * latency);
+	v_desired_offset->z -= (enemyvel.z * latency);
 }
 
 void CBot::GrenadeThrown()
