@@ -208,8 +208,6 @@ void AFKBot::OnCoreMapEnd()
 	CWaypoints::Init();
 	CWaypointDistances::Save();
 	CBotGlobals::SetMapRunning(false);
-	//CNavMeshNavigator::FreeMemory();
-	CGameRulesObject::FreeMemory();
 	CBots::FreeMapMemory();
 	CBotSquads::FreeMemory();
 	CBotEvents::FreeMemory();
@@ -478,8 +476,6 @@ void AFKBot::SDK_OnUnload()
 	CWaypointTypes::FreeMemory();
 	CBotProfiles::DeleteProfiles();
 	CWeapons::FreeMemory();
-	CGameRulesObject::FreeMemory();
-	//CNavMeshNavigator::FreeMemory();
 }
 
 bool AFKBot::SDK_OnMetamodUnload(char *error, size_t maxlen)

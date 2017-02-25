@@ -44,13 +44,13 @@ bot_util_t CRCBotTF2UtilFile::m_fUtils[UTIL_TYPE_MAX][BOT_UTIL_MAX][9];
 void CBotConfigFile::Load()
 {
 	char filePath[PLATFORM_MAX_PATH];
-	smutils->BuildPath(Path_SM, filePath, sizeof(filePath), "data\\afkbot\\config\\config.%s", BOT_CONFIG_EXTENSION);
+	smutils->BuildPath(Path_SM, filePath, sizeof(filePath), "data\\afkbot\\config\\config.cfg");
 
-	char error[64];
+	char error[128];
 	IBotConfigSMC *config = new CBotConfigSMC();
 	if (textparsers->ParseSMCFile(filePath, config, NULL, error, sizeof(error)) != SMCError_Okay)
 	{
-		smutils->LogError(myself, "[SM] Error reading data/afkbot/config/config.%s: %s", BOT_CONFIG_EXTENSION, error);
+		smutils->LogError(myself, "[SM] Error reading data/afkbot/config/config.cfg: %s", error);
 		delete config;
 	}
 }

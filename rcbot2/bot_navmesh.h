@@ -88,7 +88,7 @@ public:
 	}
 
 	static bool Init(char *error, size_t maxlen);
-	static void FreeMemory();
+	void FreeAllMemory();
 	void FreeMapMemory();
 
 	bool WorkRoute(Vector vFrom, Vector vTo, bool *bFail, bool bRestart = true, bool bNoInterruptions = false, INavMeshArea *goal = NULL, int iConditions = 0, int iDangerId = -1);

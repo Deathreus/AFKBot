@@ -1994,6 +1994,8 @@ CFindPathTask::CFindPathTask(edict_t *pEdict)
 void CFindPathTask::Execute(CBot *pBot, CBotSchedule *pSchedule)
 {
 	bool bFail = false;
+	static IBotNavigator *pNav;
+	pNav = pBot->GetNavigator();
 
 	if (m_LookTask == LOOK_NOISE)
 		pBot->WantToListen(false); // vector already Set before find path task
@@ -2018,8 +2020,6 @@ void CFindPathTask::Execute(CBot *pBot, CBotSchedule *pSchedule)
 
 	if ((m_iInt == 0) || (m_iInt == 1))
 	{
-		IBotNavigator *pNav = pBot->GetNavigator();
-
 		pBot->m_fWaypointStuckTime = 0;
 
 		if (pNav->WorkRoute(pBot->GetOrigin(),
@@ -2047,7 +2047,7 @@ void CFindPathTask::Execute(CBot *pBot, CBotSchedule *pSchedule)
 		if (pBot->m_fWaypointStuckTime == 0)
 			pBot->m_fWaypointStuckTime = engine->Time() + RandomFloat(5.0f, 10.0f);
 
-		if (!pBot->GetNavigator()->HasNextPoint())
+		if (!pNav->HasNextPoint())
 		{
 			Complete(); // reached goal
 		}
@@ -2056,7 +2056,7 @@ void CFindPathTask::Execute(CBot *pBot, CBotSchedule *pSchedule)
 			if (pBot->MoveFailed())
 			{
 				Fail();
-				pBot->GetNavigator()->FailMove();
+				pNav->FailMove();
 			}
 
 			if (m_pEdict)
@@ -2073,7 +2073,7 @@ void CFindPathTask::Execute(CBot *pBot, CBotSchedule *pSchedule)
 					}
 					else if (!m_flags.bits.m_bDontGoToEdict && pBot->IsVisible(m_pEdict))
 					{
-						if (pBot->DistanceFrom(m_pEdict) < pBot->DistanceFrom(pBot->GetNavigator()->GetNextPoint()))
+						if (pBot->DistanceFrom(m_pEdict) < pBot->DistanceFrom(pNav->GetNextPoint()))
 							Complete();
 					}
 					else if (m_flags.bits.m_bCompleteOutOfRangeEdict && (pBot->DistanceFrom(m_pEdict) > m_fRange))
