@@ -45,6 +45,16 @@ public:
 	virtual bool IsBlocked() = 0;
 	virtual void SetBlocked(bool blocked) = 0;
 
+	virtual Vector GetExtentLow() = 0;
+	virtual Vector GetExtentHigh() = 0;
+	virtual Vector GetCenter() = 0;
+
+	virtual float GetZ(const Vector &vPos) = 0;
+	virtual float GetZ(float fX, float fY) = 0;
+
+	virtual bool IsOverlapping(const Vector &vPos, float fTolerance = 120.0f) = 0;
+	virtual bool IsOverlapping(INavMeshArea *toArea) = 0;
+
 	virtual void SetTotalCost(float total) = 0;
 	virtual void SetCostSoFar(float cost) = 0;
 	virtual float GetTotalCost() = 0;

@@ -61,6 +61,16 @@ public:
 	bool IsBlocked();
 	void SetBlocked(bool blocked);
 
+	Vector GetExtentLow();
+	Vector GetExtentHigh();
+	Vector GetCenter();
+
+	float GetZ(const Vector &vPos);
+	float GetZ(float fX, float fY);
+
+	bool IsOverlapping(const Vector &vPos, float fTolerance = 0.0f);
+	bool IsOverlapping(INavMeshArea *toArea);
+
 	void SetTotalCost(float total);
 	void SetCostSoFar(float cost);
 	float GetTotalCost();
