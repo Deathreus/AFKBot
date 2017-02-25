@@ -31,10 +31,10 @@ public:
 	int WorldToGridX(float fWX);
 	int WorldToGridY(float fWY);
 
+	IList<INavMeshArea*> *GetAreasOnGrid(int x, int y);
+
 	INavMeshArea *GetArea(const Vector &vPos, float fBeneathLimit = 120.0f);
 	INavMeshArea *GetAreaByID(const unsigned int iAreaIndex);
-
-	IList<INavMeshArea*> *GetAreasOnGrid(int x, int y);
 
 private:
 	unsigned int magicNumber;

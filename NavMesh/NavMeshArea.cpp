@@ -1,7 +1,6 @@
 #include "NavMeshArea.h"
 #include "vector.h"
 
-#define NULL 0
 CNavMeshArea::CNavMeshArea(unsigned int id, unsigned int flags, unsigned int placeID,
 	float nwExtentX, float nwExtentY, float nwExtentZ,
 	float seExtentX, float seExtentY, float seExtentZ,
@@ -33,16 +32,16 @@ CNavMeshArea::CNavMeshArea(unsigned int id, unsigned int flags, unsigned int pla
 	this->earliestOccupyTimeSecondTeam = earliestOccupyTimeSecondTeam;
 	this->unk01 = unk01;
 	this->blocked = false;
-	this->m_Parent = NULL;
-	this->m_NextOpen = NULL;
-	this->m_PrevOpen = NULL;
+	this->m_Parent = 0;
+	this->m_NextOpen = 0;
+	this->m_PrevOpen = 0;
 	this->m_fCostSoFar = 0.0f;
 	this->m_fTotalCost = 0.0f;
 	this->m_fLengthSoFar = 0.0f;
 	this->m_iTraverse = NAV_TRAVERSE_COUNT;
 	this->m_iMarker = 0;
 	this->m_iOpenMarker = 0;
-	this->m_NearMarker = NULL;
+	this->m_NearMarker = 0;
 }
 
 CNavMeshArea::~CNavMeshArea() {}
@@ -230,15 +229,15 @@ void CNavMeshArea::AddToOpenList()
 {
 	this->m_iOpenMarker = m_iMasterMarker;
 
-	if (m_OpenList == NULL)
+	if (!m_OpenList)
 	{
 		m_OpenList = this;
-		this->SetPrevOpen(NULL);
-		this->SetNextOpen(NULL);
+		this->SetPrevOpen(0);
+		this->SetNextOpen(0);
 		return;
 	}
 
-	INavMeshArea *area, *last = NULL;
+	INavMeshArea *area, *last = 0;
 	for (area = m_OpenList; area; area = area->GetNextOpen())
 	{
 		if (this->GetTotalCost() < area->GetTotalCost())
@@ -265,7 +264,7 @@ void CNavMeshArea::AddToOpenList()
 		last->SetNextOpen(this);
 
 		this->SetPrevOpen(last);
-		this->SetNextOpen(NULL);
+		this->SetNextOpen(0);
 	}
 }
 
@@ -343,7 +342,7 @@ void CNavMeshArea::ClearSearchList()
 {
 	CNavMeshArea::MakeNewMarker();
 
-	m_OpenList = NULL;
+	m_OpenList = 0;
 }
 
 INavMeshArea *CNavMeshArea::GetNextOpen() { return this->m_NextOpen; }

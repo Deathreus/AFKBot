@@ -22,9 +22,9 @@ public:
 	virtual INavMeshGrid *GetGrid() = 0;
 	virtual int WorldToGridX(float fWX) = 0;
 	virtual int WorldToGridY(float FWY) = 0;
+	virtual IList<INavMeshArea*> *GetAreasOnGrid(int x, int y) = 0;
 	virtual INavMeshArea *GetArea(const Vector &vPos, float fBeneathLimit = 120.0f) = 0;
 	virtual INavMeshArea *GetAreaByID(const unsigned int iAreaIndex) = 0;
-	virtual IList<INavMeshArea*> *GetAreasOnGrid(int x, int y);
 };
 
 #endif

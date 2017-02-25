@@ -9,6 +9,7 @@
 #include "INavMeshCornerLightIntensity.h"
 #include "INavMeshVisibleArea.h"
 
+class Vector;
 
 class INavMeshArea 
 {
