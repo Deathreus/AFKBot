@@ -35,7 +35,8 @@
 #define __BOT_GLOBALS_H__
 
 #include "bot_mods.h"
-#include "bot_const.h" // for Mod id
+#include "bot_const.h"
+#include "bot_commands.h"
 
 #ifdef _WIN32
 #include <ctype.h>
@@ -201,6 +202,8 @@ public:
 	static bool IsBreakableOpen(edict_t *pBreakable);
 
 	static Vector GetVelocity(edict_t *pPlayer);
+
+	static CBotCommandContainer *m_pCommands;
 
 	static void ReadRCBotFolder();
 
