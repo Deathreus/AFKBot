@@ -421,7 +421,6 @@ Vector CBot::GetEyePosition()
 {
 	Vector vOrigin;
 	gameclients->ClientEarPosition(m_pEdict, &vOrigin);
-
 	return vOrigin;
 }
 
@@ -1930,7 +1929,7 @@ void CBot::ListenToPlayer(edict_t *pPlayer, bool bIsEnemy, bool bIsAttacking)
 
 	if (CBotGlobals::IsPlayer(pPlayer))
 	{
-		IPlayerInfo *p = playerhelpers->GetGamePlayer(pPlayer)->GetPlayerInfo();
+		IPlayerInfo *pPI = playerhelpers->GetGamePlayer(pPlayer)->GetPlayerInfo();
 
 		if (bIsEnemy == false)
 			bIsEnemy = IsEnemy(pPlayer);
@@ -1938,39 +1937,38 @@ void CBot::ListenToPlayer(edict_t *pPlayer, bool bIsEnemy, bool bIsAttacking)
 		// look at possible enemy
 		if (!bIsVisible || bIsEnemy)
 		{
-			m_vListenPosition = p->GetAbsOrigin();
+			m_vListenPosition = pPI->GetAbsOrigin();
 		}
 		else if (bIsAttacking)
 		{
 			if (!bIsEnemy && WantToInvestigateSound())
 			{
-				QAngle angle = p->GetAbsAngles();
+				QAngle angle = pPI->GetAbsAngles();
 				Vector forward;
 
 				AngleVectors(angle, &forward);
 
 				// look where team mate is shooting
-				m_vListenPosition = p->GetAbsOrigin() + (forward*1024.0f);
+				m_vListenPosition = pPI->GetAbsOrigin() + (forward*1024.0f);
 
 				// not investigating any noise right now -- depending on my braveness I will check it out
 				if (!m_pSchedules->IsCurrentSchedule(SCHED_INVESTIGATE_NOISE) && (RandomFloat(0.0f, 0.75f) < m_pProfile->m_fBraveness))
 				{
-					trace_t *TraceResult = CBotGlobals::GetTraceResult();
-
 					Vector vAttackerOrigin = CBotGlobals::EntityOrigin(pPlayer);
-
 					if (DistanceFrom(vAttackerOrigin) > 96.0f)
 					{
 						// check exactly where teammate is firing
 						CBotGlobals::QuickTraceline(pPlayer, vAttackerOrigin, m_vListenPosition);
+						trace_t *pTrace = CBotGlobals::GetTraceResult();
 
 						// update the wall or player teammate is shooting
-						m_vListenPosition = TraceResult->endpos;
+						m_vListenPosition = pTrace->endpos;
 
 						CBotGlobals::QuickTraceline(m_pEdict, GetOrigin(), m_vListenPosition);
+						pTrace = CBotGlobals::GetTraceResult();
 
 						// can't see what my teammate is shooting -- go there
-						if ((TraceResult->fraction < 1.0f) && (TraceResult->m_pEnt != m_pEdict->GetIServerEntity()->GetBaseEntity()))
+						if ((pTrace->fraction < 1.0f) && (pTrace->m_pEnt != m_pEdict->GetIServerEntity()->GetBaseEntity()))
 						{
 							m_pSchedules->RemoveSchedule(SCHED_INVESTIGATE_NOISE);
 
@@ -2364,15 +2362,10 @@ Vector CBot::Snipe(Vector &vAiming)
 {
 	if (m_fLookAroundTime < engine->Time())
 	{
-		CTraceFilterWorldAndPropsOnly filter;
 		float fTime;
 		Vector vOrigin = GetOrigin();
 
-		//trace_t *tr = CBotGlobals::getTraceResult();
-
-		m_vLookAroundOffset = Vector(RandomFloat(-64.0f, 64.0f), RandomFloat(-64.0f, 64.0f), RandomFloat(-64.0f, 32.0f));
-		// forward
-		//CBotGlobals::traceLine(vOrigin,m_vWaypointAim+m_vLookAroundOffset,MASK_SOLID_BRUSHONLY|CONTENTS_OPAQUE,&filter);	
+		m_vLookAroundOffset = Vector(RandomFloat(-512.0f, 512.0f), RandomFloat(-512.0f, 512.0f), RandomFloat(-64.0f, 64.0f));
 
 		if (m_fLookAroundTime == 0.0f)
 			fTime = 0.1f;
@@ -2380,8 +2373,6 @@ Vector CBot::Snipe(Vector &vAiming)
 			fTime = RandomFloat(3.0f, 7.0f);
 
 		m_fLookAroundTime = engine->Time() + fTime;
-
-		//m_vWaypointAim = m_vWaypointAim + m_vLookAroundOffset;
 	}
 
 	return vAiming + m_vLookAroundOffset;
@@ -2982,7 +2973,11 @@ void CBots::MakeBot(edict_t *pEdict)
 	m_Bots[SlotOfEdict(pEdict)]->CreateBotFromEdict(pEdict, pBotProfile);
 
 	if (bot_printstatus.GetBool())
-		CBotGlobals::PrintToChatAll("[AFKBot] %s is now AFK", playerhelpers->GetGamePlayer(pEdict)->GetName());
+	{
+		char message[256];
+		smutils->Format(message, 256, "\x07%06X[AFKBot] \x01%s is now AFK", 0xD32CE6, playerhelpers->GetGamePlayer(pEdict)->GetName());
+		CBotGlobals::PrintToChatAll(message);
+	}
 }
 
 void CBots::MakeNotBot(edict_t *pEdict)
@@ -3006,7 +3001,11 @@ void CBots::MakeNotBot(edict_t *pEdict)
 			pBot->FreeAllMemory();
 
 			if (bot_printstatus.GetBool())
-				CBotGlobals::PrintToChatAll("[AFKBot] %s is no longer AFK", playerhelpers->GetGamePlayer(pEdict)->GetName());
+			{
+				char message[256];
+				smutils->Format(message, 256, "\x07%06X[AFKBot] \x01%s is no longer AFK", 0xD32CE6, playerhelpers->GetGamePlayer(pEdict)->GetName());
+				CBotGlobals::PrintToChatAll(message);
+			}
 		}
 	}
 }

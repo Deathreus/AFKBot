@@ -676,7 +676,6 @@ bool CBotFortress::SetVisible(edict_t *pEntity, bool bVisible)
 				if (!m_pAmmo || (fDistance < DistanceFrom(m_pAmmo)))
 					m_pAmmo = pEntity;
 			}
-
 		}
 		else if ((pEntity != m_pHealthkit) && CTeamFortress2Mod::IsHealthKit(pEntity))
 		{
@@ -3194,41 +3193,32 @@ void CBotTF2::ModThink()
 
 	if (m_pSchedules->IsCurrentSchedule(SCHED_GOTO_ORIGIN) && (m_fPickupTime < engine->Time()) && (bNeedHealth || bNeedAmmo) && (!m_pEnemy && !HasSomeConditions(CONDITION_SEE_CUR_ENEMY)))
 	{
-		if ((m_fPickupTime < engine->Time()) && m_pNearestDisp && !m_pSchedules->IsCurrentSchedule(SCHED_USE_DISPENSER))
+		if ((m_fPickupTime < engine->Time()) && m_pNearestDisp)
 		{
-			if (fabs(CBotGlobals::EntityOrigin(m_pNearestDisp).z - GetOrigin().z) < BOT_JUMP_HEIGHT)
-			{
-				m_pSchedules->RemoveSchedule(SCHED_USE_DISPENSER);
-				m_pSchedules->AddFront(new CBotUseDispSched(this, m_pNearestDisp));
+			m_pSchedules->RemoveSchedule(SCHED_USE_DISPENSER);
+			m_pSchedules->AddFront(new CBotUseDispSched(this, m_pNearestDisp));
 
-				m_fPickupTime = engine->Time() + RandomFloat(6.0f, 20.0f);
-				return;
-			}
+			m_fPickupTime = engine->Time() + RandomFloat(6.0f, 20.0f);
+
+			return;
 		}
-		else if ((m_fPickupTime < engine->Time()) && bNeedHealth && m_pHealthkit && !m_pSchedules->IsCurrentSchedule(SCHED_TF2_GET_HEALTH))
+		else if ((m_fPickupTime < engine->Time()) && bNeedHealth && m_pHealthkit)
 		{
-			if (fabs(CBotGlobals::EntityOrigin(m_pHealthkit).z - GetOrigin().z) < BOT_JUMP_HEIGHT)
-			{
-				m_pSchedules->RemoveSchedule(SCHED_TF2_GET_HEALTH);
-				m_pSchedules->AddFront(new CBotTF2GetHealthSched(CBotGlobals::EntityOrigin(m_pHealthkit)));
+			m_pSchedules->RemoveSchedule(SCHED_TF2_GET_HEALTH);
+			m_pSchedules->AddFront(new CBotTF2GetHealthSched(CBotGlobals::EntityOrigin(m_pHealthkit)));
 
-				m_fPickupTime = engine->Time() + RandomFloat(5.0f, 10.0f);
+			m_fPickupTime = engine->Time() + RandomFloat(5.0f, 10.0f);
 
-				return;
-			}
-
+			return;
 		}
-		else if ((m_fPickupTime < engine->Time()) && bNeedAmmo && m_pAmmo && !m_pSchedules->IsCurrentSchedule(SCHED_PICKUP))
+		else if ((m_fPickupTime < engine->Time()) && bNeedAmmo && m_pAmmo)
 		{
-			if (fabs(CBotGlobals::EntityOrigin(m_pAmmo).z - GetOrigin().z) < BOT_JUMP_HEIGHT)
-			{
-				m_pSchedules->RemoveSchedule(SCHED_TF2_GET_AMMO);
-				m_pSchedules->AddFront(new CBotTF2GetAmmoSched(CBotGlobals::EntityOrigin(m_pAmmo)));
+			m_pSchedules->RemoveSchedule(SCHED_TF2_GET_AMMO);
+			m_pSchedules->AddFront(new CBotTF2GetAmmoSched(CBotGlobals::EntityOrigin(m_pAmmo)));
 
-				m_fPickupTime = engine->Time() + RandomFloat(5.0f, 10.0f);
+			m_fPickupTime = engine->Time() + RandomFloat(5.0f, 10.0f);
 
-				return;
-			}
+			return;
 		}
 	}
 
@@ -4549,7 +4539,7 @@ void CBotTF2::GetTasks(unsigned int iIgnore)
 		ADD_UTILITY(BOT_UTIL_REMOVE_DISP_SAPPER, !m_bIsCarryingObj && (m_fRemoveSapTime < engine->Time()) && !bHasFlag && (m_pDispenser != NULL) && CTeamFortress2Mod::IsMyDispenserSapped(m_pEdict), 1000.0f);
 
 		ADD_UTILITY_DATA(BOT_UTIL_GOTORESUPPLY_FOR_AMMO, !CTeamFortress2Mod::TF2_IsPlayerInvuln(m_pEdict) && !m_bIsCarryingObj && !bHasFlag && pWaypointResupply && bNeedAmmo && !m_pAmmo, 1000.0f / fResupplyDist, CWaypoints::GetWaypointIndex(pWaypointResupply));
-		ADD_UTILITY_DATA(BOT_UTIL_FIND_NEAREST_AMMO, !m_bIsCarryingObj && !bHasFlag&&bNeedAmmo && !m_pAmmo&&pWaypointAmmo, (400.0f / fAmmoDist) + ((!CTeamFortress2Mod::HasRoundStarted() && CTeamFortress2Mod::IsMapType(TF_MAP_MVM)) ? 0.5f : 0.0f), CWaypoints::GetWaypointIndex(pWaypointAmmo)); // only if close
+		ADD_UTILITY_DATA(BOT_UTIL_FIND_NEAREST_AMMO, !m_bIsCarryingObj && !bHasFlag && bNeedAmmo && !m_pAmmo && pWaypointAmmo, (400.0f / fAmmoDist) + ((!CTeamFortress2Mod::HasRoundStarted() && CTeamFortress2Mod::IsMapType(TF_MAP_MVM)) ? 0.5f : 0.0f), CWaypoints::GetWaypointIndex(pWaypointAmmo)); // only if close
 
 		ADD_UTILITY(BOT_UTIL_ENGI_LOOK_AFTER_SENTRY, !m_bIsCarryingObj && (m_pSentryGun.Get() != NULL) && (iSentryLevel>2) && (m_fLookAfterSentryTime < engine->Time()), fGetFlagUtility + 0.01f);
 

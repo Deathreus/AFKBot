@@ -13,9 +13,9 @@
 
 const float StepHeight = 18.0f;					/*< if delta Z is greater than this, we have to jump to get up*/
 const float JumpHeight = 41.8f;					/*< if delta Z is less than this, we can jump up on it*/
-const float JumpCrouchHeight = 58.0f;			/*< (48) if delta Z is less than or equal to this, we can jumpcrouch up on it*/
+const float JumpCrouchHeight = 58.0f;			/*< if delta Z is less than or equal to this, we can jumpcrouch up on it*/
 
-const float DeathDrop = 200.0f;					/*< (300) distance at which we will die if we fall - should be about 600, and pay attention to fall damage during pathfind*/
+const float DeathDrop = 200.0f;					/*< distance at which we will die if we fall - should be about 600, and pay attention to fall damage during pathfind*/
 
 const float HalfHumanWidth = 16.0f;
 const float HalfHumanHeight = 36.0f;

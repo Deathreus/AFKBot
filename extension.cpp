@@ -238,37 +238,6 @@ bool AFKBot::FireEvent(IGameEvent *pEvent, bool bDontBroadcast)
 	RETURN_META_VALUE(MRES_IGNORED, true);
 }
 
-void OnCvarChanged(IConVar *pCvar, const char *pOldValue, float fOldValue)
-{
-	if (FStrEq(pCvar->GetName(), bot_tags.GetName()))
-	{
-		char sv_tags_str[512];
-		strcpy_s(sv_tags_str, sv_tags->GetString());
-		if (!bot_tags.GetBool())
-		{
-			if (strstr(sv_tags_str, "afkbot") != NULL)
-			{
-				for (int i = strlen(sv_tags_str); i > (i - 6); i--)
-					sv_tags_str[i] = '\0';
-
-				sv_tags->SetValue(sv_tags_str);
-			}
-		}
-		else
-		{
-			if (strstr(sv_tags_str, "afkbot") == NULL)
-			{
-				if (sv_tags_str[0] == '\0')
-					strcat(sv_tags_str, "afkbot");
-				else
-					strcat(sv_tags_str, ",afkbot");
-
-				sv_tags->SetValue(sv_tags_str);
-			}
-		}
-	}
-}
-
 bool AFKBot::SDK_OnLoad(char *error, size_t maxlength, bool late)
 {
 	sharesys->AddDependency(myself, "sdktools.ext", true, true);
@@ -392,8 +361,6 @@ void AFKBot::SDK_OnAllLoaded()
 	mp_friendlyfire = icvar->FindVar("mp_friendlyfire");
 	sv_tags = icvar->FindVar("sv_tags");
 	mp_teamplay = icvar->FindVar("mp_teamplay");
-
-	icvar->InstallGlobalChangeCallback(&OnCvarChanged);
 
 	if (sv_tags != NULL && bot_tags.GetBool())
 	{

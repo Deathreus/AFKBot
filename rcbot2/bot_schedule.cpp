@@ -187,7 +187,7 @@ void CBotEngiMoveBuilding::Init()
 
 ///////////////////////////////////////////
 
-CBotTF2PushPayloadBombSched::CBotTF2PushPayloadBombSched(edict_t * ePayloadBomb)
+CBotTF2PushPayloadBombSched::CBotTF2PushPayloadBombSched(edict_t *ePayloadBomb)
 {
 	AddTask(new CFindPathTask(ePayloadBomb)); // first
 	AddTask(new CBotTF2PushPayloadBombTask(ePayloadBomb)); // second
@@ -199,7 +199,7 @@ void CBotTF2PushPayloadBombSched::Init()
 }
 ///////////////////////////////////
 
-CBotTF2DefendPayloadBombSched::CBotTF2DefendPayloadBombSched(edict_t * ePayloadBomb)
+CBotTF2DefendPayloadBombSched::CBotTF2DefendPayloadBombSched(edict_t *ePayloadBomb)
 {
 	AddTask(new CFindPathTask(CBotGlobals::EntityOrigin(ePayloadBomb))); // first
 	AddTask(new CBotTF2DefendPayloadBombTask(ePayloadBomb)); // second

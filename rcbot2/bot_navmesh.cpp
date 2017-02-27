@@ -810,7 +810,7 @@ bool CNavMeshNavigator::CalculateAimVector(QAngle *qAim)
 	if (CTeamFortress2Mod::IsMapType(TF_MAP_CTF) || CTeamFortress2Mod::IsMapType(TF_MAP_MVM) || CTeamFortress2Mod::IsMapType(TF_MAP_SD))
 	{
 		CBaseEntity *pFlag = NULL;
-		if ((pFlag = servertools->FindEntityByClassnameNearest("item_teamflag", m_pBot->GetOrigin(), 2500.0f)) != NULL)
+		if ((pFlag = servertools->FindEntityByClassnameNearest("item_teamflag", m_pBot->GetOrigin(), 2048.0f)) != NULL)
 		{
 			edict_t *pEdict = gameents->BaseEntityToEdict(pFlag);
 			if (!pEdict || pEdict->IsFree())
@@ -827,7 +827,7 @@ bool CNavMeshNavigator::CalculateAimVector(QAngle *qAim)
 	if (CTeamFortress2Mod::IsMapType(TF_MAP_CP) || CTeamFortress2Mod::IsMapType(TF_MAP_KOTH))
 	{
 		CBaseEntity *pPoint = NULL;
-		if ((pPoint = servertools->FindEntityByClassnameNearest("team_control_point", m_pBot->GetOrigin(), 2500.0f)) != NULL)
+		if ((pPoint = servertools->FindEntityByClassnameNearest("team_control_point", m_pBot->GetOrigin(), 2048.0f)) != NULL)
 		{
 			edict_t *pEdict = gameents->BaseEntityToEdict(pPoint);
 			if (!pEdict || pEdict->IsFree())
@@ -844,7 +844,7 @@ bool CNavMeshNavigator::CalculateAimVector(QAngle *qAim)
 	if (CTeamFortress2Mod::IsMapType(TF_MAP_CART) || CTeamFortress2Mod::IsMapType(TF_MAP_CARTRACE))
 	{
 		CBaseEntity *pCart = NULL;
-		if ((pCart = servertools->FindEntityByClassnameNearest("mapobj_cart_dispenser", m_pBot->GetOrigin(), 2500.0f)) != NULL)
+		if ((pCart = servertools->FindEntityByClassnameNearest("mapobj_cart_dispenser", m_pBot->GetOrigin(), 2048.0f)) != NULL)
 		{
 			edict_t *pEdict = gameents->BaseEntityToEdict(pCart);
 			if (!pEdict || pEdict->IsFree())

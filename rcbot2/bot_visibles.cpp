@@ -107,7 +107,7 @@ CBotVisibles::CBotVisibles(CBot *pBot)
 	Reset();
 }
 
-CBotVisibles :: ~CBotVisibles()
+CBotVisibles::~CBotVisibles()
 {
 	m_pBot = NULL;
 	delete[] m_iIndicesVisible;
@@ -176,33 +176,13 @@ void CBotVisibles::CheckVisible(edict_t *pEntity, int *iTicks, bool *bVisible, i
 	// update
 	if (CBotGlobals::EntityIsValid(pEntity))
 	{
-		//if ( CClients::clientsDebugging() && CClients::get(0)->isDebuggingBot(m_pBot) && (ENTINDEX(pEntity)<CBotGlobals::maxClients()) )
-		//	debugoverlay->AddLineOverlay(m_pBot->getOrigin(),CBotGlobals::entityOrigin(pEntity),255,255,255,false,1);			
-
 		// if in view cone
 		if (m_pBot->FInViewCone(pEntity))
 		{
-			// from Valve developer community wiki
-			// http://developer.valvesoftware.com/wiki/Transforming_the_Multiplayer_SDK_into_Coop
-
 			// update tick -- counts the number of PVS done (cpu intensive)
 			*iTicks = *iTicks + 1;
 
-			clusterIndex = engine->GetClusterForOrigin(m_pBot->GetOrigin());
-			engine->GetPVSForCluster(clusterIndex, sizeof(m_bPvs), m_bPvs);
-
-			vEntityOrigin = CBotGlobals::EntityOrigin(pEntity);
-
-			// for some reason the origin is their feet. add body height
-			if (iIndex <= MAX_PLAYERS)
-				vEntityOrigin + Vector(0, 0, 32);
-
-			playerInPVS = engine->CheckOriginInPVS(vEntityOrigin, m_bPvs, sizeof(m_bPvs));
-
-			if (playerInPVS)
-			{
-				*bVisible = m_pBot->FVisible(pEntity, bCheckHead);
-			}
+			*bVisible = m_pBot->FVisible(pEntity, bCheckHead);
 		}
 	}
 }
