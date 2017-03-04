@@ -2975,7 +2975,7 @@ void CBots::MakeBot(edict_t *pEdict)
 	if (bot_printstatus.GetBool())
 	{
 		char message[256];
-		smutils->Format(message, 256, "\x07%06X[AFKBot] \x01%s is now AFK", 0xD32CE6, playerhelpers->GetGamePlayer(pEdict)->GetName());
+		smutils->Format(message, 256, " \x07%06X[AFKBot] \x01%s is now AFK", 0xD32CE6, playerhelpers->GetGamePlayer(pEdict)->GetName());
 		CBotGlobals::PrintToChatAll(message);
 	}
 }
@@ -3003,7 +3003,7 @@ void CBots::MakeNotBot(edict_t *pEdict)
 			if (bot_printstatus.GetBool())
 			{
 				char message[256];
-				smutils->Format(message, 256, "\x07%06X[AFKBot] \x01%s is no longer AFK", 0xD32CE6, playerhelpers->GetGamePlayer(pEdict)->GetName());
+				smutils->Format(message, 256, " \x07%06X[AFKBot] \x01%s is no longer AFK", 0xD32CE6, playerhelpers->GetGamePlayer(pEdict)->GetName());
 				CBotGlobals::PrintToChatAll(message);
 			}
 		}
