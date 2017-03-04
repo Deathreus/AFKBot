@@ -13,9 +13,9 @@
 
 const float StepHeight = 18.0f;					/*< if delta Z is greater than this, we have to jump to get up*/
 const float JumpHeight = 41.8f;					/*< if delta Z is less than this, we can jump up on it*/
-const float JumpCrouchHeight = 58.0f;			/*< (48) if delta Z is less than or equal to this, we can jumpcrouch up on it*/
+const float JumpCrouchHeight = 58.0f;			/*< if delta Z is less than or equal to this, we can jumpcrouch up on it*/
 
-const float DeathDrop = 200.0f;					/*< (300) distance at which we will die if we fall - should be about 600, and pay attention to fall damage during pathfind*/
+const float DeathDrop = 200.0f;					/*< distance at which we will die if we fall - should be about 600, and pay attention to fall damage during pathfind*/
 
 const float HalfHumanWidth = 16.0f;
 const float HalfHumanHeight = 36.0f;
@@ -88,7 +88,7 @@ public:
 	}
 
 	static bool Init(char *error, size_t maxlen);
-	static void FreeMemory();
+	void FreeAllMemory();
 	void FreeMapMemory();
 
 	bool WorkRoute(Vector vFrom, Vector vTo, bool *bFail, bool bRestart = true, bool bNoInterruptions = false, INavMeshArea *goal = NULL, int iConditions = 0, int iDangerId = -1);
@@ -149,14 +149,14 @@ public:
 	INavMeshArea *GetNearestArea(const Vector &vPos, bool bAnyZ = false, float fMaxDist = 10000.0f, bool bCheckLOS = false, bool bCheckGround = true, int iTeam = -2);
 	INavMeshArea *GetAreaByID(const unsigned int iAreaIndex);
 	
-	int WorldToGridX(float flWX);
-	int WorldToGridY(float flWY);
+	int WorldToGridX(float fWX);
+	int WorldToGridY(float fWY);
 
-	static Vector GetExtentLow(INavMeshArea *area);
-	static Vector GetExtentHigh(INavMeshArea *area);
-	static Vector GetCenter(INavMeshArea *area);
-	static Vector GetClosestPointOnArea(INavMeshArea *area, const Vector &vPos);
-	static bool GetGroundHeight(const Vector vPos, float *fHeight, Vector *vNormal);
+	Vector GetExtentLow(INavMeshArea *area);
+	Vector GetExtentHigh(INavMeshArea *area);
+	Vector GetCenter(INavMeshArea *area);
+	Vector GetClosestPointOnArea(INavMeshArea *area, const Vector &vPos);
+	bool GetGroundHeight(const Vector vPos, float *fHeight, Vector *vNormal);
 
 	bool IsConnected(INavMeshArea *fromArea, INavMeshArea *toArea);
 	
@@ -170,8 +170,8 @@ public:
 	bool Contains(INavMeshArea *area, const Vector vPos);
 	bool IsEdge(INavMeshArea *area, eNavDir iDirection);
 
-	static float GetZ(INavMeshArea *area, const Vector &vPos);
-	static float GetZ(INavMeshArea *area, float flX, float flY);
+	float GetZ(INavMeshArea *area, const Vector &vPos);
+	float GetZ(INavMeshArea *area, float fX, float fY);
 
 	bool ComputePortal(INavMeshArea *fromArea, INavMeshArea *toArea, eNavDir iDirection, Vector *vCenter, float *fHalfWidth);
 	bool ComputeClosestPointInPortal(INavMeshArea *fromArea, INavMeshArea *toArea, eNavDir iNavDirection, const Vector &vFromPos, Vector *vClosestPos);
@@ -232,7 +232,7 @@ public:
 			if (ladder != NULL)
 				fDist = ladder->GetLength();
 			else
-				fDist = (CNavMeshNavigator::GetCenter(area) - CNavMeshNavigator::GetCenter(fromArea)).Length();
+				fDist = (area->GetCenter() - fromArea->GetCenter()).Length();
 
 			float flCost = fDist + area->GetCostSoFar();
 

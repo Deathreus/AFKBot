@@ -823,6 +823,9 @@ public:
 
 	void MvM_Upgrade();
 
+	bool DidReadyUp() { return !!m_bMvMReady; }
+	void ReadyUp(bool bReady);
+
 	//void addLoadoutWeapon ( CTF2Loadout *weap );
 private:
 	// time for next jump
@@ -894,7 +897,8 @@ private:
 	CTF2Loadout *m_pSecondary;
 
 	int m_iDesiredResistType;
-	//dataStack<CTF2LoadoutAdded*> m_LoadoutsApplyAttributes;
+	
+	bool m_bMvMReady;
 };
 
 class CBotFF : public CBotFortress

@@ -53,7 +53,7 @@ INavMesh *CNavMeshLoader::Load(char *error, int errorMaxlen)
 	elementsRead = fileHandle->Read(&magicNumber, 4, 1);
 	this->bytesRead += sizeof(magicNumber);
 
-	if (elementsRead < 1)
+	if (!elementsRead)
 	{
 		delete fileHandle;
 		snprintf(error, errorMaxlen, "Error reading magic number value from navigation mesh: %s", navPath);
@@ -70,7 +70,7 @@ INavMesh *CNavMeshLoader::Load(char *error, int errorMaxlen)
 	unsigned int version;
 	elementsRead = fileHandle->Read(&version, 4, 1);
 
-	if (elementsRead < 1)
+	if (!elementsRead)
 	{
 		delete fileHandle;
 		snprintf(error, errorMaxlen, "Error reading version number from navigation mesh: %s", navPath);
@@ -470,7 +470,7 @@ INavMesh *CNavMeshLoader::Load(char *error, int errorMaxlen)
 
 	INavMesh *mesh = new CNavMesh(magicNumber, version, navMeshSubVersion, saveBspSize, isMeshAnalyzed, places, areas, ladders, grid);
 
-	smutils->LogMessage(myself, "Total bytes read: %d", this->bytesRead);
+	smutils->LogMessage(myself, "Total bytes read: %u", this->bytesRead);
 	delete fileHandle;
 	return mesh;
 }

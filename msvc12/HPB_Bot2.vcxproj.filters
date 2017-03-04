@@ -12,26 +12,20 @@
     <Filter Include="Extension">
       <UniqueIdentifier>{e156eb5b-3411-428c-915a-392e6eeaa877}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Experimental">
-      <UniqueIdentifier>{565302e1-01c6-4f47-af60-dd7124314ccf}</UniqueIdentifier>
-    </Filter>
     <Filter Include="NavLoader">
-      <UniqueIdentifier>{476323a6-5875-484c-9020-854a8c95a5e4}</UniqueIdentifier>
+      <UniqueIdentifier>{d6a5fcf9-fa83-48d2-9d41-69e2f6a0e206}</UniqueIdentifier>
     </Filter>
     <Filter Include="NavLoader\Header Files">
-      <UniqueIdentifier>{0cb56c17-5dbc-4b6e-9cac-9ab0cba26b27}</UniqueIdentifier>
+      <UniqueIdentifier>{bea7c79e-7f3e-4593-8dee-e52a9aae195e}</UniqueIdentifier>
     </Filter>
     <Filter Include="NavLoader\Source Files">
-      <UniqueIdentifier>{a79ca03e-1e5d-4fa7-81f9-bd17c708122a}</UniqueIdentifier>
+      <UniqueIdentifier>{34e4c1d6-fedf-4e39-9f48-baa27d73bc41}</UniqueIdentifier>
     </Filter>
-    <Filter Include="CEntity">
-      <UniqueIdentifier>{57167119-e9eb-4c4c-a20d-c5178e3ee60c}</UniqueIdentifier>
+    <Filter Include="Experimental">
+      <UniqueIdentifier>{869dc632-6ff8-4b34-95e7-352d516bd54f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="CEntity\Header Files">
-      <UniqueIdentifier>{9a4b13d0-755a-4570-ba22-99413aa0097f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="CEntity\Source Files">
-      <UniqueIdentifier>{351f1f9d-3b28-416a-bdfe-d1483fd3936e}</UniqueIdentifier>
+    <Filter Include="NavLoader\Interface">
+      <UniqueIdentifier>{7d314f7b-87e0-456c-a0ca-c64c551bbd7a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -110,14 +104,17 @@
     <ClCompile Include="..\rcbot2\bot_gamerules.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\rcbot2\bot_navmesh.cpp">
-      <Filter>Experimental</Filter>
-    </ClCompile>
     <ClCompile Include="..\natives.cpp">
       <Filter>Extension</Filter>
     </ClCompile>
     <ClCompile Include="..\rcbot2\bot_base.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rcbot2\bot_commands.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rcbot2\bot_navmesh.cpp">
+      <Filter>Experimental</Filter>
     </ClCompile>
     <ClCompile Include="..\NavMesh\NavMesh.cpp">
       <Filter>NavLoader\Source Files</Filter>
@@ -157,30 +154,6 @@
     </ClCompile>
     <ClCompile Include="..\NavMesh\NavMeshVisibleArea.cpp">
       <Filter>NavLoader\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\CEntity\rtti.cpp">
-      <Filter>CEntity\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\CEntity\util.cpp">
-      <Filter>CEntity\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\CEntity\CEntity.cpp">
-      <Filter>CEntity\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\CEntity\CEntityBase.cpp">
-      <Filter>CEntity\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\CEntity\CEntityManager.cpp">
-      <Filter>CEntity\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\CEntity\CHelpers.cpp">
-      <Filter>CEntity\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\CEntity\CPlayer.cpp">
-      <Filter>CEntity\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\CEntity\CRecipientFilter.cpp">
-      <Filter>CEntity\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -283,53 +256,14 @@
     <ClInclude Include="..\rcbot2\bot_gamerules.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\rcbot2\bot_navmesh.h">
-      <Filter>Experimental</Filter>
-    </ClInclude>
     <ClInclude Include="..\rcbot2\bot_base.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\NavMesh\public\IList.h">
-      <Filter>NavLoader\Header Files</Filter>
+    <ClInclude Include="..\rcbot2\bot_commands.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\NavMesh\public\INavMesh.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\public\INavMeshArea.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\public\INavMeshConnection.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\public\INavMeshCornerLightIntensity.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\public\INavMeshEncounterPath.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\public\INavMeshEncounterSpot.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\public\INavMeshGrid.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\public\INavMeshHidingSpot.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\public\INavMeshLadder.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\public\INavMeshLadderConnection.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\public\INavMeshLoader.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\public\INavMeshPlace.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\public\INavMeshVisibleArea.h">
-      <Filter>NavLoader\Header Files</Filter>
+    <ClInclude Include="..\rcbot2\bot_navmesh.h">
+      <Filter>Experimental</Filter>
     </ClInclude>
     <ClInclude Include="..\NavMesh\List.h">
       <Filter>NavLoader\Header Files</Filter>
@@ -382,35 +316,47 @@
     <ClInclude Include="..\NavMesh\NavMeshVisibleArea.h">
       <Filter>NavLoader\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\CEntity\CEntity.h">
-      <Filter>CEntity\Header Files</Filter>
+    <ClInclude Include="..\NavMesh\public\INavMeshConnection.h">
+      <Filter>NavLoader\Interface</Filter>
     </ClInclude>
-    <ClInclude Include="..\CEntity\CEntityBase.h">
-      <Filter>CEntity\Header Files</Filter>
+    <ClInclude Include="..\NavMesh\public\INavMeshCornerLightIntensity.h">
+      <Filter>NavLoader\Interface</Filter>
     </ClInclude>
-    <ClInclude Include="..\CEntity\CEntityManager.h">
-      <Filter>CEntity\Header Files</Filter>
+    <ClInclude Include="..\NavMesh\public\INavMeshEncounterPath.h">
+      <Filter>NavLoader\Interface</Filter>
     </ClInclude>
-    <ClInclude Include="..\CEntity\CHelpers.h">
-      <Filter>CEntity\Header Files</Filter>
+    <ClInclude Include="..\NavMesh\public\INavMeshEncounterSpot.h">
+      <Filter>NavLoader\Interface</Filter>
     </ClInclude>
-    <ClInclude Include="..\CEntity\CPlayer.h">
-      <Filter>CEntity\Header Files</Filter>
+    <ClInclude Include="..\NavMesh\public\INavMeshGrid.h">
+      <Filter>NavLoader\Interface</Filter>
     </ClInclude>
-    <ClInclude Include="..\CEntity\CRecipientFilter.h">
-      <Filter>CEntity\Header Files</Filter>
+    <ClInclude Include="..\NavMesh\public\INavMeshHidingSpot.h">
+      <Filter>NavLoader\Interface</Filter>
     </ClInclude>
-    <ClInclude Include="..\CEntity\IEntityFactory.h">
-      <Filter>CEntity\Header Files</Filter>
+    <ClInclude Include="..\NavMesh\public\INavMeshLadder.h">
+      <Filter>NavLoader\Interface</Filter>
     </ClInclude>
-    <ClInclude Include="..\CEntity\macros.h">
-      <Filter>CEntity\Header Files</Filter>
+    <ClInclude Include="..\NavMesh\public\INavMeshLadderConnection.h">
+      <Filter>NavLoader\Interface</Filter>
     </ClInclude>
-    <ClInclude Include="..\CEntity\rtti.h">
-      <Filter>CEntity\Header Files</Filter>
+    <ClInclude Include="..\NavMesh\public\INavMeshLoader.h">
+      <Filter>NavLoader\Interface</Filter>
     </ClInclude>
-    <ClInclude Include="..\CEntity\util.h">
-      <Filter>CEntity\Header Files</Filter>
+    <ClInclude Include="..\NavMesh\public\INavMeshPlace.h">
+      <Filter>NavLoader\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\public\INavMeshVisibleArea.h">
+      <Filter>NavLoader\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\public\IList.h">
+      <Filter>NavLoader\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\public\INavMesh.h">
+      <Filter>NavLoader\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\public\INavMeshArea.h">
+      <Filter>NavLoader\Interface</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

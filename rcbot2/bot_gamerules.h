@@ -87,7 +87,7 @@ class CGameRulesObject
 {
 public:
 	// Returns an integer from the gamerules entity
-	static cell_t GameRules_GetProp(const char *prop, int size = 4, int element = 0);
+	static int32_t GameRules_GetProp(const char *prop, int size = 4, int element = 0);
 
 	static void *GetGameRules() { return m_pGameRules; }
 	static bool GetGameRules(char *error, size_t maxlen);

@@ -162,7 +162,7 @@
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>..;..\sdk;..\NavMesh;..\CEntity;$(SOURCEMOD)\public;$(SOURCEMOD)\public\extensions;$(SOURCEMOD)\public\CDetour;$(SOURCEMOD)\sourcepawn\include;$(HL2SDKOBVALVE)\public;$(HL2SDKOBVALVE)\public\mathlib;$(HL2SDKOBVALVE)\public\engine;$(HL2SDKOBVALVE)\public\tier0;$(HL2SDKOBVALVE)\public\tier1;$(HL2SDKOBVALVE)\public\toolframework;$(HL2SDKOBVALVE)\public\SoundEmitterSystem;$(HL2SDKOBVALVE)\game\shared;$(HL2SDKOBVALVE)\game\server;$(HL2SDKOBVALVE)\public\game\server;$(MMSOURCE)\core;$(MMSOURCE)\core\sourcehook;$(MMSOURCE)\public;%(AdditionIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..;..\sdk;..\NavMesh;..\CEntity;$(SOURCEMOD)\core;$(SOURCEMOD)\public;$(SOURCEMOD)\public\extensions;$(SOURCEMOD)\public\CDetour;$(SOURCEMOD)\sourcepawn\include;$(HL2SDKOBVALVE)\public;$(HL2SDKOBVALVE)\public\mathlib;$(HL2SDKOBVALVE)\public\engine;$(HL2SDKOBVALVE)\public\tier0;$(HL2SDKOBVALVE)\public\tier1;$(HL2SDKOBVALVE)\public\toolframework;$(HL2SDKOBVALVE)\public\SoundEmitterSystem;$(HL2SDKOBVALVE)\game\shared;$(HL2SDKOBVALVE)\game\server;$(HL2SDKOBVALVE)\public\game\server;$(MMSOURCE)\core;$(MMSOURCE)\core\sourcehook;$(MMSOURCE)\public;%(AdditionIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>SOURCE_ENGINE=11;WIN32;NDEBUG;_WINDOWS;_USRDLL;SDK_EXPORTS;_CRT_SECURE_NO_DEPRECATE;SOURCEMOD_BUILD;ORANGEBOX_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -278,14 +278,6 @@ copy "$(ProjectDir)\update.txt" "C:\Program Files (x86)\Steam\steamapps\paul.mur
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\CEntity\CEntity.cpp" />
-    <ClCompile Include="..\CEntity\CEntityBase.cpp" />
-    <ClCompile Include="..\CEntity\CEntityManager.cpp" />
-    <ClCompile Include="..\CEntity\CHelpers.cpp" />
-    <ClCompile Include="..\CEntity\CPlayer.cpp" />
-    <ClCompile Include="..\CEntity\CRecipientFilter.cpp" />
-    <ClCompile Include="..\CEntity\rtti.cpp" />
-    <ClCompile Include="..\CEntity\util.cpp" />
     <ClCompile Include="..\extension.cpp" />
     <ClCompile Include="..\natives.cpp" />
     <ClCompile Include="..\NavMesh\NavMesh.cpp" />
@@ -303,6 +295,7 @@ copy "$(ProjectDir)\update.txt" "C:\Program Files (x86)\Steam\steamapps\paul.mur
     <ClCompile Include="..\NavMesh\NavMeshVisibleArea.cpp" />
     <ClCompile Include="..\rcbot2\bot_base.cpp" />
     <ClCompile Include="..\rcbot2\bot_buttons.cpp" />
+    <ClCompile Include="..\rcbot2\bot_commands.cpp" />
     <ClCompile Include="..\rcbot2\bot_configfile.cpp" />
     <ClCompile Include="..\rcbot2\bot_events.cpp" />
     <ClCompile Include="..\rcbot2\bot_fortress.cpp" />
@@ -329,16 +322,6 @@ copy "$(ProjectDir)\update.txt" "C:\Program Files (x86)\Steam\steamapps\paul.mur
     <ClCompile Include="..\sdk\smsdk_ext.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\CEntity\CEntity.h" />
-    <ClInclude Include="..\CEntity\CEntityBase.h" />
-    <ClInclude Include="..\CEntity\CEntityManager.h" />
-    <ClInclude Include="..\CEntity\CHelpers.h" />
-    <ClInclude Include="..\CEntity\CPlayer.h" />
-    <ClInclude Include="..\CEntity\CRecipientFilter.h" />
-    <ClInclude Include="..\CEntity\IEntityFactory.h" />
-    <ClInclude Include="..\CEntity\macros.h" />
-    <ClInclude Include="..\CEntity\rtti.h" />
-    <ClInclude Include="..\CEntity\util.h" />
     <ClInclude Include="..\extension.h" />
     <ClInclude Include="..\NavMesh\List.h" />
     <ClInclude Include="..\NavMesh\NavCornerType.h" />
@@ -374,6 +357,7 @@ copy "$(ProjectDir)\update.txt" "C:\Program Files (x86)\Steam\steamapps\paul.mur
     <ClInclude Include="..\rcbot2\bot_base.h" />
     <ClInclude Include="..\rcbot2\bot_belief.h" />
     <ClInclude Include="..\rcbot2\bot_buttons.h" />
+    <ClInclude Include="..\rcbot2\bot_commands.h" />
     <ClInclude Include="..\rcbot2\bot_configfile.h" />
     <ClInclude Include="..\rcbot2\bot_const.h" />
     <ClInclude Include="..\rcbot2\bot_cvars.h" />

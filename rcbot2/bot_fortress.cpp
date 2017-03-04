@@ -676,7 +676,6 @@ bool CBotFortress::SetVisible(edict_t *pEntity, bool bVisible)
 				if (!m_pAmmo || (fDistance < DistanceFrom(m_pAmmo)))
 					m_pAmmo = pEntity;
 			}
-
 		}
 		else if ((pEntity != m_pHealthkit) && CTeamFortress2Mod::IsHealthKit(pEntity))
 		{
@@ -1313,6 +1312,35 @@ void CBotFortress::CurrentlyDead()
 	m_fUpdateClass = engine->Time() + 0.1f;
 }
 
+typedef struct timerdata {
+	CBot *bot = NULL;
+	int readycount = 0;
+}timerdata_t;
+
+class CReadyTimer : public ITimedEvent
+{
+	ResultType OnTimer(ITimer *pTimer, void *pData)
+	{
+		timerdata_t *pTData = (timerdata_t *)pData;
+		CBotTF2 *pBot = (CBotTF2 *)pTData->bot;
+		int readycount = pTData->readycount;
+
+		if (readycount > 0)
+			pBot->ReadyUp(true);
+		else
+			pBot->ReadyUp(false);
+
+		return Pl_Continue;
+	}
+
+	void OnTimerEnd(ITimer *pTimer, void *pData)
+	{
+		delete pData;
+		return;
+	}
+};
+static CReadyTimer m_ReadyTimer;
+
 void CBotFortress::ModThink()
 {
 	// get class
@@ -1405,40 +1433,62 @@ void CBotFortress::ModThink()
 		}
 	}
 
-	/*if (CTeamFortress2Mod::IsMapType(TF_MAP_MVM))
+	if (CTeamFortress2Mod::IsMapType(TF_MAP_MVM))
 	{
-		if (CClassInterface::TF2_MVMMinPlayersToReady())
+		if (CClassInterface::TF2_MvMMinPlayersToReady())
 		{
 			int readycount = 0;
 			for (short int i = 1; i < MAX_PLAYERS; i++)
 			{
+				CBot *pBot = CBots::GetBotPointer(INDEXENT(i));
+				if (pBot->InUse())
+					continue;
+
 				IGamePlayer *pClient = playerhelpers->GetGamePlayer(i);
 				if (pClient && pClient->IsInGame())
 				{
-					IPlayerInfo *pl = pClient->GetPlayerInfo();
-					if (pl && !pl->IsFakeClient())
+					IPlayerInfo *pPI = pClient->GetPlayerInfo();
+					if (pPI && !pPI->IsFakeClient())
 					{
-						if (CClassInterface::TF2_MVMIsPlayerReady(i))
+						if (CClassInterface::TF2_MvMIsPlayerReady(i))
 							readycount++;
 					}
 				}
 			}
 
-			for (short int i = 0; i < MAX_PLAYERS; i++)
+			for (short int i = 1; i < MAX_PLAYERS; i++)
 			{
-				CBot *pBot = CBots::Get(i);
+				CBot *pBot = CBots::GetBotPointer(INDEXENT(i));
 				if (pBot->InUse())
 				{
-					if (readycount > 0)
+					CBotTF2 *pTFBot = (CBotTF2 *)pBot;
+					if (!pTFBot->DidReadyUp())
+					{
+						timerdata_t *pTData = new timerdata_t;
+						pTData->bot = pBot;
+						pTData->readycount = readycount;
+
+						ITimer *pTimer = timersys->CreateTimer(&m_ReadyTimer,
+							RandomFloat(1.0f, 3.0f),
+							pTData,
+							TIMER_FLAG_NO_MAPCHANGE);
+						timersys->FireTimerOnce(pTimer, false);
+					}
+					else
+					{
+						if (readycount <= 0)
+							pTFBot->ReadyUp(false);
+					}
+
+					/*if (readycount > 0)
 						helpers->ClientCommand(pBot->GetEdict(), "tournament_player_readystate 1");
 					else
-						helpers->ClientCommand(pBot->GetEdict(), "tournament_player_readystate 0");
+						helpers->ClientCommand(pBot->GetEdict(), "tournament_player_readystate 0");*/
 				}
 			}
 		}
-	}*/
+	}
 }
-
 
 bool CBotFortress::IsTeleporterUseful(edict_t *pTele)
 {
@@ -3143,41 +3193,32 @@ void CBotTF2::ModThink()
 
 	if (m_pSchedules->IsCurrentSchedule(SCHED_GOTO_ORIGIN) && (m_fPickupTime < engine->Time()) && (bNeedHealth || bNeedAmmo) && (!m_pEnemy && !HasSomeConditions(CONDITION_SEE_CUR_ENEMY)))
 	{
-		if ((m_fPickupTime < engine->Time()) && m_pNearestDisp && !m_pSchedules->IsCurrentSchedule(SCHED_USE_DISPENSER))
+		if ((m_fPickupTime < engine->Time()) && m_pNearestDisp)
 		{
-			if (fabs(CBotGlobals::EntityOrigin(m_pNearestDisp).z - GetOrigin().z) < BOT_JUMP_HEIGHT)
-			{
-				m_pSchedules->RemoveSchedule(SCHED_USE_DISPENSER);
-				m_pSchedules->AddFront(new CBotUseDispSched(this, m_pNearestDisp));
+			m_pSchedules->RemoveSchedule(SCHED_USE_DISPENSER);
+			m_pSchedules->AddFront(new CBotUseDispSched(this, m_pNearestDisp));
 
-				m_fPickupTime = engine->Time() + RandomFloat(6.0f, 20.0f);
-				return;
-			}
+			m_fPickupTime = engine->Time() + RandomFloat(6.0f, 20.0f);
+
+			return;
 		}
-		else if ((m_fPickupTime < engine->Time()) && bNeedHealth && m_pHealthkit && !m_pSchedules->IsCurrentSchedule(SCHED_TF2_GET_HEALTH))
+		else if ((m_fPickupTime < engine->Time()) && bNeedHealth && m_pHealthkit)
 		{
-			if (fabs(CBotGlobals::EntityOrigin(m_pHealthkit).z - GetOrigin().z) < BOT_JUMP_HEIGHT)
-			{
-				m_pSchedules->RemoveSchedule(SCHED_TF2_GET_HEALTH);
-				m_pSchedules->AddFront(new CBotTF2GetHealthSched(CBotGlobals::EntityOrigin(m_pHealthkit)));
+			m_pSchedules->RemoveSchedule(SCHED_TF2_GET_HEALTH);
+			m_pSchedules->AddFront(new CBotTF2GetHealthSched(CBotGlobals::EntityOrigin(m_pHealthkit)));
 
-				m_fPickupTime = engine->Time() + RandomFloat(5.0f, 10.0f);
+			m_fPickupTime = engine->Time() + RandomFloat(5.0f, 10.0f);
 
-				return;
-			}
-
+			return;
 		}
-		else if ((m_fPickupTime < engine->Time()) && bNeedAmmo && m_pAmmo && !m_pSchedules->IsCurrentSchedule(SCHED_PICKUP))
+		else if ((m_fPickupTime < engine->Time()) && bNeedAmmo && m_pAmmo)
 		{
-			if (fabs(CBotGlobals::EntityOrigin(m_pAmmo).z - GetOrigin().z) < BOT_JUMP_HEIGHT)
-			{
-				m_pSchedules->RemoveSchedule(SCHED_TF2_GET_AMMO);
-				m_pSchedules->AddFront(new CBotTF2GetAmmoSched(CBotGlobals::EntityOrigin(m_pAmmo)));
+			m_pSchedules->RemoveSchedule(SCHED_TF2_GET_AMMO);
+			m_pSchedules->AddFront(new CBotTF2GetAmmoSched(CBotGlobals::EntityOrigin(m_pAmmo)));
 
-				m_fPickupTime = engine->Time() + RandomFloat(5.0f, 10.0f);
+			m_fPickupTime = engine->Time() + RandomFloat(5.0f, 10.0f);
 
-				return;
-			}
+			return;
 		}
 	}
 
@@ -4498,7 +4539,7 @@ void CBotTF2::GetTasks(unsigned int iIgnore)
 		ADD_UTILITY(BOT_UTIL_REMOVE_DISP_SAPPER, !m_bIsCarryingObj && (m_fRemoveSapTime < engine->Time()) && !bHasFlag && (m_pDispenser != NULL) && CTeamFortress2Mod::IsMyDispenserSapped(m_pEdict), 1000.0f);
 
 		ADD_UTILITY_DATA(BOT_UTIL_GOTORESUPPLY_FOR_AMMO, !CTeamFortress2Mod::TF2_IsPlayerInvuln(m_pEdict) && !m_bIsCarryingObj && !bHasFlag && pWaypointResupply && bNeedAmmo && !m_pAmmo, 1000.0f / fResupplyDist, CWaypoints::GetWaypointIndex(pWaypointResupply));
-		ADD_UTILITY_DATA(BOT_UTIL_FIND_NEAREST_AMMO, !m_bIsCarryingObj && !bHasFlag&&bNeedAmmo && !m_pAmmo&&pWaypointAmmo, (400.0f / fAmmoDist) + ((!CTeamFortress2Mod::HasRoundStarted() && CTeamFortress2Mod::IsMapType(TF_MAP_MVM)) ? 0.5f : 0.0f), CWaypoints::GetWaypointIndex(pWaypointAmmo)); // only if close
+		ADD_UTILITY_DATA(BOT_UTIL_FIND_NEAREST_AMMO, !m_bIsCarryingObj && !bHasFlag && bNeedAmmo && !m_pAmmo && pWaypointAmmo, (400.0f / fAmmoDist) + ((!CTeamFortress2Mod::HasRoundStarted() && CTeamFortress2Mod::IsMapType(TF_MAP_MVM)) ? 0.5f : 0.0f), CWaypoints::GetWaypointIndex(pWaypointAmmo)); // only if close
 
 		ADD_UTILITY(BOT_UTIL_ENGI_LOOK_AFTER_SENTRY, !m_bIsCarryingObj && (m_pSentryGun.Get() != NULL) && (iSentryLevel>2) && (m_fLookAfterSentryTime < engine->Time()), fGetFlagUtility + 0.01f);
 
@@ -6475,14 +6516,11 @@ void CBotTF2::ModAim(edict_t *pEntity, Vector &v_origin, Vector *v_desired_offse
 			{
 				extern ConVar bot_heavyaimoffset;
 
-				Vector vForward;
 				Vector vRight;
-				Vector vUp;
-
 				QAngle eyes = CBotGlobals::PlayerAngles(pEntity);
 
 				// in fov? Check angle to edict
-				AngleVectors(eyes, &vForward, &vRight, &vUp);
+				AngleVectors(eyes, NULL, &vRight, NULL);
 
 				*v_desired_offset = *v_desired_offset + (((vRight * 24) - Vector(0, 0, 24))* bot_heavyaimoffset.GetFloat());
 			}
@@ -7561,4 +7599,18 @@ bool CBotFortress::GetIgnoreBox(Vector *vLoc, float *fSize)
 	}
 
 	return false;
+}
+
+void CBotTF2::ReadyUp(bool bReady)
+{
+	if (bReady)
+	{
+		m_bMvMReady = true;
+		helpers->ClientCommand(this->GetEdict(), "tournament_player_readystate 1");
+	}
+	else
+	{
+		m_bMvMReady = false;
+		helpers->ClientCommand(this->GetEdict(), "tournament_player_readystate 0");
+	}
 }

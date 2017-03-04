@@ -80,6 +80,17 @@ public:
 	 * @return			True if working, false otherwise.
 	 */
 	virtual bool QueryRunning(char *error, size_t maxlen);
+
+	/**
+	 * @brief Called on server activation before plugins receive the OnServerLoad forward.
+	 *
+	 * @param pEdictList		Edicts list.
+	 * @param edictCount		Number of edicts in the list.
+	 * @param clientMax			Maximum number of clients allowed in the server.
+	 */
+	virtual void OnCoreMapStart(edict_t *pEdictList, int edictCount, int clientMax);
+	virtual void OnCoreMapEnd();
+
 public:
 #if defined SMEXT_CONF_METAMOD
 	/**

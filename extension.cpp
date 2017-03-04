@@ -49,7 +49,7 @@
 #include "rcbot2/bot_weapons.h"
 #include "rcbot2/bot_waypoint_visibility.h"
 #include "rcbot2/bot_gamerules.h"
-#include "rcbot2/bot_navmesh.h"
+//#include "rcbot2/bot_navmesh.h"
 
 SH_DECL_HOOK6(IServerGameDLL, LevelInit, SH_NOATTRIB, 0, bool, char const *, char const *, char const *, char const *, bool, bool);
 //SH_DECL_HOOK1_void(IServerGameDLL, GameFrame, SH_NOATTRIB, 0, bool);
@@ -110,8 +110,13 @@ void AFKBot::PlayerRunCmd(CUserCmd *pCmd, IMoveHelper *pMoveHelper)
 		RETURN_META(MRES_IGNORED);
 	}
 
-	edict_t *pEdict = gameents->BaseEntityToEdict(META_IFACEPTR(CBaseEntity));
-	CBot *pBot = CBots::GetBotPointer(pEdict);
+	static CUserCmd *cmd;
+	static CPlayerState *pls;
+	static edict_t *pEdict;
+	static CBot *pBot;
+
+	pEdict = gameents->BaseEntityToEdict(META_IFACEPTR(CBaseEntity));
+	pBot = CBots::GetBotPointer(pEdict);
 
 	if (pBot && pBot->InUse())
 	{
@@ -121,8 +126,8 @@ void AFKBot::PlayerRunCmd(CUserCmd *pCmd, IMoveHelper *pMoveHelper)
 			RETURN_META(MRES_IGNORED);
 		}
 
-		CUserCmd *cmd = pBot->GetUserCMD();
-		CPlayerState *pls = gameclients->GetPlayerState(pEdict);
+		cmd = pBot->GetUserCMD();
+		pls = gameclients->GetPlayerState(pEdict);
 
 		// put the bot's commands into this move frame
 		pCmd->buttons = cmd->buttons;
@@ -165,15 +170,11 @@ void AFKBot::OnClientDisconnected(int iClient)
 	}
 }*/
 
-bool AFKBot::LevelInit(const char *pMapName,
-	char const *pMapEntities,
-	char const *pOldLevel,
-	char const *pLandmarkName,
-	bool loadGame,
-	bool background)
+void AFKBot::OnCoreMapStart(edict_t *pEdictList, int edictCount, int clientMax)
 {
 	// Must set this
-	CBotGlobals::SetMapName(pMapName);
+	CBotGlobals::SetMapName(STRING(gpGlobals->mapname));
+	CBotGlobals::SetMapRunning(true);
 
 	char error[288] = "";
 	/*CNavMeshNavigator::Init(error, sizeof(error));
@@ -188,11 +189,8 @@ bool AFKBot::LevelInit(const char *pMapName,
 	}
 
 	CWaypointDistances::Reset();
-
 	CWaypoints::Init();
 	CWaypoints::Load();
-
-	CBotGlobals::SetMapRunning(true);
 
 	if (mp_teamplay)
 		CBotGlobals::SetTeamplay(mp_teamplay->GetBool());
@@ -202,28 +200,22 @@ bool AFKBot::LevelInit(const char *pMapName,
 	CBotEvents::SetupEvents();
 
 	CBots::MapInit();
-
 	CBotGlobals::GetCurrentMod()->MapInit();
-
-	CBotSquads::FreeMemory();
-
-	return true;
 }
 
-void AFKBot::LevelShutdown()
+void AFKBot::OnCoreMapEnd()
 {
-	CBots::FreeMapMemory();
 	CWaypoints::Init();
 	CWaypointDistances::Save();
-	//CNavMeshNavigator::FreeMemory();
-	CGameRulesObject::FreeMemory();
 	CBotGlobals::SetMapRunning(false);
+	CBots::FreeMapMemory();
+	CBotSquads::FreeMemory();
 	CBotEvents::FreeMemory();
 }
 
 void AFKBot::FireGameEvent(IGameEvent *pEvent)
 {
-	if (m_pNavMesh == NULL) return;
+	/*if (m_pNavMesh == NULL) return;
 	unsigned int iAreaID = pEvent->GetInt("area");
 
 	IList<INavMeshArea*> *areas = m_pNavMesh->GetAreas();
@@ -236,7 +228,7 @@ void AFKBot::FireGameEvent(IGameEvent *pEvent)
 			area->SetBlocked(bBlocked);
 			break;
 		}
-	}
+	}*/
 	return;
 }
 
@@ -334,9 +326,9 @@ bool AFKBot::SDK_OnMetamodLoad(ISmmAPI *ismm, char *error, size_t maxlen, bool l
 
 	MathLib_Init();
 
-	SH_ADD_HOOK(IServerGameDLL, LevelInit, gamedll, SH_MEMBER(this, &AFKBot::LevelInit), true);
+	//SH_ADD_HOOK(IServerGameDLL, LevelInit, gamedll, SH_MEMBER(this, &AFKBot::LevelInit), true);
 	//SH_ADD_HOOK(IServerGameDLL, GameFrame, gamedll, SH_MEMBER(this, &AFKBot::GameFrame), true);
-	SH_ADD_HOOK(IServerGameDLL, LevelShutdown, gamedll, SH_MEMBER(this, &AFKBot::LevelShutdown), false);
+	//SH_ADD_HOOK(IServerGameDLL, LevelShutdown, gamedll, SH_MEMBER(this, &AFKBot::LevelShutdown), false);
 	SH_ADD_HOOK(IServerGameClients, ClientCommand, gameclients, SH_MEMBER(this, &AFKBot::OnClientCommand), false);
 	SH_ADD_HOOK(IGameEventManager2, FireEvent, gameevents, SH_MEMBER(this, &AFKBot::FireEvent), false);
 
@@ -373,7 +365,7 @@ void AFKBot::SDK_OnAllLoaded()
 	if (sv_tags != NULL && bot_tags.GetBool())
 	{
 		char sv_tags_str[512];
-		strcpy(sv_tags_str, sv_tags->GetString());
+		strcpy_s(sv_tags_str, sv_tags->GetString());
 
 		if (strstr(sv_tags_str, "afkbot") == NULL)
 		{
@@ -383,7 +375,6 @@ void AFKBot::SDK_OnAllLoaded()
 				strcat(sv_tags_str, ",afkbot");
 
 			sv_tags->SetValue(sv_tags_str);
-
 		}
 	}
 }
@@ -424,9 +415,9 @@ void AFKBot::SDK_OnUnload()
 
 	gameevents->RemoveListener(this);
 
-	SH_REMOVE_HOOK(IServerGameDLL, LevelInit, gamedll, SH_MEMBER(this, &AFKBot::LevelInit), true);
+	//SH_REMOVE_HOOK(IServerGameDLL, LevelInit, gamedll, SH_MEMBER(this, &AFKBot::LevelInit), true);
 	//SH_REMOVE_HOOK(IServerGameDLL, GameFrame, gamedll, SH_MEMBER(this, &AFKBot::GameFrame), true);
-	SH_REMOVE_HOOK(IServerGameDLL, LevelShutdown, gamedll, SH_MEMBER(this, &AFKBot::LevelShutdown), false);
+	//SH_REMOVE_HOOK(IServerGameDLL, LevelShutdown, gamedll, SH_MEMBER(this, &AFKBot::LevelShutdown), false);
 	SH_REMOVE_HOOK(IServerGameClients, ClientCommand, gameclients, SH_MEMBER(this, &AFKBot::OnClientCommand), false);
 	SH_REMOVE_HOOK(IGameEventManager2, FireEvent, gameevents, SH_MEMBER(this, &AFKBot::FireEvent), false);
 
@@ -446,13 +437,12 @@ void AFKBot::SDK_OnUnload()
 	CBots::FreeAllMemory();
 	CStrings::FreeAllMemory();
 	CBotMods::FreeMemory();
+	CBotSquads::FreeMemory();
 	CBotEvents::FreeMemory();
 	CWaypoints::FreeMemory();
 	CWaypointTypes::FreeMemory();
 	CBotProfiles::DeleteProfiles();
 	CWeapons::FreeMemory();
-	CGameRulesObject::FreeMemory();
-	CNavMeshNavigator::FreeMemory();
 }
 
 bool AFKBot::SDK_OnMetamodUnload(char *error, size_t maxlen)

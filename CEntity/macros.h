@@ -20,7 +20,7 @@
 #ifndef _INCLUDE_MACROS_H_
 #define _INCLUDE_MACROS_H_
 
-#include <detours.h>
+#include "detours.h"
 
 #undef DECLARE_CLASS
 #define DECLARE_CLASS( className, baseClassName ) \
@@ -44,7 +44,7 @@
 			} \
 		} \
 		if (eventFuncs == NULL) \
-			g_pSM->LogError(myself, "[CENTITY] Could not lookup ISaveRestoreOps for Outputs"); \
+			smutils->LogError(myself, "[CENTITY] Could not lookup ISaveRestoreOps for Outputs"); \
 		UTIL_PatchOutputRestoreOps(pMap); \
 	}
 
@@ -81,7 +81,7 @@ public: \
 		int offset; \
 		if (!pConfig->GetOffset(#name, &offset)) \
 		{ \
-			g_pSM->LogError(myself, "[CENTITY] Failed to retrieve offset %s from gamedata file", #name); \
+			smutils->LogError(myself, "[CENTITY] Failed to retrieve offset %s from gamedata file", #name); \
 			m_bShouldHook = false; \
 		} else { \
 			SH_MANUALHOOK_RECONFIGURE(name, offset, 0, 0); \

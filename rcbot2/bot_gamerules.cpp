@@ -124,6 +124,8 @@ int32_t CGameRulesObject::GameRules_GetProp(const char *prop, int size, int elem
 		bit_count = size * 8;
 	}
 
+	smutils->LogMessage(myself, "GameRules_GetProp()-> bit_count = %i, offset = %i for property \"%s\"", bit_count, offset, prop);
+
 	if (bit_count >= 17)
 	{
 		return *(int32_t *)((intptr_t)m_pGameRules + offset);

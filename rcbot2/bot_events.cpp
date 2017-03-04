@@ -207,7 +207,7 @@ public:
 			float fDistance = pBot->DistanceFrom(m_pAttacker);
 
 			// add some fuzz based on distance
-			if (RandomFloat(0.0f, bot_listen_dist.GetFloat()) > fDistance)
+			if (RandomFloat(64.0f, bot_listen_dist.GetFloat()) > fDistance)
 				pBot->HearPlayerAttack(m_pAttacker, m_iWeaponID);
 		}
 	}
@@ -258,6 +258,7 @@ void CPlayerHurtEvent::Execute(IBotEventInterface *pEvent)
 			if (pBot)
 			{
 				pBot->Hurt(pAttacker, pEvent->GetInt("health"));
+				return;
 			}
 
 			pBot = CBots::GetBotPointer(pAttacker);
@@ -276,22 +277,22 @@ void CPlayerHurtEvent::Execute(IBotEventInterface *pEvent)
 				CBots::BotFunction(&func2);
 			}
 		}
-
 	}
-	//CBots::BotFunction()
 }
 
 void CPlayerDeathEvent::Execute(IBotEventInterface *pEvent)
 {
 	CBot *pBot = CBots::GetBotPointer(m_pActivator);
 	const char *weapon = pEvent->GetString("weapon", NULL);
-	CBotSquad *pPrevSquadLeadersSquad = NULL;
 	int iAttacker = pEvent->GetInt("attacker", 0);
 
 	edict_t *pAttacker = (iAttacker > 0) ? CBotGlobals::PlayerByUserId(iAttacker) : NULL;
 
 	if (pBot)
+	{
 		pBot->Died(pAttacker, weapon);
+		return;
+	}
 
 	pBot = CBots::GetBotPointer(pAttacker);
 
@@ -308,11 +309,6 @@ void CPlayerDeathEvent::Execute(IBotEventInterface *pEvent)
 
 		CBots::BotFunction(&func1);
 		CBots::BotFunction(&func2);
-	}
-
-	if ((pPrevSquadLeadersSquad = CBotSquads::FindSquadByLeader(m_pActivator)) != NULL)
-	{
-		CBotSquads::ChangeLeader(pPrevSquadLeadersSquad);
 	}
 }
 

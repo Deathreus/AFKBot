@@ -54,7 +54,7 @@ bool CEntityManager::Init(IGameConfig *pConfig)
 	void *addr;
 	if (!pConfig->GetMemSig("EntityFactory", &addr) || addr == NULL)
 	{
-		g_pSM->LogError(myself, "[CENTITY] Couldn't find sig: %s.", "EntityFactory");
+		smutils->LogError(myself, "[CENTITY] Couldn't find sig: %s.", "EntityFactory");
 		return false;
 	}
 
@@ -70,7 +70,7 @@ bool CEntityManager::Init(IGameConfig *pConfig)
 
 	if (!pConfig->GetMemSig("PhysIsInCallback", &addr) || addr == NULL)
 	{
-		g_pSM->LogError(myself, "[CENTITY] Couldn't find sig: %s.", "PhysIsInCallback");
+		smutils->LogError(myself, "[CENTITY] Couldn't find sig: %s.", "PhysIsInCallback");
 		return false;
 	}
 
@@ -84,7 +84,7 @@ bool CEntityManager::Init(IGameConfig *pConfig)
 		pTracker = pTracker->m_Next;
 	}
 
-	CDetourManager::Init(g_pSM->GetScriptingEngine(), pConfig);
+	CDetourManager::Init(smutils->GetScriptingEngine(), pConfig);
 
 	IDetourTracker *pDetourTracker = IDetourTracker::m_Head;
 	while (pDetourTracker)

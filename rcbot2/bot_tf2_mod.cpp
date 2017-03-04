@@ -196,19 +196,19 @@ void CTeamFortress2Mod::InitMod()
 
 eTFMapType CTeamFortress2Mod::GetMapType()
 {
-	if (CGameRulesObject::GameRules_GetProp("m_bIsInTraining"))
+	if (CGameRulesObject::GameRules_GetProp("m_bIsInTraining") == 1)
 		return TF_MAP_TR;
 
-	if (CGameRulesObject::GameRules_GetProp("m_bPlayingSpecialDeliveryMode"))
+	if (CGameRulesObject::GameRules_GetProp("m_bPlayingSpecialDeliveryMode") == 1)
 		return TF_MAP_SD;
 	
-	if (CGameRulesObject::GameRules_GetProp("m_bPlayingMannVsMachine"))
+	if (CGameRulesObject::GameRules_GetProp("m_bPlayingMannVsMachine") == 1)
 		return TF_MAP_MVM;
 
-	if (CGameRulesObject::GameRules_GetProp("m_bPlayingKoth"))
+	if (CGameRulesObject::GameRules_GetProp("m_bPlayingKoth") == 1)
 		return TF_MAP_KOTH;
 
-	if (CGameRulesObject::GameRules_GetProp("m_bPlayingRobotDestructionMode"))
+	if (CGameRulesObject::GameRules_GetProp("m_bPlayingRobotDestructionMode") == 1)
 		return TF_MAP_RD;
 
 	// Cases not caught by the above
@@ -293,6 +293,7 @@ void CTeamFortress2Mod::MapInit()
 	m_iFlagPointWptID = -1;
 
 	m_MapType = GetMapType();
+	//smutils->LogMessage(myself, "m_MapType = %i", (int)m_MapType);
 
 	m_iArea = 0;
 

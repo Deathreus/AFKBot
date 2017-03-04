@@ -44,6 +44,8 @@ CopyFiles('extras', 'addons/sourcemod/data/afkbot/config',
   ]
 )
 
+CopyFiles('extras', 'addons/sourcemod/extensions', ['afkbot.autoload'])
+
 # Copy binaries.
 for cxx_task in Extension.extensions:
   src = cxx_task.binary.path

@@ -566,12 +566,15 @@ bool CBotGlobals::EntityIsAlive(edict_t *pEntity)
 
 	if (index && (index <= MAX_PLAYERS))
 	{
-		IPlayerInfo *p = playerhelpers->GetGamePlayer(pEntity)->GetPlayerInfo();
-
-		if (!p)
+		IGamePlayer *pPlayer = playerhelpers->GetGamePlayer(pEntity);
+		if (!pPlayer || !pPlayer->IsConnected() || !pPlayer->IsInGame())
 			return false;
 
-		return (!p->IsDead() && (p->GetHealth() > 0));
+		IPlayerInfo *pPI = pPlayer->GetPlayerInfo();
+		if (!pPI || pPI->IsDead())
+			return false;
+
+		return (pPI->GetHealth() > 0);
 	}
 
 	return (pEntity->GetIServerEntity() && pEntity->GetClassName() && *pEntity->GetClassName());

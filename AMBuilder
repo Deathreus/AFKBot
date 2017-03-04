@@ -17,7 +17,7 @@ sourceFiles = [
   'rcbot2/bot_getprop.cpp',
   'rcbot2/bot_globals.cpp',
   'rcbot2/bot_mods.cpp',
-  'rcbot2/bot_navmesh.cpp',
+#  'rcbot2/bot_navmesh.cpp',
   'rcbot2/bot_profile.cpp',
   'rcbot2/bot_schedule.cpp',
   'rcbot2/bot_squads.cpp',
@@ -32,18 +32,18 @@ sourceFiles = [
   'rcbot2/bot_waypoint_visibility.cpp',
   'rcbot2/bot_weapons.cpp',
   'rcbot2/bot_wpt_dist.cpp',
-  'NavMesh/NavMeshVisibleArea.cpp',
-  'NavMesh/NavMeshArea.cpp',
-  'NavMesh/NavMeshConnection.cpp',
-  'NavMesh/NavMeshCornerLightIntensity.cpp',
-  'NavMesh/NavMeshEncounterPath.cpp',
-  'NavMesh/NavMeshEncounterSpot.cpp',
-  'NavMesh/NavMeshGrid.cpp',
-  'NavMesh/NavMeshHidingSpot.cpp',
-  'NavMesh/NavMeshLadder.cpp',
-  'NavMesh/NavMeshLadderConnection.cpp',
-  'NavMesh/NavMeshLoader.cpp',
-  'NavMesh/NavMeshPlace.cpp',
+#  'NavMesh/NavMeshVisibleArea.cpp',
+#  'NavMesh/NavMeshArea.cpp',
+#  'NavMesh/NavMeshConnection.cpp',
+#  'NavMesh/NavMeshCornerLightIntensity.cpp',
+#  'NavMesh/NavMeshEncounterPath.cpp',
+#  'NavMesh/NavMeshEncounterSpot.cpp',
+#  'NavMesh/NavMeshGrid.cpp',
+#  'NavMesh/NavMeshHidingSpot.cpp',
+#  'NavMesh/NavMeshLadder.cpp',
+#  'NavMesh/NavMeshLadderConnection.cpp',
+#  'NavMesh/NavMeshLoader.cpp',
+#  'NavMesh/NavMeshPlace.cpp',
 ]
 
 ###############
@@ -57,6 +57,6 @@ project.sources += sourceFiles
 for sdk_name in Extension.sdks:
   sdk = Extension.sdks[sdk_name]
   
-  binary = Extension.HL2Config(project, projectName + '.ext.' + sdk.ext, sdk)
+  binary = Extension.HL2Config(project, projectName + '.ext', sdk)
 
 Extension.extensions = builder.Add(project)

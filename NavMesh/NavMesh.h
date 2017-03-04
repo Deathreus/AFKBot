@@ -20,13 +20,21 @@ public:
 	unsigned int GetVersion();
 	unsigned int GetSubVersion();
 	unsigned int GetSaveBSPSize();
+
 	bool IsMeshAnalyzed();
+
 	IList<INavMeshPlace*> *GetPlaces();
 	IList<INavMeshArea*> *GetAreas();
 	IList<INavMeshLadder*> *GetLadders();
+
 	INavMeshGrid *GetGrid();
 	int WorldToGridX(float fWX);
 	int WorldToGridY(float fWY);
+
+	IList<INavMeshArea*> *GetAreasOnGrid(int x, int y);
+
+	INavMeshArea *GetArea(const Vector &vPos, float fBeneathLimit = 120.0f);
+	INavMeshArea *GetAreaByID(const unsigned int iAreaIndex);
 
 private:
 	unsigned int magicNumber;

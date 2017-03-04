@@ -307,7 +307,7 @@ void CBotTF2ShootLastEnemyPosition::Execute(CBot *pBot, CBotSchedule *pSchedule)
 CBotTF2WaitHealthTask::CBotTF2WaitHealthTask(Vector vOrigin)
 {
 	m_vOrigin = vOrigin;
-	m_fWaitTime = 0;
+	m_fWaitTime = 0.0f;
 }
 
 void CBotTF2WaitHealthTask::Execute(CBot *pBot, CBotSchedule *pSchedule)
@@ -322,12 +322,12 @@ void CBotTF2WaitHealthTask::Execute(CBot *pBot, CBotSchedule *pSchedule)
 	else
 	{
 		// TO DO
-		/*edict_t *pOtherPlayer = CBotGlobals::findNearestPlayer(m_vOrigin,50.0,pBot->GetEdict());
+		/*edict_t *pOtherPlayer = CBotGlobals::FindNearestPlayer(m_vOrigin, 50.0, pBot->GetEdict());
 
-		if ( pOtherPlayer )
+		if (pOtherPlayer)
 		{
-		Fail();
-		return;
+			Fail();
+			return;
 		}*/
 
 		pBot->SetLookAtTask(LOOK_AROUND);
@@ -1252,7 +1252,7 @@ void CBotTF2WaitAmmoTask::Execute(CBot *pBot, CBotSchedule *pSchedule)
 	}
 	else if (m_fWaitTime < engine->Time())
 		Fail();
-	else if (pBot->DistanceFrom(m_vOrigin) > 100)
+	else if (pBot->DistanceFrom(m_vOrigin) > 50)
 	{
 		pBot->SetMoveTo(m_vOrigin);
 	}
@@ -1994,6 +1994,8 @@ CFindPathTask::CFindPathTask(edict_t *pEdict)
 void CFindPathTask::Execute(CBot *pBot, CBotSchedule *pSchedule)
 {
 	bool bFail = false;
+	static IBotNavigator *pNav;
+	pNav = pBot->GetNavigator();
 
 	if (m_LookTask == LOOK_NOISE)
 		pBot->WantToListen(false); // vector already Set before find path task
@@ -2018,8 +2020,6 @@ void CFindPathTask::Execute(CBot *pBot, CBotSchedule *pSchedule)
 
 	if ((m_iInt == 0) || (m_iInt == 1))
 	{
-		IBotNavigator *pNav = pBot->GetNavigator();
-
 		pBot->m_fWaypointStuckTime = 0;
 
 		if (pNav->WorkRoute(pBot->GetOrigin(),
@@ -2047,7 +2047,7 @@ void CFindPathTask::Execute(CBot *pBot, CBotSchedule *pSchedule)
 		if (pBot->m_fWaypointStuckTime == 0)
 			pBot->m_fWaypointStuckTime = engine->Time() + RandomFloat(5.0f, 10.0f);
 
-		if (!pBot->GetNavigator()->HasNextPoint())
+		if (!pNav->HasNextPoint())
 		{
 			Complete(); // reached goal
 		}
@@ -2056,7 +2056,7 @@ void CFindPathTask::Execute(CBot *pBot, CBotSchedule *pSchedule)
 			if (pBot->MoveFailed())
 			{
 				Fail();
-				pBot->GetNavigator()->FailMove();
+				pNav->FailMove();
 			}
 
 			if (m_pEdict)
@@ -2073,7 +2073,7 @@ void CFindPathTask::Execute(CBot *pBot, CBotSchedule *pSchedule)
 					}
 					else if (!m_flags.bits.m_bDontGoToEdict && pBot->IsVisible(m_pEdict))
 					{
-						if (pBot->DistanceFrom(m_pEdict) < pBot->DistanceFrom(pBot->GetNavigator()->GetNextPoint()))
+						if (pBot->DistanceFrom(m_pEdict) < pBot->DistanceFrom(pNav->GetNextPoint()))
 							Complete();
 					}
 					else if (m_flags.bits.m_bCompleteOutOfRangeEdict && (pBot->DistanceFrom(m_pEdict) > m_fRange))
@@ -2467,6 +2467,7 @@ void CSpyCheckAir::Execute(CBot *pBot, CBotSchedule *pSchedule)
 	{
 		int i;
 		edict_t *pPlayer;
+		IGamePlayer *pPl;
 		IPlayerInfo *p;
 
 		seenlist = 0;
@@ -2481,9 +2482,13 @@ void CSpyCheckAir::Execute(CBot *pBot, CBotSchedule *pSchedule)
 			if (!CBotGlobals::EntityIsValid(pPlayer))
 				continue;
 
-			p = playerhelpers->GetGamePlayer(pPlayer)->GetPlayerInfo();
+			pPl = playerhelpers->GetGamePlayer(pPlayer);
+			if (!pPl || !pPl->IsConnected() || !pPl->IsInGame())
+				continue;
 
-			if (p->IsDead() || p->IsObserver())
+			p = pPl->GetPlayerInfo();
+
+			if (!p || p->IsDead() || p->IsObserver())
 				continue;
 
 			if (CClassInterface::GetTF2Class(pPlayer) == TF_CLASS_SPY)
