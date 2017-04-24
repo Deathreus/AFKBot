@@ -371,7 +371,7 @@ public:
 class CBotEngiMoveBuilding : public CBotSchedule
 {
 public:
-	CBotEngiMoveBuilding(edict_t *pBotEdict, edict_t *pBuilding, eEngiBuild iObject, Vector vNewLocation, bool bCarrying);
+	CBotEngiMoveBuilding(edict_t *pBotEdict, edict_t *pBuilding, eObjectType iObject, Vector vNewLocation, bool bCarrying);
 
 	void Init();
 };
@@ -412,7 +412,7 @@ public:
 class CBotSpySapBuildingSched : public CBotSchedule
 {
 public:
-	CBotSpySapBuildingSched(edict_t *pBuilding, eEngiBuild id);
+	CBotSpySapBuildingSched(edict_t *pBuilding, eObjectType id);
 
 	void Init();
 };
@@ -445,7 +445,7 @@ public:
 class CBotTFEngiBuild : public CBotSchedule
 {
 public:
-	CBotTFEngiBuild(CBot *pBot, eEngiBuild iObject, CWaypoint *pWaypoint);
+	CBotTFEngiBuild(CBot *pBot, eObjectType iObject, CWaypoint *pWaypoint);
 
 	void Init();
 };
@@ -453,7 +453,7 @@ public:
 class CBotRemoveSapperSched : public CBotSchedule
 {
 public:
-	CBotRemoveSapperSched(edict_t *pBuilding, eEngiBuild id);
+	CBotRemoveSapperSched(edict_t *pBuilding, eObjectType id);
 
 	void Init();
 };

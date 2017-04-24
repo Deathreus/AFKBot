@@ -436,14 +436,14 @@ private:
 class CBotRemoveSapper : public CBotTask
 {
 public:
-	CBotRemoveSapper(edict_t *pBuilding, eEngiBuild id);
+	CBotRemoveSapper(edict_t *pBuilding, eObjectType id);
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
 	float m_fTime;
 	float m_fHealTime;
 	MyEHandle m_pBuilding;
-	eEngiBuild m_id;
+	eObjectType m_id;
 };
 
 class CBotUseLunchBoxDrink : public CBotTask
@@ -690,14 +690,14 @@ public:
 class CBotTFEngiBuildTask : public CBotTask
 {
 public:
-	CBotTFEngiBuildTask(eEngiBuild iObject, CWaypoint *pWaypoint);
+	CBotTFEngiBuildTask(eObjectType iObject, CWaypoint *pWaypoint);
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 
 	void OneTryOnly() { m_iTries = 2; }
 private:
 	Vector m_vOrigin;
-	eEngiBuild m_iObject;
+	eObjectType m_iObject;
 	int m_iState;
 	float m_fTime;
 	int m_iTries;
@@ -940,13 +940,13 @@ private:
 class CBotTF2SpySap : public CBotTask
 {
 public:
-	CBotTF2SpySap(edict_t *pBuilding, eEngiBuild id); // going to use this 
+	CBotTF2SpySap(edict_t *pBuilding, eObjectType id); // going to use this 
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
 	MyEHandle m_pBuilding;
 	float m_fTime;
-	eEngiBuild m_id;
+	eObjectType m_id;
 };
 
 class CBotTFUseTeleporter : public CBotTask
@@ -975,13 +975,13 @@ private:
 class CBotTaskEngiPlaceBuilding : public CBotTask
 {
 public:
-	CBotTaskEngiPlaceBuilding(eEngiBuild iObject, Vector vOrigin); // going to use this 
+	CBotTaskEngiPlaceBuilding(eObjectType iObject, Vector vOrigin); // going to use this 
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
 	Vector m_vOrigin;
 	float m_fTime;
-	eEngiBuild m_iObject;
+	eObjectType m_iObject;
 	int m_iState;
 	int m_iTries;
 };

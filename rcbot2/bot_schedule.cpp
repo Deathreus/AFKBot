@@ -131,7 +131,7 @@ void CBotTF2HealSched::Init()
 
 /////////////////////////////////////////////
 
-CBotTFEngiBuild::CBotTFEngiBuild(CBot *pBot, eEngiBuild iObject, CWaypoint *pWaypoint)
+CBotTFEngiBuild::CBotTFEngiBuild(CBot *pBot, eObjectType iObject, CWaypoint *pWaypoint)
 {
 	CFindPathTask *pathtask = new CFindPathTask(CWaypoints::GetWaypointIndex(pWaypoint));
 	AddTask(pathtask); // first
@@ -165,7 +165,7 @@ void CBotGetMetalSched::Init()
 	SetID(SCHED_GET_METAL);
 }
 //////////////////////////////////////////////
-CBotEngiMoveBuilding::CBotEngiMoveBuilding(edict_t *pBotEdict, edict_t *pBuilding, eEngiBuild iObject, Vector vNewLocation, bool bCarrying)
+CBotEngiMoveBuilding::CBotEngiMoveBuilding(edict_t *pBotEdict, edict_t *pBuilding, eObjectType iObject, Vector vNewLocation, bool bCarrying)
 {
 	// not carrying
 	if (!bCarrying)
@@ -407,7 +407,7 @@ void CBotSpySapBuildingSched::Init()
 	SetID(SCHED_SPY_SAP_BUILDING);
 }
 
-CBotSpySapBuildingSched::CBotSpySapBuildingSched(edict_t *pBuilding, eEngiBuild id)
+CBotSpySapBuildingSched::CBotSpySapBuildingSched(edict_t *pBuilding, eObjectType id)
 {
 	CFindPathTask *findpath = new CFindPathTask(pBuilding);
 
@@ -536,7 +536,7 @@ void CBotDefendSched::Init()
 
 //////
 
-CBotRemoveSapperSched::CBotRemoveSapperSched(edict_t *pBuilding, eEngiBuild id)
+CBotRemoveSapperSched::CBotRemoveSapperSched(edict_t *pBuilding, eObjectType id)
 {
 	CFindPathTask *pathtask = new CFindPathTask(pBuilding);
 	AddTask(pathtask);
