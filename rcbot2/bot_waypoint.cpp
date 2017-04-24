@@ -346,7 +346,7 @@ float CWaypointNavigator::GetNextYaw()
 	if (m_iCurrentWaypoint != -1)
 		return CWaypoints::GetWaypoint(m_iCurrentWaypoint)->GetAimYaw();
 
-	return false;
+	return 0.0f;
 }
 
 // best waypoints are those with lowest danger
