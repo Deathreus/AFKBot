@@ -41,6 +41,57 @@
 
 extern IFileSystem* filesystem;
 
+const char *g_szTF2Weapons[] =
+{
+	"tf_weapon_bat",
+	"tf_weapon_bottle",
+	"tf_weapon_fireaxe",
+	"tf_weapon_club",
+	"tf_weapon_knife",
+	"tf_weapon_fists",
+	"tf_weapon_shovel",
+	"tf_weapon_wrench",
+	"tf_weapon_bonesaw",
+	"tf_weapon_shotgun_primary",
+	"tf_weapon_shotgun_soldier",
+	"tf_weapon_shotgun_hwg",
+	"tf_weapon_shotgun_pyro",
+	"tf_weapon_scattergun",
+	"tf_weapon_sniperrifle",
+	"tf_weapon_minigun",
+	"tf_weapon_smg",
+	"tf_weapon_syringegun_medic",
+	"tf_weapon_rocketlauncher",
+	"tf_weapon_grenadelauncher",
+	"tf_weapon_pipebomblauncher",
+	"tf_weapon_flamethrower",
+	"tf_weapon_pistol",
+	"tf_weapon_pistol_scout",
+	"tf_weapon_revolver",
+	"tf_weapon_drg_pomson",
+	"tf_weapon_sentry_revenge",
+	"tf_weapon_builder",
+	"tf_weapon_medigun",
+	"tf_weapon_invis",
+	"tf_weapon_buff_item",
+	"tf_weapon_flaregun",
+	"obj_sentrygun",
+	"saxxy",
+	"tf_weapon_bat_wood",
+	"tf_weapon_lunchbox_drink",
+	"tf_weapon_compound_bow",
+	"tf_weapon_jar",
+	"tf_weapon_bat_fish",
+	"tf_weapon_rocketlauncher_directhit",
+	"tf_weapon_sword",
+	"tf_weapon_katana",
+	"tf_weapon_particle_cannon",
+	"tf_weapon_crossbow",
+	"tf_weapon_cleaver",
+	"tf_weapon_bat_giftwrap",
+	"tf_weapon_raygun"
+};
+
 const char *g_szDODWeapons[] =
 {
 	"weapon_amerknife",
@@ -85,11 +136,6 @@ const char *g_szHL2DMWeapons[] =
 	"weapon_shotgun",
 	"weapon_physcannon"
 };
-
-/*  0, 0, 1, 2, 6, 3,
-  4, 5, 8, 8, 9, 8,
-  7, 5, 10, 11, 12, 12,
-  21, 22, 13, 14, 17, 18*/
 
 WeaponsData_t DODWeaps[] =
 {
@@ -145,13 +191,11 @@ WeaponsData_t HL2DMWeaps[] =
 	{ 0, 0, "\0", 0, 0, 0, 0, 0, 0 }//signal last weapon
 };
 
-//SENTRYGUN ID = 34
-
 WeaponsData_t TF2Weaps[] =
 {
-
-	//{"slot, id , weapon name, flags, min dist, max dist, ammo index, preference
-
+	/*
+		slot, id, weapon name, flags, min dist, max dist, ammo index, preference
+		*/
 	{ TF2_SLOT_MELEE, TF2_WEAPON_BAT, "tf_weapon_bat", WEAP_FL_PRIM_ATTACK | WEAP_FL_MELEE | WEAP_FL_UNDERWATER, 0, 180, 0, 1, 0 },
 	{ TF2_SLOT_MELEE, TF2_WEAPON_BOTTLE, "tf_weapon_bottle", WEAP_FL_PRIM_ATTACK | WEAP_FL_MELEE | WEAP_FL_UNDERWATER, 0, 180, 0, 1, 0 },
 	{ TF2_SLOT_MELEE, TF2_WEAPON_FIREAXE, "tf_weapon_fireaxe", WEAP_FL_PRIM_ATTACK | WEAP_FL_MELEE | WEAP_FL_UNDERWATER, 0, 180, 0, 1, 0 },
@@ -178,8 +222,6 @@ WeaponsData_t TF2Weaps[] =
 	{ TF2_SLOT_SCNDR, TF2_WEAPON_PISTOL_SCOUT, "tf_weapon_pistol_scout", WEAP_FL_KILLPIPEBOMBS | WEAP_FL_PRIM_ATTACK | WEAP_FL_UNDERWATER, 0, 1800, 2, 2, 0 },
 	{ TF2_SLOT_SCNDR, TF2_WEAPON_REVOLVER, "tf_weapon_revolver", WEAP_FL_KILLPIPEBOMBS | WEAP_FL_PRIM_ATTACK | WEAP_FL_UNDERWATER, 0, 1400, 2, 1, 0 },
 	{ TF2_SLOT_PRMRY, TF2_WEAPON_POMSON6000, "tf_weapon_drg_pomson", WEAP_FL_PRIM_ATTACK | WEAP_FL_UNDERWATER, 0, 800, 1, 2, 0 },
-	// this class is used with all classes that can use shotgun but the slot might be different
-	{ TF2_SLOT_SCNDR, TF2_WEAPON_SHOTGUN, "tf_weapon_shotgun", WEAP_FL_KILLPIPEBOMBS | WEAP_FL_PRIM_ATTACK | WEAP_FL_UNDERWATER, 0, 500, 2, 2, 0 },
 	{ TF2_SLOT_PRMRY, TF2_WEAPON_FRONTIERJUSTICE, "tf_weapon_sentry_revenge", WEAP_FL_KILLPIPEBOMBS | WEAP_FL_PRIM_ATTACK | WEAP_FL_UNDERWATER, 0, 800, 1, 2, 0 },
 	{ TF2_SLOT_PDA, TF2_WEAPON_BUILDER, "tf_weapon_builder", WEAP_FL_NONE, 0, 100, 0, 1, 0 },
 	{ TF2_SLOT_SCNDR, TF2_WEAPON_MEDIGUN, "tf_weapon_medigun", WEAP_FL_NONE, 0, 100, 0, 1, 0 },
@@ -566,7 +608,7 @@ void CWeapons::LoadWeapons(const char *szWeaponListName, WeaponsData_t *pDefault
 		KeyValues *kv = new KeyValues("Weapons");
 		char szFilename[1024];
 
-		smutils->BuildPath(Path_SM, szFilename, sizeof(szFilename), "data\\afkbot\\%s\\weapons.%s", BOT_CONFIG_FOLDER, BOT_CONFIG_EXTENSION);
+		smutils->BuildPath(Path_SM, szFilename, sizeof(szFilename), "data\\afkbot\\config\\weapons.cfg");
 
 		if (kv)
 		{
