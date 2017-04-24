@@ -60,9 +60,10 @@ public:
 
 	static inline bool IsPlayer(edict_t *pEdict)
 	{
-		IGamePlayer *pPlayer = playerhelpers->GetGamePlayer(pEdict);
+		return (ENTINDEX(pEdict) > 0 && ENTINDEX(pEdict) < MAX_PLAYERS);
+		/*IGamePlayer *pPlayer = playerhelpers->GetGamePlayer(pEdict);
 
-		return (pPlayer != NULL && pPlayer->IsInGame());
+		return (pPlayer != NULL && pPlayer->IsInGame());*/
 	}
 
 	static bool WalkableFromTo(edict_t *pPlayer, Vector v_src, Vector v_dest);
@@ -76,7 +77,7 @@ public:
 	static FILE *OpenFile(char *szFile, char *szMode);
 	// get the proper location
 	static void BuildFileName(char *szOutput, const char *szFile, const char *szFolder = NULL, const char *szExtension = NULL, bool bModDependent = false);
-	// add a directory delimiter to the string like '/' (linux) or '\\' (windows) or
+	// add a directory delimiter to the string like '/' (linux) or '\\' (windows)
 	static void AddDirectoryDelimiter(char *szString);
 	// print a message to client pEntity with bot formatting
 	static void BotMessage(edict_t *pEntity, int iErr, char *fmt, ...);

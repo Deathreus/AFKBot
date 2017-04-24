@@ -76,6 +76,77 @@ extern IPlayerInfoManager *playerinfomanager;
 extern IServerGameClients* gameclients;
 extern IEngineTrace *engtrace;
 
+extern ConVar *mp_friendlyfire;
+
+//-----------------------------------------------------------------------------
+// traceline methods
+//-----------------------------------------------------------------------------
+class CTraceFilterSimple : public CTraceFilter
+{
+public:
+
+	CTraceFilterSimple(const IHandleEntity *passentity1, const IHandleEntity *passentity2, int collisionGroup)
+	{
+		m_pPassEnt1 = passentity1;
+
+		if (passentity2)
+			m_pPassEnt2 = passentity2;
+
+		m_collisionGroup = collisionGroup;
+	}
+	virtual bool ShouldHitEntity(IHandleEntity *pHandleEntity, int contentsMask)
+	{
+		if (m_pPassEnt1 == pHandleEntity)
+			return false;
+		if (m_pPassEnt2 == pHandleEntity)
+			return false;
+#if defined(_DEBUG) && !defined(__linux__)
+		static edict_t *edict;
+		edict = INDEXENT(pHandleEntity->GetRefEHandle().GetEntryIndex());
+		debugoverlay->AddTextOverlayRGB(CBotGlobals::EntityOrigin(edict), 0, 2.0f, 255, 100, 100, 200, "Traceline hit %s", edict->GetClassName());
+#endif
+		return true;
+	}
+
+private:
+	const IHandleEntity *m_pPassEnt1;
+	const IHandleEntity *m_pPassEnt2;
+	int m_collisionGroup;
+};
+
+class CTraceFilterHitAllExceptPlayers : public CTraceFilter
+{
+public:
+	virtual bool ShouldHitEntity(IHandleEntity *pServerEntity, int contentsMask)
+	{
+		return pServerEntity->GetRefEHandle().GetEntryIndex() > MAX_PLAYERS;
+	}
+};
+
+class CTraceFilterIgnoreFriends : public CTraceFilter
+{
+public:
+	CTraceFilterIgnoreFriends(const IHandleEntity *pass, int collisionGroup)
+	{
+		m_pPassEnt = pass;
+		m_collisionGroup = collisionGroup;
+	}
+	virtual bool ShouldHitEntity(IHandleEntity *pServerEntity, int contentsMask)
+	{
+		edict_t *pEdict = gamehelpers->GetHandleEntity((CBaseHandle)pServerEntity->GetRefEHandle());
+
+		edict_t *pPlayer = gamehelpers->GetHandleEntity((CBaseHandle)m_pPassEnt->GetRefEHandle());
+
+		if (CBotGlobals::GetTeam(pEdict) == CBotGlobals::GetTeam(pPlayer))
+			return false;
+
+		return true;
+	}
+private:
+	const IHandleEntity *m_pPassEnt;
+	int m_collisionGroup;
+};
+
 class CTraceFilterVis : public CTraceFilter
 {
 public:
@@ -224,13 +295,12 @@ float CBotGlobals::GrenadeWillLand(Vector vOrigin, Vector vEnemy, float fProjSpe
 	return false;
 }
 
-// TO DO :: put in CClients ?
 edict_t *CBotGlobals::FindPlayerByTruncName(const char *name)
 // find a player by a truncated name "name".
 // e.g. name = "Jo" might find a player called "John"
 {
 	edict_t *pent = NULL;
-	IPlayerInfo *pInfo;
+	IPlayerInfo *pPI;
 	int i;
 
 	for (i = 1; i <= MAX_PLAYERS; i++)
@@ -246,12 +316,12 @@ edict_t *CBotGlobals::FindPlayerByTruncName(const char *name)
 
 			strcpy(arg_lwr, name);
 
-			pInfo = playerinfomanager->GetPlayerInfo(pent);
+			pPI = playerinfomanager->GetPlayerInfo(pent);
 
-			if (pInfo == NULL)
+			if (pPI == NULL)
 				continue;
 
-			strcpy(pent_lwr, pInfo->GetName());
+			strcpy(pent_lwr, pPI->GetName());
 
 			__strlow(arg_lwr);
 			__strlow(pent_lwr);
@@ -266,70 +336,26 @@ edict_t *CBotGlobals::FindPlayerByTruncName(const char *name)
 	return NULL;
 }
 
-class CTraceFilterHitAllExceptPlayers : public CTraceFilter
-{
-public:
-	virtual bool ShouldHitEntity(IHandleEntity *pServerEntity, int contentsMask)
-	{
-		return pServerEntity->GetRefEHandle().GetEntryIndex() <= MAX_PLAYERS;
-	}
-};
-
-//-----------------------------------------------------------------------------
-// traceline methods
-//-----------------------------------------------------------------------------
-class CTraceFilterSimple : public CTraceFilter
-{
-public:
-
-	CTraceFilterSimple(const IHandleEntity *passentity1, const IHandleEntity *passentity2, int collisionGroup)
-	{
-		m_pPassEnt1 = passentity1;
-
-		if (passentity2)
-			m_pPassEnt2 = passentity2;
-
-		m_collisionGroup = collisionGroup;
-	}
-	virtual bool ShouldHitEntity(IHandleEntity *pHandleEntity, int contentsMask)
-	{
-		if (m_pPassEnt1 == pHandleEntity)
-			return false;
-		if (m_pPassEnt2 == pHandleEntity)
-			return false;
-#if defined(_DEBUG) && !defined(__linux__)
-		static edict_t *edict;
-		edict = INDEXENT(pHandleEntity->GetRefEHandle().GetEntryIndex());
-		debugoverlay->AddTextOverlayRGB(CBotGlobals::EntityOrigin(edict),0,2.0f,255,100,100,200,"Traceline hit %s",edict->GetClassName());
-#endif
-		return true;
-	}
-
-private:
-	const IHandleEntity *m_pPassEnt1;
-	const IHandleEntity *m_pPassEnt2;
-	int m_collisionGroup;
-};
-
 bool CBotGlobals::CheckOpensLater(Vector vSrc, Vector vDest)
 {
 	CTraceFilterSimple traceFilter(NULL, NULL, MASK_PLAYERSOLID);
 
 	TraceLine(vSrc, vDest, MASK_PLAYERSOLID, &traceFilter);
 
-	return (TraceVisible(NULL));
+	return TraceVisible(NULL);
 }
-
 
 bool CBotGlobals::IsVisibleHitAllExceptPlayer(edict_t *pPlayer, Vector vSrc, Vector vDest, edict_t *pDest)
 {
-	const IHandleEntity *ignore = pPlayer->GetIServerEntity();
+	CTraceFilter *traceFilter;
+	if (!mp_friendlyfire || !mp_friendlyfire->GetBool())
+		traceFilter = new CTraceFilterIgnoreFriends(pPlayer->GetIServerEntity(), MASK_BLOCKLOS_AND_NPCS);
+	else
+		traceFilter = new CTraceFilterSimple(pPlayer->GetIServerEntity(), ((pDest == NULL) ? NULL : pDest->GetIServerEntity()), MASK_ALL);
 
-	CTraceFilterSimple traceFilter(ignore, ((pDest == NULL) ? NULL : pDest->GetIServerEntity()), MASK_ALL);
+	TraceLine(vSrc, vDest, MASK_SHOT | MASK_VISIBLE, traceFilter);
 
-	TraceLine(vSrc, vDest, MASK_SHOT | MASK_VISIBLE, &traceFilter);
-
-	return (TraceVisible(pDest));
+	return TraceVisible(pDest);
 }
 
 bool CBotGlobals::IsVisible(edict_t *pPlayer, Vector vSrc, Vector vDest)
@@ -338,7 +364,7 @@ bool CBotGlobals::IsVisible(edict_t *pPlayer, Vector vSrc, Vector vDest)
 
 	TraceLine(vSrc, vDest, MASK_SOLID_BRUSHONLY | CONTENTS_OPAQUE, &filter);
 
-	return (TraceVisible(NULL));
+	return TraceVisible(NULL);
 }
 
 bool CBotGlobals::IsVisible(edict_t *pPlayer, Vector vSrc, edict_t *pDest)
@@ -347,7 +373,7 @@ bool CBotGlobals::IsVisible(edict_t *pPlayer, Vector vSrc, edict_t *pDest)
 
 	TraceLine(vSrc, EntityOrigin(pDest), MASK_SOLID_BRUSHONLY | CONTENTS_OPAQUE, &filter);
 
-	return (TraceVisible(pDest));
+	return TraceVisible(pDest);
 }
 
 bool CBotGlobals::IsShotVisible(edict_t *pPlayer, Vector vSrc, Vector vDest, edict_t *pDest)
@@ -356,7 +382,7 @@ bool CBotGlobals::IsShotVisible(edict_t *pPlayer, Vector vSrc, Vector vDest, edi
 
 	TraceLine(vSrc, vDest, MASK_SHOT, &filter);
 
-	return (TraceVisible(pDest));
+	return TraceVisible(pDest);
 }
 
 bool CBotGlobals::IsVisible(Vector vSrc, Vector vDest)
@@ -550,7 +576,7 @@ int CBotGlobals::NumBots()
 
 	for (int i = gpGlobals->maxClients; i > 0; i--)
 	{
-		CBot *pBot = CBots::Get(i-1);
+		CBot *pBot = CBots::GetBotPointer(INDEXENT(i));
 		if (pBot && pBot->InUse())
 			iCount++;
 	}
@@ -560,11 +586,8 @@ int CBotGlobals::NumBots()
 
 bool CBotGlobals::EntityIsAlive(edict_t *pEntity)
 {
-	static short int index;
-
-	index = ENTINDEX(pEntity);
-
-	if (index && (index <= MAX_PLAYERS))
+	short int index = ENTINDEX(pEntity);
+	if (index && (index < MAX_PLAYERS))
 	{
 		IGamePlayer *pPlayer = playerhelpers->GetGamePlayer(pEntity);
 		if (!pPlayer || !pPlayer->IsConnected() || !pPlayer->IsInGame())
@@ -598,8 +621,13 @@ edict_t *CBotGlobals::PlayerByUserId(int iUserId)
 
 int CBotGlobals::GetTeam(edict_t *pEntity)
 {
-	IPlayerInfo *p = playerhelpers->GetGamePlayer(pEntity)->GetPlayerInfo();
-	return p->GetTeamIndex();
+	IGamePlayer *pPlayer = playerhelpers->GetGamePlayer(pEntity);
+	if (!pPlayer || pPlayer->IsReplay() || pPlayer->IsSourceTV())
+		return 0;
+
+	IPlayerInfo *pPI = pPlayer->GetPlayerInfo();
+
+	return pPI ? pPI->GetTeamIndex() : 0;
 }
 
 bool CBotGlobals::IsNetworkable(edict_t *pEntity)
@@ -855,7 +883,7 @@ void CBotGlobals::BotMessage(edict_t *pEntity, int iErr, char *fmt, ...)
 
 void CBotGlobals::PrintToChat(int client, const char* fmt, ...)
 {
-	static int iChatText = NULL;
+	static int iChatText = 0;
 	cell_t pClient[] = { client };
 	if (!iChatText) iChatText = usermsgs->GetMessageIndex("SayText2");
 
@@ -880,24 +908,34 @@ void CBotGlobals::PrintToChat(int client, const char* fmt, ...)
 
 void CBotGlobals::PrintToChatAll(const char *fmt, ...)
 {
-	va_list argptr; char string[253];
+	static int iChatText = 0;
+	if (!iChatText) iChatText = usermsgs->GetMessageIndex("SayText2");
+
+	va_list argptr; char buffer[253];
 	va_start(argptr, fmt);
-	smutils->FormatArgs(string, sizeof(string), fmt, argptr);
+	smutils->FormatArgs(buffer, sizeof(buffer), fmt, argptr);
 	va_end(argptr);
 
-	for (int iClient = 1; iClient <= MAX_PLAYERS; iClient++)
+	cell_t pClients[MAX_PLAYERS]; int iClients = 0;
+	for (short int i = 1; i < MAX_PLAYERS; i++)
 	{
-		IGamePlayer *pPlayer = playerhelpers->GetGamePlayer(iClient);
+		IGamePlayer *pPlayer = playerhelpers->GetGamePlayer(i);
 		if (pPlayer == NULL || !pPlayer->IsConnected() || !pPlayer->IsInGame())
 			continue;
 
-		PrintToChat(iClient, string);
+		pClients[iClients++] = i;
 	}
+
+	bf_write *pBitBuf = usermsgs->StartBitBufMessage(iChatText, pClients, iClients, USERMSG_RELIABLE);
+	pBitBuf->WriteByte(0);
+	pBitBuf->WriteString(buffer);
+	pBitBuf->WriteByte(1);
+	usermsgs->EndMessage();
 }
 
 void CBotGlobals::PrintHintText(int client, const char* fmt, ...)
 {
-	static int iHintText = NULL;
+	static int iHintText = 0;
 	cell_t pClient[] = { client };
 	if (!iHintText) iHintText = usermsgs->GetMessageIndex("HintText");
 
@@ -913,19 +951,27 @@ void CBotGlobals::PrintHintText(int client, const char* fmt, ...)
 
 void CBotGlobals::PrintHintTextAll(const char* fmt, ...)
 {
-	va_list argptr; char string[253];
+	static int iHintText = 0;
+	if (!iHintText) iHintText = usermsgs->GetMessageIndex("HintText");
+
+	va_list argptr; char buffer[253];
 	va_start(argptr, fmt);
-	smutils->FormatArgs(string, sizeof(string), fmt, argptr);
+	smutils->FormatArgs(buffer, sizeof(buffer), fmt, argptr);
 	va_end(argptr);
 
-	for (int iClient = 1; iClient <= MAX_PLAYERS; iClient++)
+	cell_t pClients[MAX_PLAYERS]; int iClients = 0;
+	for (int i = 1; i < MAX_PLAYERS; i++)
 	{
-		IGamePlayer *pPlayer = playerhelpers->GetGamePlayer(iClient);
+		IGamePlayer *pPlayer = playerhelpers->GetGamePlayer(i);
 		if (pPlayer == NULL || !pPlayer->IsConnected() || !pPlayer->IsInGame())
 			continue;
 
-		PrintHintText(iClient, string);
+		pClients[iClients++] = i;
 	}
+
+	bf_write *pBitBuf = usermsgs->StartBitBufMessage(iHintText, pClients, iClients, USERMSG_RELIABLE);
+	pBitBuf->WriteString(buffer);
+	usermsgs->EndMessage();
 }
 
 bool CBotGlobals::MakeFolders(char *szFile)
@@ -962,15 +1008,7 @@ bool CBotGlobals::MakeFolders(char *szFile)
 #ifndef __linux__
 		mkdir(szFolderName);
 #else
-		if ( mkdir(szFolderName, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == 0 ) {
-			BotMessage(NULL,0,"Trying to create folder '%s' successful",szFolderName);
-		} else {
-			if (!str_is_empty(szFolderName)) {
-				BotMessage(NULL,0,"Folder '%s' already exists", szFolderName);
-			} else {
-				BotMessage(NULL,0,"Trying to create folder '%s' failed",szFolderName);
-			}
-		}
+		mkdir(szFolderName, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 #endif   
 	}
 
@@ -1020,7 +1058,7 @@ FILE *CBotGlobals::OpenFile(char *szFile, char *szMode)
 void CBotGlobals::BuildFileName(char *szOutput, const char *szFile, const char *szFolder, const char *szExtension, bool bModDependent)
 {
 	if (m_szRCBotFolder == NULL)
-		strcat(szOutput, BOT_FOLDER);
+		strcat(szOutput, "afkbot");
 	else
 		strcpy(szOutput, m_szRCBotFolder);
 
