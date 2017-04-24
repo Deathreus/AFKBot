@@ -41,11 +41,11 @@
 #undef GetProp
 #endif
 
-void *m_pGameRules;
+void *g_pGameRules;
 
 bool CGameRulesObject::GetGameRules(char *error, size_t maxlen)
 {
-	if (!(m_pGameRules=g_pSDKTools->GetGameRules()))
+	if (!(g_pGameRules=g_pSDKTools->GetGameRules()))
 	{
 		snprintf(error, maxlen, "Could not fetch the gamerules object!");
 		return false;
@@ -58,7 +58,7 @@ int32_t CGameRulesObject::GameRules_GetProp(const char *prop, int size, int elem
 	int offset;
 	int bit_count;
 
-	if (!m_pGameRules)
+	if (!g_pGameRules)
 		return 0;
 
 	sm_sendprop_info_t info;
@@ -124,37 +124,35 @@ int32_t CGameRulesObject::GameRules_GetProp(const char *prop, int size, int elem
 		bit_count = size * 8;
 	}
 
-	smutils->LogMessage(myself, "GameRules_GetProp()-> bit_count = %i, offset = %i for property \"%s\"", bit_count, offset, prop);
-
 	if (bit_count >= 17)
 	{
-		return *(int32_t *)((intptr_t)m_pGameRules + offset);
+		return *(int32_t *)((intptr_t)g_pGameRules + offset);
 	}
 	else if (bit_count >= 9)
 	{
 		if (is_unsigned)
 		{
-			return *(uint16_t *)((intptr_t)m_pGameRules + offset);
+			return *(uint16_t *)((intptr_t)g_pGameRules + offset);
 		}
 		else
 		{
-			return *(int16_t *)((intptr_t)m_pGameRules + offset);
+			return *(int16_t *)((intptr_t)g_pGameRules + offset);
 		}
 	}
 	else if (bit_count >= 2)
 	{
 		if (is_unsigned)
 		{
-			return *(uint8_t *)((intptr_t)m_pGameRules + offset);
+			return *(uint8_t *)((intptr_t)g_pGameRules + offset);
 		}
 		else
 		{
-			return *(int8_t *)((intptr_t)m_pGameRules + offset);
+			return *(int8_t *)((intptr_t)g_pGameRules + offset);
 		}
 	}
 	else
 	{
-		return *(bool *)((intptr_t)m_pGameRules + offset) ? 1 : 0;
+		return *(bool *)((intptr_t)g_pGameRules + offset) ? 1 : 0;
 	}
 
 	return 0;

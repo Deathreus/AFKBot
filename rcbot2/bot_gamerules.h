@@ -81,7 +81,7 @@ enum ePropFieldType
 	PropField_String_T,			/**< Valid for Data fields.  Read only! */
 };
 
-extern void *m_pGameRules;
+extern void *g_pGameRules;
 
 class CGameRulesObject
 {
@@ -89,10 +89,10 @@ public:
 	// Returns an integer from the gamerules entity
 	static int32_t GameRules_GetProp(const char *prop, int size = 4, int element = 0);
 
-	static void *GetGameRules() { return m_pGameRules; }
+	static void *GetGameRules() { return g_pGameRules; }
 	static bool GetGameRules(char *error, size_t maxlen);
 
-	static void FreeMemory() { delete m_pGameRules; }
+	static void FreeMemory() { delete g_pGameRules; }
 };
 
 #endif // __BOT_GAMERULES_H__
