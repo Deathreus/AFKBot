@@ -502,7 +502,7 @@ int CClassInterface::GetTF2Score(edict_t *edict)
 	return 0;
 }
 
-int32_t CEntData::GetEntProp(edict_t *pEdict, const char *prop, int element)
+int32_t CEntData::GetEntSend(edict_t *pEdict, const char *prop, int element)
 {
 	int offset;
 	int bit_count;
@@ -555,7 +555,7 @@ int32_t CEntData::GetEntProp(edict_t *pEdict, const char *prop, int element)
 	return 0;
 }
 
-float CEntData::GetEntPropFloat(edict_t *pEdict, const char *prop, int element)
+float CEntData::GetEntSendFloat(edict_t *pEdict, const char *prop, int element)
 {
 	int offset;
 	int bit_count;
@@ -567,7 +567,7 @@ float CEntData::GetEntPropFloat(edict_t *pEdict, const char *prop, int element)
 	return *(float *)((uint8_t *)pEntity + offset);
 }
 
-const char *CEntData::GetEntPropString(edict_t *pEdict, const char *prop, int element)
+const char *CEntData::GetEntSendString(edict_t *pEdict, const char *prop, int element)
 {
 	int offset;
 	const char *src;
@@ -612,7 +612,7 @@ const char *CEntData::GetEntPropString(edict_t *pEdict, const char *prop, int el
 	return src;
 }
 
-Vector CEntData::GetEntPropVector(edict_t *pEdict, const char *prop, int element)
+Vector CEntData::GetEntSendVector(edict_t *pEdict, const char *prop, int element)
 {
 	int offset;
 	int bit_count;
@@ -624,7 +624,7 @@ Vector CEntData::GetEntPropVector(edict_t *pEdict, const char *prop, int element
 	return *(Vector *)((uint8_t *)pEntity + offset);
 }
 
-CBaseEntity *CEntData::GetEntPropEnt(edict_t *pEdict, const char *prop, int element)
+edict_t *CEntData::GetEntSendEnt(edict_t *pEdict, const char *prop, int element)
 {
 	int offset;
 	int bit_count;
@@ -639,7 +639,7 @@ CBaseEntity *CEntData::GetEntPropEnt(edict_t *pEdict, const char *prop, int elem
 	if (!pHandleEntity || hndl != reinterpret_cast<IHandleEntity *>(pHandleEntity)->GetRefEHandle())
 		return NULL;
 
-	return pHandleEntity;
+	return gameents->BaseEntityToEdict(pHandleEntity);
 }
 
 int32_t CEntData::GetEntData(edict_t *pEdict, const char *prop, int element)
@@ -652,16 +652,6 @@ int32_t CEntData::GetEntData(edict_t *pEdict, const char *prop, int element)
 	FIND_PROP_DATA(td);
 	int bit_count = MatchFieldAsGetInteger(td->fieldType);
 	CHECK_SET_PROP_DATA_OFFSET();
-
-	if (bit_count == 0)
-	{
-		return 0;
-	}
-
-	if (element < 0 || element >= td->fieldSize)
-	{
-		return 0;
-	}
 
 	if (bit_count < 1)
 	{
@@ -777,7 +767,7 @@ Vector CEntData::GetEntDataVector(edict_t *pEdict, const char *prop, int element
 	return *(Vector *)((uint8_t *)pEntity + offset);
 }
 
-CBaseEntity *CEntData::GetEntDataEnt(edict_t *pEdict, const char *prop, int element)
+edict_t *CEntData::GetEntDataEnt(edict_t *pEdict, const char *prop, int element)
 {
 	typedescription_t *td;
 	int offset;
@@ -819,7 +809,7 @@ CBaseEntity *CEntData::GetEntDataEnt(edict_t *pEdict, const char *prop, int elem
 			if (!pHandleEntity || hndl != reinterpret_cast<IHandleEntity *>(pHandleEntity)->GetRefEHandle())
 				return NULL;
 
-			return pHandleEntity;
+			return gameents->BaseEntityToEdict(pHandleEntity);
 		}
 		case PropEnt_Entity:
 		{
@@ -827,7 +817,7 @@ CBaseEntity *CEntData::GetEntDataEnt(edict_t *pEdict, const char *prop, int elem
 			if (pOther == NULL)
 				return NULL;
 
-			return pOther;
+			return gameents->BaseEntityToEdict(pOther);
 		}
 		case PropEnt_Edict:
 		{
@@ -835,7 +825,7 @@ CBaseEntity *CEntData::GetEntDataEnt(edict_t *pEdict, const char *prop, int elem
 			if (!pEdict || pEdict->IsFree())
 				return NULL;
 
-			return gameents->EdictToBaseEntity(pEdict);
+			return pEdict;
 		}
 	}
 

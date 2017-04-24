@@ -576,7 +576,7 @@ public:
 
 	inline static bool TF2_MvMIsPlayerReady(int client)
 	{
-		return CGameRulesObject::GameRules_GetProp("m_bPlayerReady", 4, client) == 1;
+		return CGameRulesObject::GameRules_GetProp("m_bPlayerReady", 1, client) == 1;
 	}
 
 private:
@@ -619,17 +619,17 @@ inline int MatchFieldAsGetInteger(int field_type)
 class CEntData
 {
 public:
-	static int32_t GetEntProp(edict_t *pEdict, const char *prop, int element = 0);
-	static float GetEntPropFloat(edict_t *pEdict, const char *prop, int element = 0);
-	static const char *GetEntPropString(edict_t *pEdict, const char *prop, int element = 0);
-	static Vector GetEntPropVector(edict_t *pEdict, const char *prop, int element = 0);
-	static CBaseEntity *GetEntPropEnt(edict_t *pEdict, const char *prop, int element = 0);
+	static int32_t GetEntSend(edict_t *pEdict, const char *prop, int element = 0);
+	static float GetEntSendFloat(edict_t *pEdict, const char *prop, int element = 0);
+	static const char *GetEntSendString(edict_t *pEdict, const char *prop, int element = 0);
+	static Vector GetEntSendVector(edict_t *pEdict, const char *prop, int element = 0);
+	static edict_t *GetEntSendEnt(edict_t *pEdict, const char *prop, int element = 0);
 
 	static int32_t GetEntData(edict_t *pEdict, const char *prop, int element = 0);
 	static float GetEntDataFloat(edict_t *pEdict, const char *prop, int element = 0);
 	static const char *GetEntDataString(edict_t *pEdict, const char *prop, int element = 0);
 	static Vector GetEntDataVector(edict_t *pEdict, const char *prop, int element = 0);
-	static CBaseEntity *GetEntDataEnt(edict_t *pEdict, const char *prop, int element = 0);
+	static edict_t *GetEntDataEnt(edict_t *pEdict, const char *prop, int element = 0);
 };
 
 }//namespace SourceMod
