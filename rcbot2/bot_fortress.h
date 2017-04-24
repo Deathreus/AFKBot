@@ -36,9 +36,6 @@
 #include "bot_base.h"
 #include "bot_utility.h"
 
-//#include <stack>
-//using namespace std;
-
 #define TF2_ROCKETSPEED   1100
 #define TF2_GRENADESPEED  1216 // TF2 wiki
 #define TF2_MAX_SENTRYGUN_RANGE 1024
@@ -84,10 +81,135 @@ class CBotUtility;
 #define TF2_PLAYER_TELEPORTING	(1 << 10)
 #define TF2_PLAYER_KRITS		(1 << 11)
 #define TF2_PLAYER_BONKED		(1 << 14)
-#define TF2_PLAYER_HEALING	    (1 << 21)    
+#define TF2_PLAYER_HEALING	    (1 << 21)
 #define TF2_PLAYER_ONFIRE	    (1 << 22)
 
-//#define TF2_SPY_FOV_KNIFEATTACK 90.0f
+typedef enum
+{
+	TFCond_Slowed = 0,
+	TFCond_Zoomed,
+	TFCond_Disguising,
+	TFCond_Disguised,
+	TFCond_Cloaked,
+	TFCond_Ubercharged,
+	TFCond_TeleportedGlow,
+	TFCond_Taunting,
+	TFCond_UberchargeFading,
+	TFCond_Unknown1, //9
+	TFCond_CloakFlicker = 9,
+	TFCond_Teleporting,
+	TFCond_Kritzkrieged,
+	TFCond_Unknown2, //12
+	TFCond_TmpDamageBonus = 12,
+	TFCond_DeadRingered,
+	TFCond_Bonked,
+	TFCond_Dazed,
+	TFCond_Buffed,
+	TFCond_Charging,
+	TFCond_DemoBuff,
+	TFCond_CritCola,
+	TFCond_InHealRadius,
+	TFCond_Healing,
+	TFCond_OnFire,
+	TFCond_Overhealed,
+	TFCond_Jarated,
+	TFCond_Bleeding,
+	TFCond_DefenseBuffed,
+	TFCond_Milked,
+	TFCond_MegaHeal,
+	TFCond_RegenBuffed,
+	TFCond_MarkedForDeath,
+	TFCond_NoHealingDamageBuff,
+	TFCond_SpeedBuffAlly, // 32
+	TFCond_HalloweenCritCandy,
+	TFCond_CritCanteen,
+	TFCond_CritDemoCharge,
+	TFCond_CritHype,
+	TFCond_CritOnFirstBlood,
+	TFCond_CritOnWin,
+	TFCond_CritOnFlagCapture,
+	TFCond_CritOnKill,
+	TFCond_RestrictToMelee,
+	TFCond_DefenseBuffNoCritBlock,
+	TFCond_Reprogrammed,
+	TFCond_CritMmmph,
+	TFCond_DefenseBuffMmmph,
+	TFCond_FocusBuff,
+	TFCond_DisguiseRemoved,
+	TFCond_MarkedForDeathSilent,
+	TFCond_DisguisedAsDispenser,
+	TFCond_Sapped,
+	TFCond_UberchargedHidden,
+	TFCond_UberchargedCanteen,
+	TFCond_HalloweenBombHead,
+	TFCond_HalloweenThriller,
+	TFCond_RadiusHealOnDamage,
+	TFCond_CritOnDamage,
+	TFCond_UberchargedOnTakeDamage,
+	TFCond_UberBulletResist,
+	TFCond_UberBlastResist,
+	TFCond_UberFireResist,
+	TFCond_SmallBulletResist,
+	TFCond_SmallBlastResist,
+	TFCond_SmallFireResist,
+	TFCond_Stealthed, // 64
+	TFCond_MedigunDebuff,
+	TFCond_StealthedUserBuffFade,
+	TFCond_BulletImmune,
+	TFCond_BlastImmune,
+	TFCond_FireImmune,
+	TFCond_PreventDeath,
+	TFCond_MVMBotRadiowave,
+	TFCond_HalloweenSpeedBoost,
+	TFCond_HalloweenQuickHeal,
+	TFCond_HalloweenGiant,
+	TFCond_HalloweenTiny,
+	TFCond_HalloweenInHell,
+	TFCond_HalloweenGhostMode,
+	TFCond_MiniCritOnKill,
+	TFCond_DodgeChance, //79
+	TFCond_ObscuredSmoke = 79,
+	TFCond_Parachute,
+	TFCond_BlastJumping,
+	TFCond_HalloweenKart,
+	TFCond_HalloweenKartDash,
+	TFCond_BalloonHead,
+	TFCond_MeleeOnly,
+	TFCond_SwimmingCurse,
+	TFCond_HalloweenKartNoTurn, //87
+	TFCond_FreezeInput = 87,
+	TFCond_HalloweenKartCage,
+	TFCond_HasRune,
+	TFCond_RuneStrength,
+	TFCond_RuneHaste,
+	TFCond_RuneRegen,
+	TFCond_RuneResist,
+	TFCond_RuneVampire,
+	TFCond_RuneWarlock,
+	TFCond_RunePrecision, // 96
+	TFCond_RuneAgility,
+	TFCond_GrapplingHook,
+	TFCond_GrapplingHookSafeFall,
+	TFCond_GrapplingHookLatched,
+	TFCond_GrapplingHookBleeding,
+	TFCond_AfterburnImmune,
+	TFCond_RuneKnockout,
+	TFCond_RuneImbalance,
+	TFCond_CritRuneTemp,
+	TFCond_PasstimeInterception,
+	TFCond_SwimmingNoEffects,
+	TFCond_EyeaductUnderworld,
+	TFCond_KingRune,
+	TFCond_PlagueRune,
+	TFCond_SupernovaRune,
+	TFCond_Plague,
+	TFCond_KingAura,
+	TFCond_SpawnOutline, //114
+	TFCond_KnockedIntoAir,
+	TFCond_CompetitiveWinner,
+	TFCond_CompetitiveLoser,
+	TFCond_NoTaunting,
+}TFCond;
 
 typedef enum
 {
@@ -121,7 +243,7 @@ typedef enum
 
 typedef enum
 {
-	TF_TRAP_TYPE_NONE,
+	TF_TRAP_TYPE_NONE = -1,
 	TF_TRAP_TYPE_WPT,
 	TF_TRAP_TYPE_POINT,
 	TF_TRAP_TYPE_FLAG,
@@ -148,19 +270,21 @@ typedef enum
 {
 	TF_TEAM_UNASSIGNED = 0,
 	TF_TEAM_SPEC = 1,
-	TF_TEAM_BLUE = 2,
-	TF_TEAM_RED = 3
+	TF_TEAM_RED = 2,
+	TF_TEAM_BLUE = 3,
+	TF_TEAM_YELLOW = 4,
+	TF_TEAM_GREEN = 5
 }TFTeam;
 
 typedef enum
 {
-	ENGI_DISP = 0,
-	ENGI_TELE,
-	ENGI_SENTRY,
-	ENGI_SAPPER,
-	ENGI_EXIT,
-	ENGI_ENTRANCE,
-}eEngiBuild;
+	OBJ_DISP = 0,
+	OBJ_TELE,
+	OBJ_SENTRY,
+	OBJ_SAPPER,
+	OBJ_EXIT,
+	OBJ_ENTRANCE,
+}eObjectType;
 
 typedef enum
 {
@@ -255,8 +379,11 @@ private:
 
 class CBasePlayer;
 
-#define EVENT_FLAG_PICKUP 0
-#define EVENT_CAPPOINT    1
+#define FLAGEVENT_PICKUP    0
+#define FLAGEVENT_CAPPED    1
+#define FLAGEVENT_DEFENDED  2
+#define FLAGEVENT_DROPPED   3
+#define FLAGEVENT_RETURNED  4
 
 class CBotFortress : public CBot
 {
@@ -274,7 +401,7 @@ public:
 
 	virtual void Shot(edict_t *pEnemy);
 
-	virtual int EngiBuildObject(int *iState, eEngiBuild iObject, float *fTime, int *iTries);
+	virtual int EngiBuildObject(int *iState, eObjectType iObject, float *fTime, int *iTries);
 
 	virtual float GetEnemyFactor(edict_t *pEnemy) { return CBot::GetEnemyFactor(pEnemy); }
 
@@ -320,9 +447,9 @@ public:
 	virtual void CheckHealingValid();
 
 	// linux fix 2
-	virtual edict_t *FindEngineerBuiltObject(eEngiBuild iBuilding, int index) { return NULL; }
+	virtual edict_t *FindEngineerBuiltObject(eObjectType iBuilding, int index) { return NULL; }
 
-	virtual void EngineerBuild(eEngiBuild iBuilding, eEngiCmd iEngiCmd) {};
+	virtual void EngineerBuild(eObjectType iBuilding, eEngiCmd iEngiCmd) {};
 
 	virtual void SpyDisguise(int iTeam, int iClass) {};
 
@@ -332,9 +459,9 @@ public:
 
 	inline edict_t *GetSentry() { return m_pSentryGun; }
 
-	virtual bool HasEngineerBuilt(eEngiBuild iBuilding) { return false; }
+	virtual bool HasEngineerBuilt(eObjectType iBuilding) { return false; }
 
-	virtual void EngiBuildSuccess(eEngiBuild iObject, int index) {};
+	virtual void EngiBuildSuccess(eObjectType iObject, int index) {};
 
 	virtual bool HealPlayer(edict_t *pPlayer, edict_t *pPrevPlayer) { return false; }
 	virtual bool UpgradeBuilding(edict_t *pBuilding, bool removesapper = false) { return false; }
@@ -655,7 +782,7 @@ public:
 	// found a new enemy
 	void EnemyFound(edict_t *pEnemy);
 
-	void EnemyAtIntel(Vector vPos, int type = EVENT_FLAG_PICKUP, int iArea = -1);
+	void EnemyAtIntel(Vector vPos, int type = FLAGEVENT_PICKUP, int iArea = -1);
 	//
 
 	bool IsTF2() { return true; }
@@ -690,7 +817,7 @@ public:
 
 	bool HandleAttack(CBotWeapon *pWeapon, edict_t *pEnemy);
 
-	void EngiBuildSuccess(eEngiBuild iObject, int index);
+	void EngiBuildSuccess(eObjectType iObject, int index);
 
 	bool LookAfterBuildings(float *fTime);
 
@@ -715,7 +842,7 @@ public:
 
 	void CheckBuildingsValid(bool bForce = false);
 
-	edict_t *FindEngineerBuiltObject(eEngiBuild iBuilding, int index);
+	edict_t *FindEngineerBuiltObject(eObjectType iBuilding, int index);
 
 	bool IsEnemy(edict_t *pEdict, bool bCheckWeapons = true);
 
@@ -729,11 +856,11 @@ public:
 
 	void PointCaptured(int iPoint, int iTeam, const char *szPointName);
 
-	void EngineerBuild(eEngiBuild iBuilding, eEngiCmd iEngiCmd);
+	void EngineerBuild(eObjectType iBuilding, eEngiCmd iEngiCmd);
 
 	void SpyDisguise(int iTeam, int iClass);
 
-	bool HasEngineerBuilt(eEngiBuild iBuilding);
+	bool HasEngineerBuilt(eObjectType iBuilding);
 
 	void GetTasks(unsigned int iIgnore = 0);
 
@@ -765,7 +892,7 @@ public:
 
 	void Setup();
 
-	void BuildingSapped(eEngiBuild building, edict_t *pSapper, edict_t *pSpy);
+	void BuildingSapped(eObjectType building, edict_t *pSapper, edict_t *pSpy);
 
 	void SapperDestroyed(edict_t *pSapper);
 
