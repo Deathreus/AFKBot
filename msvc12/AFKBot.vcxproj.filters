@@ -1,0 +1,368 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{1f2f8280-982d-4d08-9ee3-77aa40075b98}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{16586188-ff32-4199-a515-f5a8fb020e68}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+    <Filter Include="Extension">
+      <UniqueIdentifier>{e156eb5b-3411-428c-915a-392e6eeaa877}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NavLoader">
+      <UniqueIdentifier>{d6a5fcf9-fa83-48d2-9d41-69e2f6a0e206}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NavLoader\Header Files">
+      <UniqueIdentifier>{bea7c79e-7f3e-4593-8dee-e52a9aae195e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NavLoader\Source Files">
+      <UniqueIdentifier>{34e4c1d6-fedf-4e39-9f48-baa27d73bc41}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Experimental">
+      <UniqueIdentifier>{869dc632-6ff8-4b34-95e7-352d516bd54f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NavLoader\Interface">
+      <UniqueIdentifier>{7d314f7b-87e0-456c-a0ca-c64c551bbd7a}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\rcbot2\bot_buttons.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rcbot2\bot_configfile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rcbot2\bot_cvars.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rcbot2\bot_events.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rcbot2\bot_fortress.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rcbot2\bot_getprop.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rcbot2\bot_globals.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rcbot2\bot_mods.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rcbot2\bot_profile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rcbot2\bot_schedule.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rcbot2\bot_strings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rcbot2\bot_task.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rcbot2\bot_tf2_mod.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rcbot2\bot_tf2_points.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rcbot2\bot_utility.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rcbot2\bot_visibles.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rcbot2\bot_waypoint.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rcbot2\bot_waypoint_locations.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rcbot2\bot_waypoint_visibility.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rcbot2\bot_weapons.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rcbot2\bot_wpt_dist.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extension.cpp">
+      <Filter>Extension</Filter>
+    </ClCompile>
+    <ClCompile Include="..\sdk\smsdk_ext.cpp">
+      <Filter>Extension</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rcbot2\bot_gamerules.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\natives.cpp">
+      <Filter>Extension</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rcbot2\bot_base.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rcbot2\bot_commands.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rcbot2\bot_navmesh.cpp">
+      <Filter>Experimental</Filter>
+    </ClCompile>
+    <ClCompile Include="..\NavMesh\NavMesh.cpp">
+      <Filter>NavLoader\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\NavMesh\NavMeshArea.cpp">
+      <Filter>NavLoader\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\NavMesh\NavMeshConnection.cpp">
+      <Filter>NavLoader\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\NavMesh\NavMeshCornerLightIntensity.cpp">
+      <Filter>NavLoader\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\NavMesh\NavMeshEncounterPath.cpp">
+      <Filter>NavLoader\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\NavMesh\NavMeshEncounterSpot.cpp">
+      <Filter>NavLoader\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\NavMesh\NavMeshGrid.cpp">
+      <Filter>NavLoader\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\NavMesh\NavMeshHidingSpot.cpp">
+      <Filter>NavLoader\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\NavMesh\NavMeshLadder.cpp">
+      <Filter>NavLoader\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\NavMesh\NavMeshLadderConnection.cpp">
+      <Filter>NavLoader\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\NavMesh\NavMeshLoader.cpp">
+      <Filter>NavLoader\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\NavMesh\NavMeshPlace.cpp">
+      <Filter>NavLoader\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\NavMesh\NavMeshVisibleArea.cpp">
+      <Filter>NavLoader\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\NavMesh\NavMeshHint.cpp">
+      <Filter>NavLoader\Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\rcbot2\bot_belief.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_buttons.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_configfile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_const.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_cvars.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_ehandle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_event.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_fortress.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_genclass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_getprop.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_globals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_mods.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_navigator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_profile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_schedule.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_strings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_task.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_tf2_points.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_utility.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_visibles.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_waypoint.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_waypoint_locations.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_waypoint_visibility.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_weapons.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_wpt_dist.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_ga_nn_const.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_perceptron.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extension.h">
+      <Filter>Extension</Filter>
+    </ClInclude>
+    <ClInclude Include="..\version.h">
+      <Filter>Extension</Filter>
+    </ClInclude>
+    <ClInclude Include="..\sdk\smsdk_config.h">
+      <Filter>Extension</Filter>
+    </ClInclude>
+    <ClInclude Include="..\sdk\smsdk_ext.h">
+      <Filter>Extension</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_gamerules.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_base.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_commands.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_navmesh.h">
+      <Filter>Experimental</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\List.h">
+      <Filter>NavLoader\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\NavCornerType.h">
+      <Filter>NavLoader\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\NavDirType.h">
+      <Filter>NavLoader\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\NavLadderDirType.h">
+      <Filter>NavLoader\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\NavMesh.h">
+      <Filter>NavLoader\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\NavMeshArea.h">
+      <Filter>NavLoader\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\NavMeshConnection.h">
+      <Filter>NavLoader\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\NavMeshCornerLightIntensity.h">
+      <Filter>NavLoader\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\NavMeshEncounterPath.h">
+      <Filter>NavLoader\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\NavMeshEncounterSpot.h">
+      <Filter>NavLoader\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\NavMeshGrid.h">
+      <Filter>NavLoader\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\NavMeshHidingSpot.h">
+      <Filter>NavLoader\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\NavMeshLadder.h">
+      <Filter>NavLoader\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\NavMeshLadderConnection.h">
+      <Filter>NavLoader\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\NavMeshLoader.h">
+      <Filter>NavLoader\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\NavMeshPlace.h">
+      <Filter>NavLoader\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\NavMeshVisibleArea.h">
+      <Filter>NavLoader\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\public\INavMeshConnection.h">
+      <Filter>NavLoader\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\public\INavMeshCornerLightIntensity.h">
+      <Filter>NavLoader\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\public\INavMeshEncounterPath.h">
+      <Filter>NavLoader\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\public\INavMeshEncounterSpot.h">
+      <Filter>NavLoader\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\public\INavMeshGrid.h">
+      <Filter>NavLoader\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\public\INavMeshHidingSpot.h">
+      <Filter>NavLoader\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\public\INavMeshLadder.h">
+      <Filter>NavLoader\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\public\INavMeshLadderConnection.h">
+      <Filter>NavLoader\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\public\INavMeshLoader.h">
+      <Filter>NavLoader\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\public\INavMeshPlace.h">
+      <Filter>NavLoader\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\public\INavMeshVisibleArea.h">
+      <Filter>NavLoader\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\public\IList.h">
+      <Filter>NavLoader\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\public\INavMesh.h">
+      <Filter>NavLoader\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\public\INavMeshArea.h">
+      <Filter>NavLoader\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\NavMeshHint.h">
+      <Filter>NavLoader\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\public\INavMeshHint.h">
+      <Filter>NavLoader\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\NavHintType.h">
+      <Filter>NavLoader\Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
