@@ -1,0 +1,109 @@
+"Games"
+{
+	"#default"
+	{
+		"Offsets"
+		{
+			//Shared
+			"Think"
+			{
+				"windows"	"47"
+				"linux"		"48"
+			}
+			"OnTakeDamage"
+			{
+				"windows"	"62"
+				"linux"		"63"
+			}
+			"StartTouch"
+			{
+				"windows"	"98"
+				"linux"		"99"
+			}
+			"Touch"
+			{
+				"windows"	"99"
+				"linux"		"100"
+			}
+			"EndTouch"
+			{
+				"windows"	"100"
+				"linux"		"101"
+			}
+			"EyePosition"
+			{
+				"windows"	"130"
+				"linux"		"131"
+			}
+			"EyeAngles"
+			{
+				"windows"	"131"
+				"linux"		"132"
+			}
+			
+			//CTFPlayer
+			"FVisible"
+			{
+				"windows"	"142"
+				"linux"		"142"
+			}
+			"FInViewCone"
+			{
+				"windows"	"229"
+				"linux"		"229"
+			}
+			"FInAimCone"
+			{
+				"windows"	"231"
+				"linux"		"231"
+			}
+			"Weapon_Equip"
+			{
+				"windows"	"262"
+				"linux"		"263"
+			}
+			"Weapon_Switch"
+			{
+				"windows"	"265"
+				"linux"		"266"
+			}
+			"Weapon_GetSlot"
+			{
+				"windows"	"269"
+				"linux"		"270"
+			}
+			"OnTakeDamage_Alive"
+			{
+				"windows"	"273"
+				"linux"		"274"
+			}
+			"PreThink"
+			{
+				"windows"	"333"
+				"linux"		"334"
+			}
+			"PlayerRunCommand"
+			{
+				"windows"	"421"
+				"linux"		"422"
+			}
+			"CanSpeakVoiceCommand"
+			{
+				"windows"	"462"
+				"linux"		"463"
+			}
+		}
+	}
+	"#default"
+	{
+		"Signatures"
+		{
+			"HandleCommand_JoinClass"
+			{
+				"library"	"server"
+				"windows"	"\xA1\x2A\x2A\x2A\x2A\x83\xEC\x0C\x83\xB8\x2A\x03\x00\x00\x08\x56"
+				"linux"		"@_ZN9CTFPlayer23HandleCommand_JoinClassEPKcb"
+			}
+		}
+	}
+}
