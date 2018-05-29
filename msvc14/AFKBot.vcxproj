@@ -1,0 +1,317 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{B6572CBE-7C7F-4FFF-94DE-AFBBBAB11C64}</ProjectGuid>
+    <RootNamespace>AFKBot</RootNamespace>
+    <SccProjectName>
+    </SccProjectName>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccLocalPath>
+    </SccLocalPath>
+    <SccProvider>
+    </SccProvider>
+    <ProjectName>AFKBot</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>11.0.50727.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>.\Debug\</OutDir>
+    <IntDir>.\Debug\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+    <TargetName>afkbot.ext</TargetName>
+    <CodeAnalysisRuleSet>C:\Program Files (x86)\Microsoft Visual Studio 14.0\Team Tools\Static Analysis Tools\Rule Sets\NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>.\Release\</OutDir>
+    <IntDir>.\Release\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+    <TargetName>afkbot.ext</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <CustomBuildStep>
+      <Command>
+      </Command>
+      <Outputs>
+      </Outputs>
+    </CustomBuildStep>
+    <Midl>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TargetEnvironment>Win32</TargetEnvironment>
+      <TypeLibraryName>.\Debug/AFKBot.tlb</TypeLibraryName>
+      <HeaderFileName />
+    </Midl>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..;..\sdk;..\NavMesh;$(SOURCEMOD)\core;$(SOURCEMOD)\public;$(SOURCEMOD)\public\extensions;$(SOURCEMOD)\public\CDetour;$(SOURCEMOD)\sourcepawn\include;$(HL2SDKTF2)\public;$(HL2SDKTF2)\public\mathlib;$(HL2SDKTF2)\public\engine;$(HL2SDKTF2)\public\tier0;$(HL2SDKTF2)\public\tier1;$(HL2SDKTF2)\public\toolframework;$(HL2SDKTF2)\public\SoundEmitterSystem;$(HL2SDKTF2)\game\shared;$(HL2SDKTF2)\game\server;$(HL2SDKTF2)\public\game\server;$(MMSOURCE)\core;$(MMSOURCE)\core\sourcehook;$(MMSOURCE)\public;%(AdditionIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>SOURCE_ENGINE=11;WIN32;NOUSER;NOWH;_DEBUG;_WINDOWS;HOMEFOLDER;_USRDLL;SDK_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeaderOutputFile>.\Debug/AFKBot.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\Debug/</AssemblerListingLocation>
+      <ObjectFileName>.\Debug/</ObjectFileName>
+      <ProgramDataBaseFileName>.\Debug/</ProgramDataBaseFileName>
+      <BrowseInformation>true</BrowseInformation>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <CompileAs>Default</CompileAs>
+      <AdditionalOptions>/D SE_EPISODEONE=1 /D SE_DARKMESSIAH=2 /D SE_ORANGEBOX=3 /D SE_ORANGEBOXVALVE=4 /D SE_LEFT4DEAD=5 /D SE_LEFT4DEAD2=6 /D SE_ALIENSWARM=7</AdditionalOptions>
+      <DisableSpecificWarnings>4005;</DisableSpecificWarnings>
+      <EnablePREfast>true</EnablePREfast>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>mathlib.lib;vstdlib.lib;tier1.lib;tier0.lib;tier2.lib;$(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <AdditionalLibraryDirectories>$(HL2SDKTF2)\lib\public;$(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>libc;libcd;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>.\Debug/$(TargetName).pdb</ProgramDatabaseFile>
+      <GenerateMapFile>true</GenerateMapFile>
+      <MapFileName>.\Debug/$(TargetName).map</MapFileName>
+      <SubSystem>Windows</SubSystem>
+      <ImportLibrary>.\Debug/$(TargetName).lib</ImportLibrary>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy "$(TargetPath)" "C:\Program Files (x86)\Steam\SteamApps\common\team fortress 2\tf\addons\rcbot2meta.dll"</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Copying File</Message>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <CustomBuildStep>
+      <Command>
+      </Command>
+      <Outputs>
+      </Outputs>
+    </CustomBuildStep>
+    <Midl>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>true</MkTypLibCompatible>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <TargetEnvironment>Win32</TargetEnvironment>
+      <TypeLibraryName>.\Release/AFKBot.tlb</TypeLibraryName>
+      <HeaderFileName />
+    </Midl>
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <AdditionalIncludeDirectories>..;..\sdk;..\NavMesh;$(SOURCEMOD)\core;$(SOURCEMOD)\public;$(SOURCEMOD)\public\extensions;$(SOURCEMOD)\public\CDetour;$(SOURCEMOD)\sourcepawn\include;$(HL2SDKTF2)\public;$(HL2SDKTF2)\public\mathlib;$(HL2SDKTF2)\public\engine;$(HL2SDKTF2)\public\tier0;$(HL2SDKTF2)\public\tier1;$(HL2SDKTF2)\public\toolframework;$(HL2SDKTF2)\public\SoundEmitterSystem;$(HL2SDKTF2)\game\shared;$(HL2SDKTF2)\game\server;$(HL2SDKTF2)\public\game\server;$(MMSOURCE)\core;$(MMSOURCE)\core\sourcehook;$(MMSOURCE)\public;%(AdditionIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>SOURCE_ENGINE=11;WIN32;NOUSER;NOWH;NDEBUG;_WINDOWS;_USRDLL;SDK_EXPORTS;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader />
+      <PrecompiledHeaderOutputFile>.\Release/AFKBot.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\Release/</AssemblerListingLocation>
+      <ObjectFileName>.\Release/</ObjectFileName>
+      <ProgramDataBaseFileName>.\Release/</ProgramDataBaseFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>Default</CompileAs>
+      <OmitDefaultLibName>false</OmitDefaultLibName>
+      <AdditionalOptions>/D SE_EPISODEONE=1 /D SE_DARKMESSIAH=2 /D SE_ORANGEBOX=3 /D SE_BLOODYGOODTIME=4 /D SE_EYE=5 /D SE_CSS=6 /D SE_HL2DM=7 /D SE_DODS=8 /D SE_SDK2013=9 /D SE_BMS=10 /D SE_TF2=11 /D SE_LEFT4DEAD=12 /D SE_NUCLEARDAWN=13 /D SE_CONTAGION=14 /D SE_LEFT4DEAD2=15 /D SE_ALIENSWARM=16 /D SE_PORTAL2=17 /D SE_BLADE=18 /D SE_INSURGENCY=19 /D SE_CSGO=20 /D SE_DOTA=21 /MP</AdditionalOptions>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
+      <UndefinePreprocessorDefinitions>
+      </UndefinePreprocessorDefinitions>
+      <DisableSpecificWarnings>4005;</DisableSpecificWarnings>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <SDLCheck>
+      </SDLCheck>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>mathlib.lib;vstdlib.lib;tier1.lib;tier0.lib;tier2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <AdditionalLibraryDirectories>$(HL2SDKTF2)\lib\public;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <IgnoreSpecificDefaultLibraries>libc;libcd;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>.\Release/$(TargetName).pdb</ProgramDatabaseFile>
+      <GenerateMapFile>true</GenerateMapFile>
+      <MapFileName>.\Release/$(TargetName).map</MapFileName>
+      <SubSystem>Windows</SubSystem>
+      <ImportLibrary>.\Release/$(TargetName).lib</ImportLibrary>
+      <TargetMachine>MachineX86</TargetMachine>
+      <OptimizeReferences>true</OptimizeReferences>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\extension.cpp" />
+    <ClCompile Include="..\natives.cpp" />
+    <ClCompile Include="..\NavMesh\NavMesh.cpp" />
+    <ClCompile Include="..\NavMesh\NavMeshArea.cpp" />
+    <ClCompile Include="..\NavMesh\NavMeshConnection.cpp" />
+    <ClCompile Include="..\NavMesh\NavMeshCornerLightIntensity.cpp" />
+    <ClCompile Include="..\NavMesh\NavMeshEncounterPath.cpp" />
+    <ClCompile Include="..\NavMesh\NavMeshEncounterSpot.cpp" />
+    <ClCompile Include="..\NavMesh\NavMeshGrid.cpp" />
+    <ClCompile Include="..\NavMesh\NavMeshHidingSpot.cpp" />
+    <ClCompile Include="..\NavMesh\NavMeshHint.cpp" />
+    <ClCompile Include="..\NavMesh\NavMeshLadder.cpp" />
+    <ClCompile Include="..\NavMesh\NavMeshLadderConnection.cpp" />
+    <ClCompile Include="..\NavMesh\NavMeshLoader.cpp" />
+    <ClCompile Include="..\NavMesh\NavMeshPlace.cpp" />
+    <ClCompile Include="..\NavMesh\NavMeshVisibleArea.cpp" />
+    <ClCompile Include="..\rcbot2\bot_base.cpp" />
+    <ClCompile Include="..\rcbot2\bot_buttons.cpp" />
+    <ClCompile Include="..\rcbot2\bot_commands.cpp" />
+    <ClCompile Include="..\rcbot2\bot_configfile.cpp" />
+    <ClCompile Include="..\rcbot2\bot_events.cpp" />
+    <ClCompile Include="..\rcbot2\bot_fortress.cpp" />
+    <ClCompile Include="..\rcbot2\bot_gamerules.cpp" />
+    <ClCompile Include="..\rcbot2\bot_getprop.cpp" />
+    <ClCompile Include="..\rcbot2\bot_globals.cpp" />
+    <ClCompile Include="..\rcbot2\bot_mods.cpp" />
+    <ClCompile Include="..\rcbot2\bot_navmesh.cpp" />
+    <ClCompile Include="..\rcbot2\bot_profile.cpp" />
+    <ClCompile Include="..\rcbot2\bot_schedule.cpp" />
+    <ClCompile Include="..\rcbot2\bot_strings.cpp" />
+    <ClCompile Include="..\rcbot2\bot_task.cpp" />
+    <ClCompile Include="..\rcbot2\bot_tf2_mod.cpp" />
+    <ClCompile Include="..\rcbot2\bot_tf2_points.cpp" />
+    <ClCompile Include="..\rcbot2\bot_utility.cpp" />
+    <ClCompile Include="..\rcbot2\bot_visibles.cpp" />
+    <ClCompile Include="..\rcbot2\bot_waypoint.cpp" />
+    <ClCompile Include="..\rcbot2\bot_waypoint_locations.cpp" />
+    <ClCompile Include="..\rcbot2\bot_waypoint_visibility.cpp" />
+    <ClCompile Include="..\rcbot2\bot_weapons.cpp" />
+    <ClCompile Include="..\rcbot2\bot_wpt_dist.cpp" />
+    <ClCompile Include="..\rcbot2\bot_cvars.cpp" />
+    <ClCompile Include="..\sdk\smsdk_ext.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\extension.h" />
+    <ClInclude Include="..\NavMesh\List.h" />
+    <ClInclude Include="..\NavMesh\NavCornerType.h" />
+    <ClInclude Include="..\NavMesh\NavDirType.h" />
+    <ClInclude Include="..\NavMesh\NavHintType.h" />
+    <ClInclude Include="..\NavMesh\NavLadderDirType.h" />
+    <ClInclude Include="..\NavMesh\NavMesh.h" />
+    <ClInclude Include="..\NavMesh\NavMeshArea.h" />
+    <ClInclude Include="..\NavMesh\NavMeshConnection.h" />
+    <ClInclude Include="..\NavMesh\NavMeshCornerLightIntensity.h" />
+    <ClInclude Include="..\NavMesh\NavMeshEncounterPath.h" />
+    <ClInclude Include="..\NavMesh\NavMeshEncounterSpot.h" />
+    <ClInclude Include="..\NavMesh\NavMeshGrid.h" />
+    <ClInclude Include="..\NavMesh\NavMeshHidingSpot.h" />
+    <ClInclude Include="..\NavMesh\NavMeshHint.h" />
+    <ClInclude Include="..\NavMesh\NavMeshLadder.h" />
+    <ClInclude Include="..\NavMesh\NavMeshLadderConnection.h" />
+    <ClInclude Include="..\NavMesh\NavMeshLoader.h" />
+    <ClInclude Include="..\NavMesh\NavMeshPlace.h" />
+    <ClInclude Include="..\NavMesh\NavMeshVisibleArea.h" />
+    <ClInclude Include="..\NavMesh\public\IList.h" />
+    <ClInclude Include="..\NavMesh\public\INavMesh.h" />
+    <ClInclude Include="..\NavMesh\public\INavMeshArea.h" />
+    <ClInclude Include="..\NavMesh\public\INavMeshConnection.h" />
+    <ClInclude Include="..\NavMesh\public\INavMeshCornerLightIntensity.h" />
+    <ClInclude Include="..\NavMesh\public\INavMeshEncounterPath.h" />
+    <ClInclude Include="..\NavMesh\public\INavMeshEncounterSpot.h" />
+    <ClInclude Include="..\NavMesh\public\INavMeshGrid.h" />
+    <ClInclude Include="..\NavMesh\public\INavMeshHidingSpot.h" />
+    <ClInclude Include="..\NavMesh\public\INavMeshHint.h" />
+    <ClInclude Include="..\NavMesh\public\INavMeshLadder.h" />
+    <ClInclude Include="..\NavMesh\public\INavMeshLadderConnection.h" />
+    <ClInclude Include="..\NavMesh\public\INavMeshLoader.h" />
+    <ClInclude Include="..\NavMesh\public\INavMeshPlace.h" />
+    <ClInclude Include="..\NavMesh\public\INavMeshVisibleArea.h" />
+    <ClInclude Include="..\rcbot2\bot_base.h" />
+    <ClInclude Include="..\rcbot2\bot_belief.h" />
+    <ClInclude Include="..\rcbot2\bot_buttons.h" />
+    <ClInclude Include="..\rcbot2\bot_commands.h" />
+    <ClInclude Include="..\rcbot2\bot_configfile.h" />
+    <ClInclude Include="..\rcbot2\bot_const.h" />
+    <ClInclude Include="..\rcbot2\bot_cvars.h" />
+    <ClInclude Include="..\rcbot2\bot_ehandle.h" />
+    <ClInclude Include="..\rcbot2\bot_event.h" />
+    <ClInclude Include="..\rcbot2\bot_fortress.h" />
+    <ClInclude Include="..\rcbot2\bot_gamerules.h" />
+    <ClInclude Include="..\rcbot2\bot_ga_nn_const.h" />
+    <ClInclude Include="..\rcbot2\bot_genclass.h" />
+    <ClInclude Include="..\rcbot2\bot_getprop.h" />
+    <ClInclude Include="..\rcbot2\bot_globals.h" />
+    <ClInclude Include="..\rcbot2\bot_mods.h" />
+    <ClInclude Include="..\rcbot2\bot_navigator.h" />
+    <ClInclude Include="..\rcbot2\bot_navmesh.h" />
+    <ClInclude Include="..\rcbot2\bot_perceptron.h" />
+    <ClInclude Include="..\rcbot2\bot_profile.h" />
+    <ClInclude Include="..\rcbot2\bot_schedule.h" />
+    <ClInclude Include="..\rcbot2\bot_strings.h" />
+    <ClInclude Include="..\rcbot2\bot_task.h" />
+    <ClInclude Include="..\rcbot2\bot_tf2_points.h" />
+    <ClInclude Include="..\rcbot2\bot_utility.h" />
+    <ClInclude Include="..\rcbot2\bot_visibles.h" />
+    <ClInclude Include="..\rcbot2\bot_waypoint.h" />
+    <ClInclude Include="..\rcbot2\bot_waypoint_locations.h" />
+    <ClInclude Include="..\rcbot2\bot_waypoint_visibility.h" />
+    <ClInclude Include="..\rcbot2\bot_weapons.h" />
+    <ClInclude Include="..\rcbot2\bot_wpt_dist.h" />
+    <ClInclude Include="..\sdk\smsdk_config.h" />
+    <ClInclude Include="..\sdk\smsdk_ext.h" />
+    <ClInclude Include="..\version.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
