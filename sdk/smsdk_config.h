@@ -28,11 +28,11 @@
 
 /* Basic information exposed publicly */
 #define SMEXT_CONF_NAME			"AFKBot"
-#define SMEXT_CONF_DESCRIPTION	"Let's a bot take over when players are away\nRequires an external AFK manager to automatically enable the bot!"
+#define SMEXT_CONF_DESCRIPTION	"Let's a bot take over when players are away. Requires an external AFK manager to automatically enable the bot!"
 #define SMEXT_CONF_VERSION		"1.0"
 #define SMEXT_CONF_AUTHOR		"Cheeseh & Deathreus"
 #define SMEXT_CONF_URL			""
-#define SMEXT_CONF_LOGTAG		"AFKBot"
+#define SMEXT_CONF_LOGTAG		SMEXT_CONF_NAME
 #define SMEXT_CONF_LICENSE		"GPLv3"
 #define SMEXT_CONF_DATESTRING	__DATE__
 
@@ -65,6 +65,6 @@
 #define SMEXT_ENABLE_TEXTPARSERS
 #define SMEXT_ENABLE_USERMSGS
 //#define SMEXT_ENABLE_TRANSLATOR
-//#define SMEXT_ENABLE_NINVOKE
+//#define SMEXT_ENABLE_ROOTCONSOLEMENU
 
 #endif // _INCLUDE_SOURCEMOD_EXTENSION_CONFIG_H_

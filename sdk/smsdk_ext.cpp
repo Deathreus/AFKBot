@@ -54,16 +54,16 @@ IHandleSys *handlesys = NULL;			/**< Handle system */
 #endif
 #if defined SMEXT_ENABLE_PLAYERHELPERS
 IPlayerManager *playerhelpers = NULL;	/**< Player helpers */
-#endif //SMEXT_ENABLE_PLAYERHELPERS
+#endif
 #if defined SMEXT_ENABLE_DBMANAGER
 IDBManager *dbi = NULL;					/**< DB Manager */
-#endif //SMEXT_ENABLE_DBMANAGER
+#endif
 #if defined SMEXT_ENABLE_GAMECONF
 IGameConfigManager *gameconfs = NULL;	/**< Game config manager */
-#endif //SMEXT_ENABLE_DBMANAGER
+#endif
 #if defined SMEXT_ENABLE_MEMUTILS
 IMemoryUtils *memutils = NULL;
-#endif //SMEXT_ENABLE_DBMANAGER
+#endif
 #if defined SMEXT_ENABLE_GAMEHELPERS
 IGameHelpers *gamehelpers = NULL;
 #endif
@@ -128,7 +128,7 @@ bool SDKExtension::OnExtensionLoad(IExtension *me, IShareSys *sys, char *error, 
 	{
 		if (error)
 		{
-			snprintf(error, maxlength, "Metamod attach failed");
+			ke::SafeStrcpy(error, maxlength, "Metamod attach failed");
 		}
 		return false;
 	}
@@ -354,7 +354,7 @@ bool SDKExtension::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, 
 			{
 				if (error && maxlen)
 				{
-					ismm->Format(error, maxlen, "Could not find interface: VEngineServer023 or VEngineServer022");
+					ke::SafeStrcpy(error, maxlen, "Could not find interface: VEngineServer023 or VEngineServer022");
 				}
 				return false;
 			}
@@ -378,7 +378,7 @@ bool SDKExtension::Unload(char *error, size_t maxlen)
 	{
 		if (error)
 		{
-			snprintf(error, maxlen, "This extension must be unloaded by SourceMod.");
+			ke::SafeStrcpy(error, maxlen, "This extension must be unloaded by SourceMod.");
 		}
 		return false;
 	}
@@ -392,7 +392,7 @@ bool SDKExtension::Pause(char *error, size_t maxlen)
 	{
 		if (error)
 		{
-			snprintf(error, maxlen, "This extension must be paused by SourceMod.");
+			ke::SafeStrcpy(error, maxlen, "This extension must be paused by SourceMod.");
 		}
 		return false;
 	}
@@ -408,7 +408,7 @@ bool SDKExtension::Unpause(char *error, size_t maxlen)
 	{
 		if (error)
 		{
-			snprintf(error, maxlen, "This extension must be unpaused by SourceMod.");
+			ke::SafeStrcpy(error, maxlen, "This extension must be unpaused by SourceMod.");
 		}
 		return false;
 	}
@@ -501,4 +501,3 @@ void operator delete[](void * ptr)
 	free(ptr);
 }
 #endif
-
