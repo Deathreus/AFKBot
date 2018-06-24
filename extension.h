@@ -35,13 +35,14 @@
 #include <itoolentity.h>
 
 #include <ISDKTools.h>
+#include <IBinTools.h>
 
 class CUserCmd;
 class IMoveHelper;
 
-class AFKBot : public SDKExtension,
+class AFKBot : 
+	public SDKExtension,
 	public IConCommandBaseAccessor,
-	public IGameEventListener2,
 	public IClientListener,
 	public ICommandTargetProcessor
 {
@@ -126,53 +127,42 @@ public:
 #endif
 
 public: // ISmmAPI
-	bool LevelInit(char const *pMapName, char const *pMapEntities, char const *pOldLevel, char const *pLandmarkName, bool loadGame, bool background);
-	void LevelShutdown();
+	void GameFrame(bool);
 
-	void GameFrame(bool simulating);
+	void PlayerRunCmd(CUserCmd *, IMoveHelper *);
 
-	void PlayerRunCmd(CUserCmd *ucmd, IMoveHelper *moveHelper);
-
-	bool FireEvent(IGameEvent *pEvent, bool bDontBroadcast);
-
-public: // IGameEventListener2
-	void FireGameEvent(IGameEvent *pEvent);
+	bool FireEvent(IGameEvent *, bool);
 
 public: //IConCommandBaseAccessor
-	bool RegisterConCommandBase(ConCommandBase *pVar);
+	bool RegisterConCommandBase(ConCommandBase *);
 
 public: //IClientListner
-	//void OnClientConnected(int iClient);
 	void OnClientPutInServer(int iClient);
-	void OnClientDisconnected(int iClient);
-	//void OnServerActivated(int max_clients);
+	void OnClientDisconnecting(int iClient);
 
 public:
-	#if SOURCE_ENGINE >= SE_ORANGEBOX
-		void OnClientCommand(edict_t *pEntity, const CCommand &args);
-	#else
-		void OnClientCommand(edict_t *pEntity);
-	#endif
-	#if SOURCE_ENGINE >= SE_ORANGEBOX
-		void OnSayCommand(const CCommand &args);
-	#else
-		void OnSayCommand();
-	#endif
-#if SOURCE_ENGINE == SE_CSS || SOURCE_ENGINE == SE_CSGO
-	void OnSendClientCommand(edict_t *pPlayer, const char *szFormat);
-#endif
+	void OnClientCommand(edict_t *, const CCommand &);
+	void OnSayCommand(const CCommand &);
 
 	void OnSetCommandClient(int client);
 
 public: //ICommandTargetProcessor
 	bool ProcessCommandTarget(cmd_target_info_t *info);
 
+public:
+	// Only actually does something if extension is compiled as Debug
+	static void DebugMessage(const char *, ...);
+	static void BeginLogging(bool);
+	// Never call this before BeginLogging()!
+	static void EndLogging(void);
+
 
 private:
 	int m_iCommandClient;
+	static FILE* m_pLogFile;
 };
 
-inline const char *_strstr(const char *str, const char *substr)
+inline const char* _strstr(const char *str, const char *substr)
 {
 #ifdef PLATFORM_WINDOWS
 	return strstr(str, substr);
@@ -197,10 +187,10 @@ extern IFileSystem *filesystem;
 
 extern ConVar bot_enabled;
 
+extern IGameConfig *g_pGameConf;
 extern ISDKTools *g_pSDKTools;
+extern IBinTools *g_pBinTools;
 
 extern IForward *forwardOnAFK;
-
-PLUGIN_GLOBALVARS();
 
 #endif // _INCLUDE_SOURCEMOD_EXTENSION_PROPER_H_
