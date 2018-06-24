@@ -7,8 +7,6 @@ CNavMeshLadderConnection::CNavMeshLadderConnection(unsigned int connectingLadder
 	this->direction = direction;
 }
 
-CNavMeshLadderConnection::~CNavMeshLadderConnection() {}
-
 unsigned int CNavMeshLadderConnection::GetConnectingLadderID() { return this->connectingLadderID; }
 
 eNavLadderDir CNavMeshLadderConnection::GetDirection() { return this->direction; }

@@ -1,21 +1,23 @@
-#ifndef __war3source_ilist_h__
-#define __war3source_ilist_h__
+#pragma once
 
-template <class T>
-class IList
+template <class T> class IList
 {
 public:
-	virtual bool Insert(T item, unsigned int index) = 0;
-	virtual void Append(T item) = 0;
-	virtual void Prepend(T item) = 0;
-	virtual T At(unsigned int index) = 0;
-	virtual size_t Size() = 0;
+	virtual const bool Insert(T, size_t) = 0;
+	virtual const bool Erase(T, size_t) = 0;
+	virtual bool Append(T) = 0;
+	virtual bool Prepend(T) = 0;
+	virtual bool Push(T) = 0;
+	virtual T Pop() = 0;
+	virtual T At(unsigned int) = 0;
+	virtual const bool Get(size_t, T*) = 0;
+	virtual size_t Size() const = 0;
 	virtual T Head() = 0;
 	virtual T Tail() = 0;
-	virtual unsigned int Find(T item) = 0;
-	virtual bool Push(T item) = 0;
-	virtual void PopList() = 0;
-	virtual bool Resize(size_t newSize) = 0;
+	virtual int Find(T) = 0;
+	virtual const bool Resize(size_t) = 0;
+	virtual void Clear() = 0;
+	virtual const bool Empty() const = 0;
+	virtual void Sort(int (__cdecl *pfnCompare)(const T*, const T*)) = 0;
+	virtual T operator[](size_t) = 0;
 };
-
-#endif

@@ -8,7 +8,9 @@ class CNavMeshHidingSpot : public INavMeshHidingSpot
 {
 public:
 	CNavMeshHidingSpot(unsigned int id, float x, float y, float z, unsigned char flags);
-	~CNavMeshHidingSpot();
+	~CNavMeshHidingSpot() {}
+
+	inline void Destroy() { delete this; }
 
 	unsigned int GetID();
 

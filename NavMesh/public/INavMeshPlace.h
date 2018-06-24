@@ -4,6 +4,8 @@
 class INavMeshPlace 
 {
 public:
+	virtual void Destroy() = 0;
+
 	virtual const char *GetName() = 0;
 	virtual unsigned int GetID() = 0;
 };

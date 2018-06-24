@@ -11,7 +11,9 @@ public:
 	CNavMeshLadder(unsigned int id, float width, float length, float topX, float topY, float topZ,
 		float bottomX, float bottomY, float bottomZ, eNavDir direction,
 		unsigned int topForwardAreaID, unsigned int topLeftAreaID, unsigned int topRightAreaID, unsigned int topBehindAreaID, unsigned int bottomAreaID);
-	~CNavMeshLadder();
+	~CNavMeshLadder() {}
+
+	inline void Destroy() { delete this; }
 
 	unsigned int GetID();
 	float GetWidth();

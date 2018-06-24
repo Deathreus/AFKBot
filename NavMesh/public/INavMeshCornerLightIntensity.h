@@ -6,6 +6,8 @@
 class INavMeshCornerLightIntensity 
 {
 public:
+	virtual void Destroy() = 0;
+
 	virtual eNavCorner GetCornerType() = 0;
 	virtual float GetLightIntensity() = 0;
 };

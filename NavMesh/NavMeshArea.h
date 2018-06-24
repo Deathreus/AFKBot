@@ -2,7 +2,6 @@
 #define __war3source_navmesharea_h__
 
 #include "public\INavMeshArea.h"
-#include "public\IList.h"
 #include "public\INavMeshConnection.h"
 #include "public\INavMeshHidingSpot.h"
 #include "public\INavMeshEncounterPath.h"
@@ -11,8 +10,8 @@
 #include "public\INavMeshVisibleArea.h"
 
 
-static int m_iMasterMarker;
-static INavMeshArea *m_OpenList;
+typedef CList<CList<INavMeshConnection*>> ConnectionList_t;
+typedef CList<CList<INavMeshLadderConnection*>> LadderConList_t;
 
 class CNavMeshArea : public INavMeshArea
 {
@@ -21,11 +20,14 @@ public:
 		float nwExtentX, float nwExtentY, float nwExtentZ,
 		float seExtentX, float seExtentY, float seExtentZ,
 		float neCornerZ, float swCornerZ,
-		IList<INavMeshConnection*> *connections, IList<INavMeshHidingSpot*> *hidingSpots, IList<INavMeshEncounterPath*> *encounterPaths,
-		IList<INavMeshLadderConnection*> *ladderConnections, IList<INavMeshCornerLightIntensity*> *cornerLightIntensities,
-		IList<INavMeshVisibleArea*> *visibleAreas, unsigned int inheritVisibilityFromAreaID,
-		float earliestOccupyTimeFirstTeam, float earliestOccupyTimeSecondTeam, unsigned char unk01);
-	~CNavMeshArea();
+		const CList<CList<INavMeshConnection*>> connections, const CList<INavMeshHidingSpot*> hidingSpots,
+		const CList<INavMeshEncounterPath*> encounterPaths, const CList<CList<INavMeshLadderConnection*>> ladderConnections,
+		const CList<INavMeshCornerLightIntensity*> cornerLightIntensities, const CList<INavMeshVisibleArea*> visibleAreas,
+		unsigned int inheritVisibilityFromAreaID,
+		float earliestOccupyTimeFirstTeam, float earliestOccupyTimeSecondTeam);
+	~CNavMeshArea() {}
+
+	void Destroy();
 
 	unsigned int GetID();
 	unsigned int GetFlags();
@@ -45,28 +47,29 @@ public:
 	float GetNECornerZ();
 	float GetSWCornerZ();
 
-	IList<INavMeshConnection*> *GetConnections();
-	IList<INavMeshHidingSpot*> *GetHidingSpots();
-	IList<INavMeshEncounterPath*> *GetEncounterPaths();
-	IList<INavMeshLadderConnection*> *GetLadderConnections();
-	IList<INavMeshCornerLightIntensity*> *GetCornerLightIntensities();
-	IList<INavMeshVisibleArea*> *GetVisibleAreas();
+	CList<INavMeshConnection*> GetConnections(eNavDir dir);
+	CList<INavMeshHidingSpot*> GetHidingSpots();
+	CList<INavMeshEncounterPath*> GetEncounterPaths();
+	CList<INavMeshLadderConnection*> GetLadderConnections(eNavLadderDir dir);
+	CList<INavMeshCornerLightIntensity*> GetCornerLightIntensities();
+	CList<INavMeshVisibleArea*> GetVisibleAreas();
 
 	unsigned int GetInheritVisibilityFromAreaID();
-
-	unsigned char GetUnk01();
+	
+	void AddFlags(const unsigned int flags);
+	void RemoveFlags(const unsigned int flags);
 
 	// The following functions come from Kit o' Rifty and the SDK
 
-	bool IsBlocked();
-	void SetBlocked(bool blocked);
+	bool IsBlocked(void) const;
+	void SetBlocked(const bool blocked);
 
 	Vector GetExtentLow();
 	Vector GetExtentHigh();
 	Vector GetCenter();
 
 	float GetZ(const Vector &vPos);
-	float GetZ(float fX, float fY);
+	float GetZ(const float fX, const float fY);
 
 	bool IsOverlapping(const Vector &vPos, float fTolerance = 0.0f);
 	bool IsOverlapping(INavMeshArea *toArea);
@@ -84,7 +87,6 @@ public:
 	void SetParent(INavMeshArea *area);
 	void SetParentHow(eNavTraverse traverse);
 
-	static void MakeNewMarker();
 	void Mark();
 	bool IsMarked() const;
 
@@ -99,6 +101,7 @@ public:
 	void AddToClosedList();
 	void RemoveFromClosedList();
 
+	static void MakeNewMarker();
 	static void ClearSearchList();
 
 	INavMeshArea *GetNextOpen();
@@ -106,8 +109,8 @@ public:
 	INavMeshArea *GetPrevOpen();
 	void SetPrevOpen(INavMeshArea *open);
 
-	int GetNearMarker();
-	void SetNearMarker(int marker);
+	static int m_iMasterMarker;
+	static INavMeshArea *m_OpenList;
 
 private:
 	unsigned int id;
@@ -125,19 +128,17 @@ private:
 	float neCornerZ;
 	float swCornerZ;
 
-	IList<INavMeshConnection*> *connections;
-	IList<INavMeshHidingSpot*> *hidingSpots;
-	IList<INavMeshEncounterPath*> *encounterPaths;
-	IList<INavMeshLadderConnection*> *ladderConnections;
-	IList<INavMeshCornerLightIntensity*> *cornerLightIntensities;
-	IList<INavMeshVisibleArea*> *visibleAreas;
+	CList<CList<INavMeshConnection*>> connections;
+	CList<INavMeshHidingSpot*> hidingSpots;
+	CList<INavMeshEncounterPath*> encounterPaths;
+	CList<CList<INavMeshLadderConnection*>> ladderConnections;
+	CList<INavMeshCornerLightIntensity*> cornerLightIntensities;
+	CList<INavMeshVisibleArea*> visibleAreas;
 
 	float earliestOccupyTimeFirstTeam;
 	float earliestOccupyTimeSecondTeam;
 
 	unsigned int inheritVisibilityFromAreaID;
-
-	unsigned char unk01;
 
 	bool blocked;
 
@@ -151,7 +152,6 @@ private:
 	INavMeshArea *m_PrevOpen;
 	INavMeshArea *m_NextOpen;
 	float m_fLengthSoFar;
-	int m_NearMarker;
 };
 
 #endif

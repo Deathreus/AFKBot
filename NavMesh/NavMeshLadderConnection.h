@@ -8,7 +8,9 @@ class CNavMeshLadderConnection : public INavMeshLadderConnection
 {
 public:
 	CNavMeshLadderConnection(unsigned int connectingLadderID, eNavLadderDir direction);
-	~CNavMeshLadderConnection();
+	~CNavMeshLadderConnection() {}
+
+	inline void Destroy() { delete this; }
 
 	unsigned int GetConnectingLadderID();
 	eNavLadderDir GetDirection();

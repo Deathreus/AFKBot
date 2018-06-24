@@ -1,64 +1,40 @@
-#ifndef __war3source_list_h__
-#define __war3source_list_h__
+#pragma once
 
-#include "public\IList.h"
-
-#include <sh_vector.h>
+#include "tier1/utlvector.h"
+#include "tier0/dbg.h"
 
 
-template <class T>
-class CList : public IList<T>
+#define ForEachItem(items, iter) \
+	for (int (iter) = 0, iSize = (items).Count(); (iter) < iSize; (iter)++)
+
+/*
+ * CUtlVector wrapper that has some helper functions
+ * and automatically frees itself and the contained data
+ */
+template <class T> class CList : public CUtlVector<T>
 {
 public:
-	CList() { this->items = new SourceHook::CVector<T>(); }
-	~CList() { delete this->items; }
+	CList() : CUtlVector<T>() {}
+	CList(const CList<T> &other) : CUtlVector<T>() { AddVectorToTail(other); }
+	CList(int count) : CUtlVector<T>() { EnsureCapacity(count); SetCount(count); }
 
-	bool Insert(T item, unsigned int index)
+	bool Push(T item) { return !!AddToTail(item); }
+
+	T Pop()
 	{
-		size_t size = this->items->size();
-
-		if (index < 0 || index > size)
-			return false;
-
-		this->items->insert(this->items->iterAt(index), item);
-		return true;
+		T item = Tail();
+		FindAndRemove(item);
+		return item;
 	}
 
-	void Append(T item) { this->items->insert(this->items->end(), item); }
+	const bool Resize(size_t newSize) { return SetCount(newSize); }
+	
+	void Clear() { Purge(); }
 
-	void Prepend(T item) { this->items->insert(this->items->begin(), item); }
+	const bool Empty() const { return Count() == 0; }
 
-	T At(unsigned int index) { return this->items->at(index); }
-
-	size_t Size() { return this->items->size(); }
-
-	T Head() { return this->items->front(); }
-
-	T Tail() { return this->items->back(); }
-
-	unsigned int Find(T item)
+	const bool operator!() const
 	{
-		size_t size = this->items->size();
-
-		for (unsigned int i = 0; i < size; i++)
-		{
-			if (this->items->at(i) != item)
-				continue;
-
-			return i;
-		}
-
-		return -1;
+		return !Base();
 	}
-
-	bool Push(T item) { return this->items->push_back(item); }
-
-	void PopList() { this->items->pop_back(); }
-
-	bool Resize(size_t newSize) { return this->items->resize(newSize); }
-
-private:
-	SourceHook::CVector<T> *items;
 };
-
-#endif

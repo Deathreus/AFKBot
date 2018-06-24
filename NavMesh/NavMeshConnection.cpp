@@ -7,8 +7,6 @@ CNavMeshConnection::CNavMeshConnection(unsigned int connectingAreaID, eNavDir di
 	this->direction = direction;
 }
 
-CNavMeshConnection::~CNavMeshConnection() {}
-
 unsigned int CNavMeshConnection::GetConnectingAreaID() { return this->connectingAreaID; }
 
 eNavDir CNavMeshConnection::GetDirection() { return this->direction; }

@@ -22,8 +22,6 @@ CNavMeshLadder::CNavMeshLadder(unsigned int id, float width, float length, float
 	this->bottomAreaID = bottomAreaID;
 }
 
-CNavMeshLadder::~CNavMeshLadder() {}
-
 unsigned int CNavMeshLadder::GetID() { return this->id; }
 
 float CNavMeshLadder::GetWidth() { return this->width; }

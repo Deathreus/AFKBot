@@ -8,7 +8,9 @@ class CNavMeshEncounterSpot : public INavMeshEncounterSpot
 {
 public:
 	CNavMeshEncounterSpot(unsigned int orderID, float parametricDistance);
-	~CNavMeshEncounterSpot();
+	~CNavMeshEncounterSpot() {}
+
+	inline void Destroy() { delete this; }
 
 	unsigned int GetOrderID();
 	float GetParametricDistance();

@@ -6,6 +6,8 @@
 class INavMeshConnection 
 {
 public:
+	virtual void Destroy() = 0;
+
 	virtual unsigned int GetConnectingAreaID() = 0;
 	virtual eNavDir GetDirection() = 0;
 };

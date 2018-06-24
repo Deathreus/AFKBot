@@ -8,8 +8,6 @@ CNavMeshPlace::CNavMeshPlace(unsigned int id, const char *name)
 	strcpy_s(this->name, sizeof(name), name);
 }
 
-CNavMeshPlace::~CNavMeshPlace() {}
-
 const char *CNavMeshPlace::GetName() { return this->name; }
 
 unsigned int CNavMeshPlace::GetID() { return this->id; }

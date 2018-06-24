@@ -10,8 +10,6 @@ CNavMeshHidingSpot::CNavMeshHidingSpot(unsigned int id, float x, float y, float 
 	this->flags = flags;
 }
 
-CNavMeshHidingSpot::~CNavMeshHidingSpot() {}
-
 unsigned int CNavMeshHidingSpot::GetID() { return this->id; }
 
 float CNavMeshHidingSpot::GetX() { return this->x; }

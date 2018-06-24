@@ -8,7 +8,9 @@ class CNavMeshConnection : public INavMeshConnection
 {
 public:
 	CNavMeshConnection(unsigned int connectingAreaID, eNavDir direction);
-	~CNavMeshConnection();
+	~CNavMeshConnection() {}
+
+	inline void Destroy() { delete this; }
 
 	unsigned int GetConnectingAreaID();
 	eNavDir GetDirection();

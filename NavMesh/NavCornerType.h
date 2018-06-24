@@ -1,6 +1,7 @@
 #ifndef __war3source_navcornertype_h__
 #define __war3source_navcornertype_h__
 
+
 enum eNavCorner
 {
 	NAV_CORNER_NORTH_WEST = 0,

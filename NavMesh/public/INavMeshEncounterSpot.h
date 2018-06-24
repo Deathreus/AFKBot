@@ -4,6 +4,8 @@
 class INavMeshEncounterSpot
 {
 public:
+	virtual void Destroy() = 0;
+
 	virtual unsigned int GetOrderID() = 0;
 	virtual float GetParametricDistance() = 0;
 };

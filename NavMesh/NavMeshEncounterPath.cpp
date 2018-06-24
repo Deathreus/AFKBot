@@ -1,8 +1,9 @@
 #include "NavMeshEncounterPath.h"
+#include "List.h"
 
 
 CNavMeshEncounterPath::CNavMeshEncounterPath(unsigned int fromAreaID, eNavDir fromDirection,
-	unsigned int toAreaID, eNavDir toDirection, IList<INavMeshEncounterSpot*> *encounterSpots)
+	unsigned int toAreaID, eNavDir toDirection, const CList<INavMeshEncounterSpot*> encounterSpots)
 {
 	this->fromAreaID = fromAreaID;
 	this->fromDirection = fromDirection;
@@ -11,7 +12,12 @@ CNavMeshEncounterPath::CNavMeshEncounterPath(unsigned int fromAreaID, eNavDir fr
 	this->encounterSpots = encounterSpots;
 }
 
-CNavMeshEncounterPath::~CNavMeshEncounterPath() {}
+void CNavMeshEncounterPath::Destroy()
+{
+	this->encounterSpots.PurgeAndDeleteElements();
+
+	delete this;
+}
 
 unsigned int CNavMeshEncounterPath::GetFromAreaID() { return this->fromAreaID; }
 
@@ -21,4 +27,4 @@ unsigned int CNavMeshEncounterPath::GetToAreaID() { return this->toAreaID; }
 
 eNavDir CNavMeshEncounterPath::GetToDirection() { return this->toDirection; }
 
-IList<INavMeshEncounterSpot*> *CNavMeshEncounterPath::GetEncounterSpots() { return this->encounterSpots; }
+CList<INavMeshEncounterSpot*> &CNavMeshEncounterPath::GetEncounterSpots() { return this->encounterSpots; }

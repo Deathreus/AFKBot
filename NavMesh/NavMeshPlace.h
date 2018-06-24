@@ -8,7 +8,9 @@ class CNavMeshPlace : public INavMeshPlace
 {
 public:
 	CNavMeshPlace(unsigned int id, const char *name);
-	~CNavMeshPlace();
+	~CNavMeshPlace() {}
+
+	inline void Destroy() { delete this; }
 
 	const char *GetName();
 	unsigned int GetID();

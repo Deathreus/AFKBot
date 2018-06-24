@@ -1,7 +1,7 @@
 #ifndef __war3source_inavmesharea_h__
 #define __war3source_inavmesharea_h__
 
-#include "IList.h"
+#include "List.h"
 #include "INavMeshConnection.h"
 #include "INavMeshHidingSpot.h"
 #include "INavMeshEncounterPath.h"
@@ -9,11 +9,16 @@
 #include "INavMeshCornerLightIntensity.h"
 #include "INavMeshVisibleArea.h"
 
+
+enum eNavDir;
+enum eNavLadderDir;
 class Vector;
 
 class INavMeshArea 
 {
 public:
+	virtual void Destroy() = 0;
+
 	virtual unsigned int GetID() = 0;
 	virtual unsigned int GetFlags() = 0;
 	virtual unsigned int GetPlaceID() = 0;
@@ -32,26 +37,27 @@ public:
 	virtual float GetNECornerZ() = 0;
 	virtual float GetSWCornerZ() = 0;
 
-	virtual IList<INavMeshConnection*> *GetConnections() = 0;
-	virtual IList<INavMeshHidingSpot*> *GetHidingSpots() = 0;
-	virtual IList<INavMeshEncounterPath*> *GetEncounterPaths() = 0;
-	virtual IList<INavMeshLadderConnection*> *GetLadderConnections() = 0;
-	virtual IList<INavMeshCornerLightIntensity*> *GetCornerLightIntensities() = 0;
-	virtual IList<INavMeshVisibleArea*> *GetVisibleAreas() = 0;
+	virtual CList<INavMeshConnection*> GetConnections(eNavDir dir) = 0;
+	virtual CList<INavMeshHidingSpot*> GetHidingSpots() = 0;
+	virtual CList<INavMeshEncounterPath*> GetEncounterPaths() = 0;
+	virtual CList<INavMeshLadderConnection*> GetLadderConnections(eNavLadderDir dir) = 0;
+	virtual CList<INavMeshCornerLightIntensity*> GetCornerLightIntensities() = 0;
+	virtual CList<INavMeshVisibleArea*> GetVisibleAreas() = 0;
 
 	virtual unsigned int GetInheritVisibilityFromAreaID() = 0;
 
-	virtual unsigned char GetUnk01() = 0;
+	virtual bool IsBlocked() const = 0;
+	virtual void SetBlocked(const bool blocked) = 0;
 
-	virtual bool IsBlocked() = 0;
-	virtual void SetBlocked(bool blocked) = 0;
+	virtual void AddFlags(const unsigned int flags) = 0;
+	virtual void RemoveFlags(const unsigned int flags) = 0;
 
 	virtual Vector GetExtentLow() = 0;
 	virtual Vector GetExtentHigh() = 0;
 	virtual Vector GetCenter() = 0;
 
 	virtual float GetZ(const Vector &vPos) = 0;
-	virtual float GetZ(float fX, float fY) = 0;
+	virtual float GetZ(const float fX, const float fY) = 0;
 
 	virtual bool IsOverlapping(const Vector &vPos, float fTolerance = 120.0f) = 0;
 	virtual bool IsOverlapping(INavMeshArea *toArea) = 0;

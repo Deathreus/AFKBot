@@ -8,7 +8,9 @@ class CNavMeshVisibleArea : public INavMeshVisibleArea
 {
 public:
 	CNavMeshVisibleArea(unsigned int visibleAreaID, unsigned char attributes);
-	~CNavMeshVisibleArea();
+	~CNavMeshVisibleArea() {}
+
+	inline void Destroy() { delete this; }
 
 	unsigned int GetVisibleAreaID();
 	unsigned char GetAttributes();

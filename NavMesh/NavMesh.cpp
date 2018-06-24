@@ -1,24 +1,51 @@
 #include "List.h"
 #include "NavMesh.h"
+#include "NavMeshArea.h"
+#include "NavMeshHint.h"
 #include "NavMeshGrid.h"
+
 #include "../extension.h"
 
 
-CNavMesh::CNavMesh(unsigned int magicNumber, unsigned int version, unsigned int subVersion, unsigned int saveBSPSize, bool isMeshAnalyzed,
-	IList<INavMeshPlace*> *places, IList<INavMeshArea*> *areas, IList<INavMeshLadder*> *ladders, INavMeshGrid *grid)
+int CNavMesh::m_iHintCount = 0;
+
+CNavMesh::CNavMesh(unsigned int magicNumber, unsigned int version, unsigned int subVersion, unsigned int saveBSPSize, bool isMeshAnalyzed, bool hasUnnamedAreas,
+	const CList<INavMeshPlace*> places, const CList<INavMeshArea*> areas, const CList<INavMeshHint*> hints, const CList<INavMeshLadder*> ladders, INavMeshGrid *grid)
 {
 	this->magicNumber = magicNumber;
 	this->version = version;
 	this->subVersion = subVersion;
 	this->saveBSPSize = saveBSPSize;
 	this->isMeshAnalyzed = isMeshAnalyzed;
+	this->hasUnnamedAreas = hasUnnamedAreas;
 	this->places = places;
 	this->areas = areas;
+	this->hints = hints;
 	this->ladders = ladders;
 	this->grid = grid;
 }
 
-CNavMesh::~CNavMesh() {}
+CNavMesh::~CNavMesh()
+{
+	ForEachItem(this->areas, it)
+	{
+		INavMeshArea *area = this->areas.Element(it);
+		if (area) area->Destroy();
+	}
+
+	this->places.PurgeAndDeleteElements();
+	this->areas.PurgeAndDeleteElements();
+	this->hints.PurgeAndDeleteElements();
+	this->ladders.PurgeAndDeleteElements();
+
+	this->grid->Destroy();
+	delete this->grid;
+
+	CNavMesh::m_iHintCount = 0;
+
+	CNavMeshArea::m_iMasterMarker = 0;
+	CNavMeshArea::m_OpenList = nullptr;
+}
 
 unsigned int CNavMesh::GetMagicNumber() { return this->magicNumber; }
 
@@ -30,121 +57,124 @@ unsigned int CNavMesh::GetSaveBSPSize() { return this->saveBSPSize; }
 
 bool CNavMesh::IsMeshAnalyzed() { return this->isMeshAnalyzed; }
 
-IList<INavMeshPlace*> *CNavMesh::GetPlaces() { return this->places; }
+bool CNavMesh::HasUnnamedAreas() { return this->hasUnnamedAreas; }
 
-IList<INavMeshArea*> *CNavMesh::GetAreas() { return this->areas; }
+CList<INavMeshPlace*> &CNavMesh::GetPlaces() { return this->places; }
 
-IList<INavMeshLadder*> *CNavMesh::GetLadders() { return this->ladders; }
+CList<INavMeshArea*> &CNavMesh::GetAreas() { return this->areas; }
+
+CList<INavMeshLadder*> &CNavMesh::GetLadders() { return this->ladders; }
+
+void CNavMesh::AddHint(INavMeshHint *hint)
+{
+	m_iHintCount = hint->GetID();
+	this->hints.AddToTail(hint);
+}
+
+void CNavMesh::AddHint(const Vector pos, const float yaw, const unsigned char flags)
+{
+	float clampedYaw = clamp(yaw, -180.0f, 180.0f);
+	this->hints.AddToTail(new CNavMeshHint(++m_iHintCount, pos.x, pos.y, pos.z, clampedYaw, flags));
+}
+
+bool CNavMesh::RemoveHint(const Vector &vPos)
+{
+	size_t size = this->hints.Size();
+	if (!this->hints || size <= 0)
+		return false;
+
+	for (unsigned int i = 0; i < size; i++)
+	{
+		INavMeshHint *hint = this->hints.Element(i);
+		if (hint)
+		{
+			Vector vTest(hint->GetX(), hint->GetY(), hint->GetZ());
+			if ((vPos - vTest).IsLengthLessThan(6.0f))
+			{
+				return this->hints.FindAndRemove(hint);
+			}
+		}
+	}
+
+	return false;
+}
+
+CList<INavMeshHint*> &CNavMesh::GetHints() { return this->hints; }
 
 INavMeshGrid *CNavMesh::GetGrid() { return this->grid; }
 
 int CNavMesh::WorldToGridX(float fWX)
 {
-	INavMeshGrid *grid = this->GetGrid();
-	int x = (int)((fWX - grid->GetExtentLowX()) / 300.0f);
-
-	if (x < 0)
-		x = 0;
-	else if (x >= grid->GetGridSizeX())
-		x = grid->GetGridSizeX() - 1;
-
-	return x;
+	return clamp((int)((fWX - this->grid->GetExtentLow()[0]) / GridCellSize), 0, this->grid->GetGridSizeX() - 1);
 }
 
 int CNavMesh::WorldToGridY(float fWY)
 {
-	INavMeshGrid *grid = this->GetGrid();
-	int y = (int)((fWY - grid->GetExtentLowY()) / 300.0f);
-
-	if (y < 0)
-		y = 0;
-	else if (y >= grid->GetGridSizeY())
-		y = grid->GetGridSizeY() - 1;
-
-	return y;
+	return clamp((int)((fWY - this->grid->GetExtentLow()[1]) / GridCellSize), 0, this->grid->GetGridSizeY() - 1);
 }
 
-IList<INavMeshArea*> *CNavMesh::GetAreasOnGrid(int x, int y)
+Vector CNavMesh::GridToWorld(int gridX, int gridY)
 {
-	if (!this->isMeshAnalyzed)
+	gridX = clamp(gridX, 0, this->grid->GetGridSizeX() - 1);
+	gridY = clamp(gridY, 0, this->grid->GetGridSizeY() - 1);
+
+	float posX = this->grid->GetExtentLow()[0] + gridX * GridCellSize;
+	float posY = this->grid->GetExtentLow()[1] + gridY * GridCellSize;
+
+	return Vector(posX, posY, 0.0f);
+}
+
+CList<INavMeshArea*> CNavMesh::GetAreasOnGrid(int x, int y)
+{
+	if (!this->grid)
 	{
-		smutils->LogError(myself, "Could not get grid areas because the navmesh doesn't exist!");
-		return NULL;
+		smutils->LogError(myself, "Could not get areas because the grid doesn't exist!");
+		return CList<INavMeshArea*>(0);
 	}
 
-	INavMeshGrid *grid = this->GetGrid();
-	if (!grid)
-	{
-		smutils->LogError(myself, "Could not get grid areas because the grid doesn't exist!");
-		return NULL;
-	}
+	int index = x + y * this->grid->GetGridSizeX();
+	CList<INavMeshArea*> areas = this->grid->GetGridAreas(index);
+	if (!areas || areas.Size() <= 0)
+		return CList<INavMeshArea*>(0);
 
-	int iGridIndex = x + y * grid->GetGridSizeX();
-	int iListStartIndex = GetArrayCell(grid->GetGridAreas(), iGridIndex, NavMeshGrid_ListStartIndex);
-	int iListEndIndex = GetArrayCell(grid->GetGridAreas(), iGridIndex, NavMeshGrid_ListEndIndex);
-
-	if (iListStartIndex == -1)
-		return NULL;
-
-	IList<INavMeshArea*> *ret = new CList<INavMeshArea*>();
-
-	IList<INavMeshArea*> *areas = this->GetAreas();
-	for (int i = iListStartIndex; i <= iListEndIndex; i++)
-	{
-		INavMeshArea *area = areas->At(GetArrayCell(grid->GetGridList(), i, NavMeshGridList_AreaIndex));
-		if (area)
-			ret->Push(area);
-	}
-
-	return ret;
+	return areas;
 }
 
 INavMeshArea *CNavMesh::GetArea(const Vector &vPos, float fBeneathLimit)
 {
-	if (!this->isMeshAnalyzed)
-	{
-		smutils->LogError(myself, "Can't retrieve area because the navmesh doesn't exist!");
-		return NULL;
-	}
-
-	INavMeshGrid *grid = this->GetGrid();
-	if (!grid)
+	if (!this->grid)
 	{
 		smutils->LogError(myself, "Can't retrieve area because the grid doesn't exist!");
-		return NULL;
+		return nullptr;
 	}
 
 	int x = this->WorldToGridX(vPos.x);
 	int y = this->WorldToGridY(vPos.y);
 
-	IList<INavMeshArea*> *areas = this->GetAreasOnGrid(x, y);
+	CList<INavMeshArea*> &areas = this->GetAreasOnGrid(x, y);
 
-	INavMeshArea *useArea = 0;
+	INavMeshArea *useArea = nullptr;
 	float fUseZ = -99999999.9f;
 	Vector vTestPos = vPos + Vector(0.0f, 0.0f, 5.0f);
 
-	if (areas)
+	while (!areas.Empty())
 	{
-		while (areas->Size() > 0)
+		INavMeshArea *area = areas.Pop();
+
+		if (area->IsOverlapping(vPos))
 		{
-			INavMeshArea *area = areas->Tail();
-			areas->PopList();
+			float z = area->GetZ(vTestPos);
 
-			if (area->IsOverlapping(vPos))
+			if (z > vTestPos.z)
+				continue;
+
+			if (z < vPos.z - fBeneathLimit)
+				continue;
+
+			if (z > fUseZ)
 			{
-				float z = area->GetZ(vTestPos);
-
-				if (z > vTestPos.z)
-					continue;
-
-				if (z < vPos.z - fBeneathLimit)
-					continue;
-
-				if (z > fUseZ)
-				{
-					useArea = area;
-					fUseZ = z;
-				}
+				useArea = area;
+				fUseZ = z;
 			}
 		}
 	}
@@ -154,19 +184,22 @@ INavMeshArea *CNavMesh::GetArea(const Vector &vPos, float fBeneathLimit)
 
 INavMeshArea *CNavMesh::GetAreaByID(const unsigned int iAreaIndex)
 {
-	if (!this->isMeshAnalyzed)
+	size_t size = this->areas.Size();
+	if (!this->areas || size <= 0)
 	{
-		smutils->LogError(myself, "Can't retrieve area because the navmesh doesn't exist!");
-		return NULL;
+		smutils->LogError(myself, "Can't retrieve area because there are none!");
+		return nullptr;
 	}
 
-	IList<INavMeshArea*> *areas = this->GetAreas();
-	for (unsigned int i = 0; i < areas->Size(); i++)
+	for (unsigned int i = 0; i < size; i++)
 	{
-		INavMeshArea *area = areas->At(i);
-		if (area->GetID() == iAreaIndex)
-			return area;
+		INavMeshArea *area = this->areas.Element(i);
+		if (area)
+		{
+			if (area->GetID() == iAreaIndex)
+				return area;
+		}
 	}
 
-	return NULL;
+	return nullptr;
 }

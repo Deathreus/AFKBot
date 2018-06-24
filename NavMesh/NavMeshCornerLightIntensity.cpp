@@ -7,8 +7,6 @@ CNavMeshCornerLightIntensity::CNavMeshCornerLightIntensity(eNavCorner cornerType
 	this->lightIntensity = lightIntensity;
 }
 
-CNavMeshCornerLightIntensity::~CNavMeshCornerLightIntensity() {}
-
 eNavCorner CNavMeshCornerLightIntensity::GetCornerType() { return this->cornerType; }
 
 float CNavMeshCornerLightIntensity::GetLightIntensity() { return this->lightIntensity; }

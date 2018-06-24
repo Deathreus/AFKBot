@@ -12,6 +12,14 @@ enum eNavDir
 	NAV_DIR_COUNT
 };
 
+enum eNavLadderDir
+{
+	NAV_LADDER_DIR_UP = 0,
+	NAV_LADDER_DIR_DOWN = 1,
+
+	NAV_LADDER_DIR_COUNT
+};
+
 enum eNavTraverse
 {
 	// THE FIRST 4 MUST MATCH eNavDir

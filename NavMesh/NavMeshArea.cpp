@@ -1,14 +1,20 @@
 #include "NavMeshArea.h"
+#include "NavDirType.h"
+#include "List.h"
 #include "vector.h"
+
+
+int CNavMeshArea::m_iMasterMarker = 0;
+INavMeshArea *CNavMeshArea::m_OpenList = NULL;
 
 CNavMeshArea::CNavMeshArea(unsigned int id, unsigned int flags, unsigned int placeID,
 	float nwExtentX, float nwExtentY, float nwExtentZ,
 	float seExtentX, float seExtentY, float seExtentZ,
 	float neCornerZ, float swCornerZ,
-	IList<INavMeshConnection*> *connections, IList<INavMeshHidingSpot*> *hidingSpots, IList<INavMeshEncounterPath*> *encounterPaths,
-	IList<INavMeshLadderConnection*> *ladderConnections, IList<INavMeshCornerLightIntensity*> *cornerLightIntensities,
-	IList<INavMeshVisibleArea*> *visibleAreas, unsigned int inheritVisibilityFromAreaID,
-	float earliestOccupyTimeFirstTeam, float earliestOccupyTimeSecondTeam, unsigned char unk01)
+	const CList<CList<INavMeshConnection*>> connections, const CList<INavMeshHidingSpot*> hidingSpots,
+	const CList<INavMeshEncounterPath*> encounterPaths, const CList<CList<INavMeshLadderConnection*>> ladderConnections,
+	const CList<INavMeshCornerLightIntensity*> cornerLightIntensities, const CList<INavMeshVisibleArea*> visibleAreas,
+	unsigned int inheritVisibilityFromAreaID, float earliestOccupyTimeFirstTeam, float earliestOccupyTimeSecondTeam)
 {
 	this->id = id;
 	this->flags = flags;
@@ -30,8 +36,6 @@ CNavMeshArea::CNavMeshArea(unsigned int id, unsigned int flags, unsigned int pla
 	this->inheritVisibilityFromAreaID = inheritVisibilityFromAreaID;
 	this->earliestOccupyTimeFirstTeam = earliestOccupyTimeFirstTeam;
 	this->earliestOccupyTimeSecondTeam = earliestOccupyTimeSecondTeam;
-	this->unk01 = unk01;
-	this->blocked = false;
 	this->m_Parent = 0;
 	this->m_NextOpen = 0;
 	this->m_PrevOpen = 0;
@@ -41,10 +45,33 @@ CNavMeshArea::CNavMeshArea(unsigned int id, unsigned int flags, unsigned int pla
 	this->m_iTraverse = NAV_TRAVERSE_COUNT;
 	this->m_iMarker = 0;
 	this->m_iOpenMarker = 0;
-	this->m_NearMarker = 0;
 }
 
-CNavMeshArea::~CNavMeshArea() {}
+void CNavMeshArea::Destroy()
+{
+	ForEachItem(this->encounterPaths, it)
+	{
+		INavMeshEncounterPath *path = this->encounterPaths.Element(it);
+		if (path) path->Destroy();
+	}
+
+	ForEachItem(this->connections, dir)
+	{
+		this->connections[dir].PurgeAndDeleteElements();
+	}
+
+	ForEachItem(this->ladderConnections, dir)
+	{
+		this->ladderConnections[dir].PurgeAndDeleteElements();
+	}
+
+	this->hidingSpots.PurgeAndDeleteElements();
+	this->encounterPaths.PurgeAndDeleteElements();
+	this->cornerLightIntensities.PurgeAndDeleteElements();
+	this->visibleAreas.PurgeAndDeleteElements();
+
+	delete this;
+}
 
 unsigned int CNavMeshArea::GetID() { return this->id; }
 
@@ -72,25 +99,27 @@ float CNavMeshArea::GetNECornerZ() { return this->neCornerZ; }
 
 float CNavMeshArea::GetSWCornerZ() { return this->swCornerZ; }
 
-IList<INavMeshConnection*> *CNavMeshArea::GetConnections() { return this->connections; }
+CList<INavMeshConnection*> CNavMeshArea::GetConnections(eNavDir dir) { return this->connections[dir]; }
 
-IList<INavMeshHidingSpot*> *CNavMeshArea::GetHidingSpots() { return this->hidingSpots; }
+CList<INavMeshHidingSpot*> CNavMeshArea::GetHidingSpots() { return this->hidingSpots; }
 
-IList<INavMeshEncounterPath*> *CNavMeshArea::GetEncounterPaths() { return this->encounterPaths; }
+CList<INavMeshEncounterPath*> CNavMeshArea::GetEncounterPaths() { return this->encounterPaths; }
 
-IList<INavMeshLadderConnection*> *CNavMeshArea::GetLadderConnections() { return this->ladderConnections; }
+CList<INavMeshLadderConnection*> CNavMeshArea::GetLadderConnections(eNavLadderDir dir) { return this->ladderConnections[dir]; }
 
-IList<INavMeshCornerLightIntensity*> *CNavMeshArea::GetCornerLightIntensities() { return this->cornerLightIntensities; }
+CList<INavMeshCornerLightIntensity*> CNavMeshArea::GetCornerLightIntensities() { return this->cornerLightIntensities; }
 
-IList<INavMeshVisibleArea*> *CNavMeshArea::GetVisibleAreas() { return this->visibleAreas; }
+CList<INavMeshVisibleArea*> CNavMeshArea::GetVisibleAreas() { return this->visibleAreas; }
 
 unsigned int CNavMeshArea::GetInheritVisibilityFromAreaID() { return this->inheritVisibilityFromAreaID; }
 
-unsigned char CNavMeshArea::GetUnk01() { return this->unk01; }
+bool CNavMeshArea::IsBlocked(void) const { return this->blocked; }
 
-bool CNavMeshArea::IsBlocked() { return this->blocked; }
+void CNavMeshArea::SetBlocked(const bool blocked) { this->blocked = blocked; }
 
-void CNavMeshArea::SetBlocked(bool blocked) { this->blocked = blocked; }
+void CNavMeshArea::AddFlags(const unsigned int flags) { this->flags |= flags; }
+
+void CNavMeshArea::RemoveFlags(const unsigned int flags) { this->flags &= ~flags; }
 
 Vector CNavMeshArea::GetExtentLow()
 {
@@ -159,7 +188,7 @@ float CNavMeshArea::GetZ(const Vector &vPos)
 	return fNorthZ + v * (fSouthZ - fNorthZ);
 }
 
-float CNavMeshArea::GetZ(float fX, float fY)
+float CNavMeshArea::GetZ(const float fX, const float fY)
 {
 	Vector vPos(fX, fY, 0.0f);
 	return this->GetZ(vPos);
@@ -218,9 +247,9 @@ void CNavMeshArea::MakeNewMarker() { ++m_iMasterMarker; if (m_iMasterMarker == 0
 
 void CNavMeshArea::Mark() { this->m_iMarker = m_iMasterMarker; }
 
-bool CNavMeshArea::IsMarked() const { return (this->m_iMarker == m_iMasterMarker) ? true : false; }
+bool CNavMeshArea::IsMarked() const { return (this->m_iMarker == m_iMasterMarker); }
 
-bool CNavMeshArea::IsOpen() const { return (this->m_iOpenMarker == m_iMasterMarker) ? true : false; }
+bool CNavMeshArea::IsOpen() const { return (this->m_iOpenMarker == m_iMasterMarker); }
 
 /**
 * Add to open list in decreasing value order
@@ -232,15 +261,15 @@ void CNavMeshArea::AddToOpenList()
 	if (!m_OpenList)
 	{
 		m_OpenList = this;
-		this->SetPrevOpen(0);
-		this->SetNextOpen(0);
+		this->SetPrevOpen(nullptr);
+		this->SetNextOpen(nullptr);
 		return;
 	}
 
-	INavMeshArea *area, *last = 0;
+	INavMeshArea *area, *last = nullptr;
 	for (area = m_OpenList; area; area = area->GetNextOpen())
 	{
-		if (this->GetTotalCost() < area->GetTotalCost())
+		if (this->m_fTotalCost < area->GetTotalCost())
 			break;
 
 		last = area;
@@ -250,8 +279,8 @@ void CNavMeshArea::AddToOpenList()
 	{
 		// insert before this area
 		this->SetPrevOpen(area->GetPrevOpen());
-		if (this->GetPrevOpen())
-			this->GetPrevOpen()->SetNextOpen(this);
+		if (this->m_PrevOpen)
+			this->m_PrevOpen->SetNextOpen(this);
 		else
 			m_OpenList = this;
 
@@ -264,19 +293,19 @@ void CNavMeshArea::AddToOpenList()
 		last->SetNextOpen(this);
 
 		this->SetPrevOpen(last);
-		this->SetNextOpen(0);
+		this->SetNextOpen(nullptr);
 	}
 }
 
 /**
-* A smaller value has been found, update this area on the open list
-*/
+ * A smaller value has been found, update this area on the open list
+ */
 void CNavMeshArea::UpdateOnOpenList()
 {
-	while (m_PrevOpen && this->GetTotalCost() < m_PrevOpen->GetTotalCost())
+	while (this->m_PrevOpen && this->m_fTotalCost < this->m_PrevOpen->GetTotalCost())
 	{
 		// swap position with predecessor
-		INavMeshArea *other = m_PrevOpen;
+		INavMeshArea *other = this->GetPrevOpen();
 		INavMeshArea *before = other->GetPrevOpen();
 		INavMeshArea *after = this->GetNextOpen();
 
@@ -298,13 +327,13 @@ void CNavMeshArea::UpdateOnOpenList()
 
 void CNavMeshArea::RemoveFromOpenList()
 {
-	if (m_PrevOpen)
-		m_PrevOpen->SetNextOpen(m_NextOpen);
+	if (this->m_PrevOpen)
+		this->m_PrevOpen->SetNextOpen(this->m_NextOpen);
 	else
-		m_OpenList = m_NextOpen;
+		m_OpenList = this->m_NextOpen;
 
-	if (m_NextOpen)
-		m_NextOpen->SetPrevOpen(m_PrevOpen);
+	if (this->m_NextOpen)
+		this->m_NextOpen->SetPrevOpen(this->m_PrevOpen);
 
 	// zero is an invalid marker
 	this->m_iOpenMarker = 0;
@@ -323,7 +352,7 @@ INavMeshArea *CNavMeshArea::PopOpenList()
 		return area;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 bool CNavMeshArea::IsClosed() const
@@ -334,15 +363,15 @@ bool CNavMeshArea::IsClosed() const
 	return false;
 }
 
-void CNavMeshArea::AddToClosedList() { this->Mark(); }
+void CNavMeshArea::AddToClosedList() { this->m_iMarker = m_iMasterMarker; }
 
-void CNavMeshArea::RemoveFromClosedList() {}
+void CNavMeshArea::RemoveFromClosedList() { this->m_iMarker = 0; }
 
 void CNavMeshArea::ClearSearchList()
 {
 	CNavMeshArea::MakeNewMarker();
 
-	m_OpenList = 0;
+	m_OpenList = nullptr;
 }
 
 INavMeshArea *CNavMeshArea::GetNextOpen() { return this->m_NextOpen; }
@@ -352,7 +381,3 @@ void CNavMeshArea::SetNextOpen(INavMeshArea *open) { this->m_NextOpen = open; }
 INavMeshArea *CNavMeshArea::GetPrevOpen() { return this->m_PrevOpen; }
 
 void CNavMeshArea::SetPrevOpen(INavMeshArea *open) { this->m_PrevOpen = open; }
-
-int CNavMeshArea::GetNearMarker() { return this->m_NearMarker; }
-
-void CNavMeshArea::SetNearMarker(int marker) { this->m_NearMarker = marker; }

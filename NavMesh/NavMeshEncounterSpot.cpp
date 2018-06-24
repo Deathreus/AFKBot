@@ -7,8 +7,6 @@ CNavMeshEncounterSpot::CNavMeshEncounterSpot(unsigned int orderID, float paramet
 	this->parametricDistance = parametricDistance;
 }
 
-CNavMeshEncounterSpot::~CNavMeshEncounterSpot() {}
-
 unsigned int CNavMeshEncounterSpot::GetOrderID() { return this->orderID; }
 
 float CNavMeshEncounterSpot::GetParametricDistance() { return this->parametricDistance; }

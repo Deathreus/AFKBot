@@ -8,7 +8,9 @@ class CNavMeshCornerLightIntensity : public INavMeshCornerLightIntensity
 {
 public:
 	CNavMeshCornerLightIntensity(eNavCorner cornerType, float lightIntensity);
-	~CNavMeshCornerLightIntensity();
+	~CNavMeshCornerLightIntensity() {}
+
+	inline void Destroy() { delete this; }
 
 	eNavCorner GetCornerType();
 	float GetLightIntensity();
