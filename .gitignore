@@ -8,10 +8,10 @@
 *.sln.docstates
 
 # Build results
-msvc12/[Dd]ebug/
-msvc12/[Dd]ebugPublic/
-msvc12/[Rr]elease/
-msvc12/[Rr]eleases/
+msvc14/[Dd]ebug/
+msvc14/[Dd]ebugPublic/
+msvc14/[Rr]elease/
+msvc14/[Rr]eleases/
 
 # Roslyn cache directories
 *.ide/
@@ -22,6 +22,10 @@ build/
 # MSTest test Results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
+
+# VS user cache
+msvc14/.vs/
+msvc14/*.db
 
 #NUNIT
 *.VisualState.xml
