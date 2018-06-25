@@ -18,7 +18,7 @@ public:
 	eNavDir GetFromDirection();
 	unsigned int GetToAreaID();
 	eNavDir GetToDirection();
-	CList<INavMeshEncounterSpot*> &GetEncounterSpots();
+	CList<INavMeshEncounterSpot*> GetEncounterSpots();
 
 private:
 	unsigned int fromAreaID;

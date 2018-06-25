@@ -30,14 +30,14 @@ public:
 
 	bool HasUnnamedAreas();
 
-	CList<INavMeshPlace*> &GetPlaces();
-	CList<INavMeshArea*> &GetAreas();
-	CList<INavMeshLadder*> &GetLadders();
+	CList<INavMeshPlace*> GetPlaces();
+	CList<INavMeshArea*> GetAreas();
+	CList<INavMeshLadder*> GetLadders();
 
 	void AddHint(INavMeshHint *hint);
 	void AddHint(const Vector pos, const float yaw, const unsigned char flags);
 	bool RemoveHint(const Vector &vPos);
-	CList<INavMeshHint*> &GetHints();
+	CList<INavMeshHint*> GetHints();
 
 	INavMeshGrid *GetGrid();
 	int WorldToGridX(float fWX);

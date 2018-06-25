@@ -26,7 +26,7 @@ public:
 	int GetGridSizeX();
 	int GetGridSizeY();
 
-	CList<CList<INavMeshArea*>> &GetGridLists();
+	CList<CList<INavMeshArea*>> GetGridLists();
 	CList<INavMeshArea*> GetGridAreas(int index);
 
 private:

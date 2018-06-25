@@ -15,7 +15,7 @@ public:
 	virtual unsigned int GetToAreaID() = 0;
 	virtual eNavDir GetToDirection() = 0;
 
-	virtual CList<INavMeshEncounterSpot*> &GetEncounterSpots() = 0;
+	virtual CList<INavMeshEncounterSpot*> GetEncounterSpots() = 0;
 };
 
 #endif

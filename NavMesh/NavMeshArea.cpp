@@ -19,12 +19,9 @@ CNavMeshArea::CNavMeshArea(unsigned int id, unsigned int flags, unsigned int pla
 	this->id = id;
 	this->flags = flags;
 	this->placeID = placeID;
-	this->nwExtentX = nwExtentX;
-	this->nwExtentY = nwExtentY;
-	this->nwExtentZ = nwExtentZ;
-	this->seExtentX = seExtentX;
-	this->seExtentY = seExtentY;
-	this->seExtentZ = seExtentZ;
+	this->nwExtent = Vector(nwExtentX, nwExtentY, nwExtentZ);
+	this->seExtent = Vector(seExtentX, seExtentY, seExtentZ);
+	this->center = (this->nwExtent + this->seExtent) / 2.0f;
 	this->neCornerZ = neCornerZ;
 	this->swCornerZ = swCornerZ;
 	this->connections = connections;
@@ -55,20 +52,22 @@ void CNavMeshArea::Destroy()
 		if (path) path->Destroy();
 	}
 
-	ForEachItem(this->connections, dir)
+	for(int dir = 0; dir < NAV_DIR_COUNT; dir++)
 	{
-		this->connections[dir].PurgeAndDeleteElements();
+		this->connections[dir].Clear(true);
 	}
 
-	ForEachItem(this->ladderConnections, dir)
+	for(int dir = 0; dir < NAV_LADDER_DIR_COUNT; dir++)
 	{
-		this->ladderConnections[dir].PurgeAndDeleteElements();
+		this->ladderConnections[dir].Clear(true);
 	}
 
-	this->hidingSpots.PurgeAndDeleteElements();
-	this->encounterPaths.PurgeAndDeleteElements();
-	this->cornerLightIntensities.PurgeAndDeleteElements();
-	this->visibleAreas.PurgeAndDeleteElements();
+	this->connections.Clear(false);
+	this->ladderConnections.Clear(false);
+	this->hidingSpots.Clear(true);
+	this->encounterPaths.Clear(true);
+	this->cornerLightIntensities.Clear(true);
+	this->visibleAreas.Clear(true);
 
 	delete this;
 }
@@ -79,17 +78,17 @@ unsigned int CNavMeshArea::GetFlags() { return this->flags; }
 
 unsigned int CNavMeshArea::GetPlaceID() { return this->placeID; }
 
-float CNavMeshArea::GetNWExtentX() { return this->nwExtentX; }
+float CNavMeshArea::GetNWExtentX() { return this->nwExtent.x; }
 
-float CNavMeshArea::GetNWExtentY() { return this->nwExtentY; }
+float CNavMeshArea::GetNWExtentY() { return this->nwExtent.y; }
 
-float CNavMeshArea::GetNWExtentZ() { return this->nwExtentZ; }
+float CNavMeshArea::GetNWExtentZ() { return this->nwExtent.z; }
 
-float CNavMeshArea::GetSEExtentX() { return this->seExtentX; }
+float CNavMeshArea::GetSEExtentX() { return this->seExtent.x; }
 
-float CNavMeshArea::GetSEExtentY() { return this->seExtentY; }
+float CNavMeshArea::GetSEExtentY() { return this->seExtent.y; }
 
-float CNavMeshArea::GetSEExtentZ() { return this->seExtentZ; }
+float CNavMeshArea::GetSEExtentZ() { return this->seExtent.z; }
 
 float CNavMeshArea::GetEarliestOccupyTimeFirstTeam() { return this->earliestOccupyTimeFirstTeam; }
 
@@ -123,35 +122,17 @@ void CNavMeshArea::RemoveFlags(const unsigned int flags) { this->flags &= ~flags
 
 Vector CNavMeshArea::GetExtentLow()
 {
-	Vector extent;
-	extent.x = this->GetNWExtentX();
-	extent.y = this->GetNWExtentY();
-	extent.z = this->GetNWExtentZ();
-
-	return extent;
+	return this->nwExtent;
 }
 
 Vector CNavMeshArea::GetExtentHigh()
 {
-	Vector extent;
-	extent.x = this->GetSEExtentX();
-	extent.y = this->GetSEExtentY();
-	extent.z = this->GetSEExtentZ();
-
-	return extent;
+	return this->seExtent;
 }
 
 Vector CNavMeshArea::GetCenter()
 {
-	Vector center;
-	Vector top = this->GetExtentHigh();
-	Vector bottom = this->GetExtentLow();
-
-	center.x = (top.x + bottom.x) / 2.0;
-	center.y = (top.y + bottom.y) / 2.0;
-	center.z = (top.z + bottom.z) / 2.0;
-
-	return center;
+	return this->center;
 }
 
 float CNavMeshArea::GetZ(const Vector &vPos)
@@ -167,7 +148,7 @@ float CNavMeshArea::GetZ(const Vector &vPos)
 
 	// Catch divide by zero
 	if (dx == 0.0f || dy == 0.0f)
-		return this->GetNECornerZ();
+		return this->neCornerZ;
 
 	float u = (vPos.x - vExtLo.x) / dx;
 	float v = (vPos.y - vExtLo.y) / dy;
@@ -182,8 +163,8 @@ float CNavMeshArea::GetZ(const Vector &vPos)
 	else if (v > 1.0f)
 		v = 1.0f;
 
-	float fNorthZ = vExtLo.z + u * (this->GetNECornerZ() - vExtLo.z);
-	float fSouthZ = this->GetSWCornerZ() + u * (vExtHi.z - this->GetSWCornerZ());
+	float fNorthZ = vExtLo.z + u * (this->neCornerZ - vExtLo.z);
+	float fSouthZ = this->swCornerZ + u * (vExtHi.z - this->swCornerZ);
 
 	return fNorthZ + v * (fSouthZ - fNorthZ);
 }
@@ -305,9 +286,9 @@ void CNavMeshArea::UpdateOnOpenList()
 	while (this->m_PrevOpen && this->m_fTotalCost < this->m_PrevOpen->GetTotalCost())
 	{
 		// swap position with predecessor
-		INavMeshArea *other = this->GetPrevOpen();
+		INavMeshArea *other = this->m_PrevOpen;
 		INavMeshArea *before = other->GetPrevOpen();
-		INavMeshArea *after = this->GetNextOpen();
+		INavMeshArea *after = this->m_NextOpen;
 
 		this->SetNextOpen(other);
 		this->SetPrevOpen(before);

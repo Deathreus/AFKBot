@@ -29,7 +29,13 @@ public:
 
 	const bool Resize(size_t newSize) { return SetCount(newSize); }
 	
-	void Clear() { Purge(); }
+	void Clear(bool bDelete)
+	{
+		if (bDelete)
+			PurgeAndDeleteElements();
+		else
+			Purge();
+	}
 
 	const bool Empty() const { return Count() == 0; }
 

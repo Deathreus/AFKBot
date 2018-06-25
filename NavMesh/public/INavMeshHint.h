@@ -1,5 +1,7 @@
 #pragma once
 
+class Vector;
+
 class INavMeshHint
 {
 public:
@@ -10,6 +12,8 @@ public:
 	virtual float GetX() = 0;
 	virtual float GetY() = 0;
 	virtual float GetZ() = 0;
+
+	virtual Vector GetPos() = 0;
 	
 	virtual float GetYaw() = 0;
 

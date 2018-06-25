@@ -16,8 +16,10 @@ void CNavMeshGrid::Destroy()
 	ForEachItem(this->grid, it)
 	{
 		CList<INavMeshArea*> list = grid.Element(it);
-		list.PurgeAndDeleteElements();
+		list.Clear(true);
 	}
+
+	this->grid.Clear(false);
 
 	delete this;
 }
@@ -32,4 +34,4 @@ int CNavMeshGrid::GetGridSizeY() { return this->gridSizeY; }
 
 CList<INavMeshArea*> CNavMeshGrid::GetGridAreas(int index) { return this->grid[index]; }
 
-CList<CList<INavMeshArea*>> &CNavMeshGrid::GetGridLists() { return this->grid; }
+CList<CList<INavMeshArea*>> CNavMeshGrid::GetGridLists() { return this->grid; }

@@ -59,11 +59,11 @@ bool CNavMesh::IsMeshAnalyzed() { return this->isMeshAnalyzed; }
 
 bool CNavMesh::HasUnnamedAreas() { return this->hasUnnamedAreas; }
 
-CList<INavMeshPlace*> &CNavMesh::GetPlaces() { return this->places; }
+CList<INavMeshPlace*> CNavMesh::GetPlaces() { return this->places; }
 
-CList<INavMeshArea*> &CNavMesh::GetAreas() { return this->areas; }
+CList<INavMeshArea*> CNavMesh::GetAreas() { return this->areas; }
 
-CList<INavMeshLadder*> &CNavMesh::GetLadders() { return this->ladders; }
+CList<INavMeshLadder*> CNavMesh::GetLadders() { return this->ladders; }
 
 void CNavMesh::AddHint(INavMeshHint *hint)
 {
@@ -99,7 +99,7 @@ bool CNavMesh::RemoveHint(const Vector &vPos)
 	return false;
 }
 
-CList<INavMeshHint*> &CNavMesh::GetHints() { return this->hints; }
+CList<INavMeshHint*> CNavMesh::GetHints() { return this->hints; }
 
 INavMeshGrid *CNavMesh::GetGrid() { return this->grid; }
 

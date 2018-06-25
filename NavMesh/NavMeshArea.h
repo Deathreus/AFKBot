@@ -117,13 +117,9 @@ private:
 	unsigned int flags;
 	unsigned int placeID;
 
-	float nwExtentX;
-	float nwExtentY;
-	float nwExtentZ;
-
-	float seExtentX;
-	float seExtentY;
-	float seExtentZ;
+	Vector nwExtent;
+	Vector seExtent;
+	Vector center;
 
 	float neCornerZ;
 	float swCornerZ;

@@ -14,7 +14,7 @@ CNavMeshEncounterPath::CNavMeshEncounterPath(unsigned int fromAreaID, eNavDir fr
 
 void CNavMeshEncounterPath::Destroy()
 {
-	this->encounterSpots.PurgeAndDeleteElements();
+	this->encounterSpots.Clear(true);
 
 	delete this;
 }
@@ -27,4 +27,4 @@ unsigned int CNavMeshEncounterPath::GetToAreaID() { return this->toAreaID; }
 
 eNavDir CNavMeshEncounterPath::GetToDirection() { return this->toDirection; }
 
-CList<INavMeshEncounterSpot*> &CNavMeshEncounterPath::GetEncounterSpots() { return this->encounterSpots; }
+CList<INavMeshEncounterSpot*> CNavMeshEncounterPath::GetEncounterSpots() { return this->encounterSpots; }

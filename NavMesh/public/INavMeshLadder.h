@@ -3,6 +3,7 @@
 
 #include "..\NavDirType.h"
 
+class Vector;
 
 class INavMeshLadder 
 {
@@ -20,6 +21,9 @@ public:
 	virtual float GetBottomX() = 0;
 	virtual float GetBottomY() = 0;
 	virtual float GetBottomZ() = 0;
+
+	virtual Vector GetTop() = 0;
+	virtual Vector GetBottom() = 0;
 
 	virtual eNavDir GetDirection() = 0;
 	

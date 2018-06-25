@@ -16,6 +16,8 @@ public:
 	float GetX();
 	float GetY();
 	float GetZ();
+
+	Vector GetPos();
 	
 	float GetYaw();
 	
@@ -24,9 +26,7 @@ public:
 private:
 	unsigned int id;
 	
-	float x;
-	float y;
-	float z;
+	Vector pos;
 	
 	float yaw;
 	

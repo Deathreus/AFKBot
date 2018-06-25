@@ -1,4 +1,5 @@
 #include "NavMeshLadder.h"
+#include <vector.h>
 
 
 CNavMeshLadder::CNavMeshLadder(unsigned int id, float width, float length, float topX, float topY, float topZ,
@@ -8,12 +9,8 @@ CNavMeshLadder::CNavMeshLadder(unsigned int id, float width, float length, float
 	this->id = id;
 	this->width = width;
 	this->length = length;
-	this->topX = topX;
-	this->topY = topY;
-	this->topZ = topZ;
-	this->bottomX = bottomX;
-	this->bottomY = bottomY;
-	this->bottomZ = bottomZ;
+	this->top = Vector(topX, topY, topZ);
+	this->bottom = Vector(bottomX, bottomY, bottomZ);
 	this->direction = direction;
 	this->topForwardAreaID = topForwardAreaID;
 	this->topLeftAreaID = topLeftAreaID;
@@ -28,17 +25,21 @@ float CNavMeshLadder::GetWidth() { return this->width; }
 
 float CNavMeshLadder::GetLength() { return this->length; }
 
-float CNavMeshLadder::GetTopX() { return this->topX; }
+float CNavMeshLadder::GetTopX() { return this->top.x; }
 
-float CNavMeshLadder::GetTopY() { return this->topY; }
+float CNavMeshLadder::GetTopY() { return this->top.y; }
 
-float CNavMeshLadder::GetTopZ() { return this->topZ; }
+float CNavMeshLadder::GetTopZ() { return this->top.z; }
 
-float CNavMeshLadder::GetBottomX() { return this->bottomX; }
+float CNavMeshLadder::GetBottomX() { return this->bottom.x; }
 
-float CNavMeshLadder::GetBottomY() { return this->bottomY; }
+float CNavMeshLadder::GetBottomY() { return this->bottom.y; }
 
-float CNavMeshLadder::GetBottomZ() { return this->bottomZ; }
+float CNavMeshLadder::GetBottomZ() { return this->bottom.z; }
+
+Vector CNavMeshLadder::GetTop() { return this->top; }
+
+Vector CNavMeshLadder::GetBottom() { return this->bottom; }
 
 eNavDir CNavMeshLadder::GetDirection() { return this->direction; }
 

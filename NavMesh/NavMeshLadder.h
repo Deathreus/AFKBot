@@ -27,6 +27,9 @@ public:
 	float GetBottomY();
 	float GetBottomZ();
 
+	Vector GetTop();
+	Vector GetBottom();
+
 	eNavDir GetDirection();
 
 	unsigned int GetTopForwardAreaID();
@@ -40,12 +43,8 @@ private:
 	unsigned int id;
 	float width;
 	float length;
-	float topX;
-	float topY;
-	float topZ;
-	float bottomX;
-	float bottomY;
-	float bottomZ;
+	Vector top;
+	Vector bottom;
 	eNavDir direction;
 	unsigned int topForwardAreaID;
 	unsigned int topLeftAreaID;
