@@ -82,7 +82,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..;..\sdk;..\NavMesh;$(SOURCEMOD)\core;$(SOURCEMOD)\public;$(SOURCEMOD)\public\extensions;$(SOURCEMOD)\public\CDetour;$(SOURCEMOD)\sourcepawn\include;$(HL2SDKTF2)\public;$(HL2SDKTF2)\public\mathlib;$(HL2SDKTF2)\public\engine;$(HL2SDKTF2)\public\tier0;$(HL2SDKTF2)\public\tier1;$(HL2SDKTF2)\public\toolframework;$(HL2SDKTF2)\public\SoundEmitterSystem;$(HL2SDKTF2)\game\shared;$(HL2SDKTF2)\game\server;$(HL2SDKTF2)\public\game\server;$(MMSOURCE)\core;$(MMSOURCE)\core\sourcehook;$(MMSOURCE)\public;%(AdditionIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..;..\sdk;..\NavMesh;$(SOURCEMOD)\core;$(SOURCEMOD)\public;$(SOURCEMOD)\public\amtl;$(SOURCEMOD)\public\extensions;$(SOURCEMOD)\public\CDetour;$(SOURCEMOD)\sourcepawn\include;$(HL2SDKTF2)\public;$(HL2SDKTF2)\public\mathlib;$(HL2SDKTF2)\public\engine;$(HL2SDKTF2)\public\tier0;$(HL2SDKTF2)\public\tier1;$(HL2SDKTF2)\public\toolframework;$(HL2SDKTF2)\public\SoundEmitterSystem;$(HL2SDKTF2)\game\shared;$(HL2SDKTF2)\game\server;$(HL2SDKTF2)\public\game\server;$(MMSOURCE)\core;$(MMSOURCE)\core\sourcehook;$(MMSOURCE)\public;%(AdditionIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>SOURCE_ENGINE=11;WIN32;NOUSER;NOWH;_DEBUG;_WINDOWS;HOMEFOLDER;_USRDLL;SDK_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -246,7 +246,6 @@
     <ClInclude Include="..\NavMesh\NavCornerType.h" />
     <ClInclude Include="..\NavMesh\NavDirType.h" />
     <ClInclude Include="..\NavMesh\NavHintType.h" />
-    <ClInclude Include="..\NavMesh\NavLadderDirType.h" />
     <ClInclude Include="..\NavMesh\NavMesh.h" />
     <ClInclude Include="..\NavMesh\NavMeshArea.h" />
     <ClInclude Include="..\NavMesh\NavMeshConnection.h" />
@@ -258,10 +257,8 @@
     <ClInclude Include="..\NavMesh\NavMeshHint.h" />
     <ClInclude Include="..\NavMesh\NavMeshLadder.h" />
     <ClInclude Include="..\NavMesh\NavMeshLadderConnection.h" />
-    <ClInclude Include="..\NavMesh\NavMeshLoader.h" />
     <ClInclude Include="..\NavMesh\NavMeshPlace.h" />
     <ClInclude Include="..\NavMesh\NavMeshVisibleArea.h" />
-    <ClInclude Include="..\NavMesh\public\IList.h" />
     <ClInclude Include="..\NavMesh\public\INavMesh.h" />
     <ClInclude Include="..\NavMesh\public\INavMeshArea.h" />
     <ClInclude Include="..\NavMesh\public\INavMeshConnection.h" />
@@ -273,7 +270,6 @@
     <ClInclude Include="..\NavMesh\public\INavMeshHint.h" />
     <ClInclude Include="..\NavMesh\public\INavMeshLadder.h" />
     <ClInclude Include="..\NavMesh\public\INavMeshLadderConnection.h" />
-    <ClInclude Include="..\NavMesh\public\INavMeshLoader.h" />
     <ClInclude Include="..\NavMesh\public\INavMeshPlace.h" />
     <ClInclude Include="..\NavMesh\public\INavMeshVisibleArea.h" />
     <ClInclude Include="..\rcbot2\bot_base.h" />

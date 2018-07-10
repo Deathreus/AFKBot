@@ -33,10 +33,10 @@ CNavMesh::~CNavMesh()
 		if (area) area->Destroy();
 	}
 
-	this->places.PurgeAndDeleteElements();
-	this->areas.PurgeAndDeleteElements();
-	this->hints.PurgeAndDeleteElements();
-	this->ladders.PurgeAndDeleteElements();
+	this->places.Clear(true);
+	this->areas.Clear(true);
+	this->hints.Clear(true);
+	this->ladders.Clear(true);
 
 	this->grid->Destroy();
 	delete this->grid;

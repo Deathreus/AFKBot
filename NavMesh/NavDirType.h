@@ -22,7 +22,6 @@ enum eNavLadderDir
 
 enum eNavTraverse
 {
-	// THE FIRST 4 MUST MATCH eNavDir
 	GO_NORTH,
 	GO_EAST,
 	GO_SOUTH,

@@ -271,9 +271,6 @@
     <ClInclude Include="..\NavMesh\NavDirType.h">
       <Filter>NavLoader\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\NavMesh\NavLadderDirType.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\NavMesh\NavMesh.h">
       <Filter>NavLoader\Header Files</Filter>
     </ClInclude>
@@ -302,9 +299,6 @@
       <Filter>NavLoader\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\NavMesh\NavMeshLadderConnection.h">
-      <Filter>NavLoader\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\NavMeshLoader.h">
       <Filter>NavLoader\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\NavMesh\NavMeshPlace.h">
@@ -337,16 +331,10 @@
     <ClInclude Include="..\NavMesh\public\INavMeshLadderConnection.h">
       <Filter>NavLoader\Interface</Filter>
     </ClInclude>
-    <ClInclude Include="..\NavMesh\public\INavMeshLoader.h">
-      <Filter>NavLoader\Interface</Filter>
-    </ClInclude>
     <ClInclude Include="..\NavMesh\public\INavMeshPlace.h">
       <Filter>NavLoader\Interface</Filter>
     </ClInclude>
     <ClInclude Include="..\NavMesh\public\INavMeshVisibleArea.h">
-      <Filter>NavLoader\Interface</Filter>
-    </ClInclude>
-    <ClInclude Include="..\NavMesh\public\IList.h">
       <Filter>NavLoader\Interface</Filter>
     </ClInclude>
     <ClInclude Include="..\NavMesh\public\INavMesh.h">

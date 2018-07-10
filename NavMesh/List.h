@@ -5,7 +5,7 @@
 
 
 #define ForEachItem(items, iter) \
-	for (int (iter) = 0, iSize = (items).Count(); (iter) < iSize; (iter)++)
+	for (int iter = 0, iSize = items.Count(); iter < iSize; iter++)
 
 /*
  * CUtlVector wrapper that has some helper functions
@@ -14,9 +14,10 @@
 template <class T> class CList : public CUtlVector<T>
 {
 public:
-	CList() : CUtlVector<T>() {}
-	CList(const CList<T> &other) : CUtlVector<T>() { AddVectorToTail(other); }
-	CList(int count) : CUtlVector<T>() { EnsureCapacity(count); SetCount(count); }
+	CList() : CUtlVector() {}
+	CList(const CList &other) : CUtlVector() { AddVectorToTail(other); }
+	CList(int count) : CUtlVector() { EnsureCapacity(count); SetCount(count); }
+	~CList() { Purge(); }
 
 	bool Push(T item) { return !!AddToTail(item); }
 
@@ -27,14 +28,20 @@ public:
 		return item;
 	}
 
-	const bool Resize(size_t newSize) { return SetCount(newSize); }
+	const bool Resize(size_t newSize)
+	{
+		SetCount(newSize);
+		return m_Size == newSize;
+	}
 	
 	void Clear(bool bDelete)
 	{
 		if (bDelete)
-			PurgeAndDeleteElements();
-		else
-			Purge();
+		{
+			for (int i = 0; i < m_Size; i++)
+				delete Element(i);
+		}
+		Purge();
 	}
 
 	const bool Empty() const { return Count() == 0; }

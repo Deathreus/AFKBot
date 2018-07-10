@@ -186,6 +186,7 @@ extern ICvar *icvar;
 extern IFileSystem *filesystem;
 
 extern ConVar bot_enabled;
+extern ConVar bot_debug;
 
 extern IGameConfig *g_pGameConf;
 extern ISDKTools *g_pSDKTools;
