@@ -148,6 +148,9 @@ class ExtensionConfig(object):
       self.configure_mac(cxx)
     elif builder.target.platform == 'windows':
       self.configure_windows(cxx)
+	
+	if builder.options.use-navmesh == '1':
+	  cxx.defines += ['USE_NAVMESH']
 
     # Finish up.
     cxx.includes += [
