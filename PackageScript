@@ -10,6 +10,8 @@ folder_list = [
   'addons/sourcemod/extensions',
   'addons/sourcemod/data/afkbot/config',
   'addons/sourcemod/gamedata',
+  'addons/sourcemod/plugins',
+  'addons/sourcemod/scripting',
   'addons/sourcemod/scripting/include',
 ]
 
@@ -27,6 +29,10 @@ def CopyFiles(src, dest, files):
   for source_file in files:
     source_path = os.path.join(builder.sourcePath, src, source_file)
     builder.AddCopy(source_path, dest_entry)
+
+# Plugin files
+CopyFiles('extras', 'addons/sourcemod/plugins', ['afkbot.smx'])
+CopyFiles('extras', 'addons/sourcemod/scripting', ['afkbot.sp'])
 
 # Include files 
 CopyFiles('extras', 'addons/sourcemod/scripting/include', ['afk_bot.inc'])
