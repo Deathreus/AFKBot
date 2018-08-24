@@ -4,32 +4,7 @@
 	{
 		"Offsets"
 		{
-			//Shared
-			"Think"
-			{
-				"windows"	"47"
-				"linux"		"48"
-			}
-			"OnTakeDamage"
-			{
-				"windows"	"62"
-				"linux"		"63"
-			}
-			"StartTouch"
-			{
-				"windows"	"98"
-				"linux"		"99"
-			}
-			"Touch"
-			{
-				"windows"	"99"
-				"linux"		"100"
-			}
-			"EndTouch"
-			{
-				"windows"	"100"
-				"linux"		"101"
-			}
+			//CBaseEntity
 			"EyePosition"
 			{
 				"windows"	"130"
@@ -37,65 +12,59 @@
 			}
 			"EyeAngles"
 			{
-				"windows"	"131"
-				"linux"		"132"
+				"windows"	"132"
+				"linux"		"133"
 			}
-			
-			//CTFPlayer
 			"FVisible"
 			{
-				"windows"	"142"
-				"linux"		"142"
+				"windows"	"141"
+				"linux"		"143"
 			}
+			
+			//CBasePlayer
 			"FInViewCone"
 			{
 				"windows"	"229"
-				"linux"		"229"
+				"linux"		"231"
 			}
 			"FInAimCone"
 			{
 				"windows"	"231"
-				"linux"		"231"
+				"linux"		"233"
 			}
 			"Weapon_Equip"
 			{
-				"windows"	"262"
-				"linux"		"263"
+				"windows"	"264"
+				"linux"		"265"
 			}
 			"Weapon_Switch"
 			{
-				"windows"	"265"
-				"linux"		"266"
+				"windows"	"267"
+				"linux"		"268"
 			}
 			"Weapon_GetSlot"
 			{
-				"windows"	"269"
-				"linux"		"270"
-			}
-			"OnTakeDamage_Alive"
-			{
-				"windows"	"273"
-				"linux"		"274"
-			}
-			"PreThink"
-			{
-				"windows"	"333"
-				"linux"		"334"
+				"windows"	"271"
+				"linux"		"272"
 			}
 			"PlayerRunCommand"
 			{
-				"windows"	"421"
-				"linux"		"422"
-			}
-			"CanSpeakVoiceCommand"
-			{
-				"windows"	"462"
-				"linux"		"463"
+				"windows"	"422"
+				"linux"		"423"
 			}
 		}
 	}
-	"#default"
+	"tf"
 	{
+		"Offsets"
+		{
+			"CAttributeManager::OnAttributeValuesChanged"
+			{
+				"windows"	"13"
+				"linux"		"14"
+				"mac"		"14"
+			}
+		}
 		"Signatures"
 		{
 			"HandleCommand_JoinClass"
@@ -103,6 +72,56 @@
 				"library"	"server"
 				"windows"	"\xA1\x2A\x2A\x2A\x2A\x83\xEC\x0C\x83\xB8\x2A\x03\x00\x00\x08\x56"
 				"linux"		"@_ZN9CTFPlayer23HandleCommand_JoinClassEPKcb"
+			}
+			
+			"GEconItemSchema"	//static?
+			{
+				"library"			"server"
+				"windows"			"\xE8\x2A\x2A\x2A\x2A\x83\xC0\x04\xC3"
+				"linux"				"@_Z15GEconItemSchemav"
+				"mac"				"@_Z15GEconItemSchemav"
+			}
+			"CEconItemSchema::GetAttributeDefinition"	//(int), returns CEconItemAttributeDefinition*
+			{
+				"library"			"server"
+				"windows"			"\x55\x8B\xEC\x83\xEC\x2A\x53\x56\x8B\xD9\x8D\x2A\x2A\x57"
+				"linux"				"@_ZN15CEconItemSchema22GetAttributeDefinitionEi"
+				"mac"				"@_ZN15CEconItemSchema22GetAttributeDefinitionEi"
+			}
+			"CEconItemSchema::GetAttributeDefinitionByName"	//(const char*), returns CEconItemAttributeDefinition*
+			{
+				"library"			"server"
+				"windows"			"\x55\x8B\xEC\x83\xEC\x14\x53\x8B\x5D\x08\x56\x57\x8B\xF9\x85\xDB"
+				"linux"				"@_ZN15CEconItemSchema28GetAttributeDefinitionByNameEPKc"
+				"mac"				"@_ZN15CEconItemSchema28GetAttributeDefinitionByNameEPKc"
+			}
+			"CAttributeList::RemoveAttribute" //(CEconItemAttributeDefinition*), returns CEconItemAttributeDefinition*
+			{
+				"library"			"server"
+				"windows"			"\x55\x8B\xEC\x51\x53\x8B\xD9\x56\x33\xF6\x8B\x43\x10\x89\x45\xFC\x85\xC0\x7E\x2A\x57\x33\xFF"
+				"linux"				"@_ZN14CAttributeList15RemoveAttributeEPK28CEconItemAttributeDefinition"
+				"mac"				"@_ZN14CAttributeList15RemoveAttributeEPK28CEconItemAttributeDefinition"
+			}
+			"CAttributeList::SetRuntimeAttributeValue" //(CEconItemAttributeDefinition*, float), returns void
+			{
+				"library"			"server"
+				"windows"			"\x55\x8B\xEC\x83\xEC\x2A\x33\x2A\x53\x8B\xD9\x56\x57\x8B\x2A\x2A\x8B\x2A\x2A"
+				"linux"				"@_ZN14CAttributeList24SetRuntimeAttributeValueEPK28CEconItemAttributeDefinitionf"
+				"mac"				"@_ZN14CAttributeList24SetRuntimeAttributeValueEPK28CEconItemAttributeDefinitionf"
+			}
+			"CAttributeList::GetAttributeByID" //(int), returns CEconAttribute*
+			{
+				"library"			"server"
+				"windows"			"\x55\x8B\xEC\x51\x8B\xC1\x53\x56\x33\xF6\x89\x45\xFC\x8B\x58\x10"
+				"linux"				"@_ZNK14CAttributeList16GetAttributeByIDEi"
+				"mac"				"@_ZNK14CAttributeList16GetAttributeByIDEi"
+			}
+			"CAttributeList::DestroyAllAttributes" //(), returns int
+			{
+				"library"			"server"
+				"windows"			"\x56\x8B\xF1\x83\x7E\x10\x00\x74\x2A\xC7\x46\x10\x00\x00\x00\x00"
+				"linux"				"@_ZN14CAttributeList20DestroyAllAttributesEv"
+				"mac"				"@_ZN14CAttributeList20DestroyAllAttributesEv"
 			}
 		}
 	}
