@@ -41,15 +41,15 @@ cell_t Native_SetAFKBot(IPluginContext *pContext, const cell_t *params)
 		return 0;
 	}
 
-	edict_t *pClient = INDEXENT(params[1]);
-	IPlayerInfo *pPL = playerinfomanager->GetPlayerInfo(pClient);
+	int userid = playerhelpers->GetClientOfUserId(params[1]);
+	IGamePlayer *pPL = playerhelpers->GetGamePlayer(userid ? userid : params[1]);
 
 	bool bEnable = params[2] == 1;
 
-	if (pPL && pPL->IsConnected() && !pPL->IsFakeClient() && !pPL->IsObserver())
+	if (pPL && pPL->IsInGame() && !pPL->IsFakeClient())
 	{
-		if (bEnable) CBots::MakeBot(pClient);
-		else CBots::MakeNotBot(pClient);
+		if (bEnable) CBots::MakeBot(pPL->GetEdict());
+		else CBots::MakeNotBot(pPL->GetEdict());
 	}
 	else
 	{
@@ -75,12 +75,12 @@ cell_t Native_IsAFKBot(IPluginContext *pContext, const cell_t *params)
 		return 0;
 	}
 
-	edict_t *pClient = INDEXENT(params[1]);
-	IPlayerInfo *pPL = playerinfomanager->GetPlayerInfo(pClient);
+	int userid = playerhelpers->GetClientOfUserId(params[1]);
+	IGamePlayer *pPL = playerhelpers->GetGamePlayer(userid ? userid : params[1]);
 
-	if (pPL && pPL->IsConnected() && !pPL->IsFakeClient() && !pPL->IsObserver())
+	if (pPL && pPL->IsInGame() && !pPL->IsFakeClient())
 	{
-		CBot *pBot = CBots::GetBotPointer(pClient);
+		CBot *pBot = CBots::GetBotPointer(pPL->GetEdict());
 		if (pBot && pBot->InUse())
 			return 1;
 	}
@@ -155,8 +155,8 @@ cell_t Native_SetSkill(IPluginContext *pContext, const cell_t *params)
 		return 0;
 	}
 
-	edict_t *pClient = INDEXENT(params[1]);
-	IPlayerInfo *pPL = playerinfomanager->GetPlayerInfo(pClient);
+	int userid = playerhelpers->GetClientOfUserId(params[1]);
+	IGamePlayer *pPL = playerhelpers->GetGamePlayer(userid ? userid : params[1]);
 
 	float fSkill = sp_ctof(params[2]);
 	if (fSkill < 0.0 || fSkill > 1.0)
@@ -165,9 +165,9 @@ cell_t Native_SetSkill(IPluginContext *pContext, const cell_t *params)
 		fSkill = clamp(fSkill, 0.0, 1.0);
 	}
 
-	if (pPL && pPL->IsConnected() && !pPL->IsFakeClient() && !pPL->IsObserver())
+	if (pPL && pPL->IsConnected() && !pPL->IsFakeClient())
 	{
-		CBot *pBot = CBots::GetBotPointer(pClient);
+		CBot *pBot = CBots::GetBotPointer(pPL->GetEdict());
 		if (!pBot || !pBot->InUse())
 		{
 			pContext->ReportError("Client %s(%d) is not afk.", pPL->GetName(), params[1]);
@@ -250,8 +250,8 @@ cell_t Native_SetBraveness(IPluginContext *pContext, const cell_t *params)
 		return 0;
 	}
 
-	edict_t *pClient = INDEXENT(params[1]);
-	IPlayerInfo *pPL = playerinfomanager->GetPlayerInfo(pClient);
+	int userid = playerhelpers->GetClientOfUserId(params[1]);
+	IGamePlayer *pPL = playerhelpers->GetGamePlayer(userid ? userid : params[1]);
 
 	float fBraveness = sp_ctof(params[2]);
 	if (fBraveness < 0.0 || fBraveness > 1.0)
@@ -260,9 +260,9 @@ cell_t Native_SetBraveness(IPluginContext *pContext, const cell_t *params)
 		fBraveness = clamp(fBraveness, 0.0, 1.0);
 	}
 
-	if (pPL && pPL->IsConnected() && !pPL->IsFakeClient() && !pPL->IsObserver())
+	if (pPL && pPL->IsConnected() && !pPL->IsFakeClient())
 	{
-		CBot *pBot = CBots::GetBotPointer(pClient);
+		CBot *pBot = CBots::GetBotPointer(pPL->GetEdict());
 		if (!pBot || !pBot->InUse())
 		{
 			pContext->ReportError("Client %s(%d) is not afk.", pPL->GetName(), params[1]);
@@ -348,8 +348,8 @@ cell_t Native_SetSensitivity(IPluginContext *pContext, const cell_t *params)
 		return 0;
 	}
 
-	edict_t *pClient = INDEXENT(params[1]);
-	IPlayerInfo *pPL = playerinfomanager->GetPlayerInfo(pClient);
+	int userid = playerhelpers->GetClientOfUserId(params[1]);
+	IGamePlayer *pPL = playerhelpers->GetGamePlayer(userid ? userid : params[1]);
 
 	int iSensitivity = params[2];
 	if (iSensitivity < 0)
@@ -358,9 +358,9 @@ cell_t Native_SetSensitivity(IPluginContext *pContext, const cell_t *params)
 		iSensitivity = 0;
 	}
 
-	if (pPL && pPL->IsConnected() && !pPL->IsFakeClient() && !pPL->IsObserver())
+	if (pPL && pPL->IsConnected() && !pPL->IsFakeClient())
 	{
-		CBot *pBot = CBots::GetBotPointer(pClient);
+		CBot *pBot = CBots::GetBotPointer(pPL->GetEdict());
 		if (!pBot || !pBot->InUse())
 		{
 			pContext->ReportError("Client %s(%d) is not afk.", pPL->GetName(), params[1]);
@@ -447,8 +447,8 @@ cell_t Native_SetVisRevs(IPluginContext *pContext, const cell_t *params)
 		return 0;
 	}
 
-	edict_t *pClient = INDEXENT(params[1]);
-	IPlayerInfo *pPL = playerinfomanager->GetPlayerInfo(pClient);
+	int userid = playerhelpers->GetClientOfUserId(params[1]);
+	IGamePlayer *pPL = playerhelpers->GetGamePlayer(userid ? userid : params[1]);
 
 	int iVisRevs = params[2];
 	if (iVisRevs < 1 || iVisRevs > 24)
@@ -457,9 +457,9 @@ cell_t Native_SetVisRevs(IPluginContext *pContext, const cell_t *params)
 		iVisRevs = clamp(params[2], 1, 24);
 	}
 
-	if (pPL && pPL->IsConnected() && !pPL->IsFakeClient() && !pPL->IsObserver())
+	if (pPL && pPL->IsConnected() && !pPL->IsFakeClient())
 	{
-		CBot *pBot = CBots::GetBotPointer(pClient);
+		CBot *pBot = CBots::GetBotPointer(pPL->GetEdict());
 		if (!pBot || !pBot->InUse())
 		{
 			pContext->ReportError("Client %s(%d) is not afk.", pPL->GetName(), params[1]);
@@ -543,8 +543,8 @@ cell_t Native_SetPathRevs(IPluginContext *pContext, const cell_t *params)
 		return 0;
 	}
 
-	edict_t *pClient = INDEXENT(params[1]);
-	IPlayerInfo *pPL = playerinfomanager->GetPlayerInfo(pClient);
+	int userid = playerhelpers->GetClientOfUserId(params[1]);
+	IGamePlayer *pPL = playerhelpers->GetGamePlayer(userid ? userid : params[1]);
 
 	int iPathRevs = params[2];
 	if (iPathRevs < 1 || iPathRevs > 256)
@@ -553,9 +553,9 @@ cell_t Native_SetPathRevs(IPluginContext *pContext, const cell_t *params)
 		iPathRevs = clamp(params[2], 1, 256);
 	}
 
-	if (pPL && pPL->IsConnected() && !pPL->IsFakeClient() && !pPL->IsObserver())
+	if (pPL && pPL->IsConnected() && !pPL->IsFakeClient())
 	{
-		CBot *pBot = CBots::GetBotPointer(pClient);
+		CBot *pBot = CBots::GetBotPointer(pPL->GetEdict());
 		if (!pBot || !pBot->InUse())
 		{
 			pContext->ReportError("Client %s(%d) is not afk.", pPL->GetName(), params[1]);
@@ -640,8 +640,8 @@ cell_t Native_SetClientVisRevs(IPluginContext *pContext, const cell_t *params)
 		return 0;
 	}
 
-	edict_t *pClient = INDEXENT(params[1]);
-	IPlayerInfo *pPL = playerinfomanager->GetPlayerInfo(pClient);
+	int userid = playerhelpers->GetClientOfUserId(params[1]);
+	IGamePlayer *pPL = playerhelpers->GetGamePlayer(userid ? userid : params[1]);
 
 	int iVisRevs = params[2];
 	if (iVisRevs < 1 || iVisRevs > 16)
@@ -650,9 +650,9 @@ cell_t Native_SetClientVisRevs(IPluginContext *pContext, const cell_t *params)
 		iVisRevs = clamp(params[2], 1, 16);
 	}
 
-	if (pPL && pPL->IsConnected() && !pPL->IsFakeClient() && !pPL->IsObserver())
+	if (pPL && pPL->IsConnected() && !pPL->IsFakeClient())
 	{
-		CBot *pBot = CBots::GetBotPointer(pClient);
+		CBot *pBot = CBots::GetBotPointer(pPL->GetEdict());
 		if (!pBot || !pBot->InUse())
 		{
 			pContext->ReportError("Client %s(%d) is not afk.", pPL->GetName(), params[1]);
