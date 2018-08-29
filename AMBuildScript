@@ -149,7 +149,7 @@ class ExtensionConfig(object):
     elif builder.target.platform == 'windows':
       self.configure_windows(cxx)
 	
-	if builder.options.use-navmesh == '1':
+	if builder.options.navmesh == '1':
 	  cxx.defines += ['USE_NAVMESH']
 
     # Finish up.
