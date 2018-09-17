@@ -56,6 +56,17 @@
 	}
 	"tf"
 	{
+		"Addresses"
+		{
+			"g_MannVsMachineUpgrades"
+			{
+				"windows"
+				{
+					"signature" "CTFGameRules::SetCustomUpgradesFile"
+					"read" "42"
+				}
+			}
+		}
 		"Offsets"
 		{
 			"CAttributeManager::OnAttributeValuesChanged"
@@ -122,6 +133,29 @@
 				"windows"			"\x56\x8B\xF1\x83\x7E\x10\x00\x74\x2A\xC7\x46\x10\x00\x00\x00\x00"
 				"linux"				"@_ZN14CAttributeList20DestroyAllAttributesEv"
 				"mac"				"@_ZN14CAttributeList20DestroyAllAttributesEv"
+			}
+			
+			"CTFGameRules::CanUpgradeWithAttrib" //CTFPlayer *, int, ushort, CMannVsMachineUpgrades *
+			{
+				"windows"	"\x55\x8B\xEC\x83\xEC\x14\x53\x8B\x5D\x08\x85\xDB\x75\x2A"
+				"linux"		"@_ZN12CTFGameRules20CanUpgradeWithAttribEP9CTFPlayeritP22CMannVsMachineUpgrades"
+			}
+			"CTFGameRules::IsUpgradeTierEnabled" //CTFPlayer *, int, int
+			{
+				"windows"	"\x55\x8B\xEC\x81\xEC\xB4\x01\x00\x00\x83\x7D\x08\x00"
+				"linux"		"@_ZN12CTFGameRules20IsUpgradeTierEnabledEP9CTFPlayerii"
+			}
+			
+			// g_MannVsMachineUpgrades pointer
+			"CTFGameRules::SetCustomUpgradesFile"	//<- "upgrades_file_changed"
+			{
+				"library"	"server"
+				"windows"	"\x55\x8B\xEC\x56\x57\x8B\xF9\x8B\x4D\x08\x83\xC1\x08\x83\x79\x10\x02\x75\x2A\x8B\x01\xBE\x2A\x2A\x2A\x2A\x85\xC0\x0F\x45\xF0\xEB\x2A\xE8\x2A\x2A\x2A\x2A\x8B\xF0\x56"
+			}
+			"g_MannVsMachineUpgrades"
+			{
+				"library"	"server"
+				"linux"		"@g_MannVsMachineUpgrades"
 			}
 		}
 	}

@@ -24,6 +24,7 @@ build/
 [Bb]uild[Ll]og.*
 
 # VS user cache
+.vs/
 msvc14/.vs/
 msvc14/*.VC.db
 
@@ -238,3 +239,4 @@ $RECYCLE.BIN/
 *.dll
 *.so
 *.bat
+*.sh
