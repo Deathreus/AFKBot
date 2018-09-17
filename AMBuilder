@@ -6,10 +6,11 @@ projectName = 'afkbot'
 sourceFiles = [
   'extension.cpp',
   'natives.cpp',
+  'debugoverlay_shared.cpp',
   'sdk/smsdk_ext.cpp',
   'rcbot2/bot_base.cpp',
   'rcbot2/bot_buttons.cpp',
-#  'rcbot2/bot_commands.cpp',
+  'rcbot2/bot_commands.cpp',
   'rcbot2/bot_configfile.cpp',
   'rcbot2/bot_cvars.cpp',
   'rcbot2/bot_events.cpp',
@@ -21,7 +22,7 @@ sourceFiles = [
 #  'rcbot2/bot_navmesh.cpp',
   'rcbot2/bot_profile.cpp',
   'rcbot2/bot_schedule.cpp',
-  'rcbot2/bot_squads.cpp',
+#  'rcbot2/bot_squads.cpp',
   'rcbot2/bot_strings.cpp',
   'rcbot2/bot_task.cpp',
   'rcbot2/bot_tf2_mod.cpp',
@@ -60,6 +61,6 @@ project.sources += sourceFiles
 for sdk_name in Extension.sdks:
   sdk = Extension.sdks[sdk_name]
   
-  binary = Extension.HL2Config(project, projectName + '.ext', sdk)
+  binary = Extension.HL2Config(project, projectName + '.ext.' + sdk.ext, sdk)
 
 Extension.extensions = builder.Add(project)

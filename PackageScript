@@ -38,7 +38,7 @@ CopyFiles('extras', 'addons/sourcemod/scripting', ['afkbot.sp'])
 CopyFiles('extras', 'addons/sourcemod/scripting/include', ['afk_bot.inc'])
 
 # GameData files
-CopyFiles('extras', 'addons/sourcemod/gamedata', ['tf2.afk.txt'])
+CopyFiles('extras', 'addons/sourcemod/gamedata', ['afk.games.txt'])
 
 # Config files
 CopyFiles('extras', 'addons/sourcemod/data/afkbot/config',
@@ -54,10 +54,4 @@ CopyFiles('extras', 'addons/sourcemod/extensions', ['afkbot.autoload'])
 
 # Copy binaries.
 for cxx_task in Extension.extensions:
-  src = cxx_task.binary.path
-  dst = os.path.join('addons/sourcemod/extensions', os.path.basename(cxx_task.binary.path))
-  builder.AddCommand(
-    inputs  = [ cxx_task.binary ],
-    argv    = [ 'cp', '--remove-destination', src, dst ],
-    outputs = [ dst ],
-  )
+  builder.AddCopy(cxx_task.binary, folder_map['addons/sourcemod/extensions'])
