@@ -44,76 +44,23 @@
 #include <sm_platform.h>
 #include <ISourceMod.h>
 #include <amtl/am-string.h>
-#if defined SMEXT_ENABLE_FORWARDSYS
 #include <IForwardSys.h>
-#endif //SMEXT_ENABLE_FORWARDSYS
-#if defined SMEXT_ENABLE_PLAYERHELPERS
 #include <IPlayerHelpers.h>
-#endif //SMEXT_ENABLE_PlAYERHELPERS
-#if defined SMEXT_ENABLE_DBMANAGER
-#include <IDBDriver.h>
-#endif //SMEXT_ENABLE_DBMANAGER
-#if defined SMEXT_ENABLE_GAMECONF
 #include <IGameConfigs.h>
-#endif
-#if defined SMEXT_ENABLE_MEMUTILS
-#include <IMemoryUtils.h>
-#endif
-#if defined SMEXT_ENABLE_GAMEHELPERS
 #include <IGameHelpers.h>
-#endif
-#if defined SMEXT_ENABLE_TIMERSYS
 #include <ITimerSystem.h>
-#endif
-#if defined SMEXT_ENABLE_ADTFACTORY
-#include <IADTFactory.h>
-#endif
-#if defined SMEXT_ENABLE_THREADER
-#include <IThreader.h>
-#endif
-#if defined SMEXT_ENABLE_LIBSYS
-#include <ILibrarySys.h>
-#endif
-#if defined SMEXT_ENABLE_PLUGINSYS
-#include <IPluginSys.h>
-#endif
-#if defined SMEXT_ENABLE_MENUS
-#include <IMenuManager.h>
-#endif
-#if defined SMEXT_ENABLE_ADMINSYS
 #include <IAdminSystem.h>
-#endif
-#if defined SMEXT_ENABLE_TEXTPARSERS
 #include <ITextParsers.h>
-#endif
-#if defined SMEXT_ENABLE_USERMSGS
 #include <IUserMessages.h>
-#endif
-#if defined SMEXT_ENABLE_TRANSLATOR
-#include <ITranslator.h>
-#endif
-#if defined SMEXT_ENABLE_ROOTCONSOLEMENU
-#include <IRootConsoleMenu.h>
-#endif
 
-#if defined SMEXT_CONF_METAMOD
 #include <ISmmPlugin.h>
-#ifndef META_NO_HL2SDK
 #include <eiface.h>
-#endif //META_NO_HL2SDK
-#endif
-
-#if !defined METAMOD_PLAPI_VERSION
-#include <metamod_wrappers.h>
-#endif
 
 using namespace SourceMod;
 using namespace SourcePawn;
 
 class SDKExtension : 
-#if defined SMEXT_CONF_METAMOD
 	public ISmmPlugin,
-#endif
 	public IExtensionInterface
 {
 public:
@@ -151,7 +98,6 @@ public:
 	 */
 	virtual void SDK_OnDependenciesDropped();
 
-#if defined SMEXT_CONF_METAMOD
 	/**
 	 * @brief Called when Metamod is attached, before the extension version is called.
 	 *
@@ -182,7 +128,6 @@ public:
 	 * @return				True to succeed, false to fail.
 	 */
 	virtual bool SDK_OnMetamodPauseChange(bool paused, char *error, size_t maxlength);
-#endif
 
 public: //IExtensionInterface
 	virtual bool OnExtensionLoad(IExtension *me, IShareSys *sys, char *error, size_t maxlength, bool late);
@@ -216,7 +161,7 @@ public: //IExtensionInterface
 
 	/** Called after OnExtensionUnload, once dependencies have been dropped. */
 	virtual void OnDependenciesDropped();
-#if defined SMEXT_CONF_METAMOD
+
 public: //ISmmPlugin
 	/** Called when the extension is attached to Metamod. */
 	virtual bool Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlength, bool late);
@@ -246,80 +191,27 @@ private:
 	bool m_SourceMMLoaded;
 	bool m_WeAreUnloaded;
 	bool m_WeGotPauseChange;
-#endif
 };
 
 extern SDKExtension *g_pExtensionIface;
 extern IExtension *myself;
 
-extern IShareSys *g_pShareSys;
-extern IShareSys *sharesys;				/* Note: Newer name */
-extern ISourceMod *g_pSM;
-extern ISourceMod *smutils;				/* Note: Newer name */
+extern IShareSys *sharesys;
+extern ISourceMod *smutils;
 
 /* Optional interfaces are below */
-#if defined SMEXT_ENABLE_FORWARDSYS
-extern IForwardManager *g_pForwards;
-extern IForwardManager *forwards;		/* Note: Newer name */
-#endif //SMEXT_ENABLE_FORWARDSYS
-#if defined SMEXT_ENABLE_HANDLESYS
-extern IHandleSys *g_pHandleSys;
-extern IHandleSys *handlesys;			/* Note: Newer name */
-#endif //SMEXT_ENABLE_HANDLESYS
-#if defined SMEXT_ENABLE_PLAYERHELPERS
+extern IForwardManager *forwards;
 extern IPlayerManager *playerhelpers;
-#endif //SMEXT_ENABLE_PLAYERHELPERS
-#if defined SMEXT_ENABLE_DBMANAGER
-extern IDBManager *dbi;
-#endif //SMEXT_ENABLE_DBMANAGER
-#if defined SMEXT_ENABLE_GAMECONF
 extern IGameConfigManager *gameconfs;
-#endif //SMEXT_ENABLE_DBMANAGER
-#if defined SMEXT_ENABLE_MEMUTILS
-extern IMemoryUtils *memutils;
-#endif
-#if defined SMEXT_ENABLE_GAMEHELPERS
 extern IGameHelpers *gamehelpers;
-#endif
-#if defined SMEXT_ENABLE_TIMERSYS
 extern ITimerSystem *timersys;
-#endif
-#if defined SMEXT_ENABLE_ADTFACTORY
-extern IADTFactory *adtfactory;
-#endif
-#if defined SMEXT_ENABLE_THREADER
-extern IThreader *threader;
-#endif
-#if defined SMEXT_ENABLE_LIBSYS
-extern ILibrarySys *libsys;
-#endif
-#if defined SMEXT_ENABLE_PLUGINSYS
-extern SourceMod::IPluginManager *plsys;
-#endif
-#if defined SMEXT_ENABLE_MENUS
-extern IMenuManager *menus;
-#endif
-#if defined SMEXT_ENABLE_ADMINSYS
 extern IAdminSystem *adminsys;
-#endif
-#if defined SMEXT_ENABLE_USERMSGS
 extern IUserMessages *usermsgs;
-#endif
-#if defined SMEXT_ENABLE_TRANSLATOR
-extern ITranslator *translator;
-#endif
-#if defined SMEXT_ENABLE_ROOTCONSOLEMENU
-extern IRootConsole *rootconsole;
-#endif
 
-#if defined SMEXT_CONF_METAMOD
-PLUGIN_GLOBALVARS();
-#ifndef META_NO_HL2SDK
+PLUGIN_GLOBALVARS()
 extern IVEngineServer *engine;
 extern IServerGameDLL *gamedll;
 extern CGlobalVars *gpGlobals;
-#endif //META_NO_HL2SDK
-#endif
 
 /** Creates a SourceMod interface macro pair */
 #define SM_MKIFACE(name) SMINTERFACE_##name##_NAME, SMINTERFACE_##name##_VERSION

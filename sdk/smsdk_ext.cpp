@@ -39,67 +39,17 @@
  */
 
 IExtension *myself = NULL;				/**< Ourself */
-IShareSys *g_pShareSys = NULL;			/**< Share system */
 IShareSys *sharesys = NULL;				/**< Share system */
-ISourceMod *g_pSM = NULL;				/**< SourceMod helpers */
 ISourceMod *smutils = NULL;				/**< SourceMod helpers */
 
-#if defined SMEXT_ENABLE_FORWARDSYS
-IForwardManager *g_pForwards = NULL;	/**< Forward system */
 IForwardManager *forwards = NULL;		/**< Forward system */
-#endif
-#if defined SMEXT_ENABLE_HANDLESYS
-IHandleSys *g_pHandleSys = NULL;		/**< Handle system */
-IHandleSys *handlesys = NULL;			/**< Handle system */
-#endif
-#if defined SMEXT_ENABLE_PLAYERHELPERS
 IPlayerManager *playerhelpers = NULL;	/**< Player helpers */
-#endif
-#if defined SMEXT_ENABLE_DBMANAGER
-IDBManager *dbi = NULL;					/**< DB Manager */
-#endif
-#if defined SMEXT_ENABLE_GAMECONF
 IGameConfigManager *gameconfs = NULL;	/**< Game config manager */
-#endif
-#if defined SMEXT_ENABLE_MEMUTILS
-IMemoryUtils *memutils = NULL;
-#endif
-#if defined SMEXT_ENABLE_GAMEHELPERS
 IGameHelpers *gamehelpers = NULL;
-#endif
-#if defined SMEXT_ENABLE_TIMERSYS
 ITimerSystem *timersys = NULL;
-#endif
-#if defined SMEXT_ENABLE_ADTFACTORY
-IADTFactory *adtfactory = NULL;
-#endif
-#if defined SMEXT_ENABLE_THREADER
-IThreader *threader = NULL;
-#endif
-#if defined SMEXT_ENABLE_LIBSYS
-ILibrarySys *libsys = NULL;
-#endif
-#if defined SMEXT_ENABLE_PLUGINSYS
-SourceMod::IPluginManager *plsys;
-#endif
-#if defined SMEXT_ENABLE_MENUS
-IMenuManager *menus = NULL;
-#endif
-#if defined SMEXT_ENABLE_ADMINSYS
 IAdminSystem *adminsys = NULL;
-#endif
-#if defined SMEXT_ENABLE_TEXTPARSERS
 ITextParsers *textparsers = NULL;
-#endif
-#if defined SMEXT_ENABLE_USERMSGS
 IUserMessages *usermsgs = NULL;
-#endif
-#if defined SMEXT_ENABLE_TRANSLATOR
-ITranslator *translator = NULL;
-#endif
-#if defined SMEXT_ENABLE_ROOTCONSOLEMENU
-IRootConsole *rootconsole = NULL;
-#endif
 
 /** Exports the main interface */
 PLATFORM_EXTERN_C IExtensionInterface *GetSMExtAPI()
@@ -109,19 +59,16 @@ PLATFORM_EXTERN_C IExtensionInterface *GetSMExtAPI()
 
 SDKExtension::SDKExtension()
 {
-#if defined SMEXT_CONF_METAMOD
 	m_SourceMMLoaded = false;
 	m_WeAreUnloaded = false;
 	m_WeGotPauseChange = false;
-#endif
 }
 
 bool SDKExtension::OnExtensionLoad(IExtension *me, IShareSys *sys, char *error, size_t maxlength, bool late)
 {
-	g_pShareSys = sharesys = sys;
+	sharesys = sys;
 	myself = me;
 
-#if defined SMEXT_CONF_METAMOD
 	m_WeAreUnloaded = true;
 
 	if (!m_SourceMMLoaded)
@@ -132,71 +79,20 @@ bool SDKExtension::OnExtensionLoad(IExtension *me, IShareSys *sys, char *error, 
 		}
 		return false;
 	}
-#endif
-	SM_GET_IFACE(SOURCEMOD, g_pSM);
-	smutils = g_pSM;
-#if defined SMEXT_ENABLE_HANDLESYS
-	SM_GET_IFACE(HANDLESYSTEM, g_pHandleSys);
-	handlesys = g_pHandleSys;
-#endif
-#if defined SMEXT_ENABLE_FORWARDSYS
-	SM_GET_IFACE(FORWARDMANAGER, g_pForwards);
-	forwards = g_pForwards;
-#endif
-#if defined SMEXT_ENABLE_PLAYERHELPERS
-	SM_GET_IFACE(PLAYERMANAGER, playerhelpers);
-#endif
-#if defined SMEXT_ENABLE_DBMANAGER
-	SM_GET_IFACE(DBI, dbi);
-#endif
-#if defined SMEXT_ENABLE_GAMECONF
-	SM_GET_IFACE(GAMECONFIG, gameconfs);
-#endif
-#if defined SMEXT_ENABLE_MEMUTILS
-	SM_GET_IFACE(MEMORYUTILS, memutils);
-#endif
-#if defined SMEXT_ENABLE_GAMEHELPERS
-	SM_GET_IFACE(GAMEHELPERS, gamehelpers);
-#endif
-#if defined SMEXT_ENABLE_TIMERSYS
-	SM_GET_IFACE(TIMERSYS, timersys);
-#endif
-#if defined SMEXT_ENABLE_ADTFACTORY
-	SM_GET_IFACE(ADTFACTORY, adtfactory);
-#endif
-#if defined SMEXT_ENABLE_THREADER
-	SM_GET_IFACE(THREADER, threader);
-#endif
-#if defined SMEXT_ENABLE_LIBSYS
-	SM_GET_IFACE(LIBRARYSYS, libsys);
-#endif
-#if defined SMEXT_ENABLE_PLUGINSYS
-	SM_GET_IFACE(PLUGINSYSTEM, plsys);
-#endif
-#if defined SMEXT_ENABLE_MENUS
-	SM_GET_IFACE(MENUMANAGER, menus);
-#endif
-#if defined SMEXT_ENABLE_ADMINSYS
-	SM_GET_IFACE(ADMINSYS, adminsys);
-#endif
-#if defined SMEXT_ENABLE_TEXTPARSERS
-	SM_GET_IFACE(TEXTPARSERS, textparsers);
-#endif
-#if defined SMEXT_ENABLE_USERMSGS
-	SM_GET_IFACE(USERMSGS, usermsgs);
-#endif
-#if defined SMEXT_ENABLE_TRANSLATOR
-	SM_GET_IFACE(TRANSLATOR, translator);
-#endif
-#if defined SMEXT_ENABLE_ROOTCONSOLEMENU
-	SM_GET_IFACE(ROOTCONSOLE, rootconsole);
-#endif
+
+	SM_GET_IFACE(SOURCEMOD, smutils)
+	SM_GET_IFACE(FORWARDMANAGER, forwards)
+	SM_GET_IFACE(PLAYERMANAGER, playerhelpers)
+	SM_GET_IFACE(GAMECONFIG, gameconfs)
+	SM_GET_IFACE(GAMEHELPERS, gamehelpers)
+	SM_GET_IFACE(TIMERSYS, timersys)
+	SM_GET_IFACE(ADMINSYS, adminsys)
+	SM_GET_IFACE(TEXTPARSERS, textparsers)
+	SM_GET_IFACE(USERMSGS, usermsgs)
 
 	if (SDK_OnLoad(error, maxlength, late))
 	{
-#if defined SMEXT_CONF_METAMOD
 		m_WeAreUnloaded = true;
-#endif
 		return true;
 	}
 
@@ -205,18 +101,12 @@ bool SDKExtension::OnExtensionLoad(IExtension *me, IShareSys *sys, char *error, 
 
 bool SDKExtension::IsMetamodExtension()
 {
-#if defined SMEXT_CONF_METAMOD
 	return true;
-#else
-	return false;
-#endif
 }
 
 void SDKExtension::OnExtensionPauseChange(bool state)
 {
-#if defined SMEXT_CONF_METAMOD
 	m_WeGotPauseChange = true;
-#endif
 	SDK_OnPauseChange(state);
 }
 
@@ -227,9 +117,7 @@ void SDKExtension::OnExtensionsAllLoaded()
 
 void SDKExtension::OnExtensionUnload()
 {
-#if defined SMEXT_CONF_METAMOD
 	m_WeAreUnloaded = true;
-#endif
 	SDK_OnUnload();
 }
 
@@ -294,18 +182,15 @@ void SDKExtension::SDK_OnDependenciesDropped()
 {
 }
 
-#if defined SMEXT_CONF_METAMOD
 
 PluginId g_PLID = 0;						/**< Metamod plugin ID */
 ISmmPlugin *g_PLAPI = NULL;					/**< Metamod plugin API */
 SourceHook::ISourceHook *g_SHPtr = NULL;	/**< SourceHook pointer */
 ISmmAPI *g_SMAPI = NULL;					/**< SourceMM API pointer */
 
-#ifndef META_NO_HL2SDK
 IVEngineServer *engine = NULL;				/**< IVEngineServer pointer */
 IServerGameDLL *gamedll = NULL;				/**< IServerGameDLL pointer */
 CGlobalVars *gpGlobals = NULL;				/**< CGlobalVars pointer */
-#endif
 
 /** Exposes the extension to Metamod */
 SMM_API void *PL_EXPOSURE(const char *name, int *code)
@@ -333,9 +218,8 @@ SMM_API void *PL_EXPOSURE(const char *name, int *code)
 
 bool SDKExtension::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool late)
 {
-	PLUGIN_SAVEVARS();
+	PLUGIN_SAVEVARS()
 
-#ifndef META_NO_HL2SDK
 #if !defined METAMOD_PLAPI_VERSION
 	GET_V_IFACE_ANY(serverFactory, gamedll, IServerGameDLL, INTERFACEVERSION_SERVERGAMEDLL);
 	GET_V_IFACE_CURRENT(engineFactory, engine, IVEngineServer, INTERFACEVERSION_VENGINESERVER);
@@ -364,8 +248,8 @@ bool SDKExtension::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, 
 	GET_V_IFACE_CURRENT(GetEngineFactory, engine, IVEngineServer, INTERFACEVERSION_VENGINESERVER);
 #endif // TF2 / CSS / DODS / HL2DM / SDK2013
 #endif // !METAMOD_PLAPI_VERSION
+
 	gpGlobals = ismm->GetCGlobals();
-#endif //META_NO_HL2SDK
 
 	m_SourceMMLoaded = true;
 
@@ -472,8 +356,6 @@ bool SDKExtension::SDK_OnMetamodPauseChange(bool paused, char *error, size_t max
 {
 	return true;
 }
-
-#endif
 
 /* Overload a few things to prevent libstdc++ linking */
 #if defined __linux__ || defined __APPLE__
