@@ -23,7 +23,6 @@
 #include "sdk/smsdk_ext.h"
 
 #include <convar.h>
-
 #include <iplayerinfo.h>
 #include <IEngineSound.h>
 #include <IEngineTrace.h>
@@ -83,6 +82,16 @@ public:
 	virtual bool QueryRunning(char *error, size_t maxlen);
 
 	/**
+		 * @brief Notifies the extension that an external interface it uses is being removed.
+		 *
+		 * @param pInterface		Pointer to interface being dropped.  This
+		 * 							pointer may be opaque, and it should not
+		 *							be queried using SMInterface functions unless
+		 *							it can be verified to match an existing
+		 */
+	virtual void NotifyInterfaceDrop(SMInterface *pInterface);
+
+	/**
 	 * @brief Called on server activation before plugins receive the OnServerLoad forward.
 	 *
 	 * @param pEdictList		Edicts list.
@@ -93,7 +102,6 @@ public:
 	virtual void OnCoreMapEnd();
 
 public:
-#if defined SMEXT_CONF_METAMOD
 	/**
 	 * @brief Called when Metamod is attached, before the extension version is called.
 	 *
@@ -124,14 +132,9 @@ public:
 	 * @return				True to succeed, false to fail.
 	 */
 	//virtual bool SDK_OnMetamodPauseChange(bool paused, char *error, size_t maxlen);
-#endif
 
 public: // ISmmAPI
 	void GameFrame(bool);
-
-	void PlayerRunCmd(CUserCmd *, IMoveHelper *);
-
-	bool FireEvent(IGameEvent *, bool);
 
 public: //IConCommandBaseAccessor
 	bool RegisterConCommandBase(ConCommandBase *);
@@ -140,47 +143,19 @@ public: //IClientListner
 	void OnClientPutInServer(int iClient);
 	void OnClientDisconnecting(int iClient);
 
-public:
-	void OnClientCommand(edict_t *, const CCommand &);
-	void OnSayCommand(const CCommand &);
-
-	void OnSetCommandClient(int client);
-
 public: //ICommandTargetProcessor
 	bool ProcessCommandTarget(cmd_target_info_t *info);
 
 public:
-	// Only actually does something if extension is compiled as Debug
 	static void DebugMessage(const char *, ...);
-	static void BeginLogging(bool);
+	static void VerboseDebugMessage(const char *, ...);
+	void BeginLogging(bool);
 	// Never call this before BeginLogging()!
-	static void EndLogging(void);
-
+	void EndLogging(void);
 
 private:
-	int m_iCommandClient;
 	static FILE* m_pLogFile;
 };
-
-inline const char* _strstr(const char *str, const char *substr)
-{
-#ifdef PLATFORM_WINDOWS
-	return strstr(str, substr);
-#elif defined PLATFORM_LINUX || defined PLATFORM_APPLE
-	return (const char *)strstr(str, substr);
-#endif
-}
-
-inline int strcont(const char *str, const char *substr)
-{
-	const char *pos = _strstr(str, substr);
-	if (pos)
-	{
-		return (pos - str);
-	}
-
-	return -1;
-}
 
 extern ICvar *icvar;
 extern IFileSystem *filesystem;
