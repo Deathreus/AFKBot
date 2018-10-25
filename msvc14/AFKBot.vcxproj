@@ -22,6 +22,7 @@
     <SccProvider>
     </SccProvider>
     <ProjectName>AFKBot</ProjectName>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -52,16 +53,16 @@
     <_ProjectFileVersion>11.0.50727.1</_ProjectFileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>.\Debug\</OutDir>
-    <IntDir>.\Debug\</IntDir>
+    <OutDir>Debug\</OutDir>
+    <IntDir>Debug\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <TargetName>afkbot.ext</TargetName>
-    <CodeAnalysisRuleSet>C:\Program Files (x86)\Microsoft Visual Studio 14.0\Team Tools\Static Analysis Tools\Rule Sets\NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <!-- <CodeAnalysisRuleSet>C:\Program Files\Microsoft Visual Studio\2017\Community\Team Tools\Static Analysis Tools\Rule Sets\NativeRecommendedRules.ruleset</CodeAnalysisRuleSet> -->
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>.\Release\</OutDir>
-    <IntDir>.\Release\</IntDir>
+    <OutDir>Release\</OutDir>
+    <IntDir>Release\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <TargetName>afkbot.ext</TargetName>
   </PropertyGroup>
@@ -83,47 +84,51 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..;..\sdk;..\NavMesh;$(SOURCEMOD)\core;$(SOURCEMOD)\public;$(SOURCEMOD)\public\amtl;$(SOURCEMOD)\public\extensions;$(SOURCEMOD)\public\CDetour;$(SOURCEMOD)\sourcepawn\include;$(HL2SDKTF2)\public;$(HL2SDKTF2)\public\mathlib;$(HL2SDKTF2)\public\engine;$(HL2SDKTF2)\public\tier0;$(HL2SDKTF2)\public\tier1;$(HL2SDKTF2)\public\toolframework;$(HL2SDKTF2)\public\SoundEmitterSystem;$(HL2SDKTF2)\game\shared;$(HL2SDKTF2)\game\server;$(HL2SDKTF2)\public\game\server;$(MMSOURCE)\core;$(MMSOURCE)\core\sourcehook;$(MMSOURCE)\public;%(AdditionIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>SOURCE_ENGINE=11;WIN32;NOUSER;NOWH;_DEBUG;_WINDOWS;HOMEFOLDER;_USRDLL;SDK_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_NAVMESH;SOURCE_ENGINE=11;WIN32;_DEBUG;_WINDOWS;_USRDLL;SDK_EXPORTS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <PrecompiledHeaderOutputFile>.\Debug/AFKBot.pch</PrecompiledHeaderOutputFile>
-      <AssemblerListingLocation>.\Debug/</AssemblerListingLocation>
-      <ObjectFileName>.\Debug/</ObjectFileName>
-      <ProgramDataBaseFileName>.\Debug/</ProgramDataBaseFileName>
+      <PrecompiledHeaderOutputFile>$(OutDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>$(OutDir)</AssemblerListingLocation>
+      <ObjectFileName>$(OutDir)</ObjectFileName>
+      <ProgramDataBaseFileName>$(OutDir)$(TargetName).pdb</ProgramDataBaseFileName>
       <BrowseInformation>true</BrowseInformation>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level2</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
-      <AdditionalOptions>/D SE_EPISODEONE=1 /D SE_DARKMESSIAH=2 /D SE_ORANGEBOX=3 /D SE_ORANGEBOXVALVE=4 /D SE_LEFT4DEAD=5 /D SE_LEFT4DEAD2=6 /D SE_ALIENSWARM=7</AdditionalOptions>
-      <DisableSpecificWarnings>4005;</DisableSpecificWarnings>
+      <AdditionalOptions>/D SE_EPISODEONE=1 /D SE_DARKMESSIAH=2 /D SE_ORANGEBOX=3 /D SE_BLOODYGOODTIME=4 /D SE_EYE=5 /D SE_CSS=6 /D SE_HL2DM=7 /D SE_DODS=8 /D SE_SDK2013=9 /D SE_BMS=10 /D SE_TF2=11 /D SE_LEFT4DEAD=12 /D SE_NUCLEARDAWN=13 /D SE_CONTAGION=14 /D SE_LEFT4DEAD2=15 /D SE_ALIENSWARM=16 /D SE_PORTAL2=17 /D SE_BLADE=18 /D SE_INSURGENCY=19 /D SE_CSGO=20 /D SE_DOTA=21 /MP</AdditionalOptions>
+      <DisableSpecificWarnings>4005;6326;6385;6386;6387;6011</DisableSpecificWarnings>
       <EnablePREfast>true</EnablePREfast>
+      <UndefinePreprocessorDefinitions>
+      </UndefinePreprocessorDefinitions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>mathlib.lib;vstdlib.lib;tier1.lib;tier0.lib;tier2.lib;$(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>mathlib.lib;vstdlib.lib;tier0.lib;tier1.lib;tier2.lib;winmm.lib;ws2_32.lib;legacy_stdio_definitions.lib$(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>$(HL2SDKTF2)\lib\public;$(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <IgnoreSpecificDefaultLibraries>libc;libcd;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>libc;libcd;libcmt;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>.\Debug/$(TargetName).pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
-      <MapFileName>.\Debug/$(TargetName).map</MapFileName>
+      <MapFileName>$(OutDir)$(TargetName).map</MapFileName>
       <SubSystem>Windows</SubSystem>
-      <ImportLibrary>.\Debug/$(TargetName).lib</ImportLibrary>
+      <ImportLibrary>$(OutDir)$(TargetName).lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(TargetPath)" "C:\Program Files (x86)\Steam\SteamApps\common\team fortress 2\tf\addons\rcbot2meta.dll"</Command>
+      <Command>copy "$(TargetPath)" "D:\HLServer\Testing\tf\addons\sourcemod\extensions\$(TargetName)$(TargetExt)"
+copy "$(TargetPath)" "D:\Program Files\Steam\steamapps\common\Team Fortress 2\tf\addons\sourcemod\extensions\$(TargetName)$(TargetExt)"</Command>
     </PostBuildEvent>
     <PostBuildEvent>
-      <Message>Copying File</Message>
+      <Message>Copying Files</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -147,16 +152,16 @@
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <AdditionalIncludeDirectories>..;..\sdk;..\NavMesh;$(SOURCEMOD)\core;$(SOURCEMOD)\public;$(SOURCEMOD)\public\extensions;$(SOURCEMOD)\public\CDetour;$(SOURCEMOD)\sourcepawn\include;$(HL2SDKTF2)\public;$(HL2SDKTF2)\public\mathlib;$(HL2SDKTF2)\public\engine;$(HL2SDKTF2)\public\tier0;$(HL2SDKTF2)\public\tier1;$(HL2SDKTF2)\public\toolframework;$(HL2SDKTF2)\public\SoundEmitterSystem;$(HL2SDKTF2)\game\shared;$(HL2SDKTF2)\game\server;$(HL2SDKTF2)\public\game\server;$(MMSOURCE)\core;$(MMSOURCE)\core\sourcehook;$(MMSOURCE)\public;%(AdditionIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>SOURCE_ENGINE=11;WIN32;NOUSER;NOWH;NDEBUG;_WINDOWS;_USRDLL;SDK_EXPORTS;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SOURCE_ENGINE=11;WIN32;NDEBUG;_WINDOWS;_USRDLL;SDK_EXPORTS;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader />
-      <PrecompiledHeaderOutputFile>.\Release/AFKBot.pch</PrecompiledHeaderOutputFile>
-      <AssemblerListingLocation>.\Release/</AssemblerListingLocation>
-      <ObjectFileName>.\Release/</ObjectFileName>
-      <ProgramDataBaseFileName>.\Release/</ProgramDataBaseFileName>
+      <PrecompiledHeaderOutputFile>$(OutDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>$(OutDir)</AssemblerListingLocation>
+      <ObjectFileName>$(OutDir)$(TargetName).obj</ObjectFileName>
+      <ProgramDataBaseFileName>Release/</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <TreatWarningAsError>false</TreatWarningAsError>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -181,13 +186,13 @@
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>$(HL2SDKTF2)\lib\public;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <IgnoreSpecificDefaultLibraries>libc;libcd;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>libc;libcd;libcmt;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>.\Release/$(TargetName).pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
-      <MapFileName>.\Release/$(TargetName).map</MapFileName>
+      <MapFileName>$(OutDir)$(TargetName).map</MapFileName>
       <SubSystem>Windows</SubSystem>
-      <ImportLibrary>.\Release/$(TargetName).lib</ImportLibrary>
+      <ImportLibrary>$(OutDir)$(TargetName).lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
       <OptimizeReferences>true</OptimizeReferences>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
@@ -195,8 +200,19 @@
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
     </ProjectReference>
+    <Xdcmake>
+      <DocumentLibraryDependencies>false</DocumentLibraryDependencies>
+    </Xdcmake>
+    <PostBuildEvent>
+      <Command>copy "$(TargetPath)" "D:\HLServer\Testing\tf\addons\sourcemod\extensions\$(TargetName)$(TargetExt)"
+copy "$(TargetPath)" "D:\Program Files\Steam\steamapps\common\Team Fortress 2\tf\addons\sourcemod\extensions\$(TargetName)$(TargetExt)"</Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>Copying Files</Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\debugoverlay_shared.cpp" />
     <ClCompile Include="..\extension.cpp" />
     <ClCompile Include="..\natives.cpp" />
     <ClCompile Include="..\NavMesh\NavMesh.cpp" />
@@ -238,9 +254,11 @@
     <ClCompile Include="..\rcbot2\bot_weapons.cpp" />
     <ClCompile Include="..\rcbot2\bot_wpt_dist.cpp" />
     <ClCompile Include="..\rcbot2\bot_cvars.cpp" />
+    <ClCompile Include="..\rcbot2\bot_wpt_gen.cpp" />
     <ClCompile Include="..\sdk\smsdk_ext.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\debugoverlay_shared.h" />
     <ClInclude Include="..\extension.h" />
     <ClInclude Include="..\NavMesh\List.h" />
     <ClInclude Include="..\NavMesh\NavCornerType.h" />
@@ -257,6 +275,7 @@
     <ClInclude Include="..\NavMesh\NavMeshHint.h" />
     <ClInclude Include="..\NavMesh\NavMeshLadder.h" />
     <ClInclude Include="..\NavMesh\NavMeshLadderConnection.h" />
+    <ClInclude Include="..\NavMesh\NavMeshLoader.h" />
     <ClInclude Include="..\NavMesh\NavMeshPlace.h" />
     <ClInclude Include="..\NavMesh\NavMeshVisibleArea.h" />
     <ClInclude Include="..\NavMesh\public\INavMesh.h" />
@@ -280,17 +299,15 @@
     <ClInclude Include="..\rcbot2\bot_const.h" />
     <ClInclude Include="..\rcbot2\bot_cvars.h" />
     <ClInclude Include="..\rcbot2\bot_ehandle.h" />
-    <ClInclude Include="..\rcbot2\bot_event.h" />
+    <ClInclude Include="..\rcbot2\bot_events.h" />
     <ClInclude Include="..\rcbot2\bot_fortress.h" />
     <ClInclude Include="..\rcbot2\bot_gamerules.h" />
-    <ClInclude Include="..\rcbot2\bot_ga_nn_const.h" />
     <ClInclude Include="..\rcbot2\bot_genclass.h" />
     <ClInclude Include="..\rcbot2\bot_getprop.h" />
     <ClInclude Include="..\rcbot2\bot_globals.h" />
     <ClInclude Include="..\rcbot2\bot_mods.h" />
     <ClInclude Include="..\rcbot2\bot_navigator.h" />
     <ClInclude Include="..\rcbot2\bot_navmesh.h" />
-    <ClInclude Include="..\rcbot2\bot_perceptron.h" />
     <ClInclude Include="..\rcbot2\bot_profile.h" />
     <ClInclude Include="..\rcbot2\bot_schedule.h" />
     <ClInclude Include="..\rcbot2\bot_strings.h" />
@@ -305,7 +322,6 @@
     <ClInclude Include="..\rcbot2\bot_wpt_dist.h" />
     <ClInclude Include="..\sdk\smsdk_config.h" />
     <ClInclude Include="..\sdk\smsdk_ext.h" />
-    <ClInclude Include="..\version.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

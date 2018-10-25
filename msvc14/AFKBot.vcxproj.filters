@@ -155,6 +155,12 @@
     <ClCompile Include="..\NavMesh\NavMeshHint.cpp">
       <Filter>NavLoader\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\debugoverlay_shared.cpp">
+      <Filter>Extension</Filter>
+    </ClCompile>
+    <ClCompile Include="..\rcbot2\bot_wpt_gen.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\rcbot2\bot_belief.h">
@@ -173,9 +179,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\rcbot2\bot_ehandle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\rcbot2\bot_event.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\rcbot2\bot_fortress.h">
@@ -232,16 +235,7 @@
     <ClInclude Include="..\rcbot2\bot_wpt_dist.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\rcbot2\bot_ga_nn_const.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\rcbot2\bot_perceptron.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\extension.h">
-      <Filter>Extension</Filter>
-    </ClInclude>
-    <ClInclude Include="..\version.h">
       <Filter>Extension</Filter>
     </ClInclude>
     <ClInclude Include="..\sdk\smsdk_config.h">
@@ -350,6 +344,15 @@
       <Filter>NavLoader\Interface</Filter>
     </ClInclude>
     <ClInclude Include="..\NavMesh\NavHintType.h">
+      <Filter>NavLoader\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\rcbot2\bot_events.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\debugoverlay_shared.h">
+      <Filter>Extension</Filter>
+    </ClInclude>
+    <ClInclude Include="..\NavMesh\NavMeshLoader.h">
       <Filter>NavLoader\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
