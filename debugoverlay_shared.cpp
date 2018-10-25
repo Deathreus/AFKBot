@@ -10,11 +10,26 @@
 
 #define	MAX_OVERLAY_DIST_SQR	90000000
 
+#ifndef __linux__
 extern IVDebugOverlay *debugoverlay;
+#else
+IVDebugOverlay *debugoverlay = NULL;
+#endif
 
 extern IEngineTrace *engtrace;
 
 extern ConVar bot_debug;
+
+inline IGamePlayer *UTIL_GetLocalPlayer()
+{
+	IGamePlayer *pPlayer = playerhelpers->GetGamePlayer(1);
+
+	if(pPlayer && pPlayer->IsInGame()
+	   && !(pPlayer->IsReplay() || pPlayer->IsSourceTV()))
+		return pPlayer;
+
+	return NULL;
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Draw a box with no orientation
@@ -79,8 +94,7 @@ void NDebugOverlay::Line( const Vector &origin, const Vector &target, int r, int
 	// Clip the line before sending so we 
 	// don't overflow the client message buffer
 	// --------------------------------------------------------------
-	IGamePlayer *pPlayer = playerhelpers->GetGamePlayer(1);
-
+	IGamePlayer *pPlayer = UTIL_GetLocalPlayer();
 	if ( !pPlayer || !pPlayer->GetPlayerInfo() )
 		return;
 
@@ -117,7 +131,7 @@ void NDebugOverlay::Triangle( const Vector &p1, const Vector &p2, const Vector &
 	if ( !bot_debug.GetBool() )
 		return;
 
-	IGamePlayer *pPlayer = playerhelpers->GetGamePlayer(1);
+	IGamePlayer *pPlayer = UTIL_GetLocalPlayer();
 	if ( !pPlayer || !pPlayer->GetPlayerInfo() )
 		return;
 
@@ -190,8 +204,7 @@ void NDebugOverlay::Text( const Vector &origin, const char *text, float duration
 	if ( !bot_debug.GetBool() )
 		return;
 
-	IGamePlayer *pPlayer = playerhelpers->GetGamePlayer(1);
-	
+	IGamePlayer *pPlayer = UTIL_GetLocalPlayer();
 	if ( !pPlayer || !pPlayer->GetPlayerInfo() )
 		return;
 
@@ -321,8 +334,7 @@ void NDebugOverlay::DrawTickMarkedLine(const Vector &startPos, const Vector &end
 	if ( !bot_debug.GetBool() )
 		return;
 
-	IGamePlayer* pPlayer = playerhelpers->GetGamePlayer(1);
-
+	IGamePlayer* pPlayer = UTIL_GetLocalPlayer();
 	if ( !pPlayer || !pPlayer->GetPlayerInfo() ) 
 		return;
 
@@ -381,8 +393,7 @@ void NDebugOverlay::DrawGroundCrossHairOverlay(void)
 	if( !bot_debug.GetBool() )
 		return;
 
-	IGamePlayer *pPlayer = playerhelpers->GetGamePlayer(1);
-
+	IGamePlayer *pPlayer = UTIL_GetLocalPlayer();
 	if( !pPlayer || !pPlayer->GetPlayerInfo() )
 		return;
 
@@ -538,7 +549,7 @@ void NDebugOverlay::Axis( const Vector &position, const QAngle &angles, float si
 //-----------------------------------------------------------------------------
 void NDebugOverlay::Circle( const Vector &position, float radius, int r, int g, int b, int a, bool bNoDepthTest, float flDuration )
 {
-	IGamePlayer *pPlayer = playerhelpers->GetGamePlayer(1);
+	IGamePlayer *pPlayer = UTIL_GetLocalPlayer();
 	if ( !pPlayer || !pPlayer->GetPlayerInfo() )
 		return;
 
@@ -598,8 +609,8 @@ void NDebugOverlay::Circle( const Vector &position, const Vector &xAxis, const V
 
 		// If we have an alpha value, then draw the fan
 		if ( a && i > 1 )
-		{		
-			debugoverlay->AddTriangleOverlay( vecStart, vecLastPosition, vecPosition, r, g, b, a, bNoDepthTest, flDuration );
+		{
+			Triangle( vecStart, vecLastPosition, vecPosition, r, g, b, a, bNoDepthTest, flDuration );
 		}
 	}
 }
