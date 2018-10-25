@@ -37,6 +37,7 @@
 #include "bot_genclass.h"
 
 class CWaypointVisibilityTable;
+class CWaypoint;
 class CClient;
 
 class CWaypointAuthorInfo
@@ -62,8 +63,6 @@ typedef struct
 	CWaypoint *pWaypoint;
 	Vector v_ground;
 }edict_wpt_pair_t;
-
-class CWaypoint;
 
 class CWaypointType
 {
@@ -169,8 +168,10 @@ public:
 
 	static CWaypointType *GetTypeByFlags(int iFlags);
 
+	static void ShowTypesOnConsole(edict_t *pPrintTo);
+
 private:
-	static vector<CWaypointType*> m_Types;
+	static std::vector<CWaypointType*> m_Types;
 };
 
 class CWaypointTest
@@ -201,10 +202,9 @@ public:
 	{
 		m_thePaths.Init();
 		Init();
-		//		m_iId = -1;
 	}
 
-	CWaypoint(Vector vOrigin, int iFlags = 0, int iYaw = 0, int m_fRadius = 0)
+	CWaypoint(Vector vOrigin, int iFlags = 0, int iYaw = 0, int fRadius = 0)
 	{
 		m_thePaths.Clear();
 		Init();
@@ -214,11 +214,10 @@ public:
 		SetAim(iYaw);
 		m_fNextCheckGroundTime = 0;
 		m_bHasGround = false;
-		m_fRadius = 0;
+		m_fRadius = fRadius;
 		m_OpensLaterInfo.Clear();
 		m_bIsReachable = true;
 		m_fCheckReachableTime = 0;
-		//		m_iId = iId;
 	}
 
 	bool CheckGround();
@@ -233,7 +232,7 @@ public:
 		return (float)m_iAimYaw;
 	}
 
-	inline Vector GetOrigin()
+	inline const Vector GetOrigin()
 	{
 		return m_vOrigin;
 	}
@@ -390,7 +389,8 @@ public:
 
 	static void DrawWaypoints(CClient *pClient);
 
-	static int AddWaypoint(edict_t *pPlayer, Vector vOrigin, int iFlags = CWaypointTypes::W_FL_NONE, bool bAutoPath = false, int iYaw = 0, int iArea = 0, float fRadius = 0);
+	static int AddWaypoint(edict_t *pPlayer, const char *type1, const char *type2, const char *type3, const char *type4, bool bUseTemplate = false);
+	static int AddWaypoint(edict_t *pPlayer, Vector& vOrigin, int iFlags = CWaypointTypes::W_FL_NONE, bool bAutoPath = false, int iYaw = 0, int iArea = 0, float fRadius = 0);
 
 	static void RemoveWaypoint(int iIndex);
 
@@ -445,12 +445,19 @@ public:
 	static CWaypoint *GetPinchPointFromWaypoint(Vector vPlayerOrigin, Vector vPinchOrigin);
 	static CWaypoint *GetNestWaypoint(int iTeam, int iArea, bool bForceArea = false, CBot *pBot = NULL);
 
-	static void UpdateWaypointPairs(vector<edict_wpt_pair_t> *pPairs, int iWptFlag, const char *szClassname);
+	static void UpdateWaypointPairs(std::vector<edict_wpt_pair_t> *pPairs, int iWptFlag, const char *szClassname);
 	static bool HasAuthor() { return (m_szAuthor[0] != 0); }
 	static const char *GetAuthor() { return m_szAuthor; }
 	static bool IsModified() { return (m_szModifiedBy[0] != 0); }
 	static const char *GetModifier() { return m_szModifiedBy; }
 	static const char *GetWelcomeMessage() { return m_szWelcomeMessage; }
+
+	static bool WantToGenerate() { return m_bWantToGenerate; }
+	static void WantToGenerate(bool bSet) { m_bWantToGenerate = bSet; }
+	static void PrepareGeneration();
+	static void ProcessGeneration();
+	static void PostProcessGeneration();
+
 private:
 	static CWaypoint m_theWaypoints[MAX_WAYPOINTS];
 	static int m_iNumWaypoints;
@@ -460,7 +467,18 @@ private:
 	static char m_szAuthor[32];
 	static char m_szModifiedBy[32];
 	static char m_szWelcomeMessage[128];
-};
+	static bool m_bWantToGenerate;
 
+	typedef struct
+	{
+		bool bNeedToPostProcess;
+		bool bDoneGenerating;
+		bool bFirstStageDone;
+		bool bSecondStageDone;
+		int iCurrentIndex;
+		int iMaxIndex;
+	}GenData_t;
+	static GenData_t m_GenData;
+};
 
 #endif

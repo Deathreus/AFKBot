@@ -1,3 +1,4 @@
+#if !defined USE_NAVMESH
 #include "engine_wrappers.h"
 
 #include "bot_wpt_dist.h"
@@ -18,7 +19,7 @@ void CWaypointDistances::Load()
 {
 	char filename[1024];
 	wpt_dist_hdr_t hdr;
-	char *szMapName = CBotGlobals::GetMapName();
+	const char *szMapName = CBotGlobals::GetMapName();
 
 	if (szMapName  && *szMapName)
 	{
@@ -38,7 +39,7 @@ void CWaypointDistances::Load()
 			fread(m_Distances, sizeof(int), CWaypoints::MAX_WAYPOINTS * CWaypoints::MAX_WAYPOINTS, bfp);
 		}
 
-		m_fSaveTime = engine->Time() + 100.0f;
+		m_fSaveTime = TIME_NOW + 100.0f;
 
 		fclose(bfp);
 	}
@@ -46,16 +47,14 @@ void CWaypointDistances::Load()
 
 void CWaypointDistances::Save()
 {
-	//if ( m_fSaveTime < engine->Time() )
-	//{
-	char filename[1024];
-	char *szMapName = CBotGlobals::GetMapName();
+	char filename[MAX_PATH];
+	const char *szMapName = CBotGlobals::GetMapName();
 
 	if (szMapName && *szMapName)
 	{
 		wpt_dist_hdr_t hdr;
 
-		smutils->BuildPath(Path_SM, filename, sizeof(filename), "data\\afkbot\\%s\\%s.%s", BOT_WAYPOINT_FOLDER, szMapName, BOT_WAYPOINT_DISTANCE_EXTENSION);
+		smutils->BuildPath(Path_SM, filename, sizeof(filename), "data\\afkbot\\waypoints\\%s.%s", szMapName, BOT_WAYPOINT_DISTANCE_EXTENSION);
 
 		FILE *bfp = CBotGlobals::OpenFile(filename, "wb");
 
@@ -73,11 +72,10 @@ void CWaypointDistances::Save()
 
 		fwrite(m_Distances, sizeof(int), CWaypoints::MAX_WAYPOINTS * CWaypoints::MAX_WAYPOINTS, bfp);
 
-		m_fSaveTime = engine->Time() + 100.0f;
+		m_fSaveTime = TIME_NOW + 100.0f;
 
 		fclose(bfp);
 	}
-	//}
 }
 
 float CWaypointDistances::GetDistance(int iFrom, int iTo)
@@ -87,3 +85,5 @@ float CWaypointDistances::GetDistance(int iFrom, int iTo)
 
 	return (float)m_Distances[iFrom][iTo];
 }
+
+#endif // !USE_NAVMESH

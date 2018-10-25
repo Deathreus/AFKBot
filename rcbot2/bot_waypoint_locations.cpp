@@ -28,7 +28,7 @@
  *    version.
  *
  */
-
+#if !defined USE_NAVMESH
 #include "bot_base.h"
 
 #include "bot_waypoint.h"
@@ -38,12 +38,11 @@
 #include "bot_globals.h"
 
 #include <vector>    //bir3yk
-using namespace std;    //bir3yk
 
 unsigned char CWaypointLocations::g_iFailedWaypoints[CWaypoints::MAX_WAYPOINTS];
 dataUnconstArray<int> CWaypointLocations::m_iLocations[MAX_WPT_BUCKETS][MAX_WPT_BUCKETS][MAX_WPT_BUCKETS];
-float CWaypointLocations::m_fIgnoreSize = 0;
-Vector CWaypointLocations::m_vIgnoreLoc = Vector(0, 0, 0);
+float CWaypointLocations::m_fIgnoreSize = 0.0f;
+Vector CWaypointLocations::m_vIgnoreLoc = Vector(0.0f);
 bool CWaypointLocations::m_bIgnoreBox = false;
 
 #define READ_LOC(loc) abs((int)((int)(loc + HALF_MAX_MAP_SIZE) / BUCKET_SPACING));
@@ -128,7 +127,7 @@ void CWaypointLocations::AutoPath(edict_t *pPlayer, int iWpt)
 }
 
 // @param iFrom waypoint number from a and b within distance
-void CWaypointLocations::GetAllInArea(Vector &vOrigin, vector <int> *pWaypointList, int iVisibleTo)
+void CWaypointLocations::GetAllInArea(Vector &vOrigin, std::vector<int> *pWaypointList, int iVisibleTo)
 {
 	int iLoc = READ_LOC(vOrigin.x);
 	int jLoc = READ_LOC(vOrigin.y);
@@ -749,3 +748,5 @@ void CWaypointLocations::AddWptLocation(CWaypoint *pWaypoint, int iIndex)
 
 	AddWptLocation(iIndex, flOrigin);
 }
+
+#endif // !USE_NAVMESH

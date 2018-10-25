@@ -102,7 +102,7 @@ public:
 		}
 	}
 
-	static void GetAllInArea(Vector &vOrigin, vector <int> *pWaypointList, int iVisibleTo);
+	static void GetAllInArea(Vector &vOrigin, std::vector<int> *pWaypointList, int iVisibleTo);
 
 	static void GetMinMaxs(int iLoc, int jLoc, int kLoc,
 		int *iMinLoc, int *jMinLoc, int *kMinLoc,
