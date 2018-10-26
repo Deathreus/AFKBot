@@ -1,8 +1,8 @@
 #ifndef __war3source_navmeshladder_h__
 #define __war3source_navmeshladder_h__
 
-#include "public\INavMeshLadder.h"
-#include "public\INavMeshArea.h"
+#include "public/INavMeshLadder.h"
+#include "public/INavMeshArea.h"
 
 
 class CNavMeshLadder : public INavMeshLadder
@@ -27,8 +27,8 @@ public:
 	float GetBottomY();
 	float GetBottomZ();
 
-	Vector GetTop();
-	Vector GetBottom();
+	const Vector GetTop();
+	const Vector GetBottom();
 
 	eNavDir GetDirection();
 

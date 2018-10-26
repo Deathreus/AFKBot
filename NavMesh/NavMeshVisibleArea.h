@@ -1,7 +1,7 @@
 #ifndef __war3source_navmeshvisiblearea_h__
 #define __war3source_navmeshvisiblearea_h__
 
-#include "public\INavMeshVisibleArea.h"
+#include "public/INavMeshVisibleArea.h"
 
 
 class CNavMeshVisibleArea : public INavMeshVisibleArea

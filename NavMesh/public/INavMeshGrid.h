@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __war3source_inavmeshgrid_h__
+#define __war3source_inavmeshgrid_h__
 
 
 class Vector2D;
@@ -17,6 +18,8 @@ public:
 	virtual int GetGridSizeX() = 0;
 	virtual int GetGridSizeY() = 0;
 
-	virtual CList<CList<INavMeshArea*>> GetGridLists() = 0;
-	virtual CList<INavMeshArea*> GetGridAreas(int index) = 0;
+	virtual CList<CList<INavMeshArea*>> *GetGridLists() = 0;
+	virtual CList<INavMeshArea*> *GetGridAreas(int index) = 0;
 };
+
+#endif

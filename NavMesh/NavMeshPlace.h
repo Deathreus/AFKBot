@@ -1,7 +1,7 @@
 #ifndef __war3source_navmeshplace_h__
 #define __war3source_navmeshplace_h__
 
-#include "public\INavMeshPlace.h"
+#include "public/INavMeshPlace.h"
 
 
 class CNavMeshPlace : public INavMeshPlace

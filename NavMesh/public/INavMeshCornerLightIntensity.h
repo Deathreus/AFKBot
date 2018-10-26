@@ -1,7 +1,7 @@
 #ifndef __war3source_inavmeshcornerlightintensity_h__
 #define __war3source_inavmeshcornerlightintensity_h__
 
-#include "..\NavCornerType.h"
+#include "../NavCornerType.h"
 
 class INavMeshCornerLightIntensity 
 {

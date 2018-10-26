@@ -37,9 +37,9 @@ float CNavMeshLadder::GetBottomY() { return this->bottom.y; }
 
 float CNavMeshLadder::GetBottomZ() { return this->bottom.z; }
 
-Vector CNavMeshLadder::GetTop() { return this->top; }
+const Vector CNavMeshLadder::GetTop() { return this->top; }
 
-Vector CNavMeshLadder::GetBottom() { return this->bottom; }
+const Vector CNavMeshLadder::GetBottom() { return this->bottom; }
 
 eNavDir CNavMeshLadder::GetDirection() { return this->direction; }
 

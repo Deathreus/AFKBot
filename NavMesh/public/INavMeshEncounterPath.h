@@ -1,7 +1,7 @@
 #ifndef __war3source_inavmeshencounterpath_h__
 #define __war3source_inavmeshencounterpath_h__
 
-#include "..\NavDirType.h"
+#include "../NavDirType.h"
 #include "List.h"
 #include "INavMeshEncounterSpot.h"
 
@@ -15,7 +15,7 @@ public:
 	virtual unsigned int GetToAreaID() = 0;
 	virtual eNavDir GetToDirection() = 0;
 
-	virtual CList<INavMeshEncounterSpot*> GetEncounterSpots() = 0;
+	virtual CList<INavMeshEncounterSpot*> *GetEncounterSpots() = 0;
 };
 
 #endif

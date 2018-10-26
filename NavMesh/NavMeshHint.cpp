@@ -1,5 +1,4 @@
 #include "NavMeshHint.h"
-#include <vector.h>
 
 CNavMeshHint::CNavMeshHint(unsigned int id, float x, float y, float z, float yaw, unsigned char flags)
 {
@@ -17,7 +16,7 @@ float CNavMeshHint::GetY() { return this->pos.y; }
 
 float CNavMeshHint::GetZ() { return this->pos.z; }
 
-Vector CNavMeshHint::GetPos() { return this->pos; }
+const Vector CNavMeshHint::GetPos() { return this->pos; }
 
 float CNavMeshHint::GetYaw() { return this->yaw; }
 

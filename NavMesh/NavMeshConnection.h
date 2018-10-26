@@ -1,7 +1,7 @@
 #ifndef __war3source_navmeshconnection_h__
 #define __war3source_navmeshconnection_h__
 
-#include "public\INavMeshConnection.h"
+#include "public/INavMeshConnection.h"
 
 
 class CNavMeshConnection : public INavMeshConnection

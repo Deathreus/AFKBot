@@ -1,7 +1,7 @@
 #ifndef __war3source_navmeshladderconnection_h__
 #define __war3source_navmeshladderconnection_h__
 
-#include "public\INavMeshLadderConnection.h"
+#include "public/INavMeshLadderConnection.h"
 
 
 class CNavMeshLadderConnection : public INavMeshLadderConnection

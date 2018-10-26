@@ -1,17 +1,14 @@
 #ifndef __war3source_navmesharea_h__
 #define __war3source_navmesharea_h__
 
-#include "public\INavMeshArea.h"
-#include "public\INavMeshConnection.h"
-#include "public\INavMeshHidingSpot.h"
-#include "public\INavMeshEncounterPath.h"
-#include "public\INavMeshLadderConnection.h"
-#include "public\INavMeshCornerLightIntensity.h"
-#include "public\INavMeshVisibleArea.h"
+#include "public/INavMeshArea.h"
+#include "public/INavMeshConnection.h"
+#include "public/INavMeshHidingSpot.h"
+#include "public/INavMeshEncounterPath.h"
+#include "public/INavMeshLadderConnection.h"
+#include "public/INavMeshCornerLightIntensity.h"
+#include "public/INavMeshVisibleArea.h"
 
-
-typedef CList<CList<INavMeshConnection*>> ConnectionList_t;
-typedef CList<CList<INavMeshLadderConnection*>> LadderConList_t;
 
 class CNavMeshArea : public INavMeshArea
 {
@@ -25,12 +22,11 @@ public:
 		const CList<INavMeshCornerLightIntensity*> cornerLightIntensities, const CList<INavMeshVisibleArea*> visibleAreas,
 		unsigned int inheritVisibilityFromAreaID,
 		float earliestOccupyTimeFirstTeam, float earliestOccupyTimeSecondTeam);
-	~CNavMeshArea() {}
 
 	void Destroy();
 
 	unsigned int GetID();
-	unsigned int GetFlags();
+	unsigned int GetAttributes();
 	unsigned int GetPlaceID();
 
 	float GetNWExtentX();
@@ -47,12 +43,12 @@ public:
 	float GetNECornerZ();
 	float GetSWCornerZ();
 
-	CList<INavMeshConnection*> GetConnections(eNavDir dir);
-	CList<INavMeshHidingSpot*> GetHidingSpots();
-	CList<INavMeshEncounterPath*> GetEncounterPaths();
-	CList<INavMeshLadderConnection*> GetLadderConnections(eNavLadderDir dir);
-	CList<INavMeshCornerLightIntensity*> GetCornerLightIntensities();
-	CList<INavMeshVisibleArea*> GetVisibleAreas();
+	CList<INavMeshConnection*> *GetConnections(eNavDir dir);
+	CList<INavMeshHidingSpot*> *GetHidingSpots();
+	CList<INavMeshEncounterPath*> *GetEncounterPaths();
+	CList<INavMeshLadderConnection*> *GetLadderConnections(eNavLadderDir dir);
+	CList<INavMeshCornerLightIntensity*> *GetCornerLightIntensities();
+	CList<INavMeshVisibleArea*> *GetVisibleAreas();
 
 	unsigned int GetInheritVisibilityFromAreaID();
 	
@@ -64,15 +60,17 @@ public:
 	bool IsBlocked(void) const;
 	void SetBlocked(const bool blocked);
 
-	Vector GetExtentLow();
-	Vector GetExtentHigh();
-	Vector GetCenter();
+	const Vector GetExtentLow();
+	const Vector GetExtentHigh();
+	const Vector GetCenter();
 
 	float GetZ(const Vector &vPos);
 	float GetZ(const float fX, const float fY);
 
-	bool IsOverlapping(const Vector &vPos, float fTolerance = 0.0f);
+	bool IsOverlapping(const Vector &vPos, const float fTolerance = 0.0f);
 	bool IsOverlapping(INavMeshArea *toArea);
+
+	INavMeshEncounterPath *GetSpotEncounter(const int iFromID, const int iToID);
 
 	void SetTotalCost(float total);
 	void SetCostSoFar(float cost);
@@ -109,8 +107,18 @@ public:
 	INavMeshArea *GetPrevOpen();
 	void SetPrevOpen(INavMeshArea *open);
 
+#if(SOURCE_ENGINE == SE_TF2)
+	void SetTFAttribs(unsigned int iFlags);
+	void AddTFAttribs(unsigned int iFlags);
+	void RemoveTFAttribs(unsigned int iFlags);
+	unsigned int GetTFAttribs();
+#endif
+
 	static int m_iMasterMarker;
 	static INavMeshArea *m_OpenList;
+
+protected:
+	~CNavMeshArea() { }
 
 private:
 	unsigned int id;
@@ -135,6 +143,10 @@ private:
 	float earliestOccupyTimeSecondTeam;
 
 	unsigned int inheritVisibilityFromAreaID;
+
+#if(SOURCE_ENGINE == SE_TF2)
+	unsigned int TFFlags;
+#endif
 
 	bool blocked;
 

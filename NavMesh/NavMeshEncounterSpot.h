@@ -1,7 +1,7 @@
 #ifndef __war3source_navmeshencounterspot_h__
 #define __war3source_navmeshencounterspot_h__
 
-#include "public\INavMeshEncounterSpot.h"
+#include "public/INavMeshEncounterSpot.h"
 
 
 class CNavMeshEncounterSpot : public INavMeshEncounterSpot

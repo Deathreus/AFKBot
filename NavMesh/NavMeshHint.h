@@ -1,6 +1,8 @@
-#pragma once
+#ifndef __war3source_navmeshhint_h__
+#define __war3source_navmeshhint_h__
 
 #include "public/INavMeshHint.h"
+#include <vector.h>
 
 
 class CNavMeshHint : public INavMeshHint
@@ -17,7 +19,7 @@ public:
 	float GetY();
 	float GetZ();
 
-	Vector GetPos();
+	const Vector GetPos();
 	
 	float GetYaw();
 	
@@ -32,3 +34,5 @@ private:
 	
 	unsigned char flags;
 };
+
+#endif

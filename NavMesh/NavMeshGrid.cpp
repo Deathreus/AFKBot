@@ -2,7 +2,7 @@
 #include "NavMeshGrid.h"
 
 
-CNavMeshGrid::CNavMeshGrid(Vector2D low, Vector2D high, int x, int y, GridList_t list)
+CNavMeshGrid::CNavMeshGrid(Vector2D low, Vector2D high, int x, int y, const CList<CList<INavMeshArea*>> list)
 {
 	this->extentLo = low;
 	this->extentHi = high;
@@ -13,13 +13,10 @@ CNavMeshGrid::CNavMeshGrid(Vector2D low, Vector2D high, int x, int y, GridList_t
 
 void CNavMeshGrid::Destroy()
 {
-	ForEachItem(this->grid, it)
+	for (auto list : this->grid)
 	{
-		CList<INavMeshArea*> list = grid.Element(it);
-		list.Clear(true);
+		list.Clear();
 	}
-
-	this->grid.Clear(false);
 
 	delete this;
 }
@@ -32,6 +29,6 @@ int CNavMeshGrid::GetGridSizeX() { return this->gridSizeX; }
 
 int CNavMeshGrid::GetGridSizeY() { return this->gridSizeY; }
 
-CList<INavMeshArea*> CNavMeshGrid::GetGridAreas(int index) { return this->grid[index]; }
+CList<INavMeshArea*> *CNavMeshGrid::GetGridAreas(int index) { return &this->grid[index]; }
 
-CList<CList<INavMeshArea*>> CNavMeshGrid::GetGridLists() { return this->grid; }
+CList<CList<INavMeshArea*>> *CNavMeshGrid::GetGridLists() { return &this->grid; }

@@ -1,5 +1,5 @@
-#ifndef __war3source__navdirtype_h__
-#define __war3source__navdirtype_h__
+#ifndef __war3source_navdirtype_h__
+#define __war3source_navdirtype_h__
 
 
 enum eNavDir

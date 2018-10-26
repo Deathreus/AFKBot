@@ -2,12 +2,12 @@
 #define __war3source_navmesh_h__
 
 #include "List.h"
-#include "public\INavMesh.h"
-#include "public\INavMeshPlace.h"
-#include "public\INavMeshLadder.h"
-#include "public\INavMeshHint.h"
-#include "public\INavMeshArea.h"
-#include "public\INavMeshGrid.h"
+#include "public/INavMesh.h"
+#include "public/INavMeshPlace.h"
+#include "public/INavMeshLadder.h"
+#include "public/INavMeshHint.h"
+#include "public/INavMeshArea.h"
+#include "public/INavMeshGrid.h"
 
 
 class Vector;
@@ -30,24 +30,27 @@ public:
 
 	bool HasUnnamedAreas();
 
-	CList<INavMeshPlace*> GetPlaces();
-	CList<INavMeshArea*> GetAreas();
-	CList<INavMeshLadder*> GetLadders();
+	CList<INavMeshPlace*> *GetPlaces();
+	CList<INavMeshArea*> *GetAreas();
+	CList<INavMeshLadder*> *GetLadders();
 
 	void AddHint(INavMeshHint *hint);
 	void AddHint(const Vector pos, const float yaw, const unsigned char flags);
 	bool RemoveHint(const Vector &vPos);
-	CList<INavMeshHint*> GetHints();
+	CList<INavMeshHint*> *GetHints();
 
 	INavMeshGrid *GetGrid();
 	int WorldToGridX(float fWX);
 	int WorldToGridY(float fWY);
 	Vector GridToWorld(int gridX, int gridY);
 
-	CList<INavMeshArea*> GetAreasOnGrid(int x, int y);
+	CList<INavMeshArea*> *GetAreasOnGrid(int x, int y);
 
 	INavMeshArea *GetArea(const Vector &vPos, float fBeneathLimit = 120.0f);
+	INavMeshArea *GetNearestArea(const Vector &vPos, bool bAnyZ = false, float fMaxDist = 10000.0f, bool bCheckLOS = false, bool bCheckGround = true, int iTeam = -2);
 	INavMeshArea *GetAreaByID(const unsigned int iAreaIndex);
+
+	Vector GetClosestPointOnArea(INavMeshArea *area, const Vector &vPos);
 
 	static int m_iHintCount;
 

@@ -1,5 +1,4 @@
 #include "List.h"
-#include "NavMeshLoader.h"
 #include "NavMesh.h"
 #include "NavMeshPlace.h"
 #include "NavMeshLadder.h"
@@ -13,14 +12,64 @@
 #include "NavMeshHint.h"
 #include "NavMeshVisibleArea.h"
 #include "NavMeshGrid.h"
+#include "NavMeshLoader.h"
 
 
 #define NAV_MAGIC_NUMBER 0xFEEDFACE
 
-extern IFileSystem *filesystem;
+inline FILE *MkDirIfNotExist(const char *szPath, const char *szMode)
+{
+	FILE *file = fopen(szPath, szMode);
 
+	if(!file || ferror(file))
+	{
+	#ifndef __linux__
+		char *delimiter = "\\";
+	#else
+		char *delimiter = "/";
+	#endif
 
-unsigned int CNavMeshLoader::bytesRead = 0;
+		char szFolderName[1024];
+		int folderNameSize = 0;
+		szFolderName[0] = 0;
+
+		int iLen = strlen(szPath);
+
+		int i = 0;
+
+		while(i < iLen)
+		{
+			while((i < iLen) && (szPath[i] != *delimiter))
+			{
+				szFolderName[folderNameSize++] = szPath[i];
+				i++;
+			}
+
+			if(i == iLen)
+				break;
+
+			i++;
+			szFolderName[folderNameSize++] = *delimiter;//next
+			szFolderName[folderNameSize] = 0;
+
+		#ifndef __linux__
+			mkdir(szFolderName);
+		#else
+			mkdir(szFolderName, S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH);
+		#endif   
+		}
+
+		file = fopen(szPath, szMode);
+
+		if(!file || ferror(file))
+		{
+			smutils->LogError(myself, "Failed to create file at '%s' with mode %s", szPath, szMode);
+			return NULL;
+		}
+	}
+
+	return file;
+}
 
 INavMesh *CNavMeshLoader::Load(char *error, int errorMaxlen)
 {
@@ -45,8 +94,6 @@ INavMesh *CNavMeshLoader::Load(char *error, int errorMaxlen)
 		else AFKBot::DebugMessage("Successfully found the nav file within a vpk!");
 	}
 
-	CNavMeshLoader::bytesRead = fileBuffer.Size();
-
 	unsigned int magicNumber = fileBuffer.GetUnsignedInt();
 
 	if (!fileBuffer.IsValid())
@@ -61,7 +108,7 @@ INavMesh *CNavMeshLoader::Load(char *error, int errorMaxlen)
 		return nullptr;
 	}
 
-	unsigned int version = fileBuffer.GetUnsignedInt();
+	unsigned int navMeshVersion = fileBuffer.GetUnsignedInt();
 
 	if (!fileBuffer.IsValid())
 	{
@@ -69,23 +116,25 @@ INavMesh *CNavMeshLoader::Load(char *error, int errorMaxlen)
 		return nullptr;
 	}
 
-	if (version < 6 || version > 16)
+	if (navMeshVersion < 6 || navMeshVersion > 16)
 	{
-		ke::SafeSprintf(error, errorMaxlen, "Invalid version number value from navigation mesh: %s [%d]", navPath, version);
+		ke::SafeSprintf(error, errorMaxlen, "Invalid version number value from navigation mesh: %s [%d]", navPath, navMeshVersion);
 		return nullptr;
 	}
 
 	unsigned int navMeshSubVersion = 0;
-	if (version >= 10)
+	if (navMeshVersion >= 10)
 	{
 		navMeshSubVersion = fileBuffer.GetUnsignedInt();
+		if(navMeshSubVersion < 5)
+			smutils->LogMessage(myself, "Loaded NavMesh has been unmodified, navigation may experience errors. Expected sub-version 5, got %ud", navMeshSubVersion);
 	}
 
 	unsigned int saveBspSize = fileBuffer.GetUnsignedInt();
 
 	char bspPath[MAX_PATH];
-	smutils->BuildPath(Path_Game, bspPath, sizeof(bspPath), "maps\\%s.bsp", mapName);
-	unsigned int actualBspSize = filesystem->Size(bspPath);
+	ke::SafeSprintf(bspPath, sizeof(bspPath), "maps\\%s.bsp", mapName);
+	unsigned int actualBspSize = filesystem->Size(bspPath, "GAME");
 
 	if (saveBspSize != actualBspSize)
 	{
@@ -93,10 +142,10 @@ INavMesh *CNavMeshLoader::Load(char *error, int errorMaxlen)
 		return nullptr;
 	}
 
-	AFKBot::DebugMessage("Nav version: %d; BSPSize: %d; MagicNumber: %p; SubVersion: %d [v10+only]", version, saveBspSize, magicNumber, navMeshSubVersion);
+	AFKBot::DebugMessage("Nav version: %d; BSPSize: %d; MagicNumber: %p; SubVersion: %d [v10+only]", navMeshVersion, saveBspSize, magicNumber, navMeshSubVersion);
 
 	unsigned char meshAnalyzed = 0;
-	if (version > 14)
+	if (navMeshVersion > 14)
 	{
 		meshAnalyzed = fileBuffer.GetUnsignedChar();
 	}
@@ -112,13 +161,13 @@ INavMesh *CNavMeshLoader::Load(char *error, int errorMaxlen)
 
 		places.AddToTail(new CNavMeshPlace(placeIndex+1, placeName));
 
-		AFKBot::DebugMessage("Place \"%s\" [%i]", placeName, placeIndex);
+		AFKBot::VerboseDebugMessage("Place \"%s\" [%i]", placeName, placeIndex);
 	}
 
 	AFKBot::DebugMessage("%u places parsed, %u places created.", placeCount, places.Size());
 
 	unsigned char unnamedAreas = 0;
-	if (version > 11)
+	if (navMeshVersion > 11)
 	{
 		unnamedAreas = fileBuffer.GetUnsignedChar();
 	}
@@ -136,21 +185,21 @@ INavMesh *CNavMeshLoader::Load(char *error, int errorMaxlen)
 	CList<INavMeshArea*> areas;
 	for (unsigned int areaIndex = 0; areaIndex < areaCount; areaIndex++)
 	{
-		AFKBot::DebugMessage("Begin area read:");
+		AFKBot::VerboseDebugMessage("Begin area read:");
 
 		unsigned int areaID = fileBuffer.GetUnsignedInt();
 
-		AFKBot::DebugMessage("Area ID: %d", areaID);
+		AFKBot::VerboseDebugMessage("Area ID: %d", areaID);
 
 		unsigned int areaFlags = 0;
-		if (version <= 8)
+		if (navMeshVersion <= 8)
 			areaFlags = fileBuffer.GetUnsignedChar();
-		else if (version < 13)
+		else if (navMeshVersion < 13)
 			areaFlags = fileBuffer.GetUnsignedShort();
 		else
 			areaFlags = fileBuffer.GetUnsignedInt();
 
-		AFKBot::DebugMessage("Area Flags: %d", areaFlags);
+		AFKBot::VerboseDebugMessage("Area Flags: %d", areaFlags);
 
 		float areaExtLoX = fileBuffer.GetFloat();
 		float areaExtLoY = fileBuffer.GetFloat();
@@ -160,7 +209,7 @@ INavMesh *CNavMeshLoader::Load(char *error, int errorMaxlen)
 		float areaExtHiY = fileBuffer.GetFloat();
 		float areaExtHiZ = fileBuffer.GetFloat();
 
-		AFKBot::DebugMessage("Area extent: (%f, %f, %f), (%f, %f, %f)", areaExtLoX, areaExtLoY, areaExtLoZ, areaExtHiX, areaExtHiY, areaExtHiZ);
+		AFKBot::VerboseDebugMessage("Area extent: (%f, %f, %f), (%f, %f, %f)", areaExtLoX, areaExtLoY, areaExtLoZ, areaExtHiX, areaExtHiY, areaExtHiZ);
 
 		if (areaExtLoX < vGridExtLow.x)
 			vGridExtLow.x = areaExtLoX;
@@ -174,12 +223,12 @@ INavMesh *CNavMeshLoader::Load(char *error, int errorMaxlen)
 		if (areaExtHiY > vGridExtHi.y)
 			vGridExtHi.y = areaExtHiY;
 
-		AFKBot::DebugMessage("New Grid extents: (%f, %f), (%f, %f)", vGridExtLow.x, vGridExtLow.y, vGridExtHi.x, vGridExtHi.y);
+		AFKBot::VerboseDebugMessage("New Grid extents: (%f, %f), (%f, %f)", vGridExtLow.x, vGridExtLow.y, vGridExtHi.x, vGridExtHi.y);
 
 		float northEastCornerZ = fileBuffer.GetFloat();
 		float southWestCornerZ = fileBuffer.GetFloat();
 
-		AFKBot::DebugMessage("Corners: NW(%f), SW(%f)", northEastCornerZ, southWestCornerZ);
+		AFKBot::VerboseDebugMessage("Corners: NW(%f), SW(%f)", northEastCornerZ, southWestCornerZ);
 
 		CList<CList<INavMeshConnection*>> connections(NAV_DIR_COUNT);
 		for (int dir = 0; dir < NAV_DIR_COUNT; dir++)
@@ -192,7 +241,7 @@ INavMesh *CNavMeshLoader::Load(char *error, int errorMaxlen)
 				return nullptr;
 			}
 
-			AFKBot::DebugMessage("Connection count: %d", connectionCount);
+			AFKBot::VerboseDebugMessage("Connection count: %d", connectionCount);
 
 			for (unsigned int connectionIndex = 0; connectionIndex < connectionCount; connectionIndex++)
 			{
@@ -203,16 +252,16 @@ INavMesh *CNavMeshLoader::Load(char *error, int errorMaxlen)
 		}
 
 #if defined _DEBUG
-		ForEachItem(connections, dir)
+		for(int dir = 0; dir < NAV_DIR_COUNT; dir++)
 		{
-			CList<INavMeshConnection*> list = connections.Element(dir);
-			AFKBot::DebugMessage("%u connections created", list.Count());
+			CList<INavMeshConnection*> list = connections[dir];
+			AFKBot::VerboseDebugMessage("%u connections created", list.Count());
 		}
 #endif
 
 		unsigned char hidingSpotCount = fileBuffer.GetUnsignedChar();
 
-		AFKBot::DebugMessage("Hiding Spot Count: %d", hidingSpotCount);
+		AFKBot::VerboseDebugMessage("Hiding Spot Count: %d", hidingSpotCount);
 
 		CList<INavMeshHidingSpot*> hidingSpots;
 		for (unsigned int hidingSpotIndex = 0; hidingSpotIndex < hidingSpotCount; hidingSpotIndex++)
@@ -227,13 +276,13 @@ INavMesh *CNavMeshLoader::Load(char *error, int errorMaxlen)
 
 			hidingSpots.AddToTail(new CNavMeshHidingSpot(hidingSpotID, hidingSpotX, hidingSpotY, hidingSpotZ, hidingSpotFlags));
 
-			AFKBot::DebugMessage("Parsed hiding spot (%f, %f, %f) with ID [%p] and flags [%p]", hidingSpotX, hidingSpotY, hidingSpotZ, hidingSpotID, hidingSpotFlags);
+			AFKBot::VerboseDebugMessage("Parsed hiding spot (%f, %f, %f) with ID [%p] and flags [%p]", hidingSpotX, hidingSpotY, hidingSpotZ, hidingSpotID, hidingSpotFlags);
 		}
 
-		AFKBot::DebugMessage("%u hiding spots created", hidingSpots.Count());
+		AFKBot::VerboseDebugMessage("%u hiding spots created", hidingSpots.Count());
 
 		// These are old but we just need to read the data.
-		if (version < 15)
+		if (navMeshVersion < 15)
 		{
 			unsigned char approachAreaCount = fileBuffer.GetUnsignedChar();
 
@@ -249,7 +298,7 @@ INavMesh *CNavMeshLoader::Load(char *error, int errorMaxlen)
 
 		unsigned int encounterPathCount = fileBuffer.GetUnsignedInt();
 
-		AFKBot::DebugMessage("Encounter Path Count: %d", encounterPathCount);
+		AFKBot::VerboseDebugMessage("Encounter Path Count: %d", encounterPathCount);
 
 		CList<INavMeshEncounterPath*> encounterPaths;
 		for (unsigned int encounterPathIndex = 0; encounterPathIndex < encounterPathCount; encounterPathIndex++)
@@ -262,7 +311,7 @@ INavMesh *CNavMeshLoader::Load(char *error, int errorMaxlen)
 
 			unsigned char encounterSpotCount = fileBuffer.GetUnsignedChar();
 
-			AFKBot::DebugMessage("Encounter [from ID %d] [from dir %p] [to ID %d] [to dir %p] [spot count %d]", encounterFromID, encounterFromDirection, encounterToID, encounterToDirection, encounterSpotCount);
+			AFKBot::VerboseDebugMessage("Encounter [from ID %d] [from dir %p] [to ID %d] [to dir %p] [spot count %d]", encounterFromID, encounterFromDirection, encounterToID, encounterToDirection, encounterSpotCount);
 
 			CList<INavMeshEncounterSpot*> encounterSpots;
 			for (int encounterSpotIndex = 0; encounterSpotIndex < encounterSpotCount; encounterSpotIndex++)
@@ -275,27 +324,27 @@ INavMesh *CNavMeshLoader::Load(char *error, int errorMaxlen)
 
 				encounterSpots.AddToTail(new CNavMeshEncounterSpot(encounterSpotOrderId, encounterSpotParametricDistance));
 
-				AFKBot::DebugMessage("Encounter spot [order id %d] and [T %p]", encounterSpotOrderId, encounterSpotT);
+				AFKBot::VerboseDebugMessage("Encounter spot [order id %d] and [T %p]", encounterSpotOrderId, encounterSpotT);
 			}
 
-			AFKBot::DebugMessage("%u encounter spots created", encounterSpots.Count());
+			AFKBot::VerboseDebugMessage("%u encounter spots created", encounterSpots.Count());
 
 			INavMeshEncounterPath *encounterPath = new CNavMeshEncounterPath(encounterFromID, (eNavDir)encounterFromDirection, encounterToID, (eNavDir)encounterToDirection, encounterSpots);
 			encounterPaths.AddToTail(encounterPath);
 		}
 
-		AFKBot::DebugMessage("%u encounter paths created", encounterPaths.Count());
+		AFKBot::VerboseDebugMessage("%u encounter paths created", encounterPaths.Count());
 
 		unsigned short placeID = fileBuffer.GetUnsignedShort();
 
-		AFKBot::DebugMessage("Place ID: %d", placeID);
+		AFKBot::VerboseDebugMessage("Place ID: %d", placeID);
 
 		CList<CList<INavMeshLadderConnection*>> ladderConnections(NAV_LADDER_DIR_COUNT);
 		for (int dir = 0; dir < NAV_LADDER_DIR_COUNT; dir++)
 		{
 			unsigned int ladderConnectionCount = fileBuffer.GetUnsignedInt();
 
-			AFKBot::DebugMessage("Ladder Connection Count: %d", ladderConnectionCount);
+			AFKBot::VerboseDebugMessage("Ladder Connection Count: %d", ladderConnectionCount);
 
 			for (unsigned int ladderConnectionIndex = 0; ladderConnectionIndex < ladderConnectionCount; ladderConnectionIndex++)
 			{
@@ -303,29 +352,29 @@ INavMesh *CNavMeshLoader::Load(char *error, int errorMaxlen)
 
 				ladderConnections[dir].AddToTail(new CNavMeshLadderConnection(ladderConnectID, (eNavLadderDir)dir));
 
-				AFKBot::DebugMessage("Parsed ladder connect [ID %d]", ladderConnectID);
+				AFKBot::VerboseDebugMessage("Parsed ladder connect [ID %d]", ladderConnectID);
 			}
 		}
 
 #if defined _DEBUG
-		ForEachItem(ladderConnections, dir)
+		for(int dir = 0; dir < NAV_LADDER_DIR_COUNT; dir++)
 		{
-			CList<INavMeshLadderConnection*> list = ladderConnections.Element(dir);
-			AFKBot::DebugMessage("%u ladder connections created", list.Count());
+			CList<INavMeshLadderConnection*> list = ladderConnections[dir];
+			AFKBot::VerboseDebugMessage("%u ladder connections created", list.Count());
 		}
 #endif
 
 		float earliestOccupyTimeFirstTeam = fileBuffer.GetFloat();
 		float earliestOccupyTimeSecondTeam = fileBuffer.GetFloat();
 
-		AFKBot::DebugMessage("Earliest occupy times; 1: %f, 2: %f", earliestOccupyTimeFirstTeam, earliestOccupyTimeSecondTeam);
+		AFKBot::VerboseDebugMessage("Earliest occupy times; 1: %f, 2: %f", earliestOccupyTimeFirstTeam, earliestOccupyTimeSecondTeam);
 
 		CList<INavMeshCornerLightIntensity*> cornerLightIntensities;
 		CList<INavMeshVisibleArea*> visibleAreas;
 
 		unsigned int inheritVisibilityFrom = 0;
 		
-		if (version >= 11)
+		if (navMeshVersion >= 11)
 		{
 			for (int navCornerIndex = 0; navCornerIndex < NAV_CORNER_COUNT; navCornerIndex++)
 			{
@@ -333,14 +382,14 @@ INavMesh *CNavMeshLoader::Load(char *error, int errorMaxlen)
 
 				cornerLightIntensities.AddToTail(new CNavMeshCornerLightIntensity((eNavCorner)navCornerIndex, navCornerLightIntensity));
 
-				AFKBot::DebugMessage("Light intensity: [%f] [idx %d]", navCornerLightIntensity, navCornerIndex);
+				AFKBot::VerboseDebugMessage("Light intensity: [%f] [idx %d]", navCornerLightIntensity, navCornerIndex);
 			}
 
-			if (version >= 16)
+			if (navMeshVersion >= 16)
 			{
 				unsigned int visibleAreaCount = fileBuffer.GetUnsignedInt();
 
-				AFKBot::DebugMessage("Visible area count: %d", visibleAreaCount);
+				AFKBot::VerboseDebugMessage("Visible area count: %d", visibleAreaCount);
 
 				for (unsigned int visibleAreaIndex = 0; visibleAreaIndex < visibleAreaCount; visibleAreaIndex++)
 				{
@@ -350,30 +399,25 @@ INavMesh *CNavMeshLoader::Load(char *error, int errorMaxlen)
 
 					visibleAreas.AddToTail(new CNavMeshVisibleArea(visibleAreaID, visibleAreaAttributes));
 
-					AFKBot::DebugMessage("Parsed visible area [%d] with attr [%p]", visibleAreaID, visibleAreaAttributes);
+					AFKBot::VerboseDebugMessage("Parsed visible area [%d] with attr [%p]", visibleAreaID, visibleAreaAttributes);
 				}
 
-				AFKBot::DebugMessage("%u visible areas created", visibleAreas.Count());
+				AFKBot::VerboseDebugMessage("%u visible areas created", visibleAreas.Count());
 
 				inheritVisibilityFrom = fileBuffer.GetUnsignedInt();
 
-				AFKBot::DebugMessage("Inherit visibilty from: %d", inheritVisibilityFrom);
-
-				/*unk01 = fileBuffer.GetUnsignedChar();
-				for (unsigned char c = 0x0; c < unk01; c++)
-				{
-					unsigned char unknown[0XE];
-					fileBuffer.Get(&unknown, sizeof(unknown));
-				}*/
-				{
-					fileBuffer.GetUnsignedInt(); // Unknown variable, eat it
-				}
+				AFKBot::VerboseDebugMessage("Inherit visibilty from: %d", inheritVisibilityFrom);
 			}
 		}
 
 		INavMeshArea *area = new CNavMeshArea(areaID, areaFlags, placeID, areaExtLoX, areaExtLoY, areaExtLoZ, areaExtHiX, areaExtHiY, areaExtHiZ,
 			northEastCornerZ, southWestCornerZ, connections, hidingSpots, encounterPaths, ladderConnections,
 			cornerLightIntensities, visibleAreas, inheritVisibilityFrom, earliestOccupyTimeFirstTeam, earliestOccupyTimeSecondTeam);
+
+	#if(SOURCE_ENGINE == SE_TF2)
+		area->SetTFAttribs(fileBuffer.GetUnsignedInt());
+		AFKBot::VerboseDebugMessage("TF2 specific flags: %d", area->GetTFAttribs());
+	#endif
 
 		areas.AddToTail(area);
 	}
@@ -384,15 +428,15 @@ INavMesh *CNavMeshLoader::Load(char *error, int errorMaxlen)
 	CList<INavMeshLadder*> ladders;
 	for (unsigned int ladderIndex = 0; ladderIndex < ladderCount; ladderIndex++)
 	{
-		AFKBot::DebugMessage("Begin ladder read:");
+		AFKBot::VerboseDebugMessage("Begin ladder read:");
 
 		unsigned int ladderID = fileBuffer.GetUnsignedInt();
 
-		AFKBot::DebugMessage("Ladder ID: %d", ladderID);
+		AFKBot::VerboseDebugMessage("Ladder ID: %d", ladderID);
 
 		float ladderWidth = fileBuffer.GetFloat();
 
-		AFKBot::DebugMessage("Ladder width: %f", ladderWidth);
+		AFKBot::VerboseDebugMessage("Ladder width: %f", ladderWidth);
 
 		float ladderTopX = fileBuffer.GetFloat();
 		float ladderTopY = fileBuffer.GetFloat();
@@ -402,15 +446,15 @@ INavMesh *CNavMeshLoader::Load(char *error, int errorMaxlen)
 		float ladderBottomY = fileBuffer.GetFloat();
 		float ladderBottomZ = fileBuffer.GetFloat();
 
-		AFKBot::DebugMessage("Ladder positions: top (%f, %f, %f), bottom (%f, %f, %f)", ladderTopX, ladderTopY, ladderTopZ, ladderBottomX, ladderBottomY, ladderBottomZ);
+		AFKBot::VerboseDebugMessage("Ladder positions: top (%f, %f, %f), bottom (%f, %f, %f)", ladderTopX, ladderTopY, ladderTopZ, ladderBottomX, ladderBottomY, ladderBottomZ);
 
 		float ladderLength = fileBuffer.GetFloat();
 
-		AFKBot::DebugMessage("Ladder length: %f");
+		AFKBot::VerboseDebugMessage("Ladder length: %f");
 
 		unsigned int ladderDirection = fileBuffer.GetUnsignedInt();
 
-		AFKBot::DebugMessage("Ladder face direction: %s",
+		AFKBot::VerboseDebugMessage("Ladder face direction: %s",
 			ladderDirection == NAV_DIR_NORTH ? "north" :
 			ladderDirection == NAV_DIR_SOUTH ? "south" :
 			ladderDirection == NAV_DIR_EAST ? "east" :
@@ -424,11 +468,11 @@ INavMesh *CNavMeshLoader::Load(char *error, int errorMaxlen)
 
 		unsigned int ladderTopBehindAreaID = fileBuffer.GetUnsignedInt();
 
-		AFKBot::DebugMessage("Ladder ending areas: forward [%d], back [%d], left [%d], right [%d]", ladderTopForwardAreaID, ladderTopBehindAreaID, ladderTopLeftAreaID, ladderTopRightAreaID);
+		AFKBot::VerboseDebugMessage("Ladder ending areas: forward [%d], back [%d], left [%d], right [%d]", ladderTopForwardAreaID, ladderTopBehindAreaID, ladderTopLeftAreaID, ladderTopRightAreaID);
 
 		unsigned int ladderBottomAreaID = fileBuffer.GetUnsignedInt();
 
-		AFKBot::DebugMessage("Ladder starting area: %d", ladderBottomAreaID);
+		AFKBot::VerboseDebugMessage("Ladder starting area: %d", ladderBottomAreaID);
 
 		INavMeshLadder *ladder = new CNavMeshLadder(ladderID, ladderWidth, ladderLength, ladderTopX, ladderTopY, ladderTopZ,
 			ladderBottomX, ladderBottomY, ladderBottomZ, (eNavDir)ladderDirection,
@@ -468,7 +512,7 @@ INavMesh *CNavMeshLoader::Load(char *error, int errorMaxlen)
 	int iGridSizeX = (int)((vGridExtHi.x - vGridExtLow.x) / GridCellSize) + 1;
 	int iGridSizeY = (int)((vGridExtHi.y - vGridExtLow.y) / GridCellSize) + 1;
 
-	GridList_t gridlist(iGridSizeX * iGridSizeY);
+	CList<CList<INavMeshArea*>> gridlist(iGridSizeX * iGridSizeY);
 	for (unsigned int areaIndex = 0; areaIndex < areaCount; areaIndex++)
 	{
 		INavMeshArea *area = areas.Element(areaIndex);
@@ -502,11 +546,11 @@ INavMesh *CNavMeshLoader::Load(char *error, int errorMaxlen)
 	}
 
 #if defined _DEBUG
-	AFKBot::DebugMessage("Lists in grid: %u", gridlist.Size());
-	ForEachItem(gridlist, index)
+	AFKBot::VerboseDebugMessage("Lists in grid: %u", gridlist.Size());
+	for(int index = 0; index < gridlist.Count(); index++)
 	{
 		CList<INavMeshArea*> list = gridlist.Element(index);
-		AFKBot::DebugMessage("List at grid index %i has %u areas allocated.", index, list.Size());
+		AFKBot::VerboseDebugMessage("List at grid index %i has %u areas allocated.", index, list.Size());
 	}
 #endif
 
@@ -518,7 +562,7 @@ INavMesh *CNavMeshLoader::Load(char *error, int errorMaxlen)
 	bool isMeshAnalyzed = meshAnalyzed != 0;
 	AFKBot::DebugMessage("Is mesh analyzed: %s", isMeshAnalyzed ? "yes" : "no");
 
-	INavMesh *mesh = new CNavMesh(magicNumber, version, navMeshSubVersion, saveBspSize, isMeshAnalyzed, hasUnnamedAreas, places, areas, hints, ladders, grid);
+	INavMesh *mesh = new CNavMesh(magicNumber, navMeshVersion, navMeshSubVersion, saveBspSize, isMeshAnalyzed, hasUnnamedAreas, places, areas, hints, ladders, grid);
 
 	return mesh;
 }
@@ -564,24 +608,24 @@ bool CNavMeshLoader::Save(INavMesh *pNavMesh)
 	}
 
 	char bspPath[MAX_PATH];
-	smutils->BuildPath(Path_Game, bspPath, sizeof(bspPath), "maps\\%s.bsp", mapName);
+	ke::SafeSprintf(bspPath, sizeof(bspPath), "maps\\%s.bsp", mapName);
 
-	unsigned int bspSize = filesystem->Size(bspPath);
+	unsigned int bspSize = filesystem->Size(bspPath, "GAME");
 	fileBuffer.PutUnsignedInt(bspSize);
-	AFKBot::DebugMessage("Size of bsp file '%s' is %u bytes.", bspPath, bspSize);
+	AFKBot::VerboseDebugMessage("Size of bsp file '%s' is %u bytes.", bspPath, bspSize);
 
 	if (version > 13)
 	{
 		fileBuffer.PutUnsignedChar(pNavMesh->IsMeshAnalyzed());
 	}
 
-	unsigned short placeCount = pNavMesh->GetPlaces().Count();
+	unsigned short placeCount = pNavMesh->GetPlaces()->Count();
 	fileBuffer.PutUnsignedShort(placeCount);
 
-	CList<INavMeshPlace*> places = pNavMesh->GetPlaces();
+	CList<INavMeshPlace*> *places = pNavMesh->GetPlaces();
 	for (unsigned short i = 0; i < placeCount; i++)
 	{
-		INavMeshPlace *place = places.Element(i);
+		INavMeshPlace *place = places->Element(i);
 		if (place)
 		{
 			const char *placeName = place->GetName();
@@ -596,23 +640,23 @@ bool CNavMeshLoader::Save(INavMesh *pNavMesh)
 		fileBuffer.PutUnsignedChar(pNavMesh->HasUnnamedAreas());
 	}
 
-	unsigned int areaCount = pNavMesh->GetAreas().Count();
+	unsigned int areaCount = pNavMesh->GetAreas()->Count();
 	fileBuffer.PutUnsignedInt(areaCount);
 
-	CList<INavMeshArea*> areas = pNavMesh->GetAreas();
+	CList<INavMeshArea*> *areas = pNavMesh->GetAreas();
 	for (unsigned int i = 0; i < areaCount; i++)
 	{
-		INavMeshArea *area = areas.Element(i);
+		INavMeshArea *area = areas->Element(i);
 		if (area)
 		{
 			fileBuffer.PutUnsignedInt(area->GetID());
 
 			if (version <= 8)
-				fileBuffer.PutUnsignedChar(area->GetFlags());
+				fileBuffer.PutUnsignedChar(area->GetAttributes());
 			else if (version < 13)
-				fileBuffer.PutUnsignedShort(area->GetFlags());
+				fileBuffer.PutUnsignedShort(area->GetAttributes());
 			else
-				fileBuffer.PutUnsignedInt(area->GetFlags());
+				fileBuffer.PutUnsignedInt(area->GetAttributes());
 
 			fileBuffer.PutFloat(area->GetNWExtentX());
 			fileBuffer.PutFloat(area->GetNWExtentY());
@@ -627,13 +671,13 @@ bool CNavMeshLoader::Save(INavMesh *pNavMesh)
 
 			for (int dir = 0; dir < NAV_DIR_COUNT; dir++)
 			{
-				unsigned int connectionCount = area->GetConnections((eNavDir)dir).Count();
+				unsigned int connectionCount = area->GetConnections((eNavDir)dir)->Count();
 				fileBuffer.PutUnsignedInt(connectionCount);
 
-				CList<INavMeshConnection*> connections = area->GetConnections((eNavDir)dir);
+				CList<INavMeshConnection*> *connections = area->GetConnections((eNavDir)dir);
 				for (unsigned int j = 0; j < connectionCount; j++)
 				{
-					INavMeshConnection *connection = connections.Element(j);
+					INavMeshConnection *connection = connections->Element(j);
 					if (connection)
 					{
 						fileBuffer.PutUnsignedInt(connection->GetConnectingAreaID());
@@ -641,13 +685,13 @@ bool CNavMeshLoader::Save(INavMesh *pNavMesh)
 				}
 			}
 
-			unsigned char hidingSpotCount = area->GetHidingSpots().Count();
+			unsigned char hidingSpotCount = area->GetHidingSpots()->Count();
 			fileBuffer.PutUnsignedChar(hidingSpotCount);
 
-			CList<INavMeshHidingSpot*> hidingspots = area->GetHidingSpots();
+			CList<INavMeshHidingSpot*> *hidingspots = area->GetHidingSpots();
 			for (unsigned int j = 0; j < hidingSpotCount; j++)
 			{
-				INavMeshHidingSpot *hidingspot = hidingspots.Element(j);
+				INavMeshHidingSpot *hidingspot = hidingspots->Element(j);
 				if (hidingspot)
 				{
 					fileBuffer.PutUnsignedInt(hidingspot->GetID());
@@ -675,13 +719,13 @@ bool CNavMeshLoader::Save(INavMesh *pNavMesh)
 				}
 			}
 
-			unsigned int encounterPathCount = area->GetEncounterPaths().Count();
+			unsigned int encounterPathCount = area->GetEncounterPaths()->Count();
 			fileBuffer.PutUnsignedInt(encounterPathCount);
 
-			CList<INavMeshEncounterPath*> encounterpaths = area->GetEncounterPaths();
+			CList<INavMeshEncounterPath*> *encounterpaths = area->GetEncounterPaths();
 			for (unsigned int j = 0; j < encounterPathCount; j++)
 			{
-				INavMeshEncounterPath *encounterpath = encounterpaths.Element(j);
+				INavMeshEncounterPath *encounterpath = encounterpaths->Element(j);
 				if (encounterpath)
 				{
 					fileBuffer.PutUnsignedInt(encounterpath->GetFromAreaID());
@@ -690,13 +734,13 @@ bool CNavMeshLoader::Save(INavMesh *pNavMesh)
 					fileBuffer.PutUnsignedInt(encounterpath->GetToAreaID());
 					fileBuffer.PutUnsignedChar(encounterpath->GetToDirection());
 
-					unsigned char encounterSpotCount = encounterpath->GetEncounterSpots().Count();
+					unsigned char encounterSpotCount = encounterpath->GetEncounterSpots()->Count();
 					fileBuffer.PutUnsignedChar(encounterSpotCount);
 
-					CList<INavMeshEncounterSpot*> encounterspots = encounterpath->GetEncounterSpots();
+					CList<INavMeshEncounterSpot*> *encounterspots = encounterpath->GetEncounterSpots();
 					for (int k = 0; k < encounterSpotCount; k++)
 					{
-						INavMeshEncounterSpot *encounterspot = encounterspots.Element(k);
+						INavMeshEncounterSpot *encounterspot = encounterspots->Element(k);
 						if (encounterspot)
 						{
 							fileBuffer.PutUnsignedInt(encounterspot->GetOrderID());
@@ -712,13 +756,13 @@ bool CNavMeshLoader::Save(INavMesh *pNavMesh)
 
 			for (int dir = 0; dir < NAV_LADDER_DIR_COUNT; dir++)
 			{
-				unsigned int ladderConnectionCount = area->GetLadderConnections((eNavLadderDir)dir).Count();
+				unsigned int ladderConnectionCount = area->GetLadderConnections((eNavLadderDir)dir)->Count();
 				fileBuffer.PutUnsignedInt(ladderConnectionCount);
 
-				CList<INavMeshLadderConnection*> ladderconnections = area->GetLadderConnections((eNavLadderDir)dir);
+				CList<INavMeshLadderConnection*> *ladderconnections = area->GetLadderConnections((eNavLadderDir)dir);
 				for (unsigned int j = 0; j < ladderConnectionCount; j++)
 				{
-					INavMeshLadderConnection *ladderconnection = ladderconnections.Element(j);
+					INavMeshLadderConnection *ladderconnection = ladderconnections->Element(j);
 					if (ladderconnection)
 					{
 						fileBuffer.PutUnsignedInt(ladderconnection->GetConnectingLadderID());
@@ -731,12 +775,12 @@ bool CNavMeshLoader::Save(INavMesh *pNavMesh)
 
 			if (version >= 11)
 			{
-				CList<INavMeshCornerLightIntensity*> cornerlightintensities = area->GetCornerLightIntensities();
+				CList<INavMeshCornerLightIntensity*> *cornerlightintensities = area->GetCornerLightIntensities();
 				for (int corner = 0; corner < NAV_CORNER_COUNT; corner++)
 				{
-					for (int j = 0; j < cornerlightintensities.Count(); j++)
+					for (int j = 0; j < cornerlightintensities->Count(); j++)
 					{
-						INavMeshCornerLightIntensity *cornerlightintensity = cornerlightintensities.Element(j);
+						INavMeshCornerLightIntensity *cornerlightintensity = cornerlightintensities->Element(j);
 						if (cornerlightintensity)
 						{
 							if ((eNavCorner)corner == cornerlightintensity->GetCornerType())
@@ -749,13 +793,13 @@ bool CNavMeshLoader::Save(INavMesh *pNavMesh)
 
 				if (version >= 16)
 				{
-					unsigned int visibleAreaCount = area->GetVisibleAreas().Count();
+					unsigned int visibleAreaCount = area->GetVisibleAreas()->Count();
 					fileBuffer.PutUnsignedInt(visibleAreaCount);
 
-					CList<INavMeshVisibleArea*> visibleareas = area->GetVisibleAreas();
+					CList<INavMeshVisibleArea*> *visibleareas = area->GetVisibleAreas();
 					for (unsigned int j = 0; j < visibleAreaCount; j++)
 					{
-						INavMeshVisibleArea *visiblearea = visibleareas.Element(j);
+						INavMeshVisibleArea *visiblearea = visibleareas->Element(j);
 						if (visiblearea)
 						{
 							fileBuffer.PutUnsignedInt(visiblearea->GetVisibleAreaID());
@@ -766,19 +810,21 @@ bool CNavMeshLoader::Save(INavMesh *pNavMesh)
 
 					fileBuffer.PutUnsignedInt(area->GetInheritVisibilityFromAreaID());
 
-					fileBuffer.PutUnsignedInt(0);
+				#if(SOURCE_ENGINE == SE_TF2)
+					fileBuffer.PutUnsignedInt(area->GetTFAttribs());
+				#endif
 				}
 			}
 		}
 	}
 
-	unsigned int ladderCount = pNavMesh->GetLadders().Count();
+	unsigned int ladderCount = pNavMesh->GetLadders()->Count();
 	fileBuffer.PutUnsignedInt(ladderCount);
 
-	CList<INavMeshLadder*> ladders = pNavMesh->GetLadders();
+	CList<INavMeshLadder*> *ladders = pNavMesh->GetLadders();
 	for (unsigned int i = 0; i < ladderCount; i++)
 	{
-		INavMeshLadder *ladder = ladders.Element(i);
+		INavMeshLadder *ladder = ladders->Element(i);
 		if (ladder)
 		{
 			fileBuffer.PutUnsignedInt(ladder->GetID());
@@ -805,13 +851,13 @@ bool CNavMeshLoader::Save(INavMesh *pNavMesh)
 		}
 	}
 
-	unsigned int hintCount = pNavMesh->GetHints().Count();
+	unsigned int hintCount = pNavMesh->GetHints()->Count();
 	fileBuffer.PutUnsignedInt(hintCount);
 
-	CList<INavMeshHint*> hints = pNavMesh->GetHints();
+	CList<INavMeshHint*> *hints = pNavMesh->GetHints();
 	for (unsigned int i = 0; i < hintCount; i++)
 	{
-		INavMeshHint *hint = hints.Element(i);
+		INavMeshHint *hint = hints->Element(i);
 		if (hint)
 		{
 			fileBuffer.PutUnsignedInt(hint->GetID());
@@ -825,8 +871,6 @@ bool CNavMeshLoader::Save(INavMesh *pNavMesh)
 			fileBuffer.PutUnsignedChar(hint->GetFlags());
 		}
 	}
-
-	CNavMeshLoader::bytesRead = fileBuffer.Size();
 
 	if (!filesystem->WriteFile(navPath, "MOD", fileBuffer))
 	{

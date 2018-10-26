@@ -1,7 +1,7 @@
 #ifndef __war3source_inavmeshladder_h__
 #define __war3source_inavmeshladder_h__
 
-#include "..\NavDirType.h"
+#include "../NavDirType.h"
 
 class Vector;
 
@@ -22,8 +22,8 @@ public:
 	virtual float GetBottomY() = 0;
 	virtual float GetBottomZ() = 0;
 
-	virtual Vector GetTop() = 0;
-	virtual Vector GetBottom() = 0;
+	virtual const Vector GetTop() = 0;
+	virtual const Vector GetBottom() = 0;
 
 	virtual eNavDir GetDirection() = 0;
 	

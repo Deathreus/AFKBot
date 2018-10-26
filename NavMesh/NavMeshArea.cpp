@@ -46,35 +46,32 @@ CNavMeshArea::CNavMeshArea(unsigned int id, unsigned int flags, unsigned int pla
 
 void CNavMeshArea::Destroy()
 {
-	ForEachItem(this->encounterPaths, it)
+	for (auto path : this->encounterPaths)
 	{
-		INavMeshEncounterPath *path = this->encounterPaths.Element(it);
 		if (path) path->Destroy();
 	}
 
-	for(int dir = 0; dir < NAV_DIR_COUNT; dir++)
+	for(short int dir = 0; dir < NAV_DIR_COUNT; dir++)
 	{
-		this->connections[dir].Clear(true);
+		this->connections[dir].Clear();
 	}
 
-	for(int dir = 0; dir < NAV_LADDER_DIR_COUNT; dir++)
+	for(short int dir = 0; dir < NAV_LADDER_DIR_COUNT; dir++)
 	{
-		this->ladderConnections[dir].Clear(true);
+		this->ladderConnections[dir].Clear();
 	}
 
-	this->connections.Clear(false);
-	this->ladderConnections.Clear(false);
-	this->hidingSpots.Clear(true);
-	this->encounterPaths.Clear(true);
-	this->cornerLightIntensities.Clear(true);
-	this->visibleAreas.Clear(true);
+	this->hidingSpots.Clear();
+	this->encounterPaths.Clear();
+	this->cornerLightIntensities.Clear();
+	this->visibleAreas.Clear();
 
 	delete this;
 }
 
 unsigned int CNavMeshArea::GetID() { return this->id; }
 
-unsigned int CNavMeshArea::GetFlags() { return this->flags; }
+unsigned int CNavMeshArea::GetAttributes() { return this->flags; }
 
 unsigned int CNavMeshArea::GetPlaceID() { return this->placeID; }
 
@@ -98,17 +95,17 @@ float CNavMeshArea::GetNECornerZ() { return this->neCornerZ; }
 
 float CNavMeshArea::GetSWCornerZ() { return this->swCornerZ; }
 
-CList<INavMeshConnection*> CNavMeshArea::GetConnections(eNavDir dir) { return this->connections[dir]; }
+CList<INavMeshConnection*> *CNavMeshArea::GetConnections(eNavDir dir) { return &this->connections[dir]; }
 
-CList<INavMeshHidingSpot*> CNavMeshArea::GetHidingSpots() { return this->hidingSpots; }
+CList<INavMeshHidingSpot*> *CNavMeshArea::GetHidingSpots() { return &this->hidingSpots; }
 
-CList<INavMeshEncounterPath*> CNavMeshArea::GetEncounterPaths() { return this->encounterPaths; }
+CList<INavMeshEncounterPath*> *CNavMeshArea::GetEncounterPaths() { return &this->encounterPaths; }
 
-CList<INavMeshLadderConnection*> CNavMeshArea::GetLadderConnections(eNavLadderDir dir) { return this->ladderConnections[dir]; }
+CList<INavMeshLadderConnection*> *CNavMeshArea::GetLadderConnections(eNavLadderDir dir) { return &this->ladderConnections[dir]; }
 
-CList<INavMeshCornerLightIntensity*> CNavMeshArea::GetCornerLightIntensities() { return this->cornerLightIntensities; }
+CList<INavMeshCornerLightIntensity*> *CNavMeshArea::GetCornerLightIntensities() { return &this->cornerLightIntensities; }
 
-CList<INavMeshVisibleArea*> CNavMeshArea::GetVisibleAreas() { return this->visibleAreas; }
+CList<INavMeshVisibleArea*> *CNavMeshArea::GetVisibleAreas() { return &this->visibleAreas; }
 
 unsigned int CNavMeshArea::GetInheritVisibilityFromAreaID() { return this->inheritVisibilityFromAreaID; }
 
@@ -120,17 +117,17 @@ void CNavMeshArea::AddFlags(const unsigned int flags) { this->flags |= flags; }
 
 void CNavMeshArea::RemoveFlags(const unsigned int flags) { this->flags &= ~flags; }
 
-Vector CNavMeshArea::GetExtentLow()
+const Vector CNavMeshArea::GetExtentLow()
 {
 	return this->nwExtent;
 }
 
-Vector CNavMeshArea::GetExtentHigh()
+const Vector CNavMeshArea::GetExtentHigh()
 {
 	return this->seExtent;
 }
 
-Vector CNavMeshArea::GetCenter()
+const Vector CNavMeshArea::GetCenter()
 {
 	return this->center;
 }
@@ -140,48 +137,39 @@ float CNavMeshArea::GetZ(const Vector &vPos)
 	if (!vPos.IsValid())
 		return 0.0f;
 
-	Vector vExtLo = this->GetExtentLow();
-	Vector vExtHi = this->GetExtentHigh();
+	const Vector vExtLo = this->nwExtent;
+	const Vector vExtHi = this->seExtent;
 
-	float dx = vExtHi.x - vExtLo.x;
-	float dy = vExtHi.y - vExtLo.y;
+	const float dx = vExtHi.x - vExtLo.x;
+	const float dy = vExtHi.y - vExtLo.y;
 
 	// Catch divide by zero
 	if (dx == 0.0f || dy == 0.0f)
 		return this->neCornerZ;
 
-	float u = (vPos.x - vExtLo.x) / dx;
-	float v = (vPos.y - vExtLo.y) / dy;
+	const float u = clamp((vPos.x - vExtLo.x) / dx, 0.0f, 1.0f);
+	const float v = clamp((vPos.y - vExtLo.y) / dy, 0.0f, 1.0f);
 
-	if (u < 0.0f)
-		u = 0.0f;
-	else if (u > 1.0f)
-		u = 1.0f;
-
-	if (v < 0.0f)
-		v = 0.0f;
-	else if (v > 1.0f)
-		v = 1.0f;
-
-	float fNorthZ = vExtLo.z + u * (this->neCornerZ - vExtLo.z);
-	float fSouthZ = this->swCornerZ + u * (vExtHi.z - this->swCornerZ);
+	const float fNorthZ = vExtLo.z + u * (this->neCornerZ - vExtLo.z);
+	const float fSouthZ = this->swCornerZ + u * (vExtHi.z - this->swCornerZ);
 
 	return fNorthZ + v * (fSouthZ - fNorthZ);
 }
 
 float CNavMeshArea::GetZ(const float fX, const float fY)
 {
-	Vector vPos(fX, fY, 0.0f);
+	const Vector vPos(fX, fY, 0.0f);
 	return this->GetZ(vPos);
 }
 
-bool CNavMeshArea::IsOverlapping(const Vector &vPos, float flTolerance)
+bool CNavMeshArea::IsOverlapping(const Vector &vPos, const float flTolerance)
 {
-	Vector vExtLo = this->GetExtentLow();
-	Vector vExtHi = this->GetExtentHigh();
+	const Vector vExtLo = this->GetExtentLow();
+	const Vector vExtHi = this->GetExtentHigh();
 
-	if (vPos.x + flTolerance >= vExtLo.x && vPos.x - flTolerance <= vExtHi.x &&
-		vPos.y + flTolerance >= vExtLo.y && vPos.y - flTolerance <= vExtHi.y) {
+	if(vPos.x + flTolerance >= vExtLo.x && vPos.x - flTolerance <= vExtHi.x 
+	&& vPos.y + flTolerance >= vExtLo.y && vPos.y - flTolerance <= vExtHi.y)
+	{
 		return true;
 	}
 
@@ -190,18 +178,30 @@ bool CNavMeshArea::IsOverlapping(const Vector &vPos, float flTolerance)
 
 bool CNavMeshArea::IsOverlapping(INavMeshArea *toArea)
 {
-	Vector vFromExtLo = this->GetExtentLow();
-	Vector vFromExtHi = this->GetExtentHigh();
+	const Vector vFromExtLo = this->GetExtentLow();
+	const Vector vFromExtHi = this->GetExtentHigh();
 
-	Vector vToExtLo = toArea->GetExtentLow();
-	Vector vToExtHi = toArea->GetExtentHigh();
+	const Vector vToExtLo = toArea->GetExtentLow();
+	const Vector vToExtHi = toArea->GetExtentHigh();
 
-	if (vToExtLo.x < vFromExtHi.x && vToExtHi.x > vFromExtLo.x &&
-		vToExtLo.y < vFromExtHi.y && vToExtHi.y > vFromExtLo.y) {
+	if(vToExtLo.x < vFromExtHi.x && vToExtHi.x > vFromExtLo.x 
+	&& vToExtLo.y < vFromExtHi.y && vToExtHi.y > vFromExtLo.y)
+	{
 		return true;
 	}
 
 	return false;
+}
+
+INavMeshEncounterPath *CNavMeshArea::GetSpotEncounter(const int iFromID, const int iToID)
+{
+	for(INavMeshEncounterPath *e : this->encounterPaths)
+	{
+		if(e->GetFromAreaID() == iFromID && e->GetToAreaID() == iToID)
+			return e;
+	}
+
+	return nullptr;
 }
 
 void CNavMeshArea::SetTotalCost(float total) { this->m_fTotalCost = total; }
@@ -362,3 +362,13 @@ void CNavMeshArea::SetNextOpen(INavMeshArea *open) { this->m_NextOpen = open; }
 INavMeshArea *CNavMeshArea::GetPrevOpen() { return this->m_PrevOpen; }
 
 void CNavMeshArea::SetPrevOpen(INavMeshArea *open) { this->m_PrevOpen = open; }
+
+#if(SOURCE_ENGINE == SE_TF2)
+void CNavMeshArea::SetTFAttribs(unsigned int iFlags) { this->TFFlags = iFlags; }
+
+void CNavMeshArea::AddTFAttribs(unsigned int iFlags) { this->TFFlags |= iFlags; }
+
+void CNavMeshArea::RemoveTFAttribs(unsigned int iFlags) { this->TFFlags &= ~iFlags; }
+
+unsigned int CNavMeshArea::GetTFAttribs() { return this->TFFlags; }
+#endif

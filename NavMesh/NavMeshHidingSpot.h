@@ -1,7 +1,8 @@
 #ifndef __war3source_navmeshhidingspot_h__
 #define __war3source_navmeshhidingspot_h__
 
-#include "public\INavMeshHidingSpot.h"
+#include "public/INavMeshHidingSpot.h"
+#include <vector.h>
 
 
 class CNavMeshHidingSpot : public INavMeshHidingSpot
@@ -22,9 +23,9 @@ public:
 
 private:
 	unsigned int id;
-	float x;
-	float y;
-	float z;
+	
+	Vector pos;
+
 	unsigned char flags;
 };
 

@@ -1,22 +1,20 @@
-#pragma once
+#ifndef __war3source_list_h__
+#define __war3source_list_h__
 
 #include "tier1/utlvector.h"
 #include "tier0/dbg.h"
 
 
-#define ForEachItem(items, iter) \
-	for (int iter = 0, iSize = items.Count(); iter < iSize; iter++)
-
 /*
  * CUtlVector wrapper that has some helper functions
  * and automatically frees itself and the contained data
  */
-template <class T> class CList : public CUtlVector<T>
+template <class T> class CList : public CCopyableUtlVector<T>
 {
+	typedef CCopyableUtlVector<T> BaseClass;
 public:
-	CList() : CUtlVector() {}
-	CList(const CList &other) : CUtlVector() { AddVectorToTail(other); }
-	CList(int count) : CUtlVector() { EnsureCapacity(count); SetCount(count); }
+	CList() : BaseClass() {}
+	CList(int count) : BaseClass() { EnsureCapacity(count); SetCount(count); }
 	~CList() { Purge(); }
 
 	bool Push(T item) { return !!AddToTail(item); }
@@ -28,19 +26,19 @@ public:
 		return item;
 	}
 
-	const bool Resize(size_t newSize)
+	const bool Resize(int newSize)
 	{
 		SetCount(newSize);
-		return m_Size == newSize;
+		Assert(IsValidIndex(newSize));
+		return Count() == newSize;
 	}
 	
-	void Clear(bool bDelete)
+	// Shorthand for PurgeAndDeleteElements()
+	void Clear()
 	{
-		if (bDelete)
-		{
-			for (int i = 0; i < m_Size; i++)
-				delete Element(i);
-		}
+		Assert(Element(0));
+		for(int i = 0; i < Count(); i++)
+			delete Element(i);
 		Purge();
 	}
 
@@ -50,4 +48,13 @@ public:
 	{
 		return !Base();
 	}
+
+	// stdlib support and C++ 11 range looping
+	typedef T* iterator;
+	iterator begin() { return Base(); }
+	const iterator begin() const { return Base(); }
+	iterator end() { return Base() + Count(); }
+	const iterator end() const { return Base() + Count(); }
 };
+
+#endif
