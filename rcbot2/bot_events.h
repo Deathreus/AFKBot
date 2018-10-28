@@ -34,11 +34,8 @@
 #include "bot_const.h"
 
 #include <vector>
-using namespace std;
 
-class CBotEventInterface;
-class IBotEventInterface;
-
+class IGameEventListener2;
 class IGameEvent;
 
 class CBotEvent
@@ -56,42 +53,53 @@ public:
 		m_iModId = iModId;
 	}
 
-	bool ForCurrentMod();
+	const bool ForCurrentMod() const;
 
 	void SetType(char *szType);
 
-	inline bool IsType(const char *szType);
+	const bool IsType(const char *szType) const;
 
-	inline void SetActivator(edict_t *pEdict) { m_pActivator = pEdict; }
-
-	virtual void Execute(IBotEventInterface *pEvent) { return; }
+	virtual void Execute(IGameEvent *pEvent) { return; }
 
 	inline void SetEventId(int iEventId)
 	{
 		m_iEventId = iEventId;
 	}
 
-	inline bool IsEventId(int iEventId)
+	inline const bool IsEventId(int iEventId) const
 	{
 		return ForCurrentMod() && (m_iEventId == iEventId);
 	}
 
-	inline bool HasEventId()
+	inline const bool HasEventId() const
 	{
 		return (m_iEventId != -1);
 	}
 
-	const char *GetName()
+	inline const char *GetName() const
 	{
 		return m_szType;
 	}
-protected:
-	edict_t *m_pActivator;
+
 private:
 	char *m_szType;
 	int m_iEventId;
 	eModId m_iModId;
 };
+
+#if defined USE_NAVMESH
+class CNavAreaBlockedEvent : public CBotEvent
+{
+public:
+	CNavAreaBlockedEvent()
+	{
+		SetType("nav_blocked");
+		SetMod(MOD_ANY);
+	}
+
+	void Execute(IGameEvent *pEvent);
+};
+#endif
 
 class CPlayerHurtEvent : public CBotEvent
 {
@@ -102,7 +110,7 @@ public:
 		SetMod(MOD_ANY);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
 };
 
 class CPlayerDeathEvent : public CBotEvent
@@ -114,7 +122,7 @@ public:
 		SetMod(MOD_ANY);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
 };
 
 class CPlayerSpawnEvent : public CBotEvent
@@ -126,7 +134,7 @@ public:
 		SetMod(MOD_ANY);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
 };
 
 class CFlagEvent : public CBotEvent
@@ -138,7 +146,7 @@ public:
 		SetMod(MOD_TF2);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
 };
 
 class COverTimeBegin : public CBotEvent
@@ -150,7 +158,7 @@ public:
 		SetMod(MOD_TF2);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
 };
 
 class CPlayerHealed : public CBotEvent
@@ -162,19 +170,7 @@ public:
 		SetMod(MOD_TF2);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
-};
-
-class CBulletImpactEvent : public CBotEvent
-{
-public:
-	CBulletImpactEvent()
-	{
-		SetType("bullet_impact");
-		SetMod(MOD_TF2);
-	}
-
-	void Execute(IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
 };
 
 class CTF2RoundWinEvent : public CBotEvent
@@ -186,7 +182,7 @@ public:
 		SetMod(MOD_TF2);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
 };
 
 class CPlayerTeleported : public CBotEvent
@@ -198,7 +194,7 @@ public:
 		SetMod(MOD_TF2);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
 };
 
 class CTF2ObjectSapped : public CBotEvent
@@ -210,7 +206,7 @@ public:
 		SetMod(MOD_TF2);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
 };
 
 class CTF2ObjectDestroyed : public CBotEvent
@@ -222,7 +218,7 @@ public:
 		SetMod(MOD_TF2);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
 };
 
 class CTF2PointCaptured : public CBotEvent
@@ -234,7 +230,7 @@ public:
 		SetMod(MOD_TF2);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
 };
 
 class CTF2RoundActive : public CBotEvent
@@ -246,7 +242,7 @@ public:
 		SetMod(MOD_TF2);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
 };
 
 class CTF2PointStopCapture : public CBotEvent
@@ -258,7 +254,7 @@ public:
 		SetMod(MOD_TF2);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
 };
 
 class CTF2PointBlockedCapture : public CBotEvent
@@ -270,7 +266,7 @@ public:
 		SetMod(MOD_TF2);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
 };
 
 class CTF2PointStartCapture : public CBotEvent
@@ -282,7 +278,7 @@ public:
 		SetMod(MOD_TF2);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
 };
 
 
@@ -295,7 +291,7 @@ public:
 		SetMod(MOD_TF2);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
 };
 
 class CTF2MVMWaveCompleteEvent : public CBotEvent
@@ -307,7 +303,7 @@ public:
 		SetMod(MOD_TF2);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
 };
 
 class CTF2PointStartTouch : public CBotEvent
@@ -319,7 +315,7 @@ public:
 		SetMod(MOD_TF2);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
 };
 
 class CTF2PointEndTouch : public CBotEvent
@@ -331,7 +327,7 @@ public:
 		SetMod(MOD_TF2);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
 };
 
 class CTF2RoundStart : public CBotEvent
@@ -343,7 +339,7 @@ public:
 		SetMod(MOD_TF2);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
 };
 
 class CTF2SetupFinished : public CBotEvent
@@ -355,19 +351,7 @@ public:
 		SetMod(MOD_TF2);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
-};
-
-class CTF2ObjectDestroyedEvent : public CBotEvent
-{
-public:
-	CTF2ObjectDestroyedEvent()
-	{
-		SetType("object_destroyed");
-		SetMod(MOD_TF2);
-	}
-
-	void Execute(IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
 };
 
 class CTF2BuiltObjectEvent : public CBotEvent
@@ -379,7 +363,7 @@ public:
 		SetMod(MOD_TF2);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
 };
 
 class CTF2UpgradeObjectEvent : public CBotEvent
@@ -391,7 +375,7 @@ public:
 		SetMod(MOD_TF2);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
 };
 
 class CTF2ChangeClass : public CBotEvent
@@ -403,7 +387,7 @@ public:
 		SetMod(MOD_TF2);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
 };
 
 class CBossSummonedEvent : public CBotEvent
@@ -415,7 +399,7 @@ public:
 		SetMod(MOD_TF2);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
 };
 
 class CBossKilledEvent : public CBotEvent
@@ -427,8 +411,7 @@ public:
 		SetMod(MOD_TF2);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
-
+	void Execute(IGameEvent *pEvent);
 };
 
 class CTF2PointLocked : public CBotEvent
@@ -440,7 +423,7 @@ public:
 		SetMod(MOD_TF2);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
 };
 
 class CTF2PointUnlocked : public CBotEvent
@@ -452,7 +435,7 @@ public:
 		SetMod(MOD_TF2);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
 };
 
 class CTF2MannVsMachineAlarm : public CBotEvent
@@ -464,7 +447,7 @@ public:
 		SetMod(MOD_TF2);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
 };
 
 class CFlagCaptured : public CBotEvent
@@ -476,259 +459,201 @@ public:
 		SetMod(MOD_TF2);
 	}
 
-	void Execute(IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
 };
 
-/*class CRoundStartEvent : public CBotEvent
+class CRoundStartEvent : public CBotEvent
 {
 public:
-CRoundStartEvent()
-{
-SetType("round_start");
-SetMod(MOD_CSS);
-}
+	CRoundStartEvent()
+	{
+		SetType("round_start");
+		SetMod(MOD_CSS);
+	}
 
-void Execute (IBotEventInterface *pEvent);
+	void Execute(IGameEvent *pEvent);
+};
+
+class CBulletImpactEvent : public CBotEvent
+{
+public:
+	CBulletImpactEvent()
+	{
+		SetType("bullet_impact");
+		SetMod(MOD_CSS);
+	}
+
+	void Execute(IGameEvent *pEvent);
+};
+
+class CPlayerFootstepEvent : public CBotEvent
+{
+public:
+	CPlayerFootstepEvent()
+	{
+		SetType("player_footstep");
+		SetMod(MOD_CSS);
+	}
+
+	void Execute(IGameEvent *pEvent);
 };
 
 class CBombPickupEvent : public CBotEvent
 {
 public:
-CBombPickupEvent()
-{
-SetType("bomb_pickup");
-SetMod(MOD_CSS);
-}
+	CBombPickupEvent()
+	{
+		SetType("bomb_pickup");
+		SetMod(MOD_CSS);
+	}
 
-void Execute ( IBotEventInterface *pEvent );
+	void Execute(IGameEvent *pEvent);
 };
 
 class CBombDroppedEvent : public CBotEvent
 {
 public:
-CBombDroppedEvent()
-{
-SetType("bomb_dropped");
-SetMod(MOD_CSS);
-}
+	CBombDroppedEvent()
+	{
+		SetType("bomb_dropped");
+		SetMod(MOD_CSS);
+	}
 
-void Execute ( IBotEventInterface *pEvent );
+	void Execute(IGameEvent *pEvent);
 };
 
-class CDODFireWeaponEvent : public CBotEvent
+/*class CDODFireWeaponEvent : public CBotEvent
 {
 public:
-CDODFireWeaponEvent()
-{
-SetType("dod_stats_weapon_attack");
-SetMod(MOD_DOD);
-}
+	CDODFireWeaponEvent()
+	{
+		SetType("dod_stats_weapon_attack");
+		SetMod(MOD_DOD);
+	}
 
-void Execute ( IBotEventInterface *pEvent );
+	void Execute(IGameEvent *pEvent);
 };
 
 class CDODBombExploded : public CBotEvent
 {
 public:
-CDODBombExploded()
-{
-SetType("dod_bomb_exploded");
-SetMod(MOD_DOD);
-}
+	CDODBombExploded()
+	{
+		SetType("dod_bomb_exploded");
+		SetMod(MOD_DOD);
+	}
 
-void Execute ( IBotEventInterface *pEvent );
+	void Execute(IGameEvent *pEvent);
 };
 
 class CDODBombPlanted : public CBotEvent
 {
 public:
-CDODBombPlanted()
-{
-SetType("dod_bomb_planted");
-SetMod(MOD_DOD);
-}
+	CDODBombPlanted()
+	{
+		SetType("dod_bomb_planted");
+		SetMod(MOD_DOD);
+	}
 
-void Execute ( IBotEventInterface *pEvent );
+	void Execute(IGameEvent *pEvent);
 };
 
 class CDODBombDefused : public CBotEvent
 {
 public:
-CDODBombDefused()
-{
-SetType("dod_bomb_defused");
-SetMod(MOD_DOD);
-}
+	CDODBombDefused()
+	{
+		SetType("dod_bomb_defused");
+		SetMod(MOD_DOD);
+	}
 
-void Execute ( IBotEventInterface *pEvent );
+	void Execute(IGameEvent *pEvent);
 };
 
 class CDODPointCaptured : public CBotEvent
 {
 public:
-CDODPointCaptured()
-{
-SetType("dod_point_captured");
-SetMod(MOD_DOD);
-}
+	CDODPointCaptured()
+	{
+		SetType("dod_point_captured");
+		SetMod(MOD_DOD);
+	}
 
-void Execute ( IBotEventInterface *pEvent );
+	void Execute(IGameEvent *pEvent);
 };
 
 class CDODChangeClass : public CBotEvent
 {
 public:
-CDODChangeClass()
-{
-SetType("player_changeclass");
-SetMod(MOD_DOD);
-}
+	CDODChangeClass()
+	{
+		SetType("player_changeclass");
+		SetMod(MOD_DOD);
+	}
 
-void Execute ( IBotEventInterface *pEvent );
+	void Execute(IGameEvent *pEvent);
 };
 
 class CDODRoundStart : public CBotEvent
 {
 public:
-CDODRoundStart()
-{
-SetType("dod_round_start");
-SetMod(MOD_DOD);
-}
+	CDODRoundStart()
+	{
+		SetType("dod_round_start");
+		SetMod(MOD_DOD);
+	}
 
-void Execute ( IBotEventInterface *pEvent );
+	void Execute(IGameEvent *pEvent);
 };
 
 class CDODRoundActive : public CBotEvent
 {
 public:
-CDODRoundActive()
-{
-SetType("dod_round_active");
-SetMod(MOD_DOD);
-}
+	CDODRoundActive()
+	{
+		SetType("dod_round_active");
+		SetMod(MOD_DOD);
+	}
 
-void Execute ( IBotEventInterface *pEvent );
+	void Execute(IGameEvent *pEvent);
 };
 
 class CDODRoundWin : public CBotEvent
 {
 public:
-CDODRoundWin()
-{
-SetType("dod_round_win");
-SetMod(MOD_DOD);
-}
+	CDODRoundWin()
+	{
+		SetType("dod_round_win");
+		SetMod(MOD_DOD);
+	}
 
-void Execute ( IBotEventInterface *pEvent );
+	void Execute(IGameEvent *pEvent);
 };
 
 class CDODRoundOver : public CBotEvent
 {
 public:
-CDODRoundOver()
-{
-SetType("dod_game_over");
-SetMod(MOD_DOD);
-}
+	CDODRoundOver()
+	{
+		SetType("dod_game_over");
+		SetMod(MOD_DOD);
+	}
 
-void Execute ( IBotEventInterface *pEvent );
+	void Execute(IGameEvent *pEvent);
 };*/
 
-typedef enum
-{
-	TYPE_KEYVALUES = 0,
-	TYPE_IGAMEEVENT = 1
-}eBotEventType;
-
-class IBotEventInterface
-{
-public:
-	virtual float GetFloat(const char *keyName = 0, float defaultValue = 0) = 0;
-	virtual int GetInt(const char *keyName = 0, int defaultValue = 0) = 0;
-	virtual const char *GetString(const char *keyName = 0, const char *defaultValue = 0) = 0;
-	virtual const char *GetName() = 0;
-	virtual void SetInt(const char *keyName, int value) = 0;
-};
-
-class CGameEventInterface1 : public IBotEventInterface
-{
-public:
-	CGameEventInterface1(KeyValues *pEvent)
-	{
-		m_pEvent = pEvent;
-	}
-
-	float GetFloat(const char *keyName = 0, float defaultValue = 0)
-	{
-		return m_pEvent->GetFloat(keyName, defaultValue);
-	}
-	int GetInt(const char *keyName = 0, int defaultValue = 0)
-	{
-		return m_pEvent->GetInt(keyName, defaultValue);
-	}
-	void SetInt(const char *keyName, int value)
-	{
-		m_pEvent->SetInt(keyName, value);
-	}
-	const char *GetString(const char *keyName = 0, const char *defaultValue = 0)
-	{
-		return m_pEvent->GetString(keyName, defaultValue);
-	}
-	const char *GetName()
-	{
-		return m_pEvent->GetName();
-	}
-
-private:
-	KeyValues *m_pEvent;
-};
-
-class CGameEventInterface2 : public IBotEventInterface
-{
-public:
-	CGameEventInterface2(IGameEvent *pEvent)
-	{
-		m_pEvent = pEvent;
-	}
-
-	float GetFloat(const char *keyName = 0, float defaultValue = 0)
-	{
-		return m_pEvent->GetFloat(keyName, defaultValue);
-	}
-	int GetInt(const char *keyName = 0, int defaultValue = 0)
-	{
-		return m_pEvent->GetInt(keyName, defaultValue);
-	}
-	void SetInt(const char *keyName, int value)
-	{
-		m_pEvent->SetInt(keyName, value);
-	}
-	const char *GetString(const char *keyName = 0, const char *defaultValue = 0)
-	{
-		return m_pEvent->GetString(keyName, defaultValue);
-	}
-
-	const char *GetName()
-	{
-		return m_pEvent->GetName();
-	}
-private:
-	IGameEvent *m_pEvent;
-};
-
-class CBotEvents
+class CBotEvents : public IGameEventListener2
 {
 public:
 	static void SetupEvents();
 
-	static void ExecuteEvent(IGameEvent *pEvent, eBotEventType iType);
+	virtual void FireGameEvent(IGameEvent *pEvent);
 
 	static void FreeMemory();
 
 	static void AddEvent(CBotEvent *pEvent);
 
 private:
-	static vector<CBotEvent*> m_theEvents;
+	static std::vector<CBotEvent*> m_theEvents;
 };
 #endif
