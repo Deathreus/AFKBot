@@ -283,6 +283,7 @@ class ExtensionConfig(object):
       'uuid.lib',
       'odbc32.lib',
       'odbccp32.lib',
+	  'legacy_stdio_definitions.lib'
     ]
 
     if builder.options.opt == '1':
@@ -325,10 +326,13 @@ class ExtensionConfig(object):
 
   def ConfigureForExtension(self, context, compiler):
     compiler.includes += [
+      context.currentSourcePath,
       os.path.join(context.currentSourcePath, 'sdk'),
       os.path.join(context.currentSourcePath, 'rcbot'),
       os.path.join(context.currentSourcePath, 'NavMesh'),
     ]
+    compiler.defines += ['_CRT_NO_VA_START_VALIDATION']
+    compiler.linkflags += ['legacy_stdio_definitions.lib']
     return compiler
 
   def ConfigureForHL2(self, binary, sdk):
