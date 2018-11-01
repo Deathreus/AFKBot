@@ -80,6 +80,12 @@
 				"linux"		"14"
 				"mac"		"14"
 			}
+			
+			"team_control_point_master"
+			{
+				"windows"	"856"
+				"linux"		"876"
+			}
 		}
 		"Signatures"
 		{
