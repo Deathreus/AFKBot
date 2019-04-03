@@ -55,7 +55,7 @@
 #endif // USE_NAVMESH
 
 #define GAMERULES_FRAME_ACTION \
-	[](void *) {													\
+	[](void *) -> void {											\
 		char error[288] = "";										\
 		if(!CGameRulesObject::GetGameRules(error, sizeof(error)))	\
 		{															\
@@ -76,8 +76,7 @@ SH_DECL_HOOK1_void(IServerGameClients, ClientCommand, SH_NOATTRIB, 0, edict_t *)
 SH_DECL_HOOK1_void(IServerPluginHelpers, ClientCommand, SH_NOATTRIB, 0, edict_t *)
 #endif
 
-AFKBot g_AFKBot;
-SMEXT_LINK(&g_AFKBot)
+SMEXT_EXPOSE(AFKBot)
 FILE *AFKBot::m_pLogFile = NULL;
 
 IServerTools *servertools = NULL;	// usefull entity finder funcs
@@ -104,7 +103,7 @@ void EnabledValueChanged(IConVar *var, const char *pOldValue, float flOldValue);
 void DebugValueChanged(IConVar *var, const char *pOldValue, float flOldValue);
 
 ConVar bot_version("afkbot_version", SMEXT_CONF_VERSION, FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_DONTRECORD|FCVAR_NOTIFY, BOT_NAME_VER);
-ConVar bot_enabled("afkbot_enabled", "1", FCVAR_NOTIFY, "Enable turning players into bots?", true, 0.0f, true, 1.0f, &EnabledValueChanged);
+ConVar bot_enabled("afkbot_enabled", "1", 0, "Enable turning players into bots?", true, 0.0f, true, 1.0f, &EnabledValueChanged);
 ConVar bot_tags("afkbot_tag", "0", FCVAR_SPONLY|FCVAR_NOTIFY, "Add a tag onto the server to show it has this extension?", true, 0.0f, true, 1.0f);
 ConVar bot_debug("afkbot_debug_enable", "0", FCVAR_HIDDEN|FCVAR_NOTIFY, "Enable debugging? Writes to a log file.", true, 0.0f, true, 1.0f, &DebugValueChanged);
 ConVar bot_debug_verbose("afkbot_debug_verbose", "0", FCVAR_HIDDEN|FCVAR_NOTIFY, "Turn on verbose debugging? This will make the log file real big real fast", true, 0.0f, true, 1.0f);
@@ -119,25 +118,26 @@ void EnabledValueChanged(IConVar *var, const char *pOldValue, float flOldValue)
 void DebugValueChanged(IConVar *var, const char *pOldValue, float flOldValue)
 {
 	if(bot_debug.GetBool())
-		g_AFKBot.BeginLogging(!bot_log_resets.GetBool());
+		AFKBot::BeginLogging(bot_log_resets.GetBool());
 	else
-		g_AFKBot.EndLogging();
+		AFKBot::EndLogging();
 }
 
-static float s_fNextClientCommand[MAX_PLAYERS];
 #if SOURCE_ENGINE >= SE_ORANGEBOX
-void RateLimitedClientCommand(edict_t *pClient, const char *args)
+#define HELPER_ARGS edict_t *pClient, const char *args
 #else
-void RateLimitedClientCommand(edict_t *pClient)
+#define HELPER_ARGS edict_t *pClient
 #endif
+
+static float s_fNextClientCommand[MAX_PLAYERS];
+void RateLimitedClientCommand(HELPER_ARGS)
 {
 	if(bot_enabled.GetBool())
 	{
-		int iClient = ENTINDEX(pClient) % (MAX_PLAYERS-1);
-		if(s_fNextClientCommand[iClient] > gpGlobals->curtime)
+		if(s_fNextClientCommand[SlotOfEdict(pClient)] > gpGlobals->curtime)
 			RETURN_META(MRES_SUPERCEDE);
 
-		s_fNextClientCommand[iClient] = gpGlobals->curtime + 0.33;
+		s_fNextClientCommand[SlotOfEdict(pClient)] = gpGlobals->curtime + 0.33;
 	}
 
 	RETURN_META(MRES_IGNORED);
@@ -149,11 +149,11 @@ void RateLimitedClientCommand(edict_t *pClient)
 class ECommand
 {
 public:
-	ECommand() { Assert(engine); }
+	ECommand() { Assert( engine ); }
 	const char *Arg(int n) const { return engine->Cmd_Argv(n); }
 	int ArgC() const { return engine->Cmd_Argc(); }
 	const char *ArgS() const { return engine->Cmd_Args(); }
-	const char *operator[](int n) const { return engine->Cmd_Argv(n); }
+	const char *operator[](int n) const { return this->Arg(n); }
 };
 
 #define COMMAND_ARGS edict_t *pClient
@@ -168,7 +168,7 @@ void OnClientCommand(COMMAND_ARGS)
 	ECommand args;
 #endif
 
-	if(CBotGlobals::m_pCommands->IsCommand(args.Arg(0)))
+	if(CBotGlobals::m_pCommands->IsCommand(args[0]))
 	{
 		eBotCommandResult iResult = CBotGlobals::m_pCommands->Execute(pClient, args[1], args[2], args[3], args[4], args[5], args[6]);
 		switch(iResult)
@@ -190,13 +190,13 @@ void OnClientCommand(COMMAND_ARGS)
 	}
 
 	// Capture voice commands
-	CBotGlobals::GetCurrentMod()->ClientCommand(pClient, args.ArgC(), args.Arg(0), args.Arg(1), args.Arg(2));
+	CBotGlobals::GetCurrentMod()->ClientCommand(pClient, args.ArgC(), args[0], args[1], args[2]);
 	RETURN_META(MRES_IGNORED);
 }
 
 void PlayerRunCmd(CUserCmd *pCmd, IMoveHelper *pMoveHelper)
 {
-	if (bot_stop.GetBool())
+	if (bot_stop.GetBool() || !CBotGlobals::IsMapRunning())
 	{
 		RETURN_META(MRES_IGNORED);
 	}
@@ -288,16 +288,22 @@ void AFKBot::OnCoreMapStart(edict_t *pEdictList, int edictCount, int clientMax)
 {
 	if(bot_debug.GetBool())
 	{
-		BeginLogging(!bot_log_resets.GetBool());
-		smutils->LogMessage(myself, "%i - %i", clientMax, gpGlobals->maxClients);
+		BeginLogging(bot_log_resets.GetBool());
 	}
 
 	// Must set this
 	CBotGlobals::SetMapName(gpGlobals->mapname);
 	CBotGlobals::SetMapRunning(true);
 
-#if defined USE_NAVMESH
 	char error[288] = "";
+	if(!CGameRulesObject::GetGameRules(error, sizeof(error)))
+	{
+		smutils->LogError(myself, error);
+		CBotGlobals::SetMapRunning(false);
+		return;
+	}
+
+#if defined USE_NAVMESH
 	g_pNavMesh = CNavMeshLoader::Load(error, sizeof(error));
 	if (error && *error)
 	{
@@ -335,6 +341,7 @@ void AFKBot::OnCoreMapEnd()
 	CBotGlobals::SetMapRunning(false);
 	CBots::FreeMapMemory();
 	CBotEvents::FreeMemory();
+	CGameRulesObject::FreeMemory();
 
 	if (bot_debug.GetBool())
 	{
@@ -344,9 +351,6 @@ void AFKBot::OnCoreMapEnd()
 
 bool AFKBot::SDK_OnLoad(char *error, size_t maxlength, bool late)
 {
-	sharesys->AddDependency(myself, "sdktools.ext", true, true);
-	sharesys->AddDependency(myself, "bintools.ext", true, true);
-
 	char conf_error[255] = "";
 	if (!gameconfs->LoadGameConfigFile("afk.games", &g_pGameConf, conf_error, sizeof(conf_error)))
 	{
@@ -376,6 +380,9 @@ bool AFKBot::SDK_OnLoad(char *error, size_t maxlength, bool late)
 		bot_const_point_master_offset.SetValue(iOffset);
 		bot_const_round_offset.SetValue(iOffset);
 	}
+
+	sharesys->AddDependency(myself, "sdktools.ext", true, true);
+	sharesys->AddDependency(myself, "bintools.ext", true, true);
 
 	// Register natives for Pawn
 	extern sp_nativeinfo_t g_ExtensionNatives[];
@@ -656,6 +663,7 @@ void AFKBot::BeginLogging(bool bReset)
 
 void AFKBot::EndLogging()
 {
+	Assert( m_pLogFile );
 	smutils->LogMessage(myself, "End logging session");
 	fclose(m_pLogFile);
 }
