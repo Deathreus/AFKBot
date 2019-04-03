@@ -2,7 +2,12 @@
 #define __RCBOT_GETPROP_H__
 
 #include "bot_gamerules.h"
-#include "server_class.h"
+
+#include <server_class.h>
+
+#include <limits>
+#include <type_traits>
+#include <typeinfo>
 
 class CTFObjectiveResource;
 class CTeamRoundTimer;
@@ -13,6 +18,372 @@ typedef enum
 	TELE_ENTRANCE = 0,
 	TELE_EXIT
 }eTeleMode;
+
+namespace SourceMod
+{
+#define FIND_PROP_DATA() \
+	datamap_t *pMap; \
+	if ((pMap = gamehelpers->GetDataMap(pEntity)) == NULL) \
+	{ \
+		return {0}; \
+	} \
+	sm_datatable_info_t info; \
+	if (!gamehelpers->FindDataMapInfo(pMap, prop, &info)) \
+	{ \
+		return {0}; \
+	} \
+	typedescription_t *td = info.prop
+
+#define CHECK_SET_PROP_DATA_OFFSET() \
+	if (element < 0 || element >= td->fieldSize) \
+	{ \
+		smutils->LogError(myself, "Element %d is outside of array bounds", element); \
+		return {0}; \
+	} \
+	int offset = info.actual_offset + (element * (td->fieldSizeInBytes / td->fieldSize))
+
+#define FIND_PROP_SEND() \
+	IServerNetworkable *pNet = pEdict->GetNetworkable(); \
+	if (!pNet) \
+	{ \
+		smutils->LogError(myself, "Edict %d is not networkable", \
+						  gamehelpers->EntityToReference(pEntity)); \
+		return {0}; \
+	} \
+	sm_sendprop_info_t info; \
+	if (!gamehelpers->FindSendPropInfo(pNet->GetServerClass()->GetName(), prop, &info)) \
+	{ \
+		smutils->LogError(myself, "Prop '%s' not found on edict(%d)", \
+						  prop, \
+						  gamehelpers->EntityToReference(pEntity));	 \
+		return {0}; \
+	} \
+	int offset = info.actual_offset; \
+	SendProp *pProp = info.prop; \
+	int bit_count = pProp->m_nBits
+
+#define FIND_PROP_IF_SENDTABLE() \
+	if(pProp->GetType() == DPT_DataTable) \
+	{ \
+		SendTable *pTable = pProp->GetDataTable(); \
+		if (!pTable) \
+		{ \
+			smutils->LogError(myself, "Unknown error looking up SendTable."); \
+			return {0}; \
+		} \
+		\
+		int elementCount = pTable->GetNumProps(); \
+		if (element < 0 || element >= elementCount) \
+		{ \
+			smutils->LogError(myself, "Element %d is outside of array bounds", element); \
+			return {0}; \
+		} \
+		\
+		pProp = pTable->GetProp(element); \
+		offset += pProp->GetOffset(); \
+	} \
+	bit_count = pProp->m_nBits
+
+#define CHECK_TYPE_VALID_IF_VARIANT(type, typeName) \
+	if (td->fieldType == FIELD_CUSTOM && (td->flags & FTYPEDESC_OUTPUT) == FTYPEDESC_OUTPUT) \
+	{ \
+		variant_t *pVariant = (variant_t *)((intptr_t)pEntity + offset); \
+		if (pVariant->fieldType != type) \
+		{ \
+			smutils->LogError(myself, "Variant value for %s is not %s (%d)", \
+							  prop, \
+							  typeName, \
+							  pVariant->fieldType); \
+			return {0}; \
+		} \
+	}
+
+#define SET_TYPE_IF_VARIANT(type) \
+	if (td->fieldType == FIELD_CUSTOM && (td->flags & FTYPEDESC_OUTPUT) == FTYPEDESC_OUTPUT) \
+	{ \
+		variant_t *pVariant = (variant_t *)((intptr_t)pEntity + offset); \
+		pVariant->fieldType = type;	\
+	}
+
+
+
+int GetEntPropArraySize(edict_t *pEdict, const char *prop);
+int MatchFieldAsInteger(int field_type);
+
+template<typename T>
+T GetEntSend(edict_t *pEdict, const char *prop, int element = 0)
+{
+	CBaseEntity *pEntity = gameents->EdictToBaseEntity(pEdict);
+	Assert( pEntity );
+
+	if(element && !GetEntPropArraySize(pEdict, prop))
+	{
+		return { 0 };
+	}
+
+	FIND_PROP_SEND();
+	FIND_PROP_IF_SENDTABLE();
+
+	const SendPropType type = pProp->GetType();
+
+	if(type >= DPT_Int && type <= DPT_VectorXY)
+	{
+		if(type == DPT_Int)
+		{
+			if(!std::is_assignable<T&, int>::value)
+			{
+				smutils->LogError(myself, "SendProp expected to be an int, but we tried to use %s.  Property %s", typeid(T).name(), prop);
+				return 0;
+			}
+
+			bool is_unsigned = ((pProp->GetFlags() & SPROP_UNSIGNED) == SPROP_UNSIGNED);
+			if(pProp->GetFlags() & SPROP_VARINT)
+			{
+				bit_count = sizeof(int) * 8;
+			}
+
+			if(bit_count < 1)
+			{
+				bit_count = std::numeric_limits<T>::digits;
+			}
+
+			AFKBot::VerboseDebugMessage(__FUNCTION__ ": Property %s data: Type %d\tBits %u\tAddress %p\tValue %d", prop, type, bit_count, (T*)((uint8_t *)pEntity + offset), *(T*)((uint8_t *)pEntity + offset));
+
+			if(bit_count >= 17)
+			{
+				return *(int32_t *)((uint8_t *)pEntity + offset);
+			}
+			else if(bit_count >= 9)
+			{
+				if(is_unsigned)
+				{
+					return *(uint16_t *)((uint8_t *)pEntity + offset);
+				}
+				else
+				{
+					return *(int16_t *)((uint8_t *)pEntity + offset);
+				}
+			}
+			else if(bit_count >= 2)
+			{
+				if(is_unsigned)
+				{
+					return *(uint8_t *)((uint8_t *)pEntity + offset);
+				}
+				else
+				{
+					return *(int8_t *)((uint8_t *)pEntity + offset);
+				}
+			}
+			else
+			{
+				return *(bool *)((uint8_t *)pEntity + offset);
+			}
+		}
+
+		AFKBot::VerboseDebugMessage(__FUNCTION__ ": Property %s data: Type %d\tBits %u\tAddress %p\tValue %d", prop, type, bit_count, (T*)((uint8_t *)pEntity + offset), *(T*)((uint8_t *)pEntity + offset));
+
+		return *(T *)((uint8_t *)pEntity + offset);
+	}
+
+	return { 0 };
+}
+
+template<typename T>
+bool SetEntSend(edict_t *pEdict, const char *prop, T value, int element = 0)
+{
+	CBaseEntity *pEntity = gameents->EdictToBaseEntity(pEdict);
+	Assert( pEntity );
+
+	if(element && !GetEntPropArraySize(pEdict, prop, element))
+	{
+		smutils->LogError(myself, "SendProp \"%s\" is not an array.", prop);
+		return false;
+	}
+
+	FIND_PROP_SEND();
+	FIND_PROP_IF_SENDTABLE();
+
+	switch(pProp->GetType())
+	{
+		case DPT_Int:
+		{
+			if(!std::is_assignable<int&, T>::value)
+			{
+				smutils->LogError(myself, "SendProp expected to be an int, but we tried to use %s.  Property %s", typeid(T).name(), prop);
+				return false;
+			}
+
+			if(pProp->GetFlags() & SPROP_VARINT)
+			{
+				bit_count = sizeof(int) * 8;
+			}
+
+			if(bit_count < 1)
+			{
+				bit_count = std::numeric_limits<T>::digits;
+			}
+
+			if(bit_count >= 17)
+			{
+				*(int32_t *)((uint8_t *)pEntity + offset) = (int32_t)value;
+			}
+			else if(bit_count >= 9)
+			{
+				*(int16_t *)((uint8_t *)pEntity + offset) = (int16_t)value;
+			}
+			else if(bit_count >= 2)
+			{
+				*(int8_t *)((uint8_t *)pEntity + offset) = (int8_t)value;
+			}
+			else
+			{
+				*(bool *)((uint8_t *)pEntity + offset) = (bool)value;
+			}
+
+			gamehelpers->SetEdictStateChanged(pEdict, offset);
+
+			return true;
+		}
+		case DPT_Float:
+		{
+			*(float *)((uint8_t *)pEntity + offset) = value;
+
+			gamehelpers->SetEdictStateChanged(pEdict, offset);
+
+			return true;
+		}
+		case DPT_Vector:
+		case DPT_VectorXY:
+		{
+			*(Vector *)((uint8_t *)pEntity + offset) = value;
+
+			gamehelpers->SetEdictStateChanged(pEdict, offset);
+
+			return true;
+		}
+	}
+
+	return false;
+}
+
+const char *GetEntSendString(edict_t *pEdict, const char *prop, int element = 0);
+bool SetEntSendString(edict_t *pEdict, const char *prop, const char *value, int element = 0);
+edict_t *GetEntSendEnt(edict_t *pEdict, const char *prop, int element = 0);
+bool SetEntSendEnt(edict_t *pEdict, const char *prop, edict_t *value, int element = 0);
+
+template<typename T>
+T GetEntData(edict_t *pEdict, const char *prop, int element = 0)
+{
+	CBaseEntity *pEntity = gameents->EdictToBaseEntity(pEdict);
+	Assert( pEntity );
+
+	FIND_PROP_DATA();
+	int bit_count = MatchFieldAsInteger(td->fieldType);
+	CHECK_SET_PROP_DATA_OFFSET();
+
+	if(bit_count < 1)
+	{
+		bit_count = std::numeric_limits<T>::digits;
+	}
+
+	if(td->fieldType == FIELD_FLOAT || td->fieldType == FIELD_TIME
+	|| td->fieldType == FIELD_VECTOR || td->fieldType == FIELD_POSITION_VECTOR)
+	{
+		AFKBot::VerboseDebugMessage(__FUNCTION__ ": Property %s data: Type %d\tBits %u\tAddress %p\tValue %d", prop, td->fieldType, bit_count, (T*)((uint8_t *)pEntity + offset), *(T*)((uint8_t *)pEntity + offset));
+		return *(T *)((uint8_t *)pEntity + offset);
+	}
+	else
+	{
+		AFKBot::VerboseDebugMessage(__FUNCTION__ ": Property %s data: Type %d\tBits %u\tAddress %p\tValue %d", prop, td->fieldType, bit_count, (T*)((uint8_t *)pEntity + offset), *(T*)((uint8_t *)pEntity + offset));
+
+		if(bit_count >= 17)
+		{
+			return *(int32_t *)((uint8_t *)pEntity + offset);
+		}
+		else if(bit_count >= 9)
+		{
+			return *(int16_t *)((uint8_t *)pEntity + offset);
+		}
+		else if(bit_count >= 2)
+		{
+			return *(int8_t *)((uint8_t *)pEntity + offset);
+		}
+		else
+		{
+			return *(bool *)((uint8_t *)pEntity + offset);
+		}
+	}
+
+	return { 0 };
+}
+
+template<typename T>
+bool SetEntData(edict_t *pEdict, const char *prop, T value, int element = 0)
+{
+	CBaseEntity *pEntity = gameents->EdictToBaseEntity(pEdict);
+	Assert( pEntity );
+
+	FIND_PROP_DATA();
+	int bit_count = MatchFieldAsInteger(td->fieldType);
+	CHECK_SET_PROP_DATA_OFFSET();
+
+	if(bit_count < 1)
+	{
+		bit_count = std::numeric_limits<T>::digits;
+	}
+
+	if(td->fieldType == FIELD_VECTOR || td->fieldType == FIELD_POSITION_VECTOR)
+	{
+		if(td->fieldType == FIELD_CUSTOM && (td->flags & FTYPEDESC_OUTPUT) == FTYPEDESC_OUTPUT)
+		{
+			variant_t *pVariant = (variant_t *)((intptr_t)pEntity + offset);
+			// Both of these are supported and we don't know which is intended. But, if it's already
+			// a pos vector, we probably want to keep that.
+			if(pVariant->fieldType != FIELD_POSITION_VECTOR)
+			{
+				pVariant->fieldType = FIELD_VECTOR;
+			}
+		}
+
+		*(Vector *)((uint8_t *)pEntity + offset) = value;
+	}
+	else if(td->fieldType == FIELD_FLOAT || td->fieldType == FIELD_TIME)
+	{
+		SET_TYPE_IF_VARIANT(FIELD_FLOAT);
+
+		*(float *)((uint8_t *)pEntity + offset) = value;
+	}
+	else
+	{
+		SET_TYPE_IF_VARIANT(FIELD_INTEGER);
+
+		if(bit_count >= 17)
+		{
+			*(int32_t *)((uint8_t *)pEntity + offset) = (int32_t)value;
+		}
+		else if(bit_count >= 9)
+		{
+			*(int16_t *)((uint8_t *)pEntity + offset) = (int16_t)value;
+		}
+		else if(bit_count >= 2)
+		{
+			*(int8_t *)((uint8_t *)pEntity + offset) = (int8_t)value;
+		}
+		else
+		{
+			*(bool *)((uint8_t *)pEntity + offset) = (bool)value;
+		}
+	}
+
+	return true;
+}
+
+const char *GetEntDataString(edict_t *pEdict, const char *prop, int element = 0);
+bool SetEntDataString(edict_t *pEdict, const char *prop, const char *value, int element = 0);
+edict_t *GetEntDataEnt(edict_t *pEdict, const char *prop, int element = 0);
+bool SetEntDataEnt(edict_t *pEdict, const char *prop, edict_t *value, int element = 0);
+};
 
 typedef enum
 {
@@ -35,17 +406,15 @@ typedef enum
 	GETPROP_SEQUENCE,
 	GETPROP_CYCLE,
 	GETPROP_ENTITYFLAGS,
-	GETPROP_MOVETYPE,
 	GETPROP_ENTOWNER,
 	GETPROP_GROUND_ENTITY,
 	GETPROP_ORIGIN,
 	GETPROP_WATERLEVEL,
-	GETPROP_SENTRY_ENEMY,
-	GETPROP_TF2OBJECTSHELLS,
-	GETPROP_TF2OBJECTROCKETS,
+	GETPROP_TF2SENTRY_ENEMY,
+	GETPROP_TF2SENTRY_SHELLS,
+	GETPROP_TF2SENTRY_ROCKETS,
 	GETPROP_TF2SCORE,
 	GETPROP_TF2_NUMHEALERS,
-	GETPROP_TF2_CONDITIONS,
 	GETPROP_TF2CLASS,
 	GETPROP_TF2SPYMETER,
 	GETPROP_TF2SPYDISGUISED_TEAM,
@@ -54,20 +423,18 @@ typedef enum
 	GETPROP_TF2SPYDISGUISED_DIS_HEALTH,
 	GETPROP_TF2MEDIGUN_HEALING,
 	GETPROP_TF2MEDIGUN_TARGETTING,
-	GETPROP_TF2TELEPORTERMODE,
+	GETPROP_TF2OBJECT_MODE,
 	GETPROP_TF2UBERCHARGE_LEVEL,
-	GETPROP_TF2SENTRYHEALTH,
-	GETPROP_TF2DISPENSERHEALTH,
-	GETPROP_TF2TELEPORTERHEALTH,
-	GETPROP_TF2OBJECTCARRIED,
-	GETPROP_TF2OBJECTUPGRADELEVEL,
-	GETPROP_TF2OBJECTUPGRADEMETAL,
-	GETPROP_TF2OBJECTMAXHEALTH,
-	GETPROP_TF2DISPMETAL,
+	GETPROP_TF2OBJECT_HEALTH,
+	GETPROP_TF2OBJECT_CARRIED,
+	GETPROP_TF2OBJECT_UPGRADELEVEL,
+	GETPROP_TF2OBJECT_UPGRADEMETAL,
+	GETPROP_TF2OBJECT_MAXHEALTH,
+	GETPROP_TF2DISPENSER_METAL,
 	GETPROP_TF2MINIBUILDING,
-	GETPROP_TF2OBJECTBUILDING,
-	GETPROP_TF2_TELEPORT_RECHARGETIME,
-	GETPROP_TF2_TELEPORT_RECHARGEDURATION,
+	GETPROP_TF2OBJECT_BUILDING,
+	GETPROP_TF2TELEPORT_RECHARGETIME,
+	GETPROP_TF2TELEPORT_RECHARGEDURATION,
 	GETPROP_TF2_OBJTR_m_vCPPositions,
 	GETPROP_TF2_OBJTR_m_bCPIsVisible,
 	GETPROP_TF2_OBJTR_m_iTeamIcons,
@@ -99,7 +466,7 @@ typedef enum
 	GETPROP_TF2_TAUNTYAW,
 	GETPROP_TF2_HIGHFIVE,
 	GETPROP_TF2_HIGHFIVE_PARTNER,
-	GETPROP_SENTRYGUN_PLACING,
+	GETPROP_TF2OBJECT_PLACING,
 	GETPROP_TF2_ISCARRYINGOBJ,
 	GETPROP_TF2_GETCARRIEDOBJ,
 	GETPROP_TF2_ATTRIBUTELIST,
@@ -116,12 +483,17 @@ typedef enum
 	GETPROP_TF2_ENERGYDRINKMETER,
 	GETPROP_TF2_MEDIEVALMODE,
 	GETPROP_TF2_ACTIVEWEAPON,
-	GETPROP_TF2_BUILDER_TYPE,
-	GETPROP_TF2_BUILDER_MODE,
-	GETPROP_TF2_CHARGE_RESIST_TYPE,
+	GETPROP_TF2BUILDER_TYPE,
+	GETPROP_TF2BUILDER_MODE,
+	GETPROP_TF2MEDIGUN_RESIST_TYPE,
 	GETPROP_TF2_ROUNDSTATE,
 	GETPROP_TF2DESIREDCLASS,
 	GETPROP_MVMHASMINPLAYERSREADY,
+	GETPROP_MVMCURRENCY,
+	GETPROP_TF2OBJECT_TYPE,
+	GETPROP_MVMINUPGZONE,
+	GETPROP_TF2_PCTINVISIBLE,
+	GETPROP_TF2_LASTDMGTYPE,
 	GET_PROPDATA_MAX
 }getpropdata_id;
 
@@ -315,15 +687,7 @@ class CClassInterface
 public:
 	static void Init();
 
-	static edict_t *FindEntityByNetClass(int start, const char *classname);
-	static edict_t *FindEntityByNetClassNearest(Vector vstart, const char *classname, float fMinDist = 8192.0f);
-	static edict_t *FindEntityByClassname(int start, const char *classname);
-	static edict_t *FindEntityByClassnameNearest(Vector vstart, const char *classname, float fMinDist = 8192.0f, edict_t *pOwner = NULL);
-
-	// TF2
 	static int GetTF2Score(edict_t *edict);
-
-	static void SetupCTeamRoundTimer(CTeamRoundTimer *pTimer);
 
 	inline static float GetRageMeter(edict_t *edict) { return g_GetProps[GETPROP_TF2_RAGEMETER].GetFloat(edict, 0); }
 
@@ -337,8 +701,6 @@ public:
 
 	inline static int GetTF2NumHealers(edict_t *edict) { return g_GetProps[GETPROP_TF2_NUMHEALERS].GetInt(edict, 0); }
 
-	inline static int GetTF2Conditions(edict_t *edict) { return g_GetProps[GETPROP_TF2_CONDITIONS].GetInt(edict, 0); }
-
 	inline static bool GetVelocity(edict_t *edict, Vector *v) { return g_GetProps[GETPROP_VELOCITY].GetVector(edict, v); }
 
 	inline static int GetTF2Class(edict_t *edict) { return g_GetProps[GETPROP_TF2CLASS].GetInt(edict, 0); }
@@ -348,13 +710,6 @@ public:
 	inline static edict_t *GetExtraWearableViewModel(edict_t *edict) { return g_GetProps[GETPROP_TF2_EXTRAWEARABLEVIEWMODEL].GetEntity(edict); }
 
 	inline static float TF2_GetEnergyDrinkMeter(edict_t * edict) { return g_GetProps[GETPROP_TF2_ENERGYDRINKMETER].GetFloat(edict, 0); }
-
-	inline static void SetInitialized(edict_t *edict)
-	{
-		bool *m_bInitialized = g_GetProps[GETPROP_TF2_WEAPON_INITIALIZED].GetBoolPointer(edict);
-
-		*m_bInitialized = true;
-	}
 
 	inline static edict_t *TF2_GetActiveWeapon(edict_t *edict) { return g_GetProps[GETPROP_TF2_ACTIVEWEAPON].GetEntity(edict); }
 	
@@ -366,42 +721,34 @@ public:
 
 	inline static void TF2_SetBuilderType(edict_t *pBuilder, int itype)
 	{
-		int *pitype = g_GetProps[GETPROP_TF2_BUILDER_TYPE].GetIntPointer(pBuilder);
+		int *piType = g_GetProps[GETPROP_TF2BUILDER_TYPE].GetIntPointer(pBuilder);
 
-		*pitype = itype;
+		*piType = itype;
 	}
 
 	inline static int GetChargeResistType(edict_t *pMedigun)
 	{
-		return g_GetProps[GETPROP_TF2_CHARGE_RESIST_TYPE].GetInt(pMedigun, 0);
+		return g_GetProps[GETPROP_TF2MEDIGUN_RESIST_TYPE].GetInt(pMedigun, 0);
 	}
 
 	inline static void TF2_SetBuilderMode(edict_t *pBuilder, int imode)
 	{
-		int *pitype = g_GetProps[GETPROP_TF2_BUILDER_MODE].GetIntPointer(pBuilder);
+		int *piType = g_GetProps[GETPROP_TF2BUILDER_MODE].GetIntPointer(pBuilder);
 
-		*pitype = imode;
+		*piType = imode;
 	}
 	
 	inline static int GetTF2DesiredClass(edict_t *edict) { return g_GetProps[GETPROP_TF2DESIREDCLASS].GetInt(edict, 0); }
 
 	inline static void SetTF2Class(edict_t *edict, int _class)
 	{
-		int* p = g_GetProps[GETPROP_TF2DESIREDCLASS].GetIntPointer(edict);
-		if (p != NULL) *p = _class;
+		int *piClass = g_GetProps[GETPROP_TF2DESIREDCLASS].GetIntPointer(edict);
+		if (piClass != NULL) *piClass = _class;
 	}
 	
 	inline static float GetTF2SpyCloakMeter(edict_t *edict) { return g_GetProps[GETPROP_TF2SPYMETER].GetFloat(edict, 0); }
 
 	inline static int GetWaterLevel(edict_t *edict) { return g_GetProps[GETPROP_WATERLEVEL].GetInt(edict, 0); }
-
-	inline static void UpdateSimulationTime(edict_t *edict)
-	{
-		float *m_flSimulationTime = g_GetProps[GETPROP_SIMULATIONTIME].GetFloatPointer(edict);
-
-		if (m_flSimulationTime)
-			*m_flSimulationTime = gpGlobals->curtime;
-	}
 
 	static bool GetTF2SpyDisguised(edict_t *edict, int *_class, int *_team, int *_index, int *_health)
 	{
@@ -421,29 +768,6 @@ public:
 		return !CClassInterfaceValue::IsError();
 	}
 
-	inline static void SetEntityIndex_Level_Quality(edict_t *edict, int iIndex, int iLevel = 0, int iQuality = 0)
-	{
-		int *pdata = g_GetProps[GETPROP_TF2_ITEMDEFINITIONINDEX].GetIntPointer(edict);
-
-		if (pdata)
-			*pdata = iIndex;
-
-		if (iLevel)
-		{
-			int *pdata = g_GetProps[GETPROP_TF2_ENTITYLEVEL].GetIntPointer(edict);
-
-			if (pdata)
-				*pdata = iLevel;
-		}
-		if (iQuality)
-		{
-			int *pdata = g_GetProps[GETPROP_TF2_ENTITYQUALITY].GetIntPointer(edict);
-
-			if (pdata)
-				*pdata = iQuality;
-		}
-	}
-
 	inline static bool IsCarryingObj(edict_t *edict) { return g_GetProps[GETPROP_TF2_ISCARRYINGOBJ].GetBool(edict, false); }
 
 	inline static edict_t *GetCarriedObj(edict_t *edict) { return g_GetProps[GETPROP_TF2_GETCARRIEDOBJ].GetEntity(edict); }
@@ -452,44 +776,35 @@ public:
 
 	inline static edict_t *GetMedigunTarget(edict_t *edict) { return g_GetProps[GETPROP_TF2MEDIGUN_TARGETTING].GetEntity(edict); }
 
-	inline static edict_t *GetSentryEnemy(edict_t *edict) { return g_GetProps[GETPROP_SENTRY_ENEMY].GetEntity(edict); }
-
 	inline static edict_t *GetOwner(edict_t *edict) { return g_GetProps[GETPROP_ENTOWNER].GetEntity(edict); }
 
 	inline static bool IsMedigunTargetting(edict_t *pgun, edict_t *ptarget) { return (g_GetProps[GETPROP_TF2MEDIGUN_TARGETTING].GetEntity(pgun) == ptarget); }
 
-	//static void SetTickBase (edict_t *edict, int tickbase) { return ; }
+	inline static bool IsTeleporterMode(edict_t *edict, eTeleMode mode) { return (g_GetProps[GETPROP_TF2OBJECT_MODE].GetInt(edict, -1) == (int)mode); }
 
-	inline static int IsTeleporterMode(edict_t *edict, eTeleMode mode) { return (g_GetProps[GETPROP_TF2TELEPORTERMODE].GetInt(edict, -1) == (int)mode); }
+	inline static int GetObjectType(edict_t *edict) { return g_GetProps[GETPROP_TF2OBJECT_TYPE].GetInt(edict, -1); }
 
 	inline static edict_t *GetCurrentWeapon(edict_t *player) { return g_GetProps[GETPROP_CURRENTWEAPON].GetEntity(player); }
 
 	inline static int GetUberChargeLevel(edict_t *pWeapon) { return (int)(g_GetProps[GETPROP_TF2UBERCHARGE_LEVEL].GetFloat(pWeapon, 0)*100.0); }
 
-	inline static float GetSentryHealth(edict_t *edict) { return g_GetProps[GETPROP_TF2SENTRYHEALTH].GetFloatFromInt(edict, 100); }
+	inline static int GetObjectHealth(edict_t *edict) { return g_GetProps[GETPROP_TF2OBJECT_HEALTH].GetInt(edict, 0); }
+	inline static int GetObjectMaxHealth(edict_t *edict) { return g_GetProps[GETPROP_TF2OBJECT_MAXHEALTH].GetInt(edict, 0); }
 
-	inline static float GetDispenserHealth(edict_t *edict) { return g_GetProps[GETPROP_TF2DISPENSERHEALTH].GetFloatFromInt(edict, 100); }
+	inline static bool IsObjectCarried(edict_t *edict) { return g_GetProps[GETPROP_TF2OBJECT_CARRIED].GetBool(edict, false); }
+	inline static bool IsObjectBeingPlaced(edict_t *pSentry) { return g_GetProps[GETPROP_TF2OBJECT_PLACING].GetBool(pSentry, false); }
 
-	inline static float GetTeleporterHealth(edict_t *edict) { return g_GetProps[GETPROP_TF2TELEPORTERHEALTH].GetFloatFromInt(edict, 100); }
+	inline static int GetObjectUpgradeLevel(edict_t *edict) { return g_GetProps[GETPROP_TF2OBJECT_UPGRADELEVEL].GetInt(edict, 0); }
+	inline static int GetObjectUpgradeMetal(edict_t *edict) { return g_GetProps[GETPROP_TF2OBJECT_UPGRADEMETAL].GetInt(edict, 0); }
 
-	inline static bool IsObjectCarried(edict_t *edict) { return g_GetProps[GETPROP_TF2OBJECTCARRIED].GetBool(edict, false); }
+	inline static edict_t *GetSentryEnemy(edict_t *edict) { return g_GetProps[GETPROP_TF2SENTRY_ENEMY].GetEntity(edict); }
+	inline static int GetSentryShells(edict_t *edict) { return g_GetProps[GETPROP_TF2SENTRY_SHELLS].GetInt(edict, 0); }
+	inline static int GetSentryRockets(edict_t *edict) { return g_GetProps[GETPROP_TF2SENTRY_ROCKETS].GetInt(edict, 0); }
 
-	inline static int GetTF2UpgradeLevel(edict_t *edict) { return g_GetProps[GETPROP_TF2OBJECTUPGRADELEVEL].GetInt(edict, 0); }
+	inline static float GetTF2TeleRechargeTime(edict_t *edict) { return g_GetProps[GETPROP_TF2TELEPORT_RECHARGETIME].GetFloat(edict, 0); }
+	inline static float GetTF2TeleRechargeDuration(edict_t *edict) { return g_GetProps[GETPROP_TF2TELEPORT_RECHARGEDURATION].GetFloat(edict, 0); }
 
-	inline static int GetTF2SentryUpgradeMetal(edict_t *edict) { return g_GetProps[GETPROP_TF2OBJECTUPGRADEMETAL].GetInt(edict, 0); }
-	inline static int GetTF2SentryShells(edict_t *edict) { return g_GetProps[GETPROP_TF2OBJECTSHELLS].GetInt(edict, 0); }
-
-	inline static int GetTF2SentryRockets(edict_t *edict) { return g_GetProps[GETPROP_TF2OBJECTROCKETS].GetInt(edict, 0); }
-
-	static bool GetTF2ObjectiveResource(CTFObjectiveResource *pResource);
-
-	inline static float GetTF2TeleRechargeTime(edict_t *edict) { return g_GetProps[GETPROP_TF2_TELEPORT_RECHARGETIME].GetFloat(edict, 0); }
-
-	inline static float GetTF2TeleRechargeDuration(edict_t *edict) { return g_GetProps[GETPROP_TF2_TELEPORT_RECHARGEDURATION].GetFloat(edict, 0); }
-
-	inline static int GetTF2GetBuildingMaxHealth(edict_t *edict) { return g_GetProps[GETPROP_TF2OBJECTMAXHEALTH].GetInt(edict, 0); }
-
-	inline static int GetTF2DispMetal(edict_t *edict) { return g_GetProps[GETPROP_TF2DISPMETAL].GetInt(edict, 0); }
+	inline static int GetTF2DispMetal(edict_t *edict) { return g_GetProps[GETPROP_TF2DISPENSER_METAL].GetInt(edict, 0); }
 
 	inline static bool GetTF2BuildingIsMini(edict_t *edict) { return g_GetProps[GETPROP_TF2MINIBUILDING].GetBool(edict, false); }
 
@@ -497,7 +812,7 @@ public:
 
 	inline static float GetSpeedFactor(edict_t *edict) { return g_GetProps[GETPROP_CONSTRAINT_SPEED].GetFloat(edict, 0); }
 
-	inline static bool IsObjectBeingBuilt(edict_t *edict) { return g_GetProps[GETPROP_TF2OBJECTBUILDING].GetBool(edict, false); }
+	inline static bool IsObjectBeingBuilt(edict_t *edict) { return g_GetProps[GETPROP_TF2OBJECT_BUILDING].GetBool(edict, false); }
 
 	inline static edict_t *GetGroundEntity(edict_t *edict) { return g_GetProps[GETPROP_GROUND_ENTITY].GetEntity(edict); }
 
@@ -549,89 +864,27 @@ public:
 	inline static bool GetTF2HighFiveReady(edict_t *edict) { return g_GetProps[GETPROP_TF2_HIGHFIVE].GetBool(edict, false); }
 	inline static edict_t *GetHighFivePartner(edict_t *edict) { return g_GetProps[GETPROP_TF2_HIGHFIVE_PARTNER].GetEntity(edict); }
 
-	inline static bool IsMoveType(edict_t *pent, int movetype)
+	static bool IsMoveType(edict_t *edict, byte movetype);
+
+	static int GetMoveType(edict_t *edict);
+
+	inline static bool MvMMinPlayersToReady()
 	{
-		return ((g_GetProps[GETPROP_MOVETYPE].GetInt(pent, 0) & 15) == movetype);
+		return CGameRulesObject::GetProperty("m_bHaveMinPlayersToEnableReady") == 1;
 	}
 
-	inline static int GetMoveType(edict_t *pent)
+	inline static bool MvMIsPlayerReady(int client)
 	{
-		return (g_GetProps[GETPROP_MOVETYPE].GetInt(pent, 0) & 15);
+		return CGameRulesObject::GetProperty("m_bPlayerReady", 1, client) == 1;
 	}
 
-	inline static byte *GetMoveTypePointer(edict_t *pent)
+	inline static bool MvMIsPlayerAtUpgradeStation(edict_t *edict)
 	{
-		return (g_GetProps[GETPROP_MOVETYPE].GetBytePointer(pent));
-	}
-
-	inline static bool IsSentryGunBeingPlaced(edict_t *pSentry)
-	{
-		return g_GetProps[GETPROP_SENTRYGUN_PLACING].GetBool(pSentry, false);
-	}
-
-	inline static bool TF2_MvMMinPlayersToReady()
-	{
-		return CGameRulesObject::GameRules_GetProp("m_bHaveMinPlayersToEnableReady") == 1;
-	}
-
-	inline static bool TF2_MvMIsPlayerReady(int client)
-	{
-		return CGameRulesObject::GameRules_GetProp("m_bPlayerReady", 1, client) == 1;
+		return g_GetProps[GETPROP_MVMINUPGZONE].GetBool(edict, false);
 	}
 
 private:
 	static CClassInterfaceValue g_GetProps[GET_PROPDATA_MAX];
-
 };
-
-namespace SourceMod {
-
-enum PropEntType
-{
-	PropEnt_Handle,
-	PropEnt_Entity,
-	PropEnt_Edict,
-};
-
-inline int MatchFieldAsGetInteger(int field_type)
-{
-	switch (field_type)
-	{
-		case FIELD_TICK:
-		case FIELD_MODELINDEX:
-		case FIELD_MATERIALINDEX:
-		case FIELD_INTEGER:
-		case FIELD_COLOR32:
-			return 32;
-		case FIELD_SHORT:
-			return 16;
-		case FIELD_CHARACTER:
-			return 8;
-		case FIELD_BOOLEAN:
-			return 1;
-		default:
-			return 0;
-	}
-
-	return 0;
-}
-
-class CEntData
-{
-public:
-	static int32_t GetEntSend(edict_t *pEdict, const char *prop, int element = 0);
-	static float GetEntSendFloat(edict_t *pEdict, const char *prop, int element = 0);
-	static const char *GetEntSendString(edict_t *pEdict, const char *prop, int element = 0);
-	static Vector GetEntSendVector(edict_t *pEdict, const char *prop, int element = 0);
-	static edict_t *GetEntSendEnt(edict_t *pEdict, const char *prop, int element = 0);
-
-	static int32_t GetEntData(edict_t *pEdict, const char *prop, int element = 0);
-	static float GetEntDataFloat(edict_t *pEdict, const char *prop, int element = 0);
-	static const char *GetEntDataString(edict_t *pEdict, const char *prop, int element = 0);
-	static Vector GetEntDataVector(edict_t *pEdict, const char *prop, int element = 0);
-	static edict_t *GetEntDataEnt(edict_t *pEdict, const char *prop, int element = 0);
-};
-
-}//namespace SourceMod
 
 #endif
