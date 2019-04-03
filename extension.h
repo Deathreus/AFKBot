@@ -149,9 +149,8 @@ public: //ICommandTargetProcessor
 public:
 	static void DebugMessage(const char *, ...);
 	static void VerboseDebugMessage(const char *, ...);
-	void BeginLogging(bool);
-	// Never call this before BeginLogging()!
-	void EndLogging(void);
+	static void BeginLogging(bool);
+	static void EndLogging(void);
 
 private:
 	static FILE* m_pLogFile;

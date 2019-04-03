@@ -42,7 +42,7 @@ cell_t Native_SetAFKBot(IPluginContext *pContext, const cell_t *params)
 	}
 
 	int userid = playerhelpers->GetClientOfUserId(params[1]);
-	IGamePlayer *pPL = playerhelpers->GetGamePlayer(userid ? userid : params[1]);
+	IGamePlayer *pPL = playerhelpers->GetGamePlayer(userid > 0 ? userid : params[1]);
 
 	bool bEnable = params[2] == 1;
 
@@ -76,7 +76,7 @@ cell_t Native_IsAFKBot(IPluginContext *pContext, const cell_t *params)
 	}
 
 	int userid = playerhelpers->GetClientOfUserId(params[1]);
-	IGamePlayer *pPL = playerhelpers->GetGamePlayer(userid ? userid : params[1]);
+	IGamePlayer *pPL = playerhelpers->GetGamePlayer(userid > 0 ? userid : params[1]);
 
 	if (pPL && pPL->IsInGame() && !pPL->IsFakeClient())
 	{
@@ -156,7 +156,7 @@ cell_t Native_SetSkill(IPluginContext *pContext, const cell_t *params)
 	}
 
 	int userid = playerhelpers->GetClientOfUserId(params[1]);
-	IGamePlayer *pPL = playerhelpers->GetGamePlayer(userid ? userid : params[1]);
+	IGamePlayer *pPL = playerhelpers->GetGamePlayer(userid > 0 ? userid : params[1]);
 
 	float fSkill = sp_ctof(params[2]);
 	if (fSkill < 0.0 || fSkill > 1.0)
@@ -251,7 +251,7 @@ cell_t Native_SetBraveness(IPluginContext *pContext, const cell_t *params)
 	}
 
 	int userid = playerhelpers->GetClientOfUserId(params[1]);
-	IGamePlayer *pPL = playerhelpers->GetGamePlayer(userid ? userid : params[1]);
+	IGamePlayer *pPL = playerhelpers->GetGamePlayer(userid > 0 ? userid : params[1]);
 
 	float fBraveness = sp_ctof(params[2]);
 	if (fBraveness < 0.0 || fBraveness > 1.0)
@@ -349,7 +349,7 @@ cell_t Native_SetSensitivity(IPluginContext *pContext, const cell_t *params)
 	}
 
 	int userid = playerhelpers->GetClientOfUserId(params[1]);
-	IGamePlayer *pPL = playerhelpers->GetGamePlayer(userid ? userid : params[1]);
+	IGamePlayer *pPL = playerhelpers->GetGamePlayer(userid > 0 ? userid : params[1]);
 
 	int iSensitivity = params[2];
 	if (iSensitivity < 0)
@@ -448,7 +448,7 @@ cell_t Native_SetVisRevs(IPluginContext *pContext, const cell_t *params)
 	}
 
 	int userid = playerhelpers->GetClientOfUserId(params[1]);
-	IGamePlayer *pPL = playerhelpers->GetGamePlayer(userid ? userid : params[1]);
+	IGamePlayer *pPL = playerhelpers->GetGamePlayer(userid > 0 ? userid : params[1]);
 
 	int iVisRevs = params[2];
 	if (iVisRevs < 1 || iVisRevs > 24)
@@ -544,7 +544,7 @@ cell_t Native_SetPathRevs(IPluginContext *pContext, const cell_t *params)
 	}
 
 	int userid = playerhelpers->GetClientOfUserId(params[1]);
-	IGamePlayer *pPL = playerhelpers->GetGamePlayer(userid ? userid : params[1]);
+	IGamePlayer *pPL = playerhelpers->GetGamePlayer(userid > 0 ? userid : params[1]);
 
 	int iPathRevs = params[2];
 	if (iPathRevs < 1 || iPathRevs > 256)
@@ -641,7 +641,7 @@ cell_t Native_SetClientVisRevs(IPluginContext *pContext, const cell_t *params)
 	}
 
 	int userid = playerhelpers->GetClientOfUserId(params[1]);
-	IGamePlayer *pPL = playerhelpers->GetGamePlayer(userid ? userid : params[1]);
+	IGamePlayer *pPL = playerhelpers->GetGamePlayer(userid > 0 ? userid : params[1]);
 
 	int iVisRevs = params[2];
 	if (iVisRevs < 1 || iVisRevs > 16)
