@@ -31,7 +31,12 @@
 #ifndef __RCBOT_EHANDLE_H__
 #define __RCBOT_EHANDLE_H__
 
-////// entity handling in network
+/**
+  * Entities can and will be destroyed at any point,
+  * this class dynamically verifies that any entity
+  * actually still exists and is the same before we procede 
+  * to modify or use the pointer
+  */
 class MyEHandle
 {
 public:
@@ -41,20 +46,14 @@ public:
 		m_iSerialNumber = 0;
 	}
 
-	MyEHandle(edict_t *pent)
+	MyEHandle(edict_t *pEnt)
 	{
-		m_pEnt = pent;
-
-		if (pent)
-		{
-			m_iSerialNumber = pent->m_NetworkSerialNumber;
-		}
-		else
-			m_iSerialNumber = 0;
+		m_pEnt = pEnt;
+		m_iSerialNumber = m_pEnt ? m_pEnt->m_NetworkSerialNumber : 0;
 	}
 
-	inline bool NotValid() { return Get() == NULL; }
-	inline bool IsValid() { return Get() != NULL; }
+	// Will invalidate itself if required during the call
+	inline const bool IsValid() const { return Get() != NULL; }
 
 	inline edict_t *Get()
 	{
@@ -69,13 +68,25 @@ public:
 		return NULL;
 	}
 
-	inline edict_t *Get_Old()
+	inline edict_t *const Get() const
+	{
+		if(m_iSerialNumber && m_pEnt)
+		{
+			if(!m_pEnt->IsFree() && (m_iSerialNumber == m_pEnt->m_NetworkSerialNumber))
+				return m_pEnt;
+		}
+
+		return NULL;
+	}
+
+	inline edict_t *Get_Old() const
 	{
 		return m_pEnt;
 	}
 
-	inline operator edict_t * const ()
-	{ // same as get function (inlined for speed)
+	// Same as Get() (inlined for speed)
+	inline operator edict_t *()
+	{
 		if (m_iSerialNumber && m_pEnt)
 		{
 			if (!m_pEnt->IsFree() && (m_iSerialNumber == m_pEnt->m_NetworkSerialNumber))
@@ -87,36 +98,68 @@ public:
 		return NULL;
 	}
 
-	inline bool operator == (int a)
+	// Entity access
+	inline edict_t *const operator->() const
 	{
-		return ((int)Get() == a);
+		return m_pEnt;
 	}
 
-	inline bool operator == (edict_t *pent)
+	inline bool operator!() const
 	{
-		return (Get() == pent);
+		return !IsValid();
 	}
 
-	inline bool operator == (MyEHandle &other)
+	inline bool operator==(MyEHandle &other) const
 	{
-		return (Get() == other.Get());
+		return (m_pEnt == other.Get());
+	}
+	inline bool operator!=(MyEHandle &other) const
+	{
+		return (m_pEnt != other.Get());
 	}
 
-	inline edict_t * operator = (edict_t *pent)
+	// edict_t assigning
+	inline MyEHandle& operator=(edict_t *pEnt)
 	{
-		m_pEnt = pent;
+		m_pEnt = pEnt;
 
-		if (pent)
-		{
-			m_iSerialNumber = pent->m_NetworkSerialNumber;
-		}
+		if (m_pEnt)
+			m_iSerialNumber = m_pEnt->m_NetworkSerialNumber;
 		else
 			m_iSerialNumber = 0;
 
-		return m_pEnt;
+		return *this;
 	}
+
+	// CBaseEntity assigning
+	inline MyEHandle& operator=(CBaseEntity *pEnt)
+	{
+		extern IServerGameEnts *gameents;
+		m_pEnt = gameents->BaseEntityToEdict(pEnt);
+
+		if(m_pEnt)
+			m_iSerialNumber = m_pEnt->m_NetworkSerialNumber;
+		else
+			m_iSerialNumber = 0;
+
+		return *this;
+	}
+
+	// EHandle assigning
+	inline MyEHandle& operator=(MyEHandle &other)
+	{
+		m_pEnt = other.Get();
+
+		if (m_pEnt)
+			m_iSerialNumber = m_pEnt->m_NetworkSerialNumber;
+		else
+			m_iSerialNumber = 0;
+
+		return *this;
+	}
+
 private:
-	int m_iSerialNumber;
+	short m_iSerialNumber;
 	edict_t *m_pEnt;
 };
 
