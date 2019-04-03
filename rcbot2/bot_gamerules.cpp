@@ -31,54 +31,72 @@
 
 #include <server_class.h>
 #include "bot_gamerules.h"
-#include "..\extension.h"
-
-#ifdef GetClassName
-#undef GetClassName
-#endif
+#include "../extension.h"
 
 #ifdef GetProp
-#undef GetProp
+ #undef GetProp
 #endif
 
-void *g_pGameRules;
+void *CGameRulesObject::g_pGameRules = NULL;
+
+const char *g_szGameRulesProxy = NULL;
 
 bool CGameRulesObject::GetGameRules(char *error, size_t maxlen)
 {
-	if (!(g_pGameRules=g_pSDKTools->GetGameRules()))
+	if(!(g_pGameRules=g_pSDKTools->GetGameRules()))
 	{
-		snprintf(error, maxlen, "Could not fetch the gamerules object!");
+		ke::SafeStrcpy(error, maxlen, "Could not fetch the gamerules pointer!");
 		return false;
 	}
+
+	if(!(g_szGameRulesProxy=g_pGameConf->GetKeyValue("GameRulesProxy")))
+	{
+		ke::SafeStrcpy(error, maxlen, "Could not find GameRulesProxy value in afk.games.txt!");
+		return false;
+	}
+
 	return true;
 }
 
-int32_t CGameRulesObject::GameRules_GetProp(const char *prop, int size, int element)
+void *CGameRulesObject::GetGameRules()
 {
-	int offset;
-	int bit_count;
-
-	if (!g_pGameRules)
-		return 0;
-
-	sm_sendprop_info_t info;
-	SendProp *pProp;
-	if (!gamehelpers->FindSendPropInfo("CTFGameRulesProxy", prop, &info))
+	if(g_pSDKTools)
 	{
-		smutils->LogError(myself, "Property \"%s\" not found on the gamerules proxy", prop);
+		if(g_pGameRules == NULL)
+			g_pGameRules = g_pSDKTools->GetGameRules();
+
+		return g_pGameRules;
+	}
+
+	return NULL;
+}
+
+int32_t CGameRulesObject::GetProperty(const char *prop, int size, int element)
+{
+	if(!GetGameRules() || !g_szGameRulesProxy || !*g_szGameRulesProxy)
+	{
+		smutils->LogError(myself, "GameRules lookup failed.");
 		return 0;
 	}
 
-	offset = info.actual_offset;
-	pProp = info.prop;
-	bit_count = pProp->m_nBits;
+	sm_sendprop_info_t info;
+	if(!gamehelpers->FindSendPropInfo(g_szGameRulesProxy, prop, &info))
+	{
+		smutils->LogError(myself, "Property \"%s\" not found on the gamerules proxy.", prop);
+		return 0;
+	}
 
-	switch (pProp->GetType())
+	int offset = info.actual_offset;
+	SendProp *pProp = info.prop;
+	int bit_count = pProp->m_nBits;
+
+	switch(pProp->GetType())
 	{
 		case DPT_Int:
 		{
-			if (element > 0)
+			if(element > 0)
 			{
+				smutils->LogError(myself, "Property \"%s\" is not an array.", prop);
 				return 0;
 			}
 			break;
@@ -86,19 +104,21 @@ int32_t CGameRulesObject::GameRules_GetProp(const char *prop, int size, int elem
 		case DPT_DataTable:
 		{
 			SendTable *pTable = pProp->GetDataTable();
-			if (!pTable)
+			if(!pTable)
 			{
+				smutils->LogError(myself, "Error looking up DataTable for prop %s", prop);
 				return 0;
 			}
 
 			int elementCount = pTable->GetNumProps();
-			if (element >= elementCount)
+			if(element >= elementCount)
 			{
+				smutils->LogError(myself, "Element %d is outside of array bounds", element);
 				return 0;
 			}
 
 			pProp = pTable->GetProp(element);
-			if (pProp->GetType() != DPT_Int)
+			if(pProp->GetType() != DPT_Int)
 			{
 				return 0;
 			}
@@ -108,29 +128,28 @@ int32_t CGameRulesObject::GameRules_GetProp(const char *prop, int size, int elem
 			break;
 		}
 		default:
-		{
 			return 0;
-		}
 	}
+
 	bool is_unsigned = ((pProp->GetFlags() & SPROP_UNSIGNED) == SPROP_UNSIGNED);
 
-	if (pProp->GetFlags() & SPROP_VARINT)
+	if(pProp->GetFlags() & SPROP_VARINT)
 	{
 		bit_count = sizeof(int) * 8;
 	}
 
-	if (bit_count < 1)
+	if(bit_count < 1)
 	{
 		bit_count = size * 8;
 	}
 
-	if (bit_count >= 17)
+	if(bit_count >= 17)
 	{
 		return *(int32_t *)((intptr_t)g_pGameRules + offset);
 	}
-	else if (bit_count >= 9)
+	else if(bit_count >= 9)
 	{
-		if (is_unsigned)
+		if(is_unsigned)
 		{
 			return *(uint16_t *)((intptr_t)g_pGameRules + offset);
 		}
@@ -139,9 +158,9 @@ int32_t CGameRulesObject::GameRules_GetProp(const char *prop, int size, int elem
 			return *(int16_t *)((intptr_t)g_pGameRules + offset);
 		}
 	}
-	else if (bit_count >= 2)
+	else if(bit_count >= 2)
 	{
-		if (is_unsigned)
+		if(is_unsigned)
 		{
 			return *(uint8_t *)((intptr_t)g_pGameRules + offset);
 		}

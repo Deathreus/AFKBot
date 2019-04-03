@@ -70,29 +70,19 @@ enum eRoundState
 	RoundState_BetweenRounds,
 };
 
-enum ePropFieldType
-{
-	PropField_Unsupported,		/**< The type is unsupported. */
-	PropField_Integer,			/**< Valid for SendProp and Data fields */
-	PropField_Float,			/**< Valid for SendProp and Data fields */
-	PropField_Entity,			/**< Valid for Data fields only (SendProp shows as int) */
-	PropField_Vector,			/**< Valid for SendProp and Data fields */
-	PropField_String,			/**< Valid for SendProp and Data fields */
-	PropField_String_T,			/**< Valid for Data fields.  Read only! */
-};
-
-extern void *g_pGameRules;
-
 class CGameRulesObject
 {
 public:
 	// Returns an integer from the gamerules entity
-	static int32_t GameRules_GetProp(const char *prop, int size = 4, int element = 0);
+	static int32_t GetProperty(const char *prop, int size = 4, int element = 0);
 
-	static void *GetGameRules() { return g_pGameRules; }
+	static void *GetGameRules();
+
 	static bool GetGameRules(char *error, size_t maxlen);
 
-	static void FreeMemory() { delete g_pGameRules; }
+	inline static void FreeMemory() { g_pGameRules = NULL; }
+
+	static void *g_pGameRules;
 };
 
-#endif // __BOT_GAMERULES_H__
+#endif
