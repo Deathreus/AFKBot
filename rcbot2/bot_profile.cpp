@@ -33,15 +33,10 @@
 #include "bot_globals.h"
 #include "bot_profile.h"
 
-CBotProfile **CBotProfiles::m_Profiles = NULL;
-CBotProfile *CBotProfiles::m_pDefaultProfile = NULL;
+#include <vector>
 
-extern ConVar bot_skill_min;
-extern ConVar bot_sensitivity_min;
-extern ConVar bot_braveness_min;
-extern ConVar bot_visrevs_min;
-extern ConVar bot_visrevs_client_min;
-extern ConVar bot_pathrevs_min;
+std::vector<CBotProfile*> CBotProfiles::m_Profiles;
+CBotProfile *CBotProfiles::m_pDefaultProfile = NULL;
 
 CBotProfile::CBotProfile(
 	int iVisionTicks,
@@ -61,10 +56,13 @@ CBotProfile::CBotProfile(
 
 void CBotProfiles::DeleteProfiles()
 {
-	for (short int i = 0; i < gpGlobals->maxClients; i++)
+	for (size_t i = 0; i < m_Profiles.size(); i++)
 	{
-		delete m_Profiles[i];
-		m_Profiles[i] = NULL;
+		if (m_Profiles[i])
+		{
+			delete m_Profiles[i];
+			m_Profiles[i] = NULL;
+		}
 	}
 
 	delete m_pDefaultProfile;
@@ -72,8 +70,15 @@ void CBotProfiles::DeleteProfiles()
 }
 
 // Setup Default profile
-void CBotProfiles::SetupProfile()
+void CBotProfiles::SetupDefaultProfile()
 {
+	extern ConVar bot_skill_min;
+	extern ConVar bot_sensitivity_min;
+	extern ConVar bot_braveness_min;
+	extern ConVar bot_visrevs_min;
+	extern ConVar bot_visrevs_client_min;
+	extern ConVar bot_pathrevs_min;
+
 	m_pDefaultProfile = new CBotProfile(
 		bot_visrevs_min.GetInt(), // vis ticks
 		bot_pathrevs_min.GetInt(), // path ticks

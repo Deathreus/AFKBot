@@ -265,7 +265,6 @@ void CPlayerHurtEvent::Execute(IGameEvent *pEvent)
 		if (pBot)
 		{
 			pBot->Hurt(pAttacker, pEvent->GetInt("health"));
-			return;
 		}
 
 		pBot = CBots::GetBotPointer(pAttacker);
@@ -278,10 +277,10 @@ void CPlayerHurtEvent::Execute(IGameEvent *pEvent)
 		if (CBotGlobals::IsPlayer(pVictim) && CBotGlobals::IsPlayer(pAttacker))
 		{
 			CBotSeeFriendlyHurtEnemy func1(pAttacker, pVictim, pEvent->GetInt("weaponid", -1));
-			CBotSeeEnemyHurtFriendly func2(pAttacker, pVictim, pEvent->GetInt("weaponid", -1));
+			CBots::BotFunction(func1);
 
-			CBots::BotFunction(&func1);
-			CBots::BotFunction(&func2);
+			CBotSeeEnemyHurtFriendly func2(pAttacker, pVictim, pEvent->GetInt("weaponid", -1));
+			CBots::BotFunction(func2);
 		}
 	}
 }
@@ -305,7 +304,6 @@ void CPlayerDeathEvent::Execute(IGameEvent *pEvent)
 		if (pBot)
 		{
 			pBot->Died(pAttacker, szWeapon);
-			return;
 		}
 
 		pBot = CBots::GetBotPointer(pAttacker);
@@ -319,10 +317,10 @@ void CPlayerDeathEvent::Execute(IGameEvent *pEvent)
 		if (CBotGlobals::IsPlayer(pVictim) && CBotGlobals::IsPlayer(pAttacker))
 		{
 			CBotSeeFriendlyDie func1(pVictim, pAttacker, szWeapon);
-			CBotSeeFriendlyKill func2(pAttacker, pVictim, szWeapon);
+			CBots::BotFunction(func1);
 
-			CBots::BotFunction(&func1);
-			CBots::BotFunction(&func2);
+			CBotSeeFriendlyKill func2(pAttacker, pVictim, szWeapon);
+			CBots::BotFunction(func2);
 		}
 	}
 }
@@ -382,9 +380,8 @@ void CTF2ObjectSapped::Execute(IGameEvent *pEvent)
 
 		CTeamFortress2Mod::SapperPlaced(pOwner, (eObjectType)building, pSapper);
 
-		CBroadcastSpySap spysap = CBroadcastSpySap(pSpy);
-
-		CBots::BotFunction(&spysap);
+		CBroadcastSpySap spysap(pSpy);
+		CBots::BotFunction(spysap);
 
 	}
 }
@@ -399,9 +396,8 @@ void CTF2RoundActive::Execute(IGameEvent *pEvent)
 
 void COverTimeBegin::Execute(IGameEvent *pEvent)
 {
-	CBroadcastOvertime function;
-
-	CBots::BotFunction(&function);
+	static CBroadcastOvertime function;
+	CBots::BotFunction(function);
 }
 
 void CBossSummonedEvent::Execute(IGameEvent *pEvent)
@@ -533,13 +529,11 @@ void CTF2UpgradeObjectEvent::Execute(IGameEvent *pEvent)
 void CTF2RoundWinEvent::Execute(IGameEvent *pEvent)
 {
 	int iWinningTeam = pEvent->GetInt("team");
-	CTF2BroadcastRoundWin *function = new CTF2BroadcastRoundWin(iWinningTeam, pEvent->GetInt("full_round") == 1);
 
+	CTF2BroadcastRoundWin function(iWinningTeam, pEvent->GetInt("full_round") == 1);
 	CBots::BotFunction(function);
 
 	CTeamFortress2Mod::RoundWon(iWinningTeam);
-
-	delete function;
 }
 
 
@@ -595,12 +589,12 @@ void CTF2ChangeClass::Execute(IGameEvent *pEvent)
 
 void CTF2MVMWaveCompleteEvent::Execute(IGameEvent *pEvent)
 {
-	CBotWaveCompleteMVM func;
+	static CBotWaveCompleteMVM func;
 
 	CTeamFortress2Mod::MVMAlarmReset();
 	CTeamFortress2Mod::RoundReset();
 
-	CBots::BotFunction(&func);
+	CBots::BotFunction(func);
 }
 
 void CTF2MVMWaveFailedEvent::Execute(IGameEvent *pEvent)
@@ -611,10 +605,6 @@ void CTF2MVMWaveFailedEvent::Execute(IGameEvent *pEvent)
 
 void CTF2RoundStart::Execute(IGameEvent *pEvent)
 {
-	// 04/07/09 : add full reset
-
-	CBroadcastRoundStart roundstart = CBroadcastRoundStart(pEvent->GetInt("full_reset") == 1);
-
 	if (pEvent->GetInt("full_reset") == 1)
 	{
 		//CPoints::resetPoints();
@@ -628,8 +618,8 @@ void CTF2RoundStart::Execute(IGameEvent *pEvent)
 
 	CTeamFortress2Mod::ResetSetupTime();
 
-	CBots::BotFunction(&roundstart);
-
+	CBroadcastRoundStart roundstart(pEvent->GetInt("full_reset") == 1);
+	CBots::BotFunction(roundstart);
 }
 
 void CTF2PointStopCapture::Execute(IGameEvent *pEvent)
@@ -637,7 +627,6 @@ void CTF2PointStopCapture::Execute(IGameEvent *pEvent)
 	int capindex = pEvent->GetInt("cp");
 
 	CTeamFortress2Mod::RemoveCappers(capindex);
-
 }
 
 void CTF2PointBlockedCapture::Execute(IGameEvent *pEvent)
@@ -706,36 +695,31 @@ void CTF2PointStartCapture::Execute(IGameEvent *pEvent)
 
 	CTeamFortress2Mod::m_ObjectiveResource.UpdateCaptureTime(capindex);
 
-	CBotTF2FunctionEnemyAtIntel *function = new CBotTF2FunctionEnemyAtIntel(capteam, CTeamFortress2Mod::m_ObjectiveResource.GetCPPosition(capindex), FLAGEVENT_CAPPED, NULL, capindex);
-
+	CBotTF2FunctionEnemyAtIntel function(capteam, CTeamFortress2Mod::m_ObjectiveResource.GetCPPosition(capindex), FLAGEVENT_CAPPED, NULL, capindex);
 	CBots::BotFunction(function);
-
-	delete function;
 }
 
 void CTF2MannVsMachineAlarm::Execute(IGameEvent *pEvent)
 {
-	CBroadcastMVMAlarm alarm = CBroadcastMVMAlarm(CTeamFortress2Mod::GetMVMCapturePointRadius());
+	static CBroadcastMVMAlarm alarm(CTeamFortress2Mod::GetMVMCapturePointRadius());
 	// MUST BE AFTER POINTS HAVE BEEN UPDATED!
-	CBots::BotFunction(&alarm);
+	CBots::BotFunction(alarm);
 
 	CTeamFortress2Mod::MVMAlarmSounded();
 }
 
 void CTF2PointCaptured::Execute(IGameEvent *pEvent)
 {
-	CBroadcastCapturedPoint cap = CBroadcastCapturedPoint(pEvent->GetInt("cp"), pEvent->GetInt("team"), pEvent->GetString("cpname"));
-
 	//CTeamFortress2Mod::m_Resource.debugprint();
 	CTeamFortress2Mod::UpdatePointMaster();
 
 	// update points
 	CTeamFortress2Mod::m_ObjectiveResource.m_fUpdatePointTime = 0;
-	CTeamFortress2Mod::m_ObjectiveResource.m_fNextCheckMonitoredPoint = engine->Time() + 0.2f;
+	CTeamFortress2Mod::m_ObjectiveResource.m_fNextCheckMonitoredPoint = TIME_NOW + 0.2f;
 
+	CBroadcastCapturedPoint cap(pEvent->GetInt("cp"), pEvent->GetInt("team"), pEvent->GetString("cpname"));
 	// MUST BE AFTER POINTS HAVE BEEN UPDATED!
-	CBots::BotFunction(&cap);
-
+	CBots::BotFunction(cap);
 }
 
 void CFlagEvent::Execute(IGameEvent *pEvent)
@@ -756,7 +740,7 @@ void CFlagEvent::Execute(IGameEvent *pEvent)
 
 	switch (type)
 	{
-	case FLAGEVENT_PICKUP:
+		case FLAGEVENT_PICKUP:
 		{
 			if (pBot && pBot->IsTF())
 			{
@@ -768,40 +752,31 @@ void CFlagEvent::Execute(IGameEvent *pEvent)
 				int iTeam = CTeamFortress2Mod::GetTeam(pPlayer);
 				CTeamFortress2Mod::FlagPickedUp(iTeam, pPlayer);
 			}
+			break;
 		}
-		break;
-	case FLAGEVENT_CAPPED:
+		case FLAGEVENT_CAPPED:
 		{
-			IPlayerInfo *p = NULL;
-
-			if (pPlayer)
-			{
-				p = playerinfomanager->GetPlayerInfo(pPlayer);
-
-				if (p)
-				{
-					CBroadcastFlagCaptured captured = CBroadcastFlagCaptured(p->GetTeamIndex());
-					CBots::BotFunction(&captured);
-				}
-			}
-
-			if (pBot && pBot->IsTF())
-			{
-				((CBotTF2*)pBot)->CapturedFlag();
-				((CBotTF2*)pBot)->DroppedFlag();
-			}
-
 			if (pPlayer)
 			{
 				int iTeam = CTeamFortress2Mod::GetTeam(pPlayer);
+
+				CBroadcastFlagCaptured captured(iTeam);
+				CBots::BotFunction(captured);
+
+				if(pBot && pBot->IsTF())
+				{
+					((CBotTF2*)pBot)->CapturedFlag();
+					((CBotTF2*)pBot)->DroppedFlag();
+				}
+
 				CTeamFortress2Mod::FlagDropped(iTeam, Vector(0, 0, 0));
 			}
 
 			CTeamFortress2Mod::ResetFlagStateToDefault();
 
+			break;
 		}
-		break;
-	case FLAGEVENT_DROPPED:
+		case FLAGEVENT_DROPPED:
 		{
 			IPlayerInfo *p = playerhelpers->GetGamePlayer(pPlayer)->GetPlayerInfo();
 			Vector vLoc;
@@ -809,33 +784,34 @@ void CFlagEvent::Execute(IGameEvent *pEvent)
 			if (p)
 			{
 				vLoc = CBotGlobals::EntityOrigin(pPlayer);
-				CBroadcastFlagDropped dropped = CBroadcastFlagDropped(p->GetTeamIndex(), vLoc);
-				CBots::BotFunction(&dropped);
+				CBroadcastFlagDropped dropped(p->GetTeamIndex(), vLoc);
+				CBots::BotFunction(dropped);
 			}
 
 			if (pBot && pBot->IsTF())
 				((CBotTF2*)pBot)->DroppedFlag();
 
-
 			if (pPlayer)
 				CTeamFortress2Mod::FlagDropped(CTeamFortress2Mod::GetTeam(pPlayer), vLoc);
+
+			break;
 		}
-		break;
-	case FLAGEVENT_RETURNED:
+		case FLAGEVENT_RETURNED:
 		{
 			if (CTeamFortress2Mod::IsMapType(TF_MAP_SD))
 			{
-				CBroadcastFlagReturned returned = CBroadcastFlagReturned(CTeamFortress2Mod::GetFlagCarrierTeam());
-				CBots::BotFunction(&returned);
+				CBroadcastFlagReturned returned(CTeamFortress2Mod::GetFlagCarrierTeam());
+				CBots::BotFunction(returned);
 			}
+
 			CTeamFortress2Mod::ResetFlagStateToDefault();
 
 			CTeamFortress2Mod::FlagReturned(0); // for special delivery
-			//p->GetTeamIndex(),CBotGlobals::EntityOrigin(pPlayer));
+
+			break;
 		}
-		break;
-	default:
-		break;
+		default:
+			break;
 	}
 
 }

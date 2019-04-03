@@ -38,9 +38,11 @@
 //#include "bot_profiling.h"
 #include "bot_getprop.h"
 
-#include "ndebugoverlay.h"
 
-extern IVDebugOverlay *debugoverlay;
+#ifndef __linux__
+#include <ndebugoverlay.h>
+#endif
+
 extern ConVar bot_visrevs;
 extern ConVar bot_visrevs_clients;
 ////////////////////////////////////////////
@@ -101,7 +103,7 @@ void CFindEnemyFunc::Init()
 CBotVisibles::CBotVisibles(CBot *pBot)
 {
 	m_pBot = pBot;
-	m_iMaxIndex = m_pBot->MaxEntityIndex();
+	m_iMaxIndex = gpGlobals->maxEntities;
 	m_iMaxSize = (m_iMaxIndex / 8) + 1;
 	m_iIndicesVisible = new unsigned char[m_iMaxSize];
 	Reset();
@@ -233,7 +235,7 @@ void CBotVisibles::UpdateVisibles()
 
 	if (m_pBot->MoveToIsValid())
 	{
-		Vector vMoveTo = m_pBot->GetMoveTo();
+		Vector vMoveTo = *m_pBot->GetMoveTo();
 		if (m_pBot->FVisible(vMoveTo))
 			m_pBot->UpdateCondition(CONDITION_SEE_WAYPOINT);
 		else

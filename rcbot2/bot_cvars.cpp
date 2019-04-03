@@ -1,39 +1,44 @@
 
-#include "convar.h"
+#include <convar.h>
 
 #include "bot_cvars.h"
 
+// Debugging
+ConVar bot_notarget("afkbot_notarget", "0", 0, "bots don't shoot the host!", true, 0.0f, true, 1.0f);
+ConVar bot_debug_notasks("afkbot_debug_notasks", "0", 0, "Debug command, stops bots from doing tasks by themselves", true, 0.0f, true, 1.0f);
+ConVar bot_debug_dont_shoot("afkbot_debug_dont_shoot", "0", 0, "Debug command, stops bots from shooting everyone", true, 0.0f, true, 1.0f);
+ConVar bot_debug_show_route("afkbot_debug_show_route", "1", 0, "Debug command, shows waypoint route to host", true, 0.0f, true, 1.0f);
+ConVar bot_debug_show_waypoints("afkbot_debug_show_waypoints", "1", 0, "Debug command, draws nearby waypoints to the host", true, 0.0f, true, 1.0f);
+ConVar bot_debug_iglev("afkbot_debug_iglev", "0", 0, "bot think ignores functions to test cpu speed", true, 0.0f, true, 11.0f);
+ConVar bot_dont_move("afkbot_dontmove", "0", 0, "if 1, bots will all stop moving", true, 0.0f, true, 1.0f);
 ConVar bot_attack("afkbot_flipout", "0", 0, "bots all attack", true, 0.0f, true, 1.0f);
 ConVar bot_stop("afkbot_stop", "0", 0, "Make bots stop thinking!", true, 0.0f, true, 1.0f);
+ConVar bot_melee_only("afkbot_melee_only", "0", 0, "if 1 bots will only use only melee weapons", true, 0.0f, true, 1.0f);
+ConVar bot_nocapturing("afkbot_dontcapture", "0", 0, "bots don't capture flags in DOD:S", true, 0.0f, true, 1.0f);
+ConVar bot_tf2_debug_spies_cloakdisguise("afkbot_tf2_debug_spies_cloakdisguise", "1", 0, "Debug command : allow spy bots to cloak and disguise", true, 0.0f, true, 1.0f);
+
+ConVar bot_wpt_autotype("afkbot_wpt_autotype", "1", 0, "If 1, types will be automatically added to waypoints when they are added", true, 0.0f, true, 1.0f);
 ConVar bot_waypointpathdist("afkbot_wpt_pathdist", "400", 0, "Length for waypoints to automatically add paths at");
+ConVar bot_wptplace_width("afkbot_wpt_width", "48", 0, "width of the player, automatic paths won't connect unless there is enough space for a player");
 ConVar bot_avoid_radius("afkbot_avoid_radius", "80", 0, "radius in units for bots to avoid things");
 ConVar bot_avoid_strength("afkbot_avoid_strength", "100", 0, "strength of avoidance (0 = disable)");
 ConVar bot_messaround("afkbot_messaround", "1", 0, "bots mess around at start up", true, 0.0f, true, 1.0f);
 ConVar bot_aimsmoothing("afkbot_aimsmoothing", "1", 0, "(0 = no smoothing)", true, 0.0f, true, 1.0f);
-ConVar bot_wptplace_width("afkbot_wpt_width", "48", 0, "width of the player, automatic paths won't connect unless there is enough space for a player");
 ConVar bot_smoke_time("afkbot_smoke_time", "10", 0, "seconds a smoke grenade stays active");
 ConVar bot_shoot_breakables("afkbot_shoot_breakables", "1", 0, "if 1, bots will shoot breakable objects", true, 0.0f, true, 1.0f);
 ConVar bot_shoot_breakable_dist("afkbot_shoot_breakable_dist", "128.0", 0, "The distance bots will shoot breakables at");
 ConVar bot_shoot_breakable_cos("afkbot_shoot_breakable_cos", "0.9", 0, "The cosine of the angle bots should worry about breaking objects at (default = 0.9) ~= 25 degrees");
-ConVar bot_notarget("afkbot_notarget", "0", 0, "bots don't shoot the host!", true, 0.0f, true, 1.0f);
 ConVar bot_jump_obst_dist("afkbot_jump_obst_dist", "80", 0, "the distance from an obstacle the bot will jump");
 ConVar bot_jump_obst_speed("afkbot_jump_obst_speed", "100", 0, "the speed of the bot for the bot to jump an obstacle");
 ConVar bot_speed_boost("afkbot_speed_boost", "1", 0, "multiplier for bots speed");
-ConVar bot_melee_only("afkbot_melee_only", "0", 0, "if 1 bots will only use only melee weapons", true, 0.0f, true, 1.0f);
-ConVar bot_debug_iglev("afkbot_debug_iglev", "0", 0, "bot think ignores functions to test cpu speed", true, 0.0f, true, 1.0f);
-ConVar bot_dont_move("afkbot_dontmove", "0", 0, "if 1, bots will all stop moving", true, 0.0f, true, 1.0f);
 ConVar bot_runplayercmd_hookonce("afkbot_runplayer_hookonce", "1", 0, "function will hook only once, if 0 it will unook and rehook after every map", true, 0.0f, true, 1.0f);
 ConVar bot_ladder_offs("afkbot_ladder_offs", "42", 0, "difference in height for bot to think it has touched the ladder waypoint");
 ConVar bot_ffa("afkbot_ffa", "0", 0, "Free for all mode -- bots shoot everyone", true, 0.0f, true, 1.0f);
-ConVar bot_debug_notasks("afkbot_debug_notasks", "0", 0, "Debug command, stops bots from doing tasks by themselves", true, 0.0f, true, 1.0f);
-ConVar bot_debug_dont_shoot("afkbot_debug_dont_shoot", "0", 0, "Debug command, stops bots from shooting everyone", true, 0.0f, true, 1.0f);
-ConVar bot_debug_show_route("afkbot_debug_show_route", "0", 0, "Debug command, shows waypoint route to host", true, 0.0f, true, 1.0f);
 ConVar bot_supermode("afkbot_supermode", "0", 0, "If 1 will make every bot skill and reaction much higher", true, 0.0f, true, 1.0f);
 ConVar bot_printstatus("afkbot_printafkstatus", "1", 0, "If 1 will print to everyone when someone becomes a bot or not", true, 0.0f, true, 1.0f);
 
 
 // DOD vars
-ConVar bot_nocapturing("afkbot_dontcapture", "0", 0, "bots don't capture flags in DOD:S", true, 0.0f, true, 1.0f);
 ConVar bot_prone_enemy_only("afkbot_prone_enemy_only", "1", 0, "if 1 bots only prone in DOD:S when they have an enemy", true, 0.0f, true, 1.0f);
 ConVar bot_stats_inrange_dist("afkbot_stats_inrange_dist", "320.0", 0, "distance for bots to realise they have other players in range (for particular radio commands in DOD:S)");
 ConVar bot_squad_idle_time("afkbot_squad_idle_time", "3.0", 0, "time for bots to do other things if squad leader is idle for a short time");
@@ -42,13 +47,12 @@ ConVar bot_bot_squads_percent("afkbot_bot_squads_percent", "50", 0, "the percent
 
 
 // TF2 vars
-ConVar bot_tf2_debug_spies_cloakdisguise("afkbot_tf2_debug_spies_cloakdisguise", "1", 0, "Debug command : allow spy bots to cloak and disguise", true, 0.0f, true, 1.0f);
 ConVar bot_tf2_medic_letgotime("afkbot_tf2_medic_letgotime", "0.4", 0, "Time for medic to let go of medigun to switch players");
 ConVar bot_tf2_pyro_airblast("afkbot_tf2_pyro_airblast_ammo", "50", 0, "Ammo must be above this to airblast -- if 200 airblast will be disabled");
 ConVar bot_spyknifefov("afkbot_spyknifefov", "80", 0, "the FOV from the enemy that spies must backstab from");
 ConVar bot_scoutdj("afkbot_scoutdj", "0.28", 0, "time scout uses to double jump");
 ConVar bot_rj("afkbot_rj", "0.01", 0, "time for soldier to fire rocket after jumping");
-ConVar bot_change_class("afkbot_change_classes", "0", 0, "bots change classes at random intervals", true, 0.0f, true, 1.0f);
+ConVar bot_change_class("afkbot_change_classes", "1", 0, "bots change classes at random intervals", true, 0.0f, true, 1.0f);
 ConVar bot_use_vc_commands("afkbot_voice_cmds", "1", 0, "bots use voice commands e.g. medic/spy etc", true, 0.0f, true, 1.0f);
 ConVar bot_use_disp_dist("afkbot_disp_dist", "800.0", 0, "distance that bots will go back to use a dispenser");
 ConVar bot_max_cc_time("afkbot_max_cc_time", "240", 0, "maximum time for bots to consider changing class <seconds>");
@@ -68,8 +72,8 @@ ConVar bot_tf2_spy_kill_on_cap_dist("afkbot_tf2_spy_kill_on_cap_dist", "200.0", 
 ConVar bot_move_dist("afkbot_move_dist", "800", 0, "minimum distance to move objects to");
 ConVar bot_move_obj("afkbot_move_obj", "1", 0, "if 1 afkbot engineers will move objects around", true, 0.0f, true, 1.0f);
 ConVar bot_taunt("afkbot_taunt", "0", 0, "enable/disable bots taunting", true, 0.0f, true, 1.0f);
-ConVar bot_tf2_autoupdate_point_time("afkbot_tf2_autoupdate_point_time", "60", 0, "Time to automatically update points in TF2 for any changes");
-ConVar bot_tf2_payload_dist_retreat("afkbot_tf2_payload_dist_retreat", "512.0", 0, "Distance for payload bomb to be greater than at cap before defend team retreats");
+ConVar bot_tf2_autoupdate_point_time("afkbot_tf2_autoupdate_point_time", "20", 0, "Time to automatically update points in TF2 for any changes");
+ConVar bot_tf2_payload_dist_retreat("afkbot_tf2_payload_dist_retreat", "228.0", 0, "Distance for payload bomb to be greater than at cap before defend team retreats");
 ConVar bot_spy_runaway_health("afkbot_spy_runaway_health", "70", 0, "health which spies run away after attacking");
 
 // Default offsets
@@ -94,7 +98,7 @@ ConVar bot_pathrevs_max("afkbot_pathrevs_max", "160", FCVAR_NOTIFY, "maximum pat
 // TODO : Make these per bot?
 ConVar bot_defrate("afkbot_defrate", "0.24", FCVAR_NOTIFY, "rate for bots to defend");
 ConVar bot_beliefmulti("afkbot_beliefmulti", "20.0", FCVAR_NOTIFY, "multiplier for increasing bot belief");
-ConVar bot_belief_fade("afkbot_belief_fade", "0.75", FCVAR_NOTIFY, "the multiplayer rate bot belief decreases");
+ConVar bot_belief_fade("afkbot_belief_fade", "0.75", FCVAR_NOTIFY, "the multiplier rate a bot belief decreases");
 ConVar bot_projectile_tweak("afkbot_projtweak", "0.05", FCVAR_NOTIFY, "Tweaks the bots knowledge of projectiles and gravity");
 ConVar bot_general_difficulty("afkbot_skill", "0.6", FCVAR_NOTIFY, "General difficulty of the bots. 0.5 = stock, < 0.5 easier, > 0.5 = harder");
 ConVar bot_bossattackfactor("afkbot_bossattackfactor", "1.0", FCVAR_NOTIFY, "the higher the more often the bots will shoot the boss");

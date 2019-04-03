@@ -40,6 +40,13 @@
  * @brief Exposes plugin's main interface.
  */
 #define SMEXT_LINK(name) SDKExtension *g_pExtensionIface = name;
+/**
+ * @brief Helper exposure macro when you don't need to use a variable
+ */
+#define SMEXT_EXPOSE(className) \
+	static className gs_##className; \
+	SMEXT_LINK(&gs_##className)
+
 
 #define SMEXT_CONF_METAMOD		
 

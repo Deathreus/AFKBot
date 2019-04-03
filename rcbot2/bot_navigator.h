@@ -33,30 +33,22 @@
 
 #include <vector>
 #include <queue>
-using namespace std;
 
 #include "bot_base.h"
-#include "bot_waypoint.h"
-#include "..\NavMesh\NavMesh.h"
 
-#include "bot_belief.h"
+#if defined USE_NAVMESH
+#include "../NavMesh/NavMesh.h"
+#else
+#include "bot_waypoint.h"
+#endif
+
 #include "bot_genclass.h"
 
-class CNavMesh;
-class CWaypointVisibilityTable;
-class INavMeshArea;
+constexpr float MAX_BELIEF = 200.0f;
 
-#define MAX_BELIEF 200.0f
+constexpr int MAX_PATH_TICKS = 200;
 
-class INavigatorNode
-{
-public:
-	inline Vector GetOrigin() { return m_vOrigin; }
-protected:
-	Vector m_vOrigin;
-};
-
-class IBotNavigator
+abstract_class IBotNavigator
 {
 public:
 	virtual void Init() = 0;
@@ -91,7 +83,11 @@ public:
 
 	virtual float DistanceTo(Vector vOrigin) = 0;
 
+#if defined USE_NAVMESH
+	virtual float DistanceTo(INavMeshArea *pWaypoint) = 0;
+#else
 	virtual float DistanceTo(CWaypoint *pWaypoint) = 0;
+#endif
 
 	//virtual void GoBack () = 0;
 
@@ -128,100 +124,17 @@ public:
 
 	virtual int NumPaths() { return 0; }
 
-	virtual Vector GetPath(int pathid) { return Vector(0, 0, 0); }
+	virtual Vector GetPath(int pathid) { return Vector(0.0f); }
 
 	virtual bool RandomDangerPath(Vector *vec) { return false; }
 
-	bool GetDangerPoint(Vector *vec) { *vec = m_bDangerPoint ? m_vDangerPoint : Vector(0, 0, 0); return m_bDangerPoint; }
+	bool GetDangerPoint(Vector *vec) { *vec = m_bDangerPoint ? m_vDangerPoint : Vector(0.0f); return m_bDangerPoint; }
 
 	bool WantToLoadBelief() { return m_bLoadBelief; }
 	virtual bool WantToSaveBelief() { return false; }
 	float GetGoalDistance() { return m_fGoalDistance; }
 
-	static const int MAX_PATH_TICKS = 200;
-
-protected:
-	Vector m_vGoal;
-	float m_fGoalDistance;
-	Vector m_vPreviousPoint;
-	Vector m_vDangerPoint;
-	bool m_bDangerPoint;
-	short int m_iBeliefTeam;
-	bool m_bBeliefChanged;
-	bool m_bLoadBelief;
-};
-
-// Tries to mimic the old waypoint navigator as closely as possible
-class INavMeshNavigator
-{
-public:
-	virtual void FreeMapMemory() = 0;
-
-	virtual bool WorkRoute(Vector vFrom, Vector vTo, bool *bFail, bool bRestart = true, bool bNoInterruptions = false, INavMeshArea *goal = NULL, int iConditions = 0, int iDangerId = -1) = 0;
-
-	virtual INavMeshArea *ChooseBestFromBelief(IList<INavMeshArea*> *goals, bool bHighDanger = false, int iSearchFlags = 0, int iTeam = 0) = 0;
-	virtual INavMeshArea *ChooseBestFromBeliefBetweenAreas(IList<INavMeshArea*> *goals, bool bHighDanger = false, bool bIgnoreBelief = false) = 0;
-
-	virtual void RollBackPosition() = 0;
-
-	virtual void FailMove() = 0;
-
-	virtual Vector GetNextPoint() = 0;
-	inline Vector GetPreviousPoint() { return m_vPreviousPoint; }
-
-	virtual bool HasNextPoint() = 0;
-
-	virtual void UpdatePosition() = 0;
-
-	virtual INavMeshArea *GetCurrentWaypoint() = 0;
-	virtual INavMeshArea *GetCurrentGoal() = 0;
-
-	virtual bool GetNextRoutePoint(Vector *vPoint) = 0;
-
-	virtual bool NextPointIsOnLadder() = 0;
-
-	virtual bool CanGetTo(Vector vOrigin) = 0;
-
-	virtual int GetCurrentFlags() { return 0; }
-
-	virtual bool GetCoverPosition(Vector vCoverOrigin, Vector *vCover) = 0;
-	virtual bool GetHideSpotPosition(Vector vCoverOrigin, Vector *vCover) = 0;
-
-	virtual float DistanceTo(Vector vOrigin) = 0;
-	virtual float DistanceTo(INavMeshArea *area) = 0;
-
-	virtual bool BeliefLoad() { return false; };
-	virtual bool BeliefSave(bool bOverride = false) { return false; };
-	virtual void Belief(Vector vOrigin, Vector vOther, float fBelief, float fStrength, BotBelief iType) = 0;
-	virtual void BeliefOne(int iAreaID, BotBelief iBeliefType, float fDist) { return; }
-	virtual float GetBelief(int index) { return 0; }
-
-	inline Vector GetGoalOrigin() { return m_vGoal; }
-
-	float GetGoalDistance() { return m_fGoalDistance; }
-
-	bool GetDangerPoint(Vector *vec) { *vec = m_bDangerPoint ? m_vDangerPoint : Vector(0, 0, 0); return m_bDangerPoint; }
-
-	virtual bool CalculateAimVector(QAngle *qAim) = 0;
-
-	virtual INavMeshArea *GetArea(const Vector &vPos, float fBeneathLimit = 120.0f) = 0;
-	virtual INavMeshArea *GetNearestArea(const Vector &vPos, bool bAnyZ = false, float fMaxDist = 10000.0f, bool bCheckLOS = false, bool bCheckGround = true, int iTeam = -2) = 0;
-	virtual INavMeshArea *GetAreaByID(const unsigned int iAreaIndex) = 0;
-
-	virtual int WorldToGridX(float flWX) = 0;
-	virtual int WorldToGridY(float flWY) = 0;
-
-	virtual IList<INavMeshArea*> *CollectSurroundingAreas(INavMeshArea *fromArea, float fTravelDistanceLimit = 1500.0f, float fMaxStepUpLimit = 18.0f, float fMaxDropDownLimit = 100.0f) = 0;
-	virtual IList<INavMeshArea*> *GetAdjacentList(INavMeshArea *fromArea, eNavDir iDirection) = 0;
-	virtual IList<INavMeshLadder*> *GetLadderList(INavMeshArea *fromArea, eNavLadderDir iLadderDirection) = 0;
-	virtual IList<INavMeshArea*> *GetAreasOnGrid(int x, int y) = 0;
-
-	virtual bool IsWalkableTraceLineClear(Vector vFrom, Vector vTo, unsigned int iFlags) = 0;
-
-	bool WantToLoadBelief() { return m_bLoadBelief; }
-	virtual bool WantToSaveBelief() { return false; }
-
-	static const int MAX_PATH_TICKS = 200;
+	virtual void DrawPath() = 0;
 
 protected:
 	Vector m_vGoal;
@@ -446,20 +359,11 @@ typedef struct
 	bool bSkipped;
 }failedpath_t;
 
+#if !defined USE_NAVMESH
 class CWaypointNavigator : public IBotNavigator
 {
 public:
-	CWaypointNavigator(CBot *pBot)
-	{
-		Init();
-		m_pBot = pBot;
-		m_fNextClearFailedGoals = 0;
-		m_bDangerPoint = false;
-		m_iBeliefTeam = -1;
-		m_bLoadBelief = true;
-		m_bBeliefChanged = false;
-		memset(&m_lastFailedPath, 0, sizeof(failedpath_t));
-	}
+	CWaypointNavigator(CBot *pBot);
 
 	void Init();
 
@@ -478,7 +382,7 @@ public:
 
 	void UpdatePosition();
 
-	float GetBelief(int index) { if (index >= 0) return m_fBelief[index]; return 0; }
+	float GetBelief(int index) { if(index >= 0) return m_fBelief[index]; return 0; }
 
 	void FailMove();
 
@@ -548,12 +452,11 @@ public:
 	int GetCurrentFlags();
 	int GetPathFlags(int iPath);
 
+	void DrawPath();
+
 private:
 	CBot *m_pBot;
 
-	//CWaypointVisibilityTable *m_pDangerNodes;
-
-	//int m_iPrevWaypoint;
 	int m_iCurrentWaypoint;
 	int m_iPrevWaypoint;
 	int m_iNextWaypoint;
@@ -562,8 +465,8 @@ private:
 
 	failedpath_t m_lastFailedPath;
 
-	dataStack<int> m_currentRoute;
-	queue<int> m_oldRoute;
+	std::stack<int> m_currentRoute;
+	std::queue<int> m_oldRoute;
 
 	int m_iLastFailedWpt;
 
@@ -580,6 +483,9 @@ private:
 
 	Vector m_vOffset;
 	bool m_bOffsetApplied;
+
+	int m_nPathLength;
 };
+#endif
 
 #endif

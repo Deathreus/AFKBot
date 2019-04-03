@@ -32,7 +32,6 @@
 #define __BOT_STRINGS_H__
 
 #include <vector>
-using namespace std;
 
 #define MAX_STRINGS_HASH 26
 
@@ -47,7 +46,7 @@ using namespace std;
  *
  * Another good thing is that it will save memory if there are duplicate strings
  * it only keeps one unique copy of a string. If it tries to make a duplicate string
- * then a pointer to to current string is sent back
+ * then a pointer to the current string is sent back
  *
  */
 class CStrings
@@ -60,7 +59,7 @@ public:
 private:
 	// dataStack is like a linked list, dont want 
 	// to use an array for lots of stuff like this
-	static vector<char *> m_Strings[MAX_STRINGS_HASH];
+	static std::vector<char *> m_Strings[MAX_STRINGS_HASH];
 };
 
 #endif

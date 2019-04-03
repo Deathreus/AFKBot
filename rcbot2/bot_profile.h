@@ -1,8 +1,6 @@
 #ifndef __RCBOT_PROFILE_H__
 #define __RCBOT_PROFILE_H__
 
-#include <vector>
-using namespace std;
 
 class CBotProfile
 {
@@ -39,12 +37,13 @@ class CBotProfiles
 public:
 	static void DeleteProfiles();
 
-	static void SetupProfile();
+	static void SetupDefaultProfile();
 
 	static CBotProfile *GetDefaultProfile();
 
+	static std::vector<CBotProfile*> m_Profiles;
+
 private:
-	static CBotProfile **m_Profiles;
 	static CBotProfile *m_pDefaultProfile;
 };
 

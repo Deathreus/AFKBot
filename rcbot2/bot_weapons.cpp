@@ -36,7 +36,7 @@
 #include "bot_getprop.h"
 
 #ifdef GetClassName
-#undef GetClassName
+ #undef GetClassName
 #endif
 
 extern IFileSystem* filesystem;
@@ -257,7 +257,7 @@ bool CBotWeapon::NeedToReload(CBot *pBot)
 }
 
 // static init (all weapons in game)
-vector<CWeapon*> CWeapons::m_theWeapons;
+std::vector<CWeapon*> CWeapons::m_theWeapons;
 
 int CBotWeapon::GetAmmo(CBot *pBot, int type)
 {
@@ -354,41 +354,40 @@ bool CBotWeapons::Update(bool bOverrideAllFromEngine)
 	short int i = 0;
 	unsigned short int iWeaponsSignature = 0x0; // check sum of weapons
 	edict_t *pWeapon;
-	CBaseHandle *m_Weapons = CClassInterface::GetWeaponList(m_pBot->GetEdict());
-	CBaseHandle *m_Weapon_iter;
+	CBaseHandle *hWeapons = CClassInterface::GetWeaponList(m_pBot->GetEdict());
+	CBaseHandle *hWeapon_iter;
 
-	m_Weapon_iter = m_Weapons;
+	hWeapon_iter = hWeapons;
 
 	for (i = 0; i < MAX_WEAPONS; i++)
 	{
 		// create a 'hash' of current weapons
-		pWeapon = (m_Weapon_iter == NULL) ? NULL : INDEXENT(m_Weapon_iter->GetEntryIndex());
+		pWeapon = (hWeapon_iter == NULL) ? NULL : INDEXENT(hWeapon_iter->GetEntryIndex());
 		iWeaponsSignature += ((unsigned int)pWeapon) + ((pWeapon == NULL) ? 0 : (unsigned int)CClassInterface::GetWeaponState(pWeapon));
-		m_Weapon_iter++;
+		hWeapon_iter++;
 	}
 
 	// if weapons have changed this will be different
-	if (iWeaponsSignature != m_iWeaponsSignature) // m_fUpdateWeaponsTime < engine->Time() )
+	if (iWeaponsSignature != m_iWeaponsSignature)
 	{
 		this->ClearWeapons();
 
 		int iWeaponState;
-		register unsigned short int i;
 		bool bFound;
 
 		const char *pszClassname;
 
-		CBaseHandle *m_Weapons = CClassInterface::GetWeaponList(m_pBot->GetEdict());
-		CBotWeapon *m_BotWeapon_iter = m_theWeapons;
+		hWeapons = CClassInterface::GetWeaponList(m_pBot->GetEdict());
+		CBotWeapon *hBotWeapon_iter = m_theWeapons;
 
 		// loop through the weapons array and see if it is in the CBaseCombatCharacter
 		for (i = 0; i < MAX_WEAPONS; i++)
 		{
-			m_Weapon_iter = &m_Weapons[i];
+			hWeapon_iter = &hWeapons[i];
 			iWeaponState = 0;
 			bFound = false;
 
-			pWeapon = INDEXENT(m_Weapon_iter->GetEntryIndex());
+			pWeapon = INDEXENT(hWeapon_iter->GetEntryIndex());
 
 			if (!pWeapon || pWeapon->IsFree())
 			{

@@ -146,6 +146,7 @@ const char *g_szUtils[BOT_UTIL_MAX + 1] =
 	"BOT_UTIL_SNIPE_POINT",
 	"BOT_UTIL_MOVEUP_MG",
 	"BOT_UTIL_SNIPE_CROSSBOW",
+	"BOT_UTIL_UPGWEAPON",
 	"BOT_UTIL_MAX"
 };
 
@@ -271,5 +272,4 @@ CBotUtility *CBotUtilities::NextBest()
 	free(temp);
 
 	return pBest;
-
 }

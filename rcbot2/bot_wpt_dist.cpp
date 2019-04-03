@@ -60,7 +60,7 @@ void CWaypointDistances::Save()
 
 		if (bfp == NULL)
 		{
-			m_fSaveTime = engine->Time() + 100.0f;
+			m_fSaveTime = TIME_NOW + 100.0f;
 			return; // give up
 		}
 

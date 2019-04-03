@@ -60,9 +60,9 @@ void CWaypoints::ProcessGeneration()
 			Vector vCenter = area->GetCenter();
 			CWaypointLocations::GetAllInArea(vCenter, &iNearby, -1);
 			bool bSomethingNear = false;
-			for(int i : iNearby)
+			for(int n : iNearby)
 			{
-				CWaypoint *pWpt = CWaypoints::GetWaypoint(i);
+				CWaypoint *pWpt = CWaypoints::GetWaypoint(n);
 				if(pWpt && pWpt->DistanceFrom(vCenter) < 200.0f)
 				{
 					bSomethingNear = true;
@@ -98,46 +98,38 @@ void CWaypoints::ProcessGeneration()
 				if(comp.LengthSqr() > Square(400.0))
 				{
 					Vector vCenter = area->GetCenter();
-					for(int8_t i = NAV_CORNER_NORTH_WEST; i < NAV_CORNER_COUNT; i++)
+					for(int i = NAV_CORNER_NORTH_WEST; i < NAV_CORNER_COUNT; i++)
 					{
 						switch((eNavCorner)i)
 						{
 							case NAV_CORNER_NORTH_WEST:
-								{
-									vCenter.x += comp.Length() / 1.75;
-									vCenter.y -= comp.Length() / 1.75;
-									vCenter.z = area->GetZ(vCenter);
-								}
+								vCenter.x += comp.Length() / 1.75;
+								vCenter.y -= comp.Length() / 1.75;
+								vCenter.z = area->GetZ(vCenter);
 								break;
 							case NAV_CORNER_NORTH_EAST:
-								{
-									vCenter.x += comp.Length() / 1.75;
-									vCenter.y += comp.Length() / 1.75;
-									vCenter.z = area->GetZ(vCenter);
-								}
+								vCenter.x += comp.Length() / 1.75;
+								vCenter.y += comp.Length() / 1.75;
+								vCenter.z = area->GetZ(vCenter);
 								break;
 							case NAV_CORNER_SOUTH_EAST:
-								{
-									vCenter.x -= comp.Length() / 1.75;
-									vCenter.y += comp.Length() / 1.75;
-									vCenter.z = area->GetZ(vCenter);
-								}
+								vCenter.x -= comp.Length() / 1.75;
+								vCenter.y += comp.Length() / 1.75;
+								vCenter.z = area->GetZ(vCenter);
 								break;
 							case NAV_CORNER_SOUTH_WEST:
-								{
-									vCenter.x -= comp.Length() / 1.75;
-									vCenter.y -= comp.Length() / 1.75;
-									vCenter.z = area->GetZ(vCenter);
-								}
+								vCenter.x -= comp.Length() / 1.75;
+								vCenter.y -= comp.Length() / 1.75;
+								vCenter.z = area->GetZ(vCenter);
 								break;
 						}
 
 						CWaypointLocations::GetAllInArea(vCenter, &iNearby, -1);
 						bool bSomethingNear = false;
-						for(int j : iNearby)
+						for(int n : iNearby)
 						{
-							CWaypoint *pWpt = CWaypoints::GetWaypoint(i);
-							if(pWpt && pWpt->DistanceFrom(vCenter) < 135.0f)
+							CWaypoint *pWpt = CWaypoints::GetWaypoint(n);
+							if(pWpt && pWpt->DistanceFrom(vCenter) < 120.0f)
 							{
 								bSomethingNear = true;
 								break;
@@ -154,8 +146,6 @@ void CWaypoints::ProcessGeneration()
 			iNearby.clear();
 		}
 	}
-
-	iNearby.clear();
 
 	// Stage 3, populate health and ammo positions as well as capture points
 	if(m_GenData.bNeedToPostProcess)
@@ -232,12 +222,12 @@ void CWaypoints::PostProcessGeneration()
 		{
 			std::vector<int> iNearby;
 			Vector vOrigin = CBotGlobals::EntityOrigin(pEdict);
-			float flRadius = pEdict->GetCollideable()->OBBMaxs().AsVector2D().Length();
+			float flRadius = pEdict->GetCollideable()->OBBMaxs().Length();
 			CWaypointLocations::GetAllInArea(vOrigin, &iNearby, -1);
 			bool bSomethingNear = false;
-			for(int j : iNearby)
+			for(int n : iNearby)
 			{
-				CWaypoint *pWpt = CWaypoints::GetWaypoint(j);
+				CWaypoint *pWpt = CWaypoints::GetWaypoint(n);
 				if(pWpt && pWpt->DistanceFrom(vOrigin) < 32.0f)
 				{
 					bSomethingNear = true;
@@ -263,7 +253,7 @@ void CWaypoints::PostProcessGeneration()
 
 	for(INavMeshHint *hint : *g_pNavMesh->GetHints())
 	{
-		Vector vSpot = hint->GetPos();
+		Vector vSpot = hint->GetOrigin();
 		float flYaw = hint->GetYaw();
 		byte uType = hint->GetFlags();
 

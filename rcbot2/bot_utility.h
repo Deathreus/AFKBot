@@ -36,9 +36,6 @@
 
 #include "bot_genclass.h"
 
-#include <vector>
-using namespace std;
-
 class CBot;
 class CBotWeapon;
 
@@ -149,6 +146,7 @@ typedef enum
 	BOT_UTIL_SNIPE_POINT,
 	BOT_UTIL_MOVEUP_MG,
 	BOT_UTIL_SNIPE_CROSSBOW,
+	BOT_UTIL_UPGWEAPON,
 	BOT_UTIL_MAX
 }eBotAction;
 
@@ -157,7 +155,7 @@ extern const char *g_szUtils[BOT_UTIL_MAX + 1];
 class CBotUtility
 {
 public:
-	CBotUtility(CBot *pBot, eBotAction id, bool bCanDo, float fUtil, CBotWeapon *pWeapon = NULL, int iData = 0, Vector vec = Vector(0, 0, 0));
+	CBotUtility(CBot *pBot, eBotAction id, bool bCanDo, float fUtil, CBotWeapon *pWeapon = NULL, int iData = 0, Vector vec = Vector(0.0f));
 
 	inline float GetUtility() { return m_fUtility; }
 
@@ -181,13 +179,11 @@ private:
 	Vector m_vVector;
 };
 
-
 typedef struct util_node_s
 {
 	CBotUtility *util;
 	struct util_node_s *next;
 }util_node_t;
-
 
 typedef struct
 {
@@ -212,17 +208,73 @@ public:
 	CBotUtility *NextBest();
 
 private:
-	vector<CBotUtility> m_Utilities;
+	std::vector<CBotUtility> m_Utilities;
 
 	util_list m_pBest;
 };
 
-#define ADD_UTILITY_WEAPON_DATA_VECTOR(utilname,condition,utility,weapon,data,vector) if ( m_fUtilTimes[utilname] < engine->Time()) { if ( condition ) { utils.AddUtility(CBotUtility(this,utilname,true,utility,weapon,data,vector)); } }
-#define ADD_UTILITY_DATA_VECTOR(utilname,condition,utility,data,vector) if ( m_fUtilTimes[utilname] < engine->Time()) { if ( condition ) { utils.AddUtility(CBotUtility(this,utilname,true,utility,NULL,data,vector)); } }
-#define ADD_UTILITY_WEAPON_DATA(utilname,condition,utility,weapon,data) if ( m_fUtilTimes[utilname] < engine->Time()) { if ( condition ) { utils.AddUtility(CBotUtility(this,utilname,true,utility,weapon,data)); } }
-#define ADD_UTILITY_DATA(utilname,condition,utility,data) if ( m_fUtilTimes[utilname] < engine->Time()) { if ( condition ) { utils.AddUtility(CBotUtility(this,utilname,true,utility,NULL,data)); } }
-#define ADD_UTILITY_WEAPON(utilname,condition,utility,weapon) if ( m_fUtilTimes[utilname] < engine->Time()) { if ( condition ) { utils.AddUtility(CBotUtility(this,utilname,true,utility,weapon)); } }
-#define ADD_UTILITY(utilname,condition,utility) if ( m_fUtilTimes[utilname] < engine->Time()) { if ( condition ) { utils.AddUtility(CBotUtility(this,utilname,true,utility)); } }
+#define ADD_UTILITY_WEAPON_DATA_VECTOR(utilname, condition, utility, weapon, data, vector) \
+	if ( m_ftUtilTimes[utilname].IsElapsed() ) \
+	{ \
+		if ( condition ) \
+		{ \
+			utils.AddUtility(CBotUtility(this, utilname, true, utility, weapon, data, vector)); \
+		} \
+	}
+
+#define ADD_UTILITY_DATA_VECTOR(utilname, condition, utility, data, vector) \
+	if ( m_ftUtilTimes[utilname].IsElapsed() ) \
+	{ \
+		if ( condition ) \
+		{ \
+			utils.AddUtility(CBotUtility(this, utilname, true, utility, NULL, data, vector)); \
+		} \
+	}
+
+#define ADD_UTILITY_WEAPON_DATA(utilname, condition, utility, weapon, data) \
+	if ( m_ftUtilTimes[utilname].IsElapsed() ) \
+	{ \
+		if ( condition ) \
+		{ \
+			utils.AddUtility(CBotUtility(this, utilname, true, utility, weapon, data)); \
+		} \
+	}
+
+#define ADD_UTILITY_VECTOR(utilname, condition, utility, vector) \
+	if ( m_ftUtilTimes[utilname].IsElapsed() ) \
+	{ \
+		if ( condition ) \
+		{ \
+			utils.AddUtility(CBotUtility(this, utilname, true, utility, NULL, 0, vector)); \
+		} \
+	}
+
+#define ADD_UTILITY_DATA(utilname, condition, utility, data) \
+	if ( m_ftUtilTimes[utilname].IsElapsed() ) \
+	{ \
+		if ( condition ) \
+		{ \
+			utils.AddUtility(CBotUtility(this, utilname, true, utility, NULL, data)); \
+		} \
+	}
+
+#define ADD_UTILITY_WEAPON(utilname, condition, utility, weapon) \
+	if ( m_ftUtilTimes[utilname].IsElapsed() ) \
+	{ \
+		if ( condition ) \
+		{ \
+			utils.AddUtility(CBotUtility(this, utilname, true, utility, weapon)); \
+		} \
+	}
+
+#define ADD_UTILITY(utilname, condition, utility) \
+	if ( m_ftUtilTimes[utilname].IsElapsed() ) \
+	{ \
+		if ( condition ) \
+		{ \
+			utils.AddUtility(CBotUtility(this, utilname, true, utility)); \
+		} \
+	}
 
 
 #endif

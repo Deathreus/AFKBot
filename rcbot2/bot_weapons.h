@@ -31,9 +31,6 @@
 #ifndef __BOT_WEAPONS_H__
 #define __BOT_WEAPONS_H__
 
-#include <vector>
-using namespace std;
-
 class CBot;
 
 extern int m_TF2AmmoIndices[];
@@ -201,6 +198,19 @@ public:
 		m_iAmmoIndex2 = -1;
 
 		m_iPreference = data->m_iPreference;
+
+#if defined _DEBUG
+		char fmt[24];
+		ke::SafeSprintf(fmt, sizeof(fmt), "Projectile Speed: %.3f", m_fProjectileSpeed);
+		AFKBot::DebugMessage("Parsed data for '%s'\nSlot: %i\nID: %i\nEngage Distance: %.2f - %.2f\nPreference: %i\n%s", 
+			m_szWeaponName,
+			m_iSlot,
+			m_iWeaponId,
+			m_fPrimMinWeaponShootDist,
+			m_fPrimMaxWeaponShootDist,
+			m_iPreference,
+			(m_iFlags & WEAP_FL_PROJECTILE) ? fmt : "");
+#endif
 	}
 
 	/*CWeapon( int iSlot, const char *szWeaponName, int iId, int iFlags = 0, int iAmmoIndex = -1, float minPrim =0.0f, float maxPrim = 4096.0f, int iPref = 0, int iAmmoIndex2 = -1 )
@@ -477,7 +487,7 @@ public:
 
 private:
 	// available weapons in game
-	static vector<CWeapon*> m_theWeapons;
+	static std::vector<CWeapon*> m_theWeapons;
 };
 
 #define AMMO_PRIM 1

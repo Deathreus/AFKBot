@@ -93,8 +93,8 @@ typedef enum
 	SCHED_RETURN_TO_INTEL,
 	SCHED_INVESTIGATE_HIDE,
 	SCHED_TAUNT,
+	SCHED_UPGRADE_WEAPON,
 	SCHED_MAX
-	//SCHED_HIDE_FROM_ENEMY
 }eBotSchedule;
 
 class CBotSchedule
@@ -118,53 +118,41 @@ public:
 
 	const char *GetIDString();
 
-	CBotTask *CurrentTask()
-	{
-		if (m_Tasks.IsEmpty())
-			return NULL;
+	CBotTask *CurrentTask();
 
-		return m_Tasks.GetFrontInfo();
-	}
-
-	bool HasFailed()
+	const bool HasFailed()
 	{
 		return m_bFailed;
 	}
 
-	bool IsComplete()
+	const bool IsComplete()
 	{
 		return m_Tasks.IsEmpty();
 	}
 
-	void FreeMemory()
-	{
-		m_Tasks.Destroy();
-	}
+	void FreeMemory();
 
 	void RemoveTop();
-
-	//////////////////////////
 
 	void ClearPass() { m_bitsPass = 0; }
 
 	void PassInt(int i);
 	void PassFloat(float f);
-	void PassVector(Vector v);
+	void PassVector(Vector *v);
 	void PassEdict(edict_t *p);
-	//////////////////////////
 
 	bool HasPassInfo() { return (m_bitsPass != 0); }
 
 	inline int PassedInt() { return iPass; }
 	inline float PassedFloat() { return fPass; }
-	inline Vector PassedVector() { return vPass; }
+	inline Vector *PassedVector() { return vPass; }
 	inline edict_t *PassedEdict() { return pPass; }
 	inline bool IsID(eBotSchedule iId) { return m_iSchedId == iId; }
 
-	inline bool HasPassInt() { return ((m_bitsPass&BITS_SCHED_PASS_INT) > 0); }
-	inline bool HasPassFloat() { return ((m_bitsPass&BITS_SCHED_PASS_FLOAT) > 0); }
-	inline bool HasPassVector() { return ((m_bitsPass&BITS_SCHED_PASS_VECTOR) > 0); }
-	inline bool HasPassEdict() { return ((m_bitsPass&BITS_SCHED_PASS_EDICT) > 0); }
+	inline bool HasPassInt() { return ((m_bitsPass & BITS_SCHED_PASS_INT) > 0); }
+	inline bool HasPassFloat() { return ((m_bitsPass & BITS_SCHED_PASS_FLOAT) > 0); }
+	inline bool HasPassVector() { return ((m_bitsPass & BITS_SCHED_PASS_VECTOR) > 0); }
+	inline bool HasPassEdict() { return ((m_bitsPass & BITS_SCHED_PASS_EDICT) > 0); }
 
 	inline void SetID(eBotSchedule iId) { m_iSchedId = iId; }
 
@@ -175,10 +163,13 @@ private:
 	eBotSchedule m_iSchedId;
 
 	// passed information to next task(s)
-	int iPass;
-	float fPass;
-	Vector vPass;
-	edict_t *pPass;
+	union
+	{
+		int iPass;
+		float fPass;
+		Vector *vPass;
+		edict_t *pPass;
+	};
 
 	int m_bitsPass;
 };
@@ -186,79 +177,15 @@ private:
 class CBotSchedules
 {
 public:
-	bool HasSchedule(eBotSchedule iSchedule)
-	{
-		dataQueue<CBotSchedule*> tempQueue = m_Schedules;
+	bool HasSchedule(eBotSchedule iSchedule);
 
-		while (!tempQueue.IsEmpty())
-		{
-			CBotSchedule *sched = tempQueue.ChooseFrom();
+	bool IsCurrentSchedule(eBotSchedule iSchedule);
 
-			if (sched->IsID(iSchedule))
-			{
-				tempQueue.Init();
-				return true;
-			}
-		}
+	void RemoveSchedule(eBotSchedule iSchedule);
 
-		return false;
-	}
+	void Execute(CBot *pBot);
 
-	bool IsCurrentSchedule(eBotSchedule iSchedule)
-	{
-		if (m_Schedules.IsEmpty())
-			return false;
-
-		return m_Schedules.GetFrontInfo()->IsID(iSchedule);
-	}
-
-	void RemoveSchedule(eBotSchedule iSchedule)
-	{
-		dataQueue<CBotSchedule*> tempQueue = m_Schedules;
-
-		CBotSchedule *toRemove = NULL;
-
-		while (!tempQueue.IsEmpty())
-		{
-			CBotSchedule *sched = tempQueue.ChooseFrom();
-
-			if (sched->IsID(iSchedule))
-			{
-				toRemove = sched;
-				tempQueue.Init();
-				break;
-			}
-		}
-
-		if (toRemove)
-			m_Schedules.Remove(toRemove);
-
-		return;
-	}
-
-	void Execute(CBot *pBot)
-	{
-		if (IsEmpty())
-			return;
-
-		CBotSchedule *pSched = m_Schedules.GetFrontInfo();
-
-		pSched->Execute(pBot);
-
-		if (pSched->IsComplete() || pSched->HasFailed())
-			RemoveTop();
-	}
-
-	void RemoveTop()
-	{
-		CBotSchedule *pSched = m_Schedules.GetFrontInfo();
-
-		m_Schedules.RemoveFront();
-
-		pSched->FreeMemory();
-
-		delete pSched;
-	}
+	void RemoveTop();
 
 	void FreeMemory()
 	{
@@ -279,36 +206,17 @@ public:
 		m_Schedules.AddFront(pSchedule);
 	}
 
-	inline bool IsEmpty()
+	inline const bool IsEmpty()
 	{
 		return m_Schedules.IsEmpty();
 	}
 
-	CBotTask *GetCurrentTask()
-	{
-		if (!m_Schedules.IsEmpty())
-		{
-			CBotSchedule *sched = m_Schedules.GetFrontInfo();
+	CBotTask *GetCurrentTask();
 
-			if (sched != NULL)
-			{
-				return sched->CurrentTask();
-			}
-		}
-
-		return NULL;
-	}
-
-	CBotSchedule *GetCurrentSchedule()
-	{
-		if (IsEmpty())
-			return NULL;
-
-		return m_Schedules.GetFrontInfo();
-	}
+	CBotSchedule *GetCurrentSchedule();
 
 private:
-	dataQueue <CBotSchedule*> m_Schedules;
+	dataQueue<CBotSchedule*> m_Schedules;
 };
 ///////////////////////////////////////////
 class CBotTF2DemoPipeTrapSched : public CBotSchedule
@@ -445,7 +353,11 @@ public:
 class CBotTFEngiBuild : public CBotSchedule
 {
 public:
+#if defined USE_NAVMESH
+	CBotTFEngiBuild(CBot *pBot, eObjectType iObject, Vector vSpot);
+#else
 	CBotTFEngiBuild(CBot *pBot, eObjectType iObject, CWaypoint *pWaypoint);
+#endif
 
 	void Init();
 };
@@ -562,6 +474,14 @@ class CBotTF2FindFlagSched : public CBotSchedule
 {
 public:
 	CBotTF2FindFlagSched(Vector vOrigin);
+
+	void Init();
+};
+
+class CBotTF2UpgradeWeaponSched : public CBotSchedule
+{
+public:
+	CBotTF2UpgradeWeaponSched(Vector vStationLoc, TFClass iClass);
 
 	void Init();
 };

@@ -32,6 +32,7 @@
 #include "bot_base.h"
 #include "bot_buttons.h"
 #include "in_buttons.h"
+#include <vector>
 
 void CBotButtons::Attack(float fFor, float fFrom)
 {
@@ -117,7 +118,6 @@ int CBotButtons::GetBitMask()
 		}
 
 		return iBitMask;
-
 	}
 }
 

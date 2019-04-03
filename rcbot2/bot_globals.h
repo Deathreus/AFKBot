@@ -38,16 +38,56 @@
 #include "bot_const.h"
 #include "bot_commands.h"
 
+#include <basetypes.h>
+
 #ifdef _WIN32
 #include <ctype.h>
 #endif
 
+#define DebugMsg(str, ...) AFKBot::DebugMessage(str, __VA_ARGS__)
+
+inline bool FStrEq(const char *sz1, const char *sz2)
+{
+	return (sz1 == sz2 || strcasecmp(sz1, sz2) == 0);
+}
+
+inline bool FNullEnt(const edict_t* pent)
+{
+	return (pent == NULL || ENTINDEX(pent) == 0);
+}
+
+template<typename T>
+inline T Min(const T& a, const T& b)
+{
+	if(a < b)
+		return a;
+
+	return b;
+}
+
+template<typename T>
+inline T Max(const T& a, const T& b)
+{
+	if(a > b)
+		return a;
+
+	return b;
+}
+
+template<typename T>
+inline T Clamp(const T& val, const T& min, const T& max)
+{
+	if(val < min)
+		return min;
+	else if(val > max)
+		return max;
+	
+	return val;
+}
+
 class CBotGlobals
 {
 public:
-	CBotGlobals();
-
-	static void Init();
 	static bool InitModFolder();
 
 	static bool GameStart();
@@ -94,8 +134,8 @@ public:
 	static float DotProductFromOrigin(Vector vPlayer, Vector vFacing, QAngle eyes);
 
 	static int NumPlayersOnTeam(int iTeam, bool bAliveOnly);
-	static void SetMapName(const char *szMapName);
-	static char *GetMapName();
+	static inline void SetMapName(string_t iMapName) { m_iMapName = iMapName; }
+	static const char *GetMapName() { return STRING(m_iMapName); }
 
 	static bool IsMapRunning() { return m_bMapRunning; }
 	static void SetMapRunning(bool bSet) { m_bMapRunning = bSet; }
@@ -188,11 +228,13 @@ public:
 
 	static inline bool IsMod(eModId iMod) { return m_iCurrentMod == iMod; }
 
-	static inline char *GameFolder(){ return m_szGameFolder; }
+	static inline const char *GameFolder(){ return m_szGameFolder; }
 
-	static inline char *ModFolder(){ return m_szModFolder; }
+	static inline const char *ModFolder(){ return m_szModFolder; }
 
 	static edict_t *PlayerByUserId(int iUserId);
+
+	static edict_t *GetPlayerWeaponSlot(edict_t *pPlayer, int iSlot);
 
 	static bool IsCurrentMod(eModId modid);
 
@@ -208,35 +250,20 @@ public:
 
 	static void ReadRCBotFolder();
 
-	static bool str_is_empty(const char *s) {
-		while (*s != '\0') {
-			if (!isspace(*s))
-				return false;
-			s++;
-		}
-
-		return true;
-	}
-
 private:
 	static eModId m_iCurrentMod;
 	static CBotMod *m_pCurrentMod;
 	static char *m_szModFolder;
 	static char *m_szGameFolder;
-	static char m_szMapName[MAX_MAP_STRING_LEN];
+	static string_t m_iMapName;
 	static int m_iDebugLevels;
 	static bool m_bMapRunning;
 	static trace_t m_TraceResult;
-	static int m_iMaxClients;
 	static int m_iEventVersion;
 	static int m_iWaypointDisplayType;
 	static bool m_bTeamplay;
 	static float m_fMapStartTime;
 	static char *m_szRCBotFolder;
-
-	/*static Vector m_vForward;
-	static Vector m_vRight;
-	static Vector m_vUp;*/
 };
 
 #endif

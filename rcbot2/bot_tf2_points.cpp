@@ -3,40 +3,52 @@
 #include "bot_getprop.h"
 #include "bot_fortress.h"
 #include "bot_tf2_points.h"
-#include "bot_waypoint.h"
 #include "bot_globals.h"
+
+#if defined USE_NAVMESH
+#include "bot_navmesh.h"
+#else
+#include "bot_waypoint.h"
 #include "bot_waypoint_locations.h"
+#endif
 
 #ifdef GetClassName
-#undef GetClassName
+ #undef GetClassName
 #endif
+
+extern ConVar bot_const_point_offset;
+extern ConVar bot_const_round_offset;
+extern ConVar bot_tf2_autoupdate_point_time;
+extern ConVar bot_tf2_payload_dist_retreat;
+extern ConVar bot_defrate;
+
+extern IServerGameEnts *gameents;
 
 class CBotFuncResetAttackPoint : public IBotFunction
 {
 public:
-	CBotFuncResetAttackPoint(int team) { iTeam = team; }
+	CBotFuncResetAttackPoint(int team) : m_iTeam(team) {}
 	void Execute(CBot *pBot)
 	{
-		if (pBot->GetTeam() == iTeam)
+		if (pBot->GetTeam() == m_iTeam)
 			((CBotTF2*)pBot)->UpdateAttackPoints();
 	}
 private:
-	int iTeam;
+	int m_iTeam;
 };
 
 class CBotFuncResetDefendPoint : public IBotFunction
 {
 public:
-	CBotFuncResetDefendPoint(int team) { iTeam = team; }
+	CBotFuncResetDefendPoint(int team) : m_iTeam(team) {}
 	void Execute(CBot *pBot)
 	{
-		if (pBot->GetTeam() == iTeam)
+		if (pBot->GetTeam() == m_iTeam)
 			((CBotTF2*)pBot)->UpdateDefendPoints();
 	}
 private:
-	int iTeam;
+	int m_iTeam;
 };
-
 
 class CBotFuncPointsUpdated : public IBotFunction
 {
@@ -47,148 +59,215 @@ public:
 	}
 };
 
-void CTFObjectiveResource::UpdatePoints()
+bool CTeamControlPointRound::IsPointInRound(edict_t *point_ent)
 {
-	static CBotFuncResetAttackPoint ResetBlueAttack(TF2_TEAM_BLUE);
-	static CBotFuncResetDefendPoint ResetBlueDefend(TF2_TEAM_BLUE);
-	static CBotFuncResetDefendPoint ResetRedAttack(TF2_TEAM_RED);
-	static CBotFuncResetDefendPoint ResetRedDefend(TF2_TEAM_RED);
-	static CBotFuncPointsUpdated PointsUpdated;
-	bool bChanged = false;
+	edict_t *pPoint;
 
-	m_iMonitorPoint[0] = -1;
-	m_iMonitorPoint[1] = -1;
-
-	CTeamFortress2Mod::m_ObjectiveResource.ResetValidWaypointAreas();
-
-	if (CTeamFortress2Mod::m_ObjectiveResource.UpdateAttackPoints(TF2_TEAM_BLUE))
+	for(int i = 0; i < m_ControlPoints.Size(); i++)
 	{
-		CBots::BotFunction(&ResetBlueAttack);
-		bChanged = true;
+		CBaseHandle *hndl = &m_ControlPoints[i];
+
+		if(hndl)
+		{
+			pPoint = INDEXENT(hndl->GetEntryIndex());
+
+			if(pPoint)
+			{
+				CBaseEntity *test_ent = pPoint->GetUnknown()->GetBaseEntity();
+				if(point_ent->GetUnknown()->GetBaseEntity() == test_ent)
+					return true;
+			}
+		}
 	}
 
-	if (CTeamFortress2Mod::m_ObjectiveResource.UpdateAttackPoints(TF2_TEAM_RED))
-	{
-		CBots::BotFunction(&ResetRedAttack);
-		bChanged = true;
-	}
-
-	if (CTeamFortress2Mod::m_ObjectiveResource.UpdateDefendPoints(TF2_TEAM_BLUE))
-	{
-		CBots::BotFunction(&ResetBlueDefend);
-		bChanged = true;
-	}
-
-	if (CTeamFortress2Mod::m_ObjectiveResource.UpdateDefendPoints(TF2_TEAM_RED))
-	{
-		CBots::BotFunction(&ResetRedDefend);
-		bChanged = true;
-	}
-
-	if (bChanged)
-		CBots::BotFunction(&PointsUpdated);
-
-	CTeamFortress2Mod::m_ObjectiveResource.UpdateValidWaypointAreas();
-
-}
-// INPUT = Waypoint Area
-bool CTFObjectiveResource::IsWaypointAreaValid(int wptarea, int waypointflags)
-{
-	//	CWaypoint *pWaypoint;
-
-	if (wptarea == 0)
-		return true;
-
-	// Translate Waypoint Area to Index
-	if ((wptarea < 0) || (wptarea > MAX_CONTROL_POINTS))
-		return false;
-
-	int cpindex = m_WaypointAreaToIndexTranslation[wptarea];
-
-	if (cpindex == -1)
-		return false;
-
-	if (waypointflags & CWaypointTypes::W_FL_AREAONLY)
-	{
-		// AND
-		return (m_ValidPoints[0][0][cpindex].bValid && m_ValidPoints[1][1][cpindex].bValid) ||
-			(m_ValidPoints[0][1][cpindex].bValid && m_ValidPoints[1][0][cpindex].bValid);
-	}
-
-	// OR
-	return m_ValidAreas[cpindex];
-	/*
-	for ( int i = 0; i < MAX_CONTROL_POINTS; i ++ )
-	{
-	pWaypoint = CWaypoints::getWaypoint(m_iControlPointWpt[i]);
-
-	if ( pWaypoint && (pWaypoint->getArea() == wptarea) )
-	{
-	return m_ValidAreas[i];
-	}
-	}
-
-	// can't find return default
-	return m_ValidAreas[wptarea-1];*/
+	return false;
 }
 
-bool CTFObjectiveResource::IsCPValidWptArea(int iWptArea, int iTeam, ePointAttackDefend_s type)
+CTeamControlPointRound *CTeamControlPointMaster::GetCurrentRound()
 {
-	if (iWptArea == 0)
-		return true;
+	if(!m_ControlPointRounds.IsValidIndex(m_iCurrentRoundIndex))
+		return NULL;
 
-	if ((iWptArea < 1) || (iWptArea > MAX_CONTROL_POINTS))
-		return false;
+	CBaseEntity *pEnt = m_ControlPointRounds[m_iCurrentRoundIndex];
 
-	return IsCPValid(m_WaypointAreaToIndexTranslation[iWptArea], iTeam, type);
+	return (CTeamControlPointRound*)((intptr_t)pEnt + bot_const_round_offset.GetInt());
 }
 
-// Returns TRUE if waypoint area is worth attacking or defending at this moment
-bool CTFObjectiveResource::TestProbWptArea(int iWptArea, int iTeam)
+float CTeamRoundTimer::GetSetupTime()
 {
-	int iCpIndex = m_WaypointAreaToIndexTranslation[iWptArea];
-
-	if ((iTeam != TF2_TEAM_BLUE) && (iTeam != TF2_TEAM_RED))
-		return true;
-
-	if (iWptArea == 0)
-		return true;
-
-	if ((iWptArea < 1) || (iWptArea > MAX_CONTROL_POINTS))
-		return true;
-
-	return IsCPValid(iCpIndex, iTeam, TF2_POINT_ATTACK) ? (RandomFloat(0.0f, 1.0f) > m_ValidPoints[iTeam - 2][TF2_POINT_ATTACK][iCpIndex].fProb) : (IsCPValid(iCpIndex, iTeam, TF2_POINT_DEFEND) ? (RandomFloat(0.0f, 1.0f) > m_ValidPoints[iTeam - 2][TF2_POINT_DEFEND][iCpIndex].fProb) : true);
+	Assert( m_Resource.IsValid() );
+	return (float)GetEntSend<int>(m_Resource, "m_nSetupTimeLength");
 }
 
-bool CTFObjectiveResource::IsCPValid(int iCPIndex, int iTeam, ePointAttackDefend_s type)
+float CTeamRoundTimer::GetEndTime()
 {
-	if ((iCPIndex < 0) || (iCPIndex >= MAX_CONTROL_POINTS))
-		return false;
+	Assert( m_Resource.IsValid() );
+	return GetEntSend<float>(m_Resource, "m_flTimerEndTime");
+}
 
-	return m_ValidPoints[iTeam - 2][type][iCPIndex].bValid;
+const bool CTeamRoundTimer::IsInSetup()
+{
+	Assert( m_Resource.IsValid() );
+	return (GetEntSend<int>(m_Resource, "m_nState") == RT_STATE_SETUP);
+}
+
+void CTeamRoundTimer::Reset()
+{
+	Q_memset(this, 0, sizeof(CTeamRoundTimer));
+
+	extern IServerTools *servertools;
+	m_Resource = servertools->FindEntityByClassname(NULL, "team_round_timer");
+}
+
+
+const Vector CTFObjectiveResource::GetCPPosition(int index)
+{
+	Assert( m_Resource.IsValid() );
+	AssertValidIndex(index);
+	return GetEntData<Vector>(m_Resource, "m_vCPPositions", index);
+}
+
+bool CTFObjectiveResource::TeamCanCapPoint(int index, int team)
+{
+	Assert( m_Resource.IsValid() );
+	AssertValidIndex(index);
+	return GetEntData<bool>(m_Resource, "m_bTeamCanCap", TEAM_ARRAY(index, team));
+}
+
+int CTFObjectiveResource::GetOwningTeam(int index)
+{
+	Assert( m_Resource.IsValid() );
+	AssertValidIndex(index);
+	return GetEntData<int>(m_Resource, "m_iOwner", index);
+}
+
+bool CTFObjectiveResource::IsCPVisible(int index)
+{
+	Assert( m_Resource.IsValid() );
+	AssertValidIndex(index);
+	return GetEntData<bool>(m_Resource, "m_bCPIsVisible", index);
+}
+
+bool CTFObjectiveResource::IsCPBlocked(int index)
+{
+	Assert( m_Resource.IsValid() );
+	AssertValidIndex(index);
+	return GetEntSend<bool>(m_Resource, "m_bBlocked", index);
+}
+
+bool CTFObjectiveResource::IsCPLocked(int index)
+{
+	Assert( m_Resource.IsValid() );
+	AssertValidIndex(index);
+	return GetEntSend<bool>(m_Resource, "m_bCPLocked", index);
+}
+
+int CTFObjectiveResource::GetCappingTeam(int index)
+{
+	Assert( m_Resource.IsValid() );
+	AssertValidIndex(index);
+	return GetEntSend<int>(m_Resource, "m_iCappingTeam", index);
+}
+
+int CTFObjectiveResource::GetTeamInZone(int index)
+{
+	Assert( m_Resource.IsValid() );
+	AssertValidIndex(index);
+	return GetEntData<int>(m_Resource, "m_iTeamInZone", index);
+}
+
+int CTFObjectiveResource::GetNumPlayersInArea(int index, int team)
+{
+	Assert( m_Resource.IsValid() );
+	AssertValidIndex(index);
+	return GetEntData<int>(m_Resource, "m_iNumTeamMembers", TEAM_ARRAY(index, team));
+}
+
+int CTFObjectiveResource::GetRequiredCappers(int index, int team)
+{
+	Assert( m_Resource.IsValid() );
+	AssertValidIndex(index);
+	return GetEntData<int>(m_Resource, "m_iTeamReqCappers", TEAM_ARRAY(index, team));
+}
+
+int CTFObjectiveResource::GetBaseControlPointForTeam(int iTeam)
+{
+	Assert( m_Resource.IsValid() );
+	Assert( iTeam >= 0 && iTeam < MAX_CONTROL_POINT_TEAMS );
+	return GetEntSend<int>(m_Resource, "m_iBaseControlPoints", iTeam);
+}
+
+float CTFObjectiveResource::GetCPUnlockTime(int index)
+{
+	Assert( m_Resource.IsValid() );
+	AssertValidIndex(index);
+	return GetEntSend<float>(m_Resource, "m_flUnlockTimes", index);
+}
+
+int CTFObjectiveResource::GetPreviousPointForPoint(int index, int team, int iPrevIndex)
+{
+	Assert( m_Resource.IsValid() );
+	AssertValidIndex(index);
+	AssertValidIndex(iPrevIndex);
+	int iIndex = iPrevIndex + (index * MAX_PREVIOUS_POINTS) + (team * MAX_CONTROL_POINTS * MAX_PREVIOUS_POINTS);
+	return GetEntData<int>(m_Resource, "m_iPreviousPoints", iIndex);
+}
+
+bool CTFObjectiveResource::PlayingMiniRounds(void)
+{
+	Assert( m_Resource.IsValid() );
+	return GetEntSend<bool>(m_Resource, "m_bPlayingMiniRounds");
+}
+
+bool CTFObjectiveResource::IsInMiniRound(int index)
+{
+	Assert( m_Resource.IsValid() );
+	AssertValidIndex(index);
+	return GetEntSend<bool>(m_Resource, "m_bInMiniRound", index);
 }
 
 // TO DO  - Base on waypoint danger
 // base on base point -- if already have attack point and base point -- less focus on base point
-int CTFObjectiveResource::GetRandomValidPointForTeam(int team, ePointAttackDefend_s type)
+int CTFObjectiveResource::GetRandomValidPointForTeam(int team, ePointAttackDefend type)
 {
-	TF2PointProb_t *arr = NULL;
-	vector<int> points;
-	int iotherteam;
-
-	float fTotal = 0.0f;
-
 	if ((team < 2) || (team > 3))
 		return 0;
 
-	if (m_iNumControlPoints == NULL)
+	if (m_iNumControlPoints < 2)
 		return 0;
 
-	iotherteam = (team == 2) ? 3 : 2;
+	int iOtherTeam = (team == 2) ? 3 : 2;
 
-	arr = m_ValidPoints[team - 2][type];
+	if(CTeamFortress2Mod::IsMapType(TF_MAP_5CP))
+	{
+		for(int i = 0; i < m_iNumControlPoints; i++)
+		{
+			if(type == TF2_POINT_ATTACK)
+			{
+				if(GetOwningTeam(i) != team && !IsCPLocked(i))
+				#if defined USE_NAVMESH // We use the actual CP index if using navmesh
+					return i;
+				#else
+					return m_IndexToWaypointAreaTranslation[i];
+				#endif
+			}
+			else
+			{
+				if(GetOwningTeam(i) != iOtherTeam && !IsCPLocked(i))
+				#if defined USE_NAVMESH // We use the actual CP index if using navmesh
+					return i;
+				#else
+					return m_IndexToWaypointAreaTranslation[i];
+				#endif
+			}
+		}
+	}
 
-	for (int i = 0; i < *m_iNumControlPoints; i++)
+	std::vector<int> points;
+	float fTotal = 0.0f;
+	TF2PointProb_t *arr = m_ValidPoints[team - 2][type];
+
+	for (int i = 0; i < m_iNumControlPoints; i++)
 	{
 		if (arr[i].bValid == true)
 		{
@@ -198,14 +277,14 @@ int CTFObjectiveResource::GetRandomValidPointForTeam(int team, ePointAttackDefen
 			{
 				if (GetCappingTeam(i) == team)
 					arr[i].fProbMultiplier = 3.0f;
-				else if ((GetLastCaptureTime(i) + 10.0f) > gpGlobals->curtime)
+				else if ((GetLastCaptureTime(i) + 10.0f) > TIME_NOW)
 					arr[i].fProbMultiplier = 2.0f;
 			}
 			else
 			{
-				if (GetCappingTeam(i) == iotherteam)
+				if (GetCappingTeam(i) == iOtherTeam)
 				{
-					int numplayers = GetNumPlayersInArea(i, iotherteam);
+					int numplayers = GetNumPlayersInArea(i, iOtherTeam);
 
 					// IF this is not base point and a lot of players are here, reduce probability of defending
 					if ((i != GetBaseControlPointForTeam(team)) && (numplayers > 1))
@@ -218,7 +297,7 @@ int CTFObjectiveResource::GetRandomValidPointForTeam(int team, ePointAttackDefen
 					else // Otherwise there aren't any playres on or is base and has been attacked recently
 						arr[i].fProbMultiplier = 4.0f;
 				}
-				else if ((GetLastCaptureTime(i) + 10.0f) > gpGlobals->curtime)
+				else if ((GetLastCaptureTime(i) + 10.0f) > TIME_NOW)
 					arr[i].fProbMultiplier = 2.0f;
 			}
 
@@ -238,7 +317,11 @@ int CTFObjectiveResource::GetRandomValidPointForTeam(int team, ePointAttackDefen
 
 		if (fTotal > fRand)
 		{
+		#if defined USE_NAVMESH // We use the actual CP index if using navmesh
+			return index;
+		#else
 			return m_IndexToWaypointAreaTranslation[index];
+		#endif
 		}
 	}
 
@@ -246,157 +329,257 @@ int CTFObjectiveResource::GetRandomValidPointForTeam(int team, ePointAttackDefen
 	return 0;
 }
 
-void CTeamRoundTimer::Reset()
+void CTFObjectiveResource::Reset()
 {
-	CTeamRoundTimer();
+	Q_memset(this, 0, sizeof(CTFObjectiveResource));
 
-	m_Resource = CClassInterface::FindEntityByNetClass(MAX_PLAYERS + 1, "CTeamRoundTimer");
-	if (m_Resource.Get() != NULL)
-	{
-		CClassInterface::SetupCTeamRoundTimer(this);
-	}
+	extern IServerTools *servertools;
+	m_Resource = servertools->FindEntityByClassname(NULL, "tf_objective_resource");
+	
+	Assert( m_Resource.IsValid() );
+	Setup();
 }
-
-bool CTeamControlPointRound::IsPointInRound(edict_t *point_pent)
-{
-	edict_t *pPoint;
-	extern ConVar bot_const_point_offset;
-
-	for (int i = 0; i < m_ControlPoints.Size(); i++)
-	{
-		CBaseHandle *hndl;
-
-		hndl = (CBaseHandle *)&(m_ControlPoints[i]);
-
-		if (hndl)
-		{
-			pPoint = INDEXENT(hndl->GetEntryIndex());
-
-			CBaseEntity *pent = pPoint->GetUnknown()->GetBaseEntity();
-
-			if (point_pent->GetUnknown()->GetBaseEntity() == pent)
-				return true;
-
-			//CTeamControlPoint *point = (CTeamControlPoint*)((unsigned long)pent + bot_const_point_offset.GetInt() );
-
-			//if ( point )
-			//{
-			//	if ( point->m_iIndex == iIndex )
-			//		return true;
-			//}
-		}
-	}
-
-	return false;
-}
-
-CTeamControlPointRound *CTeamControlPointMaster::GetCurrentRound()
-{
-	if (m_iCurrentRoundIndex == -1)
-		return NULL;
-
-	CBaseEntity *pent = m_ControlPointRounds[m_iCurrentRoundIndex];
-
-	//extern IServerGameEnts *gameents;
-
-	//edict_t *p = gameents->BaseEntityToEdict(pent);
-
-	extern ConVar bot_const_round_offset;
-	/*
-	CTeamControlPointRound *org = (CTeamControlPointRound*)((unsigned long)pent+(unsigned long)bot_const_round_offset.GetInt());
-	CTeamControlPointRound *fromunk = (CTeamControlPointRound*)p->GetUnknown();
-	CTeamControlPointRound *fromserverent = (CTeamControlPointRound*)p->GetIServerEntity();*/
-
-	return (CTeamControlPointRound*)((unsigned long)pent + (unsigned long)bot_const_round_offset.GetInt());
-}
-
-//////////////////
-
 
 void CTFObjectiveResource::Setup()
 {
-	CClassInterface::GetTF2ObjectiveResource(this);
+	m_iNumControlPoints = GetEntSend<int>(m_Resource, "m_iNumControlPoints");
 
-	memset(m_pControlPoints, 0, sizeof(edict_t*)*MAX_CONTROL_POINTS);
-	memset(m_iControlPointWpt, 0xFF, sizeof(int)*MAX_CONTROL_POINTS);
-	memset(m_fLastCaptureTime, 0, sizeof(float)*MAX_CONTROL_POINTS);
-	// Find control point entities
+	Q_memset(m_iControlPointWpt, 0xFF, sizeof(int)*MAX_CONTROL_POINTS);
 
-	edict_t *pent;
+	Q_memset(m_pControlPoints, 0, sizeof(edict_t*)*MAX_CONTROL_POINTS);
+	Q_memset(m_iControlPointWpt, 0xFF, sizeof(int)*MAX_CONTROL_POINTS);
+	Q_memset(m_fLastCaptureTime, 0, sizeof(float)*MAX_CONTROL_POINTS);
 
+	Q_memset(m_IndexToWaypointAreaTranslation, 0, sizeof(int)*MAX_CONTROL_POINTS);
+	Q_memset(m_WaypointAreaToIndexTranslation, 0xFF, sizeof(int)*(MAX_CONTROL_POINTS + 1));
+
+	m_iMonitorPoint[0] = -1;
+	m_iMonitorPoint[1] = -1;
+
+	edict_t *pEnt;
 	Vector vOrigin;
-
-	int i = MAX_PLAYERS;
-	int maxEnts = MAX_ENTITIES;
-
-	memset(m_IndexToWaypointAreaTranslation, 0, sizeof(int)*MAX_CONTROL_POINTS);
-	memset(m_WaypointAreaToIndexTranslation, 0xFF, sizeof(int)*(MAX_CONTROL_POINTS + 1));
-
-	// find visible flags -- with a model
-	while (++i < maxEnts)
+	for(int i = MAX_PLAYERS; i < MAX_ENTITIES; ++i)
 	{
-		pent = INDEXENT(i);
-
-		if (!pent || pent->IsFree())
+		pEnt = INDEXENT(i);
+		if(!pEnt || pEnt->IsFree())
 			continue;
 
-		if (strcmp(pent->GetClassName(), "team_control_point") == 0)
+		if(strcmp(pEnt->GetClassName(), "team_control_point") == 0)
 		{
-			vOrigin = CBotGlobals::EntityOrigin(pent);
+			vOrigin = CBotGlobals::EntityOrigin(pEnt);
 
-			for (int j = 0; j < *m_iNumControlPoints; j++)
+			for(int j = 0; j < m_iNumControlPoints; j++)
 			{
-				if (m_pControlPoints[j].Get() != NULL)
+				if(m_pControlPoints[j].Get() != NULL)
 					continue;
 
-				if (vOrigin == m_vCPPositions[j])
-				{
-					m_pControlPoints[j] = MyEHandle(pent);
-					//m_pControlPointClass[j] = CTeamControlPoint::getPoint(pent);
-				}
+				if(VectorsAreEqual(vOrigin, GetCPPosition(j), 1.0f))
+					m_pControlPoints[j] = pEnt;
 			}
 		}
 	}
+#if defined USE_NAVMESH
+	for(int i = 0; i < m_iNumControlPoints; i++)
+	{
+		vOrigin = GetCPPosition(i);
 
+		if(m_iControlPointWpt[i] == -1)
+		{
+			INavMeshArea *area = g_pNavMesh->GetArea(vOrigin);
+			if(area)
+			{
+				m_iControlPointWpt[i] = area->GetID();
+			}
+		}
+	}
+#else
 	CWaypoint *pWaypoint;
 	int iWpt;
 
-	for (int j = 0; j < *m_iNumControlPoints; j++)
+	for (int i = 0; i < m_iNumControlPoints; i++)
 	{
-		vOrigin = m_vCPPositions[j];
+		vOrigin = GetCPPosition(i);
 
-		if (m_iControlPointWpt[j] == -1)
+		if (m_iControlPointWpt[i] == -1)
 		{
 			iWpt = CWaypointLocations::NearestWaypoint(vOrigin, 1024.0f, -1, false, false, false, NULL, false, 0, false, false, Vector(0, 0, 0), CWaypointTypes::W_FL_CAPPOINT);
 			pWaypoint = CWaypoints::GetWaypoint(iWpt);
-			m_iControlPointWpt[j] = iWpt;
+			m_iControlPointWpt[i] = iWpt;
 
 			// For compatibility -- old waypoints are already set with an area, so take the area from the waypoint here
 			// in the future waypoints will automatically be set to the waypoint area anyway
 			if (pWaypoint)
 			{
 				int iArea = pWaypoint->GetArea();
-				m_IndexToWaypointAreaTranslation[j] = iArea;
+				m_IndexToWaypointAreaTranslation[i] = iArea;
 
-				if ((iArea >= 1) && (iArea < MAX_CONTROL_POINTS))
-					m_WaypointAreaToIndexTranslation[iArea] = j;
+				if ((iArea >= 1) && (iArea <= MAX_CONTROL_POINTS))
+					m_WaypointAreaToIndexTranslation[iArea] = i;
 			}
 			else
 			{
-				m_IndexToWaypointAreaTranslation[j] = 0;
-				m_WaypointAreaToIndexTranslation[j + 1] = -1;
+				m_IndexToWaypointAreaTranslation[i] = 0;
+				m_WaypointAreaToIndexTranslation[i + 1] = -1;
 			}
 		}
 	}
+#endif
 
 	m_bInitialised = true;
 }
 
-int CTFObjectiveResource::GetControlPointArea(edict_t *pPoint)
+void CTFObjectiveResource::Think()
 {
-	for (int j = 0; j < *m_iNumControlPoints; j++)
+	if(m_bInitialised && (m_fNextCheckMonitoredPoint < TIME_NOW))
 	{
-		if (m_pControlPoints[j] == pPoint)
+		bool bUpdate = (m_fUpdatePointTime < TIME_NOW);
+
+		int iTeam = 0;
+		while(iTeam < 2 && !bUpdate)
+		{
+			if(m_iMonitorPoint[iTeam] != -1)
+			{
+				for(int j = 0; j < MAX_PREVIOUS_POINTS; j++)
+				{
+					int prev = GetPreviousPointForPoint(m_iMonitorPoint[iTeam], (iTeam + 2), j);
+
+					if((prev != -1) && (GetOwningTeam(prev) != (iTeam + 2)))
+					{
+						bUpdate = true;
+						break;
+					}
+				}
+			}
+			++iTeam;
+		}
+
+		if(bUpdate)
+		{
+			UpdatePoints();
+
+			m_fNextCheckMonitoredPoint = TIME_NOW + 5.0f;
+			m_fUpdatePointTime = TIME_NOW + bot_tf2_autoupdate_point_time.GetFloat();
+		}
+		else
+			m_fNextCheckMonitoredPoint = TIME_NOW + 1.0f;
+	}
+}
+
+void CTFObjectiveResource::UpdatePoints()
+{
+	static CBotFuncResetAttackPoint ResetBlueAttack(TF2_TEAM_BLUE);
+	static CBotFuncResetDefendPoint ResetBlueDefend(TF2_TEAM_BLUE);
+	static CBotFuncResetAttackPoint ResetRedAttack(TF2_TEAM_RED);
+	static CBotFuncResetDefendPoint ResetRedDefend(TF2_TEAM_RED);
+	static CBotFuncPointsUpdated PointsUpdated;
+	bool bChanged = false;
+
+	m_iMonitorPoint[0] = -1;
+	m_iMonitorPoint[1] = -1;
+
+	CTeamFortress2Mod::m_ObjectiveResource.ResetValidWaypointAreas();
+
+	if(CTeamFortress2Mod::m_ObjectiveResource.UpdateAttackPoints(TF2_TEAM_BLUE))
+	{
+		CBots::BotFunction(ResetBlueAttack);
+		bChanged = true;
+	}
+
+	if(CTeamFortress2Mod::m_ObjectiveResource.UpdateAttackPoints(TF2_TEAM_RED))
+	{
+		CBots::BotFunction(ResetRedAttack);
+		bChanged = true;
+	}
+
+	if(CTeamFortress2Mod::m_ObjectiveResource.UpdateDefendPoints(TF2_TEAM_BLUE))
+	{
+		CBots::BotFunction(ResetBlueDefend);
+		bChanged = true;
+	}
+
+	if(CTeamFortress2Mod::m_ObjectiveResource.UpdateDefendPoints(TF2_TEAM_RED))
+	{
+		CBots::BotFunction(ResetRedDefend);
+		bChanged = true;
+	}
+
+	if(bChanged)
+		CBots::BotFunction(PointsUpdated);
+
+	CTeamFortress2Mod::m_ObjectiveResource.UpdateValidWaypointAreas();
+
+}
+
+const bool CTFObjectiveResource::IsWaypointAreaValid(int wptarea, int waypointflags) const
+{
+#if defined USE_NAVMESH
+	return true;
+#else
+	if(wptarea == 0)
+		return true;
+
+	// Translate Waypoint Area to Index
+	if((wptarea < 0) || (wptarea > MAX_CONTROL_POINTS))
+		return false;
+
+	int cpindex = m_WaypointAreaToIndexTranslation[wptarea];
+
+	if(cpindex == -1)
+		return false;
+
+	if(waypointflags & CWaypointTypes::W_FL_AREAONLY)
+	{
+		// AND
+		return (m_ValidPoints[0][0][cpindex].bValid && m_ValidPoints[1][1][cpindex].bValid) ||
+			(m_ValidPoints[0][1][cpindex].bValid && m_ValidPoints[1][0][cpindex].bValid);
+	}
+
+	// OR
+	return m_ValidAreas[cpindex];
+#endif
+}
+
+const bool CTFObjectiveResource::IsCPValidWptArea(int iWptArea, int iTeam, ePointAttackDefend type) const
+{
+	if(iWptArea == 0)
+		return true;
+
+	if((iWptArea < 1) || (iWptArea > MAX_CONTROL_POINTS))
+		return false;
+
+	return IsCPValid(m_WaypointAreaToIndexTranslation[iWptArea], iTeam, type);
+}
+
+// Returns TRUE if waypoint area is worth attacking or defending at this moment
+const bool CTFObjectiveResource::TestProbWptArea(int iWptArea, int iTeam) const
+{
+	int iCpIndex = m_WaypointAreaToIndexTranslation[iWptArea];
+
+	if((iTeam != TF2_TEAM_BLUE) && (iTeam != TF2_TEAM_RED))
+		return true;
+
+	if(iWptArea == 0)
+		return true;
+
+	if((iWptArea < 1) || (iWptArea > MAX_CONTROL_POINTS))
+		return true;
+
+	return IsCPValid(iCpIndex, iTeam, TF2_POINT_ATTACK) ? (RandomFloat(0.0f, 1.0f) > m_ValidPoints[iTeam - 2][TF2_POINT_ATTACK][iCpIndex].fProb) : (IsCPValid(iCpIndex, iTeam, TF2_POINT_DEFEND) ? (RandomFloat(0.0f, 1.0f) > m_ValidPoints[iTeam - 2][TF2_POINT_DEFEND][iCpIndex].fProb) : true);
+}
+
+const bool CTFObjectiveResource::IsCPValid(int iCPIndex, int iTeam, ePointAttackDefend type) const
+{
+	if((iCPIndex < 0) || (iCPIndex >= MAX_CONTROL_POINTS))
+		return false;
+
+	return m_ValidPoints[iTeam - 2][type][iCPIndex].bValid;
+}
+
+int CTFObjectiveResource::GetControlPointArea(edict_t *pPoint) const
+{
+	for (int j = 0; j < m_iNumControlPoints; j++)
+	{
+		if (m_pControlPoints[j].Get() == pPoint)
 			return (j + 1); // return waypoint area (+1)
 	}
 
@@ -409,9 +592,9 @@ int CTFObjectiveResource::NearestArea(Vector vOrigin)
 	float fNearest = 2048.0f;
 	float fDist;
 
-	for (int i = 0; i < *m_iNumControlPoints; i++)
+	for (int i = 0; i < m_iNumControlPoints; i++)
 	{
-		if ((fDist = (m_vCPPositions[i] - vOrigin).Length()) < fNearest)
+		if ((fDist = (GetCPPosition(i) - vOrigin).Length()) < fNearest)
 		{
 			fNearest = fDist;
 			iNearest = i;
@@ -441,7 +624,7 @@ bool CTFObjectiveResource::UpdateDefendPoints(int team)
 	//CTeamControlPointMaster *pMaster = CTeamFortress2Mod::getPointMaster();
 	CTeamControlPointRound *pRound = CTeamFortress2Mod::GetCurrentRound();
 
-	if (m_ObjectiveResource.Get() == NULL) // not set up yet
+	if (m_Resource.Get() == NULL) // not set up yet
 		return false;
 	if (team == 0) // invalid team
 		return false;
@@ -449,19 +632,19 @@ bool CTFObjectiveResource::UpdateDefendPoints(int team)
 	arr = m_ValidPoints[team - 2][TF2_POINT_DEFEND];
 
 	// reset array
-	memset(arr, 0, sizeof(TF2PointProb_t)*MAX_CONTROL_POINTS);
+	Q_memset(arr, 0, sizeof(TF2PointProb_t)*MAX_CONTROL_POINTS);
 
-	for (int i = 0; i < *m_iNumControlPoints; i++)
+	for (int i = 0; i < m_iNumControlPoints; i++)
 	{
 		arr[i].fProbMultiplier = 1.0f;
 		arr[i].fProb = 1.0f;
-		memset(arr[i].iPrev, 0xFF, sizeof(int)*MAX_PREVIOUS_POINTS);
+		Q_memset(arr[i].iPrev, 0xFF, sizeof(int)*MAX_PREVIOUS_POINTS);
 
 		// not visible
-		if (m_bCPIsVisible[i] == 0)
+		if (!IsCPVisible(i))
 			continue;
 		// not unlocked
-		if (m_flUnlockTimes[i] > gpGlobals->curtime)
+		if (GetCPUnlockTime(i) > TIME_NOW)
 			continue;
 		// not in round
 		if (m_pControlPoints[i] && pRound && !pRound->IsPointInRound(m_pControlPoints[i]))
@@ -516,16 +699,6 @@ bool CTFObjectiveResource::UpdateDefendPoints(int team)
 						{
 							arr[i].bValid = true;
 						}
-						/*
-						// other team has captured previous points
-						if ( j == 3 )
-						{
-						arr[i].bValid = true;
-						continue;
-						}
-						else
-						{
-						continue;*/
 					}
 				}
 				else
@@ -543,13 +716,13 @@ bool CTFObjectiveResource::UpdateDefendPoints(int team)
 							int iNumOwned = 0;
 							int iNumAvailable = 0;
 
-							for (int j = 0; j < *m_iNumControlPoints; j++)
+							for (int j = 0; j < m_iNumControlPoints; j++)
 							{
 								// not visible
-								if (m_bCPIsVisible[j] == 0)
+								if (!IsCPVisible(j))
 									continue;
 								// not unlocked
-								if (m_flUnlockTimes[j] > gpGlobals->curtime)
+								if (GetCPUnlockTime(j) > TIME_NOW)
 									continue;
 								// not in round
 								if (m_pControlPoints[j] && pRound && !pRound->IsPointInRound(m_pControlPoints[j]))
@@ -568,7 +741,6 @@ bool CTFObjectiveResource::UpdateDefendPoints(int team)
 							}
 							else if (iNumOwned == (iNumAvailable - 2))
 							{
-								extern ConVar bot_defrate;
 								// other team can capture this as the next point
 								arr[i].fProb = bot_defrate.GetFloat();
 							}
@@ -588,7 +760,7 @@ bool CTFObjectiveResource::UpdateDefendPoints(int team)
 		}
 	}
 	// do another search through the previous points
-	for (int i = 0; i < *m_iNumControlPoints; i++)
+	for (int i = 0; i < m_iNumControlPoints; i++)
 	{
 		if (arr[i].bPrev)
 		{
@@ -612,8 +784,6 @@ bool CTFObjectiveResource::UpdateDefendPoints(int team)
 				// this point is next because the current valid points are required
 				arr[i].bNextPoint = true;
 
-				extern ConVar bot_defrate;
-
 				// other team can capture this as the next point
 				// lower chance of defending the next point before round has started!!! Get everyone up!!
 				arr[i].fProb = CTeamFortress2Mod::HasRoundStarted() ? bot_defrate.GetFloat() : (bot_defrate.GetFloat()*0.5f);
@@ -621,7 +791,7 @@ bool CTFObjectiveResource::UpdateDefendPoints(int team)
 		}
 	}
 
-	for (int i = 0; i < *m_iNumControlPoints; i++)
+	for (int i = 0; i < m_iNumControlPoints; i++)
 	{
 		if (arr[i].bNextPoint)
 			arr[i].bValid = true;
@@ -630,7 +800,7 @@ bool CTFObjectiveResource::UpdateDefendPoints(int team)
 			bool bfound = false;
 
 			// find this point in one of the previous points
-			for (int j = 0; j < *m_iNumControlPoints; j++)
+			for (int j = 0; j < m_iNumControlPoints; j++)
 			{
 				if (i == j)
 					continue;
@@ -668,12 +838,10 @@ bool CTFObjectiveResource::UpdateDefendPoints(int team)
 	{
 		float fMaxProb = 1.0f;
 		bool bFirst = true;
-		extern ConVar bot_defrate;
-		extern ConVar bot_tf2_payload_dist_retreat;
 
 		other = (team == 2) ? 3 : 2;
 
-		for (int i = 0; i < *m_iNumControlPoints; i++)
+		for (int i = 0; i < m_iNumControlPoints; i++)
 		{
 			if (arr[i].bValid)
 			{
@@ -684,7 +852,7 @@ bool CTFObjectiveResource::UpdateDefendPoints(int team)
 					if (bFirst)
 					{
 						// TO DO update probability depending on distance to payload bomb
-						float fDist = (CBotGlobals::EntityOrigin(pPayloadBomb) - m_vCPPositions[i]).Length();
+						float fDist = (CBotGlobals::EntityOrigin(pPayloadBomb) - GetCPPosition(i)).Length();
 
 						bFirst = false;
 
@@ -703,7 +871,7 @@ bool CTFObjectiveResource::UpdateDefendPoints(int team)
 
 							int j = i + 1;
 
-							if (j < *m_iNumControlPoints)
+							if (j < m_iNumControlPoints)
 							{
 								if (arr[j].bValid == false)
 								{
@@ -732,7 +900,7 @@ bool CTFObjectiveResource::UpdateDefendPoints(int team)
 	}
 
 	// update signature
-	for (int i = 0; i < *m_iNumControlPoints; i++)
+	for (int i = 0; i < m_iNumControlPoints; i++)
 	{
 		byte j;
 		byte *barr = (byte*)&(arr[i]);
@@ -750,47 +918,6 @@ bool CTFObjectiveResource::UpdateDefendPoints(int team)
 	return false;
 }
 
-void CTFObjectiveResource::Think()
-{
-	if (m_bInitialised && (m_fNextCheckMonitoredPoint < engine->Time()))
-	{
-		bool bupdate = (m_fUpdatePointTime < engine->Time());
-
-		int team = 0;
-
-		do
-		{
-			if (m_iMonitorPoint[team] != -1)
-			{
-				for (int j = 0; j < MAX_PREVIOUS_POINTS; j++)
-				{
-					int prev = GetPreviousPointForPoint(m_iMonitorPoint[team], (team + 2), j);
-
-					if ((prev != -1) && (GetOwningTeam(prev) != (team + 2)))
-					{
-						bupdate = true;
-						break;
-					}
-				}
-			}
-			team++;
-		} while ((team < 2) && (bupdate == false));
-
-		if (bupdate)
-		{
-			extern ConVar bot_tf2_autoupdate_point_time;
-
-			UpdatePoints();
-
-			m_fNextCheckMonitoredPoint = engine->Time() + 5.0f;
-			m_fUpdatePointTime = engine->Time() + bot_tf2_autoupdate_point_time.GetFloat();
-		}
-		else
-			m_fNextCheckMonitoredPoint = engine->Time() + 1.0f;
-	}
-
-}
-
 // return true if bots should change attack point
 bool CTFObjectiveResource::UpdateAttackPoints(int team)
 {
@@ -799,7 +926,7 @@ bool CTFObjectiveResource::UpdateAttackPoints(int team)
 	CTeamControlPointRound *pRound = CTeamFortress2Mod::GetCurrentRound();
 	TF2PointProb_t *arr;
 
-	if (m_ObjectiveResource.Get() == NULL) // not set up yet
+	if (!m_Resource.IsValid()) // not set up yet
 		return false;
 	if (team == 0)
 		return false;
@@ -807,8 +934,8 @@ bool CTFObjectiveResource::UpdateAttackPoints(int team)
 	arr = m_ValidPoints[team - 2][TF2_POINT_ATTACK];
 
 	// reset array
-	memset(arr, 0, sizeof(TF2PointProb_t)*MAX_CONTROL_POINTS);
-	memset(arr->iPrev, 0xFF, sizeof(int)*MAX_PREVIOUS_POINTS);
+	Q_memset(arr, 0, sizeof(TF2PointProb_t)*MAX_CONTROL_POINTS);
+	Q_memset(arr->iPrev, 0xFF, sizeof(int)*MAX_PREVIOUS_POINTS);
 
 	if ((team == TF2_TEAM_RED) && (CTeamFortress2Mod::IsAttackDefendMap()))
 	{
@@ -816,17 +943,17 @@ bool CTFObjectiveResource::UpdateAttackPoints(int team)
 		return false;
 	}
 
-	for (int i = 0; i < *m_iNumControlPoints; i++)
+	for (int i = 0; i < m_iNumControlPoints; i++)
 	{
 		arr[i].fProb = 1.0f;
 		arr[i].fProbMultiplier = 1.0f;
-		memset(arr[i].iPrev, 0xFF, sizeof(int)*MAX_PREVIOUS_POINTS);
+		Q_memset(arr[i].iPrev, 0xFF, sizeof(int)*MAX_PREVIOUS_POINTS);
 
 		// not visible
-		if (m_bCPIsVisible[i] == 0)
+		if (!IsCPVisible(i))
 			continue;
 		// not unlocked
-		if (m_flUnlockTimes[i] > engine->Time())
+		if (GetCPUnlockTime(i) > TIME_NOW)
 			continue;
 		// not in round
 		if (m_pControlPoints[i] && pRound && !pRound->IsPointInRound(m_pControlPoints[i]))
@@ -910,7 +1037,7 @@ bool CTFObjectiveResource::UpdateAttackPoints(int team)
 							bool allowned = true;
 
 							// make sure bot owns all points above this point
-							for (int x = i + 1; x < *m_iNumControlPoints; x++)
+							for (int x = i + 1; x < m_iNumControlPoints; x++)
 							{
 								if (GetOwningTeam(x) != team)
 								{
@@ -924,7 +1051,7 @@ bool CTFObjectiveResource::UpdateAttackPoints(int team)
 
 							continue;
 						}
-						else if (basepoint == ((*m_iNumControlPoints) - 1))
+						else if (basepoint == ((m_iNumControlPoints) - 1))
 						{
 							bool allowned = true;
 							// make sure team owns all points below this point
@@ -952,14 +1079,14 @@ bool CTFObjectiveResource::UpdateAttackPoints(int team)
 	}
 
 	// Flush out less important cap points
-	for (int i = 0; i < *m_iNumControlPoints; i++)
+	for (int i = 0; i < m_iNumControlPoints; i++)
 	{
 		if (arr[i].bValid)
 		{
 			bool bfound = false;
 
 			// find this point in one of the previous points
-			for (int j = 0; j < *m_iNumControlPoints; j++)
+			for (int j = 0; j < m_iNumControlPoints; j++)
 			{
 				if (i == j)
 					continue;
@@ -995,17 +1122,17 @@ bool CTFObjectiveResource::UpdateAttackPoints(int team)
 	// In Payload give lower numbers higher priority 
 	if (CTeamFortress2Mod::IsMapType(TF_MAP_CART) || CTeamFortress2Mod::IsMapType(TF_MAP_CARTRACE))
 	{
-		for (int i = 0; i < *m_iNumControlPoints; i++)
+		for (int i = 0; i < m_iNumControlPoints; i++)
 		{
 			if (arr[i].bValid)
 			{
-				arr[i].fProb = (float)(*m_iNumControlPoints + 1 - i);
+				arr[i].fProb = (float)(m_iNumControlPoints + 1 - i);
 				arr[i].fProb *= arr[i].fProb; // square it
 			}
 		}
 	}
 
-	for (int i = 0; i < *m_iNumControlPoints; i++)
+	for (int i = 0; i < m_iNumControlPoints; i++)
 	{
 		byte j;
 		byte *barr = (byte*)&(arr[i]);
@@ -1026,10 +1153,10 @@ bool CTFObjectiveResource::UpdateAttackPoints(int team)
 
 void CTFObjectiveResource::UpdateCaptureTime(int index)
 {
-	m_fLastCaptureTime[index] = engine->Time();
+	m_fLastCaptureTime[index] = TIME_NOW;
 }
 
-float CTFObjectiveResource::GetLastCaptureTime(int index)
+float CTFObjectiveResource::GetLastCaptureTime(int index) const
 {
 	return m_fLastCaptureTime[index];
 }

@@ -1,10 +1,21 @@
 #ifndef __BOT_CVARS_H__
 #define __BOT_CVARS_H__
 
-extern ConVar bot_cmd_enable_wpt_sounds;
-extern ConVar bot_command;
+extern ConVar bot_notarget;
+extern ConVar bot_debug_notasks;
+extern ConVar bot_debug_dont_shoot;
+extern ConVar bot_debug_show_route;
+extern ConVar bot_debug_show_waypoints;
+extern ConVar bot_debug_iglev;
+extern ConVar bot_dont_move;
 extern ConVar bot_attack;
 extern ConVar bot_stop;
+extern ConVar bot_melee_only;
+extern ConVar bot_nocapturing;
+extern ConVar bot_tf2_debug_spies_cloakdisguise;
+
+extern ConVar bot_cmd_enable_wpt_sounds;
+extern ConVar bot_command;
 extern ConVar bot_waypointpathdist;
 extern ConVar bot_avoid_radius;
 extern ConVar bot_avoid_strength;
@@ -17,13 +28,9 @@ extern ConVar bot_smoke_time;
 extern ConVar bot_shoot_breakables;
 extern ConVar bot_shoot_breakable_dist;
 extern ConVar bot_shoot_breakable_cos;
-extern ConVar bot_notarget;
 extern ConVar bot_jump_obst_dist;
 extern ConVar bot_jump_obst_speed;
 extern ConVar bot_speed_boost;
-extern ConVar bot_melee_only;
-extern ConVar bot_debug_iglev;
-extern ConVar bot_dont_move;
 extern ConVar bot_runplayercmd_hookonce;
 extern ConVar bot_ladder_offs;
 extern ConVar bot_ffa;
@@ -31,20 +38,15 @@ extern ConVar bot_menu_update_time1;
 extern ConVar bot_menu_update_time2;
 extern ConVar bot_autowaypoint_dist;
 extern ConVar bot_tooltips;
-extern ConVar bot_debug_notasks;
-extern ConVar bot_debug_dont_shoot;
-extern ConVar bot_debug_show_route;
 extern ConVar bot_supermode;
 extern ConVar bot_printstatus;
 
-extern ConVar bot_nocapturing;
 extern ConVar bot_prone_enemy_only;
 extern ConVar bot_stats_inrange_dist;
 extern ConVar bot_squad_idle_time;
 extern ConVar bot_bots_form_squads;
 extern ConVar bot_bot_squads_percent;
 
-extern ConVar bot_tf2_debug_spies_cloakdisguise;
 extern ConVar bot_tf2_medic_letgotime;
 extern ConVar bot_tf2_pyro_airblast;
 extern ConVar bot_spyknifefov;
