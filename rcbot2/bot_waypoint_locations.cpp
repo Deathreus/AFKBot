@@ -668,6 +668,61 @@ void CWaypointLocations::FindNearestInBucket(int i, int j, int k, const Vector &
 	}
 }
 
+void CWaypointLocations::DrawWaypoints(edict_t *pPlayer, float fDist)
+{
+	static byte bPvs[MAX_MAP_CLUSTERS/8];
+	static int clusterIndex;
+	static dataUnconstArray<int> *arr;
+	static short int size;
+	static int iWpt;
+	static CWaypoint *pWpt;
+	static int i, j, k;
+	static Vector vWpt;
+	static Vector vOrigin;
+	static int iMinLoci, iMaxLoci, iMinLocj, iMaxLocj, iMinLock, iMaxLock;
+
+	int iLoc = READ_LOC(vOrigin.x);
+	int jLoc = READ_LOC(vOrigin.y);
+	int kLoc = READ_LOC(vOrigin.z);
+
+	vOrigin = CBotGlobals::EntityOrigin(pPlayer) + Vector(0, 0, 32);
+
+	GetMinMaxs(iLoc, jLoc, kLoc, &iMinLoci, &iMinLocj, &iMinLock, &iMaxLoci, &iMaxLocj, &iMaxLock);
+
+	for(i = iMinLoci; i <= iMaxLoci; i++)
+	{
+		for(j = iMinLocj; j <= iMaxLocj; j++)
+		{
+			for(k = iMinLock; k <= iMaxLock; k++)
+			{
+				arr = &(m_iLocations[i][j][k]);
+				size = (short int)arr->Size();
+
+				for(short int l = 0; l < size; l++)
+				{
+					iWpt = arr->ReturnValueFromIndex(l);
+
+					pWpt = CWaypoints::GetWaypoint(iWpt);
+
+					if(!pWpt->IsUsed()) // deleted
+						continue;
+
+					vWpt = pWpt->GetOrigin();
+
+					if(fabs(vWpt.z - vOrigin.z) <= fDist) // also in z range
+					{
+						clusterIndex = engine->GetClusterForOrigin(vOrigin);
+						engine->GetPVSForCluster(clusterIndex, sizeof(bPvs), bPvs);
+
+						if(engine->CheckOriginInPVS(vWpt, bPvs, sizeof(bPvs)))
+							pWpt->Draw(pPlayer);
+					}
+				}
+			}
+		}
+	}
+}
+
 /////////////////////////////
 // get the nearest waypoint INDEX from an origin
 int CWaypointLocations::NearestWaypoint(const Vector &vOrigin, float fNearestDist,

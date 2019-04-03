@@ -68,7 +68,7 @@ class CWaypointType
 {
 public:
 
-	CWaypointType(int iBit, const char *szName, const char *szDescription, int iModBits = BITS_MOD_ALL, int iImportance = 0);
+	CWaypointType(int iBit, const char *szName, const char *szDescription, Color vColour, int iModBits = BITS_MOD_ALL, int iImportance = 0);
 
 	inline const char *GetName() { return m_szName; }
 	inline const char *GetDescription() { return m_szDescription; }
@@ -77,6 +77,7 @@ public:
 	inline int GetBits() { return m_iBit; }
 	inline void SetMods(int iMods){ m_iMods = iMods; }// input bitmask of mods (32 max)
 	inline bool ForMod(int iMod) { return ((1 << iMod)&m_iMods) == (1 << iMod); }
+	inline const Color& GetColour() { return m_vColour; }
 	inline int GetImportance() { return m_iImportance; }
 
 	bool operator < (CWaypointType *other)
@@ -92,19 +93,32 @@ private:
 	int m_iBit; // bits used
 	char *m_szName; // e.g. "jump"/"ladder"
 	char *m_szDescription; // e.g. "will jump here"/"will climb here"
+	Color m_vColour;
 	int m_iImportance;
 };
 
-
-/*
-class CCrouchWaypointType : public CWaypointType
+// This is wrong to what the operator means, but I just wanted a inline way of mixing two colors
+inline Color& operator|=(Color &lhs, const Color &rhs)
 {
-public:
-	CCrouchWaypointType();
+	float fr = (lhs.r()-rhs.r())*0.5;
+	float fg = (lhs.g()-rhs.g())*0.5;
+	float fb = (lhs.b()-rhs.b())*0.5;
 
-	void giveTypeToWaypoint ( CWaypoint *pWaypoint );
-	void removeTypeFromWaypoint ( CWaypoint *pWaypoint );
-};*/
+	if(fr < 0)
+		fr = 0;
+	if(fg < 0)
+		fg = 0;
+	if(fb < 0)
+		fb = 0;
+
+	lhs.SetColor(
+		(unsigned char)((rhs.r()*0.5)+fr),
+		(unsigned char)((rhs.g()*0.5)+fg),
+		(unsigned char)((rhs.b()*0.5)+fb)
+	);
+
+	return lhs;
+}
 
 class CWaypointTypes
 {
@@ -158,8 +172,6 @@ public:
 
 	static CWaypointType *GetType(const char *szType);
 
-	static void SelectedType(CClient *pClient);
-
 	static void FreeMemory();
 
 	static CWaypointType *GetTypeByIndex(unsigned int iIndex);
@@ -170,14 +182,10 @@ public:
 
 	static void ShowTypesOnConsole(edict_t *pPrintTo);
 
+	static Color GetColour(unsigned int iFlags);
+
 private:
 	static std::vector<CWaypointType*> m_Types;
-};
-
-class CWaypointTest
-{
-public:
-	void Go(edict_t *pPlayer);
 };
 
 typedef struct
@@ -190,10 +198,6 @@ typedef struct
 class CWaypoint //: public INavigatorNode
 {
 public:
-	//static const int MAX_PATHS = 8;
-	// Waypoint flags (up to 32)
-
-
 	static const int WAYPOINT_HEIGHT = 72;
 	static const int WAYPOINT_WIDTH = 8;
 	static const int PATHWAYPOINT_WIDTH = 4;
@@ -276,9 +280,6 @@ public:
 	// show info to player
 	void Info(edict_t *pEdict);
 
-	// methods
-	void Touched();
-
 	bool AddPathTo(int iWaypointIndex);
 	void RemovePathTo(int iWaypointIndex);
 
@@ -294,14 +295,11 @@ public:
 		return m_bUsed;
 	}
 
-	//bool touched ( edict_t *pEdict );
 	bool Touched(Vector vOrigin, Vector vOffset, float fTouchDist, bool onground = true);
-
-	void BotTouch(CBot *pBot);
 
 	inline void FreeMapMemory()
 	{
-		m_thePaths.Clear();//Destroy();
+		m_thePaths.Clear();
 	}
 
 	inline int GetArea() { return m_iArea; }
@@ -340,6 +338,8 @@ public:
 	Vector ApplyRadius();
 
 	bool IsAiming(void);
+
+	void Draw(edict_t *pPlayer);
 
 private:
 	Vector m_vOrigin;
@@ -387,7 +387,7 @@ public:
 
 	static void ShiftVisibleAreas(edict_t *pPlayer, int from, int to);
 
-	static void DrawWaypoints(CClient *pClient);
+	static void DrawWaypoints(edict_t *pPlayer);
 
 	static int AddWaypoint(edict_t *pPlayer, const char *type1, const char *type2, const char *type3, const char *type4, bool bUseTemplate = false);
 	static int AddWaypoint(edict_t *pPlayer, Vector& vOrigin, int iFlags = CWaypointTypes::W_FL_NONE, bool bAutoPath = false, int iYaw = 0, int iArea = 0, float fRadius = 0);
@@ -395,8 +395,6 @@ public:
 	static void RemoveWaypoint(int iIndex);
 
 	static int NumWaypoints();
-
-	static bool CheckReachable(CWaypoint *pWaypoint, int iStart);
 
 	static CWaypoint *NearestPipeWaypoint(Vector vTarget, Vector vOrigin, int *iAiming);
 
