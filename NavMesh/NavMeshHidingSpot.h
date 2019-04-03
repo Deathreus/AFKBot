@@ -19,6 +19,8 @@ public:
 	float GetY();
 	float GetZ();
 
+	const Vector GetOrigin();
+
 	unsigned char GetFlags();
 
 private:

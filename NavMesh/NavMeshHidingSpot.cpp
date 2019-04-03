@@ -16,4 +16,6 @@ float CNavMeshHidingSpot::GetY() { return this->pos.y; }
 
 float CNavMeshHidingSpot::GetZ() { return this->pos.z; }
 
+const Vector CNavMeshHidingSpot::GetOrigin() { return this->pos; }
+
 unsigned char CNavMeshHidingSpot::GetFlags() { return this->flags; }
