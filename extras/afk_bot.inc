@@ -6,7 +6,7 @@
 /**
  * Gets the current AFK status of the client index.
  *
- * @param client    The client index of the player being checked.
+ * @param client    The client index/uid of the player being checked.
  * @return          The clients AFK status.
  * @error           The client index is invalid.
  */
@@ -15,7 +15,7 @@ native bool IsClientAFKBot(int client);
 /**
  * Sets the AFK status of the client index.
  *
- * @param client    The client index.
+ * @param client    The client index/uid.
  * @param enabled   True to enable, false to disable
  * @error           The client index is invalid.
  * @noreturn
@@ -35,7 +35,7 @@ native void SetAFKBotMinMaxSkill(float min, float max);
 /**
  * Sets skill level of the bot for the client index.
  *
- * @param int client       Client index
+ * @param int client       Client index/uid
  * @param float skill      Skill level
  * @error                  The client index is invalid, or the value is below 0.0 or above 1.0.
  * @noreturn
@@ -59,7 +59,7 @@ native void SetAFKBotMinMaxSensitivity(int min, int max);
 /**
  * Sets the turning sensitivty(speed) for the client index.
  *
- * @param int client        Client index
+ * @param int client        Client index/uid
  * @param int sensitivity   Turn speed
  * @error                   The client index is invalid, or the value is below 0.
  * @noreturn
@@ -80,7 +80,7 @@ native void SetAFKBotMinMaxBraveness(float min, float max);
 /**
  * Sets braveness factor (How often or how little for the client index.
  *
- * @param int client        Client
+ * @param int client        Client index/uid
  * @param float braveness   Braveness factor
  * @error                   The client index is invalid, or the value is below 0.0 or above 1.0.
  * @noreturn
@@ -105,7 +105,7 @@ native void SetAFKBotMinMaxVisRevs(int min, int max);
  * Sets number of revisions the bot tries 
  * to do per vision check for the client index.
  *
- * @param int client      Client index
+ * @param int client      Client index/uid
  * @param int revisions   Vision revisions
  * @error                 The client index is invalid, or the value is below 1 or above 24.
  * @noreturn
@@ -127,7 +127,7 @@ native void SetAFKBotMinMaxPathRevs(int min, int max);
  * Sets the number of revisions the bot
  * tries to do per path check for the client index.
  *
- * @param int client      Client index
+ * @param int client      Client index/uid
  * @param int revisions   Path revisions
  * @error                 The client index is invalid, or the value is below 1 or above 256.
  * @noreturn
@@ -151,7 +151,7 @@ native void SetAFKBotMinMaxClientVisRevs(int min, int max);
  * Sets the number of revisions the bot tries
  * to do per vision check for clients for the client index.
  *
- * @param int client      Client index
+ * @param int client      Client index/uid
  * @param int revisions   Vision revisions
  * @error                 The client index is invalid, or the value is below 1 or above 16.
  * @noreturn
@@ -162,7 +162,7 @@ native void SetClientBotClientVisRevs(int client, int revisions);
  * Called just before the bot is enabled on a client.
  * Return Plugin_Handled or higher to stop this from happening.
  *
- * @param int client     Client about to be turned into a bot
+ * @param int client     UserID of client about to be turned into a bot
  * @param bool enable    If the bot was being enabled or disabled.
  */
 forward Action OnBotEnable(int client, bool enable);
@@ -191,7 +191,7 @@ public __pl_afkbot_SetNTVOptional()
 {
     MarkNativeAsOptional("IsClientAFKBot");
     MarkNativeAsOptional("SetClientAFKBot");
-    /*MarkNativeAsOptional("SetAFKBotMinMaxSkill");
+    MarkNativeAsOptional("SetAFKBotMinMaxSkill");
     MarkNativeAsOptional("SetClientBotSkill");
     MarkNativeAsOptional("SetAFKBotMinMaxSensitivity");
     MarkNativeAsOptional("SetClientBotSensitivity");
@@ -202,6 +202,6 @@ public __pl_afkbot_SetNTVOptional()
     MarkNativeAsOptional("SetAFKBotMinMaxClientVisRevs");
     MarkNativeAsOptional("SetClientBotClientVisRevs");
     MarkNativeAsOptional("SetAFKBotMinMaxPathRevs");
-    MarkNativeAsOptional("SetClientBotPathRevs");*/
+    MarkNativeAsOptional("SetClientBotPathRevs");
 }
 #endif
