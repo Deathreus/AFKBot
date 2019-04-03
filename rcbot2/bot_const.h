@@ -31,21 +31,14 @@
 #ifndef __BOT_CONST_H__
 #define __BOT_CONST_H__
 
-#include "shareddefs.h"
+#include <shareddefs.h>
 
-#define BOT_DEFAULT_FOV 75.0f
 
-#define __to_lower(a) (((a)>='A')&&((a)<='Z'))?('a'+((a)-'A')):(a)
+#define __to_lower(a) (((a) >= 'A') && ((a) <= 'Z')) ? ('a' + ((a) - 'A')) : (a)
 #define __strlow(str) { char *__strx = str; while ( __strx && *__strx ) { *__strx = __to_lower(*__strx); __strx++; } }
-//#define strlow(str) { unsigned short int len = strlen(str); unsigned short int i;	for ( i = 0; i < len; i ++ ) { str[i] = to_lower(str[i]); } }
-#define __round(a) (((a-(int)a) >= 0.5) ? ((int)a+1) : ((int)a))
 
-//#define RANDOM_INT(min,max) (min + round(((float)rand()/RAND_MAX)*(float)(max-min)))
-//#define RANDOM_FLOAT(min,max) (min + ((float)rand()/RAND_MAX)*(float)(max-min))
-
-#define BOT_CONVAR_FLAGS_OFFSET 20
-
-#define BOT_WPT_TOUCH_DIST 72 // distance for bot to touch waypoint
+//#define RANDOM_INT(min, max) (round( ( (float)rand() / RAND_MAX ) * (float)( max - min ) + min ) )
+//#define RANDOM_FLOAT(min, max) (min + ( (float)rand() / RAND_MAX ) * (float)( max - min ) )
 
 #define BOT_DEBUG_GAME_EVENT	0 
 #define BOT_DEBUG_NAV			1 
@@ -82,16 +75,13 @@ typedef enum
 	LOOK_MAX
 }eLookTask;
 
-extern const char *g_szLookTaskToString[LOOK_MAX];
+extern const char *const g_szLookTaskToString[LOOK_MAX];
 
-#define BOT_CONFIG_FOLDER "config"
-#define BOT_WAYPOINT_FOLDER "waypoints"
 #define BOT_CONFIG_EXTENSION "cfg"
-
+#define BOT_BELIEF_EXTENTION "rcb"
 #define BOT_WAYPOINT_EXTENSION "rcw"
 #define BOT_WAYPOINT_DISTANCE_EXTENSION "rcd"
 #define BOT_WAYPOINT_VISIBILITY_EXTENSION "rcv"
-#define BOT_WAYPOINT_BELIEF_EXTENTION "rcb"
 #define BOT_WAYPOINT_FILE_TYPE "RCBot2\0" // for waypoint file header
 
 #define BOT_TAG "[AFKBot] " // for printing messages
@@ -116,9 +106,13 @@ typedef enum
 
 #define BITS_MOD_ALL ~(1<<MOD_MAX)
 
+#define BOT_DEFAULT_FOV 75
+
 #define BOT_JUMP_HEIGHT 45
 
 #define MIN_COVER_MOVE_DIST 128
+
+#define BOT_WPT_TOUCH_DIST 72 // distance for bot to touch waypoint
 
 #define INDEXENT(iEdictNum) engine->PEntityOfEntIndex(iEdictNum)
 #define ENTINDEX(pEdict) engine->IndexOfEdict(pEdict)
@@ -126,7 +120,6 @@ typedef enum
 #define BOT_NAME "AFKBot"
 #define BOT_NAME_VER "AFKBot version"
 #define BOT_VER_CVAR "afkbot_version"
-#define BOT_FOLDER "afkbot"
 
 typedef enum
 {
@@ -159,22 +152,66 @@ typedef enum
 #define CONDITION_SEE_ENEMY_HEAD		524288		// bit 19 - bot can aim for a headshot
 #define CONDITION_PRONE					1048576		// bit 20 - bot needs to go prone (lie down)
 #define CONDITION_PARANOID				2097152		// bit 21 - bot is paranoid of spies or unknown enemy
-#define CONDITION_SEE_SQUAD_LEADER		4194304		// bit 22 - bot can see his leader
-#define CONDITION_SQUAD_LEADER_DEAD		8388608		// bit 23 - bots leader is dead
-#define CONDITION_SQUAD_LEADER_INRANGE	16777216	// bit 24 - bots leader is in range
-#define CONDITION_SQUAD_IDLE			33554432	// bit 25 - bots squad isn't doing anything fun
-#define CONDITION_DEFENSIVE				67108864	// bit 26 - bot leader told me to defend
-#define CONDITION_BUILDING_SAPPED		134217728	// bit 27 - one of engineers buildings sapped
-#define CONDITION_SEE_ENEMY_GROUND		268435456	// bit 28 - can see enemy ground so aim for it if i have explosive
+#define CONDITION_DEFENSIVE				4194304		// bit 22 - bot leader told me to defend
+#define CONDITION_BUILDING_SAPPED		8388608		// bit 23 - one of engineers buildings sapped
+#define CONDITION_SEE_ENEMY_GROUND		16777216	// bit 24 - can see enemy ground so aim for it if i have explosive
 #define CONDITION_MAX					CONDITION_SEE_ENEMY_GROUND
-#define CONDITION_MAX_BITS				28
+#define CONDITION_MAX_BITS				24
+
+typedef enum
+{
+    BELIEF_NONE = 0,
+	BELIEF_DANGER = (1<<0),
+	BELIEF_SAFETY = (1<<1)
+}BotBelief;
 
 #define MAX_MAP_STRING_LEN 64
-#define MAX_PATH_LEN 512
-#define MAX_ENTITIES 2048
 
-////////////////////////
+#define MAX_ENTITIES (1<<MAX_EDICT_BITS)
+
+#define MAX_AMMO_TYPES 32
+
+#define MAX_VOICE_CMDS 32
+
 #define BLAST_RADIUS 200
+
+#define MIN_WPT_TOUCH_DIST 16.0f
+
+#define MOVELOOK_DEFAULT	0
+#define MOVELOOK_THINK		1
+#define MOVELOOK_MODTHINK	2
+#define MOVELOOK_TASK		3
+#define MOVELOOK_LISTEN		4
+#define MOVELOOK_EVENT		5
+#define MOVELOOK_ATTACK		6
+#define MOVELOOK_OVERRIDE	6
+
+#define DEG_TO_RAD(x) (x)*0.0174533
+#define RAD_TO_DEG(x) (x)*57.29578
+
+#define TIME_NOW	(gpGlobals->curtime + FLT_EPSILON)
+
+#define DOT_1DEGREE   0.9998476951564
+#define DOT_2DEGREE   0.9993908270191
+#define DOT_3DEGREE   0.9986295347546
+#define DOT_4DEGREE   0.9975640502598
+#define DOT_5DEGREE   0.9961946980917
+#define DOT_6DEGREE   0.9945218953683
+#define DOT_7DEGREE   0.9925461516413
+#define DOT_8DEGREE   0.9902680687416
+#define DOT_9DEGREE   0.9876883405951
+#define DOT_10DEGREE  0.9848077530122
+#define DOT_15DEGREE  0.9659258262891
+#define DOT_20DEGREE  0.9396926207859
+#define DOT_25DEGREE  0.9063077870367
+#define DOT_30DEGREE  0.866025403784
+#define DOT_45DEGREE  0.707106781187
+
+#define VIEW_FIELD_FULL			(float)-1.0 // +-180 degrees
+#define	VIEW_FIELD_WIDE			(float)-0.7 // +-135 degrees 0.1 // +-85 degrees, used for full FOV checks 
+#define	VIEW_FIELD_NARROW		(float)0.7 // +-45 degrees, more narrow check used to set up ranged attacks
+#define	VIEW_FIELD_ULTRA_NARROW	(float)0.9 // +-25 degrees, more narrow check used to set up ranged attacks
+
 ///////////////////////
 typedef enum 
 {
