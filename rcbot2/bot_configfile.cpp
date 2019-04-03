@@ -33,11 +33,11 @@
 #include "bot_globals.h"
 #include "bot_strings.h"
 #include "bot_weapons.h"
-
 #include "bot_configfile.h"
 
 #include <convar.h>
 
+#include <memory>
 
 bot_util_t CRCBotTF2UtilFile::m_fUtils[UTIL_TYPE_MAX][BOT_UTIL_MAX][9];
 
@@ -46,23 +46,18 @@ void CBotConfigFile::Load()
 	char filePath[PLATFORM_MAX_PATH];
 	smutils->BuildPath(Path_SM, filePath, sizeof(filePath), "data\\afkbot\\config\\config.cfg");
 
-	char error[128];
-	IBotConfigSMC *config = new CBotConfigSMC();
-	if (textparsers->ParseSMCFile(filePath, config, NULL, error, sizeof(error)) != SMCError_Okay)
+	char error[128]; auto config = std::make_unique<CBotConfigSMC>();
+	if (textparsers->ParseSMCFile(filePath, config.get(), nullptr, error, sizeof(error)) != SMCError_Okay)
 	{
-		smutils->LogError(myself, "[SM] Error reading data/afkbot/config/config.cfg: %s", error);
-		delete config;
+		smutils->LogError(myself, "Error reading '%s': %s", filePath, error);
 	}
 }
-
-CBotConfigSMC::CBotConfigSMC() {}
-CBotConfigSMC::~CBotConfigSMC() {}
 
 SMCResult CBotConfigSMC::ReadSMC_NewSection(const SMCStates *states, const char *name)
 {
 	if (!FStrEq(name, "botcfg"))
 	{
-		smutils->LogError(myself, "Config Error: Expected to find section \"botcfg\", found \"%s\"", name);
+		smutils->LogError(myself, "Config Error: Expected to find section 'botcfg', found '%s'", name);
 		return SMCResult_HaltFail;
 	}
 
@@ -71,14 +66,17 @@ SMCResult CBotConfigSMC::ReadSMC_NewSection(const SMCStates *states, const char 
 
 SMCResult CBotConfigSMC::ReadSMC_KeyValue(const SMCStates *states, const char *key, const char *value)
 {
-	ConVarRef *cvar = new ConVarRef(key);
-	if (cvar->IsValid())
+	ConVarRef cvar(key);
+	if (cvar.IsValid())
 	{
-		cvar->SetValue(value);
+		cvar.SetValue(value);
+#if defined _DEBUG
+		smutils->LogMessage(myself, "Setting %s to %s", key, value);
+#endif
 	}
 	else
 	{
-		smutils->LogError(myself, "Config Error: \"%s\" is not a cvar.", key);
+		smutils->LogError(myself, "Config Error: '%s' is not a cvar.", key);
 		return SMCResult_HaltFail;
 	}
 
@@ -141,7 +139,7 @@ void CRCBotTF2UtilFile::LoadConfig()
 		{
 			eBotAction iUtil = (eBotAction)0;
 
-			while (fgets(line, 255, fp) != NULL)
+			while (fgets(line, 255, fp) != nullptr)
 			{
 				float iClassList[TF_CLASS_MAX][2];
 				char utiltype[64];

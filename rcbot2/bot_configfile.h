@@ -66,21 +66,14 @@ public:
 	static void Load();
 };
 
-class IBotConfigSMC : public ITextListener_SMC
+class CBotConfigSMC : public ITextListener_SMC
 {
 public:
-	virtual SMCResult ReadSMC_NewSection(const SMCStates *states, const char *name) = 0;
-	virtual SMCResult ReadSMC_KeyValue(const SMCStates *states, const char *key, const char *value) = 0;
-};
+	CBotConfigSMC() {};
+	~CBotConfigSMC() {};
 
-class CBotConfigSMC : public IBotConfigSMC
-{
-public:
-	CBotConfigSMC();
-	~CBotConfigSMC();
-
-	SMCResult ReadSMC_NewSection(const SMCStates *states, const char *name);
-	SMCResult ReadSMC_KeyValue(const SMCStates *states, const char *key, const char *value);
+	SMCResult ReadSMC_NewSection(const SMCStates *states, const char *name) override;
+	SMCResult ReadSMC_KeyValue(const SMCStates *states, const char *key, const char *value) override;
 };
 
 #endif
