@@ -14,7 +14,7 @@ public:
 	virtual float GetY() = 0;
 	virtual float GetZ() = 0;
 
-	virtual const Vector GetPos() = 0;
+	virtual const Vector GetOrigin() = 0;
 	
 	virtual float GetYaw() = 0;
 

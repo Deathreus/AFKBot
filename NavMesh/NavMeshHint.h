@@ -19,7 +19,7 @@ public:
 	float GetY();
 	float GetZ();
 
-	const Vector GetPos();
+	const Vector GetOrigin();
 	
 	float GetYaw();
 	
