@@ -154,12 +154,7 @@ class ExtensionConfig(object):
 
     # Finish up.
     cxx.includes += [
-      os.path.join(self.sm_root, 'core'),
       os.path.join(self.sm_root, 'public'),
-      os.path.join(self.sm_root, 'public', 'extensions'),
-      os.path.join(self.sm_root, 'public', 'CDetour'),
-      os.path.join(self.sm_root, 'public', 'amtl'),
-      os.path.join(self.sm_root, 'sourcepawn', 'include'),
     ]
 
   def configure_gcc(self, cxx):
@@ -283,7 +278,6 @@ class ExtensionConfig(object):
       'uuid.lib',
       'odbc32.lib',
       'odbccp32.lib',
-	  'legacy_stdio_definitions.lib'
     ]
 
     if builder.options.opt == '1':
@@ -326,10 +320,16 @@ class ExtensionConfig(object):
 
   def ConfigureForExtension(self, context, compiler):
     compiler.includes += [
-      context.currentSourcePath,
+      os.path.join(context.currentSourcePath),
       os.path.join(context.currentSourcePath, 'sdk'),
       os.path.join(context.currentSourcePath, 'rcbot'),
       os.path.join(context.currentSourcePath, 'NavMesh'),
+	  os.path.join(self.sm_root, 'core'),
+	  os.path.join(self.sm_root, 'public', 'extensions'),
+      os.path.join(self.sm_root, 'public', 'CDetour'),
+      os.path.join(self.sm_root, 'public', 'amtl'),
+      os.path.join(self.sm_root, 'public', 'amtl', 'amtl'),
+      os.path.join(self.sm_root, 'sourcepawn', 'include'),
     ]
     compiler.defines += ['_CRT_NO_VA_START_VALIDATION']
     compiler.linkflags += ['legacy_stdio_definitions.lib']
