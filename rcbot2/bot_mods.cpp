@@ -28,24 +28,18 @@
  *    version.
  *
  */
-#include "engine_wrappers.h"
 
 #include "bot_base.h"
-
-#include "in_buttons.h"
-
 #include "bot_mods.h"
 #include "bot_globals.h"
 #include "bot_fortress.h"
 #include "bot_weapons.h"
-#include "bot_configfile.h"
 #include "bot_getprop.h"
 //#include "bot_dod_bot.h"
-#include "bot_navigator.h"
-#include "bot_waypoint.h"
-#include "bot_waypoint_locations.h"
 
-//vector<edict_wpt_pair_t> CHalfLifeDeathmatchMod::m_LiftWaypoints;
+#include <vector>
+
+//std::vector<edict_wpt_pair_t> CHalfLifeDeathmatchMod::m_LiftWaypoints;
 
 void CBotMods::ReadMods()
 {
@@ -102,7 +96,7 @@ eModId CBotMod::GetModId()
 //
 // MOD LIST
 
-vector<CBotMod*> CBotMods::m_Mods;
+std::vector<CBotMod*> CBotMods::m_Mods;
 
 void CBotMods::FreeMemory()
 {
@@ -135,23 +129,16 @@ CBotMod *CBotMods::GetMod(char *szModFolder, char *szSteamFolder)
 
 void CBotMod::InitMod()
 {
-	m_bPlayerHasSpawned = false;
-
 	CWeapons::LoadWeapons(m_szWeaponListName, NULL);
 }
 
 void CBotMod::MapInit()
 {
-	m_bPlayerHasSpawned = false;
+	
 }
 
 bool CBotMod::PlayerSpawned(CBaseEntity *pEntity)
 {
-	if (m_bPlayerHasSpawned)
-		return false;
-
-	m_bPlayerHasSpawned = true;
-
 	return true;
 }
 
@@ -183,4 +170,3 @@ void CHalfLifeDeathmatchMod::MapInit ()
 
 	m_LiftWaypoints.Clear();
 }*/
-

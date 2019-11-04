@@ -40,10 +40,13 @@
 #ifndef __RCBOT2_H__
 #define __RCBOT2_H__
 
-#include <eiface.h>
-
-#include <usercmd.h>
 #include <queue>
+#include <stack>
+#include <typeinfo>
+
+#include <eiface.h>
+#include <usercmd.h>
+#include <fmtstr.h>
 
 #include "bot_utility.h"
 #include "bot_const.h"
@@ -55,29 +58,22 @@
 
 #include "../extension.h"
 
-using namespace std;
+extern bool BotFunc_BreakableIsEnemy(edict_t *pBreakable, edict_t *pEdict);
 
-#define MAX_AMMO_TYPES 32
-#define MAX_VOICE_CMDS 32
-#define MIN_WPT_TOUCH_DIST 16.0f
+inline const char *GetTypeName(const std::type_info &type)
+{
+	const char *temp = type.name();
+	while(*temp != ' ')
+		temp++;
+	return ++temp;
+}
 
-// Interfaces from the engine
-extern IVEngineServer *engine;
+inline const int SlotOfEdict(edict_t *pEdict)
+{
+	return engine->IndexOfEdict(pEdict) - 1;
+}
 
-#define GET_HEALTH 0
-#define GET_TEAM   1
-#define GET_AMMO   2
-
-#define T_OFFSETMAX  3
-
-class CBotSquad;
-class CBasePlayer;
-
-bool BotFunc_BreakableIsEnemy(edict_t *pBreakable, edict_t *pEdict);
-
-/////////// Voice commands
-
-class IBotFunction
+abstract_class IBotFunction
 {
 public:
 	virtual void Execute(CBot *pBot) = 0;
@@ -86,7 +82,12 @@ public:
 class CBroadcastVoiceCommand : public IBotFunction
 {
 public:
-	CBroadcastVoiceCommand(edict_t *pPlayer, byte voicecmd) { m_pPlayer = pPlayer; m_VoiceCmd = voicecmd; };
+	CBroadcastVoiceCommand(edict_t *pPlayer, byte voicecmd)
+	{
+		m_pPlayer = pPlayer;
+		m_VoiceCmd = voicecmd;
+	}
+
 	void Execute(CBot *pBot);
 
 private:
@@ -104,7 +105,7 @@ typedef union
 	}b1;
 
 	byte voicecmd;
-}u_VOICECMD;
+}voicecmd_u;
 
 typedef union
 {
@@ -119,44 +120,65 @@ typedef union
 	byte dat;
 }squad_u;
 
-// events
-class CRCBotEventListener : public IGameEventListener2
-{
-	void Event(IGameEvent *pevent);
-};
-
-//extern IVDebugOverlay *debugoverlay;
-
 class CBotVisibles;
 class CFindEnemyFunc;
 class IBotNavigator;
-class CBotMemoryNode;
-class CBotMemoryPop;
-class CGA;
-class CPerceptron;
+class CBotSquad;
 class CBotSchedules;
-class CBotGAValues;
-class CBotStuckValues;
 class CBotButtons;
-class IBotNavigator;
 class CFindEnemyFunc;
 class CBotWeapons;
 class CBotProfile;
 class CWaypoint;
 class CBotWeapon;
 class CWeapon;
-class CBotNeuralNet;
-class CTrainingSet;
 class INavMeshArea;
 
-#define MOVELOOK_DEFAULT 0
-#define MOVELOOK_THINK 1
-#define MOVELOOK_MODTHINK 2
-#define MOVELOOK_TASK 3
-#define MOVELOOK_LISTEN 4
-#define MOVELOOK_EVENT 5
-#define MOVELOOK_ATTACK 6
-#define MOVELOOK_OVERRIDE 6
+class FrameTimer
+{
+public:
+	FrameTimer()
+	{
+		m_timestamp = -1.0f;
+		m_duration = 0.0f;
+	}
+
+	void Reset()
+	{
+		m_timestamp = TIME_NOW + m_duration;
+	}
+
+	void Start(float duration)
+	{
+		m_timestamp = TIME_NOW + duration;
+		m_duration = duration;
+	}
+
+	void Invalidate()
+	{
+		m_timestamp = -1.0f;
+	}
+
+	const bool HasStarted() const
+	{
+		return (m_timestamp > 0.0f);
+	}
+
+	const bool IsElapsed() const
+	{
+		return (TIME_NOW > m_timestamp);
+	}
+
+	FrameTimer& operator=(const float time)
+	{
+		this->Start(time);
+		return *this;
+	}
+
+private:
+	float m_duration;
+	float m_timestamp;
+};
 
 class CBotLastSee
 {
@@ -168,7 +190,7 @@ public:
 
 	inline void Reset()
 	{
-		m_pLastSee = NULL; // edict
+		m_pLastSee = MyEHandle(); // edict
 		m_fLastSeeTime = 0.0f; // time
 	}
 
@@ -184,6 +206,7 @@ public:
 	bool HasSeen(float fTime);
 
 	Vector GetLocation();
+
 private:
 	MyEHandle m_pLastSee; // edict
 	float m_fLastSeeTime; // time
@@ -191,81 +214,13 @@ private:
 	Vector m_vLastSeeVel; // velocity
 };
 
-typedef union bot_statistics_t
+typedef struct
 {
-	int data;
-	struct
-	{
-		byte m_iTeamMatesInRange;
-		byte m_iEnemiesInRange;
-		byte m_iEnemiesVisible;
-		byte m_iTeamMatesVisible;
-	} stats;
-} bot_statistics_s;
-
-
-/*
-class CBotSquads
-{
-public:
-CBotSquads ()
-{
-}
-
-void freeMapMemory()
-{
-unsigned int i;
-
-for ( i = 0; i < m_theSquads.size(); i ++ )
-m_theSquads[i].freeMapMemory();
-
-m_theSquads.clear();
-}
-private:
-vector<CBotSquad> m_theSquads;
-}
-
-class CBotSquad
-{
-public:
-CBotSquad ( edict_t *pLeader )
-{
-m_Leader = pLeader;
-m_Members.clear();
-}
-
-void addMember ( edict_t *pMember )
-{
-m_Members.push_back(MyEHandle(pMember));
-}
-
-void think ()
-{
-if ( !CBotGlobals::entityIsValid(m_Leader) || CBotGlobals::entityIsAlive(m_Leader) )
-{
-m_Leader = NULL;
-
-// find a new leader
-unsigned int i;
-
-for ( i = 0; i < m_Members.size(); i ++ )
-{
-if ( m_Members[i].get() )
-break;
-}
-}
-}
-
-bool killme()
-{
-return (m_Leader.get() == NULL) && (m_Members.size() == 0);
-}
-
-private:
-MyEHandle m_Leader;
-vector<MyEHandle> m_Members;
-};
-*/
+	short int m_iTeamMatesInRange;
+	short int m_iEnemiesInRange;
+	short int m_iEnemiesVisible;
+	short int m_iTeamMatesVisible;
+} bot_statistics_t;
 
 class CBot
 {
@@ -281,12 +236,9 @@ public:
 	inline void ClearFailedWeaponSelect() { m_iPrevWeaponSelectFailed = 0; }
 	inline void FailWeaponSelect() { m_iPrevWeaponSelectFailed++; }
 
-	void DebugMsg(int iLev, const char *szMsg);
+	virtual short int MaxEntityIndex() { return MAX_PLAYERS; }
 
-	virtual unsigned int MaxEntityIndex() { return MAX_PLAYERS; }
-
-	// linux fix 1
-	virtual void OnInventoryApplication(){}
+	virtual void OnInventoryApplication() { }
 
 	int IsDesiredClass(int iclass)
 	{
@@ -307,17 +259,15 @@ public:
 	}
 	inline float DistanceFrom(edict_t *pEntity)
 	{
-		return (pEntity->GetCollideable()->GetCollisionOrigin() - m_pPI->GetAbsOrigin()).Length();
+		return (pEntity->GetCollideable()->GetCollisionOrigin() - GetOrigin()).Length();
 	}
 
 	inline float DistanceFrom2D(edict_t *pEntity)
 	{
-		return (pEntity->GetCollideable()->GetCollisionOrigin() - m_pPI->GetAbsOrigin()).Length2D();
+		return (pEntity->GetCollideable()->GetCollisionOrigin() - GetOrigin()).Length2D();
 	}
 
 	/*
-	 * init()
-	 *
 	 * initialize all bot variables
 	 * (this is called when bot is made for the first time)
 	 */
@@ -326,9 +276,7 @@ public:
 	virtual void Setup();
 
 	/*
-	 * runPlayerMove()
-	 *
-	 * make bot move in the game
+	 * fill out the bots usercmd buffer with desired values
 	 * botman : see CBasePlayer::RunNullCommand() for example of PlayerRunCommand()...
 	 */
 	inline void RunPlayerMove();
@@ -345,7 +293,7 @@ public:
 
 	CBotWeapon *GetBestWeapon(edict_t *pEnemy, bool bAllowMelee = true, bool bAllowMeleeFallback = true, bool bMeleeOnly = false, bool bExplosivesOnly = false);
 
-	virtual void ModThink() { return; }
+	virtual void ModThink() { }
 
 	virtual bool IsEnemy(edict_t *pEdict, bool bCheckWeapons = true) { return false; }
 
@@ -356,9 +304,7 @@ public:
 
 	virtual bool HandleAttack(CBotWeapon *pWeapon, edict_t *pEnemy);
 
-	float DotProductFromOrigin(Vector pOrigin);
-
-	bool FVisible(edict_t *pEdict, bool bCheckHead = false);
+	float DotProductFromOrigin(const Vector pOrigin);
 
 	bool IsVisible(edict_t *pEdict);
 
@@ -389,6 +335,9 @@ public:
 
 	bool FInViewCone(edict_t *pEntity);
 
+	bool FVisible(Vector vOrigin, edict_t *pDest = NULL);
+	bool FVisible(edict_t *pEdict, bool bCheckHead = false);
+
 	/*
 	 * make bot start the gmae, e.g join a team first
 	 */
@@ -408,40 +357,29 @@ public:
 	 */
 	inline bool InUse()
 	{
-		return (m_bUsed && (m_pEdict != NULL));
+		return (m_bUsed && m_pEdict);
 	}
 
 	edict_t *GetEdict();
 
 	void SetEdict(edict_t *pEdict);
 
-	bool FVisible(Vector &vOrigin, edict_t *pDest = NULL);
-
 	Vector GetEyePosition();
 
 	void Think();
 
-	virtual void FriendlyFire(edict_t *pEdict) { };
+	virtual void FriendlyFire(edict_t *pEdict) { }
 
 	virtual void FreeMapMemory();
 
 	virtual void FreeAllMemory();
 
 	///////////////////////////////
-	inline bool MoveToIsValid()
-	{
-		return m_bMoveToIsValid;
-	}
+	inline bool MoveToIsValid() { return m_bMoveToIsValid; }
 
-	inline bool LookAtIsValid()
-	{
-		return m_bLookAtIsValid;
-	}
+	inline bool LookAtIsValid() { return m_bLookAtIsValid; }
 
-	inline Vector GetMoveTo()
-	{
-		return m_vMoveTo;
-	}
+	inline Vector *GetMoveTo() { return &m_vMoveTo; }
 
 	inline bool MoveFailed()
 	{
@@ -464,7 +402,6 @@ public:
 
 	inline bool HasEnemy() { return m_pEnemy && HasSomeConditions(CONDITION_SEE_CUR_ENEMY); }
 	inline edict_t *GetEnemy() { return m_pEnemy; }
-
 
 	inline void SetMoveTo(Vector vNew)
 	{
@@ -501,8 +438,8 @@ public:
 		{
 			m_bMoveToIsValid = false;
 			m_iMovePriority = m_iMoveLookPriority;
-			m_fWaypointStuckTime = 0;
-			m_fCheckStuckTime = engine->Time() + 4.0f;
+			m_ftWaypointStuckTime.Invalidate();
+			m_ftCheckStuckTime.Reset();
 		}
 	}
 
@@ -517,17 +454,17 @@ public:
 
 	inline void SetLookAtTask(eLookTask lookTask, float fTime = 0)
 	{
-		if ((m_iMoveLookPriority >= m_iLookPriority) && ((fTime > 0) || (m_fLookSetTime < engine->Time())))
+		if ((m_iMoveLookPriority >= m_iLookPriority) && ((fTime > 0) || m_ftLookSetTime.IsElapsed()))
 		{
 			m_iLookPriority = m_iMoveLookPriority;
 			m_iLookTask = lookTask;
 
 			if (fTime > 0)
-				m_fLookSetTime = engine->Time() + fTime;
+				m_ftLookSetTime.Start(fTime);
 		}
 	}
 
-	virtual void EnemyLost(edict_t *pEnemy) {};
+	virtual void EnemyLost(edict_t *pEnemy) { }
 
 	void SetLastEnemy(edict_t *pEnemy);
 
@@ -537,17 +474,17 @@ public:
 			UpdateCondition(CONDITION_ENEMY_DEAD);
 		if (pEnemy == m_pLastEnemy)
 		{
-			m_pLastEnemy = NULL;
+			m_pLastEnemy = MyEHandle(NULL);
 		}
 	}
-	//////////////////////
+	
 	virtual bool IsCSS() { return false; }
 	virtual bool IsHLDM() { return false; }
 	virtual bool IsTF() { return false; }
 
 	virtual void SpawnInit();
 
-	QAngle EyeAngles();
+	QAngle GetEyeAngles();
 
 	virtual bool IsAlive();
 
@@ -555,7 +492,7 @@ public:
 
 	inline bool CurrentEnemy(edict_t *pEntity) { return m_pEnemy == pEntity; }
 
-	Vector GetAimVector(edict_t *pEntity);
+	Vector *GetAimVector(edict_t *pEntity);
 
 	virtual void ModAim(edict_t *pEntity, Vector &v_origin,
 		Vector *v_desired_offset, Vector &v_size,
@@ -585,23 +522,22 @@ public:
 	virtual bool Hurt(edict_t *pAttacker, int iHealthNow, bool bDontHide = false);
 	virtual void Shot(edict_t *pEnemy);
 	virtual void ShotMiss();
-	//inline void SetAvoidEntity (edict_t *pEntity) { m_pAvoidEntity = pEntity; };
 
 	int GetPlayerID(); // return player ID on server
 	int GetHealth();
 
 	float GetHealthPercent();
 
-	inline CBotSchedules *GetSchedule() { return m_pSchedules; }
+	inline CBotSchedules *GetSchedules() { return m_pSchedules; }
 
 	virtual void ReachedCoverSpot(int flags);
 
 	virtual bool WantToFollowEnemy();
 
-	virtual void SeeFriendlyHurtEnemy(edict_t *pTeammate, edict_t *pEnemy, CWeapon *pWeapon) { };
-	virtual void SeeEnemyHurtFriendly(edict_t *pTeammate, edict_t *pEnemy, CWeapon *pWeapon) { };
-	virtual void SeeFriendlyDie(edict_t *pDied, edict_t *pKiller, CWeapon *pWeapon) { };
-	virtual void SeeFriendlyKill(edict_t *pTeamMate, edict_t *pDied, CWeapon *pWeapon) { };
+	virtual void SeeFriendlyHurtEnemy(edict_t *pTeammate, edict_t *pEnemy, CWeapon *pWeapon) { }
+	virtual void SeeEnemyHurtFriendly(edict_t *pTeammate, edict_t *pEnemy, CWeapon *pWeapon) { }
+	virtual void SeeFriendlyDie(edict_t *pDied, edict_t *pKiller, CWeapon *pWeapon) { }
+	virtual void SeeFriendlyKill(edict_t *pTeamMate, edict_t *pDied, CWeapon *pWeapon) { }
 
 	inline void SelectWeapon(int iWeaponId) { m_iSelectWeapon = iWeaponId; }
 
@@ -615,7 +551,11 @@ public:
 
 	inline CBotProfile *GetProfile() { return m_pProfile; }
 
+#if defined USE_NAVMESH
+	virtual bool CanGotoWaypoint(Vector vPrevWaypoint, INavMeshArea *pWaypoint, INavMeshArea *pPrev = NULL);
+#else
 	virtual bool CanGotoWaypoint(Vector vPrevWaypoint, CWaypoint *pWaypoint, CWaypoint *pPrev = NULL);
+#endif
 
 	void TapButton(int iButton);
 
@@ -628,32 +568,29 @@ public:
 
 	void UpdatePosition();
 
-	MyEHandle m_pLookEdict;
-
 	CBotWeapons *GetWeapons() { return m_pWeapons; }
 
 	virtual float GetEnemyFactor(edict_t *pEnemy);
 
 	virtual void CheckCanPickup(edict_t *pPickup);
 
-	virtual void TouchedWpt(CWaypoint *pWaypoint, int iNextWaypoint = -1, int iPrevWaypoint = -1);
+#if defined USE_NAVMESH
 	virtual void TouchedWpt(INavMeshArea *pWaypoint, int iNextWaypoint = -1, int iPrevWaypoint = -1);
+#else
+	virtual void TouchedWpt(CWaypoint *pWaypoint, int iNextWaypoint = -1, int iPrevWaypoint = -1);
+#endif
 
 	inline void SetAiming(Vector aiming) { m_vWaypointAim = aiming; }
 
-	inline Vector GetAiming() { return m_vWaypointAim; }
+	inline Vector *GetAiming() { return &m_vWaypointAim; }
 
 	inline void SetLookVector(Vector vLook) { m_vLookVector = vLook; }
 
-	inline Vector GetLookVector() { return m_vLookVector; }
+	inline Vector *GetLookVector() { return &m_vLookVector; }
 
-	inline void ResetLookAroundTime() { m_fLookAroundTime = 0.0f; }
+	inline void ResetLookAroundTime() { m_ftLookAroundTime.Invalidate(); }
 
 	Vector Snipe(Vector &vAiming);
-
-	//inline void dontAvoid () { m_fAvoidTime = engine->Time() + 1.0f; }
-
-	float m_fWaypointStuckTime;
 
 	inline float GetSpeed() { return m_vVelocity.Length2D(); }
 
@@ -674,7 +611,7 @@ public:
 
 	int NearbyFriendlies(float fDistance);
 
-	bool IsFacing(Vector vOrigin);
+	bool IsFacing(const Vector vOrigin);
 
 	bool IsOnLift(void);
 
@@ -705,14 +642,12 @@ public:
 	inline int GetImpulse() { return m_iImpulse; }
 	inline int GetSelectWeapon() { return m_iSelectWeapon; }
 
-	inline QAngle GetViewAngles() { return m_vViewAngles; }
+	inline QAngle *GetViewAngles() { return &m_vViewAngles; }
 
 	void ForceGotoWaypoint(int wpt);
 
-	void SnapEyeAngles(const QAngle &viewAngles);
-
 	// bot is defending -- mod specific stuff
-	virtual void Defending() {}
+	virtual void Defending() { }
 
 	virtual void HearVoiceCommand(edict_t *pPlayer, byte cmd) {};
 
@@ -726,10 +661,13 @@ public:
 
 	virtual bool OverrideAmmoTypes() { return true; }
 
-	virtual void DebugBot(char *msg);
+	virtual void DebugBot();
 
-	virtual bool WalkingTowardsWaypoint(CWaypoint *pWaypoint, bool *bOffsetApplied, Vector &vOffset);
+#if defined USE_NAVMESH
 	virtual bool WalkingTowardsWaypoint(INavMeshArea *pWaypoint, bool *bOffsetApplied, Vector &vOffset);
+#else
+	virtual bool WalkingTowardsWaypoint(CWaypoint *pWaypoint, bool *bOffsetApplied, Vector &vOffset);
+#endif
 
 	void SetCoverFrom(edict_t *pCoverFrom) { m_pLastCoverFrom = MyEHandle(pCoverFrom); }
 
@@ -737,36 +675,11 @@ public:
 
 	inline void ResetAreaClear() { m_uSquadDetail.b1.said_area_clear = false; }
 
-
-	inline bool InSquad(CBotSquad *pSquad)
-	{
-		return m_pSquad == pSquad;
-	}
-
-	inline bool InSquad(void)
-	{
-		return m_pSquad != NULL;
-	}
-
-	bool IsSquadLeader(void);
-
-	inline void SetSquadIdleTime(float fTime)
-	{
-		m_fSquadIdleTime = fTime;
-	}
-
-	void ClearSquad();
-
-	inline void SetSquad(CBotSquad *pSquad)
-	{
-		m_pSquad = pSquad;
-	}
-
 	void SquadInPosition();
 	virtual void SayInPosition() { }
 	virtual void SayMoveOut() { }
 
-	bot_statistics_t *GetStats() { if (m_bStatsCanUse) return &m_StatsCanUse; return NULL; }
+	bot_statistics_t *GetStats() { return &m_Stats; }
 
 	virtual void HearPlayerAttack(edict_t *pAttacker, int iWeaponID);
 
@@ -788,16 +701,24 @@ public:
 
 	bool RecentlySpawned(float fTime);
 
+	FrameTimer m_ftWaypointStuckTime;
+
 protected:
 
 	inline void SetLookAt(Vector vNew)
 	{
-		m_vLookAt = vNew;
+		m_vLookAt.Init(vNew.x, vNew.y, vNew.z);
+		m_bLookAtIsValid = true;
+	}
+
+	inline void SetLookAt(Vector *vNew)
+	{
+		m_vLookAt.Init(vNew->x, vNew->y, vNew->z);
 		m_bLookAtIsValid = true;
 	}
 
 	static void CheckEntity(edict_t **pEdict);
-	/////////////////////////
+	
 	void DoMove();
 
 	void DoLook();
@@ -805,7 +726,6 @@ protected:
 	virtual void GetLookAtVector();
 
 	void DoButtons();
-	/////////////////////////
 
 	void ChangeAngles(float fSpeed, float *fIdeal, float *fCurrent, float *fUpdate);
 
@@ -817,8 +737,7 @@ protected:
 	static const int CMD_BUFFER_SIZE = 64;
 	///////////////////////////////////
 	// bots edict
-	edict_t *m_pEdict;
-	MyEHandle m_pAvoidEntity;
+	MyEHandle m_pEdict;
 	// is bot used in the game?
 	bool m_bUsed;
 	// time the bot was made in the server
@@ -826,61 +745,54 @@ protected:
 	// next think time
 	float m_fNextThink;
 
+	char m_szBotName[64];
+
+	float m_fSpawnTime;
+
 	float m_fFov;
 
 	bool m_bInitAlive;
-	bool m_bThinkStuck;
 
 	int m_iMovePriority;
 	int m_iLookPriority;
 	int m_iMoveSpeedPriority;
-
 	int m_iMoveLookPriority;
 
-	int *m_iAmmo;
-	bool m_bLookedForEnemyLast;
+	int m_iFlags;
 
-	//CBotStuckValues *m_pGAvStuck;
-	//CGA *m_pGAStuck;
-	//CPerceptron *m_pThinkStuck;
-	Vector m_vStuckPos;
-	//int m_iTimesStuck;
-	float m_fAvoidTime;
+	int *m_iAmmo;
+
 	///////////////////////////////////
-	// current impulse command
+	// usercmds
 	int m_iImpulse;
-	// buttons held
 	int m_iButtons;
-	// bots forward move speed
 	float m_fForwardSpeed;
-	// bots side move speed
 	float m_fSideSpeed;
-	// bots upward move speed (e.g in water)
 	float m_fUpSpeed;
-	float m_fAimMoment; // aiming "mouse" momentum
+	Vector m_vVelocity;
+	float m_fAimMoment;
+
+	FrameTimer m_ftStrafeTime;
 
 	float m_fLookAtTimeStart;
 	float m_fLookAtTimeEnd;
 	// Look task can't be changed if this is greater than Time()
-	float m_fLookSetTime;
-	float m_fLookAroundTime;
+	FrameTimer m_ftLookSetTime;
+	FrameTimer m_ftLookAroundTime;
+	MyEHandle m_pLookEdict;
 
-	int m_iFlags;
 	// Origin a second ago to check if stuck
 	Vector m_vLastOrigin;
-	// Generated velocity found from last origin (not always correct)
-	Vector m_vVelocity;
 	// next update time (1 second update)
-	float m_fUpdateOriginTime;
+	FrameTimer m_ftUpdateOriginTime;
 	float m_fStuckTime;
-	float m_fCheckStuckTime;
-	float m_fNextUpdateStuckConstants;
+	FrameTimer m_ftCheckStuckTime;
+	FrameTimer m_ftNextUpdateStuckConstants;
+	bool m_bThinkStuck;
+	Vector m_vStuckPos;
+	//int m_iTimesStuck;
 
-	float m_fStrafeTime;
-	float m_fLastSeeEnemy;
-	float m_fLastUpdateLastSeeEnemy;
-
-	float m_fUpdateDamageTime;
+	FrameTimer m_ftUpdateDamageTime;
 	// Damage bot accumulated over the last second or so
 	int m_iAccumulatedDamage;
 	int m_iPrevHealth;
@@ -899,15 +811,21 @@ protected:
 	// weapons storage -- sensor
 	CBotWeapons *m_pWeapons;
 	////////////////////////////////////
+	// engine exposed info
 	IPlayerInfo *m_pPI;
 	CPlayerState *m_pPS;
 	CUserCmd m_pCmd;
 	////////////////////////////////////
 	MyEHandle m_pEnemy; // current enemy
 	MyEHandle m_pOldEnemy;
+	MyEHandle m_pAvoidEntity;
 	Vector m_vLastSeeEnemy;
 	Vector m_vLastSeeEnemyBlastWaypoint;
 	MyEHandle m_pLastEnemy; // enemy we were fighting before we lost it
+	float m_fLastSeeEnemy;
+	FrameTimer m_ftLastUpdateLastSeeEnemy;
+	float m_fLastSeeEnemyPlayer;
+	bool m_bLookedForEnemyLast;
 	//edict_t *m_pAvoidEntity; // avoid this guy
 	Vector m_vHurtOrigin;
 	Vector m_vLookVector;
@@ -920,7 +838,7 @@ protected:
 	Vector m_vGoal; // goal vector
 	bool m_bHasGoal;
 	QAngle m_vViewAngles;
-	float m_fNextUpdateAimVector;
+	FrameTimer m_ftNextUpdateAimVector;
 	float m_fStartUpdateAimVector;
 	Vector m_vAimVector;
 	Vector m_vPrevAimVector;
@@ -932,11 +850,13 @@ protected:
 	bool m_bMoveToIsValid;
 	bool m_bLookAtIsValid;
 
+	bool m_bFailNextMove;
+
 	float m_fIdealMoveSpeed;
 
-	float m_fLastWaypointVisible;
+	float m_fPercentMoved;
 
-	bool m_bFailNextMove;
+	float m_fLastWaypointVisible;
 
 	int m_iSelectWeapon;
 
@@ -945,68 +865,61 @@ protected:
 
 	// bots profile data
 	CBotProfile *m_pProfile;
+	// bots preferred weapon
+	CBotWeapon *m_pPrimaryWeapon;
 
-	float m_fPercentMoved;
-
-	/////////////////////////////////
-
-	char m_szBotName[64];
-
-	/////////////////////////////////
-	Vector m_vListenPosition; // listening player position, heard someone shoot
-	bool m_bListenPositionValid;
-	float m_fListenTime;
-	MyEHandle m_PlayerListeningTo;
-	float m_fWantToListenTime;
 	bool m_bOpenFire;
-	unsigned int m_iPrevWeaponSelectFailed;
-
-	bool m_bWantToListen;
-	float m_fListenFactor; // the current weight of bots listening vector (higher = better)
-	float m_fUseRouteTime;
-
 	bool m_bWantToChangeWeapon;
 
+	unsigned int m_iPrevWeaponSelectFailed;
+
+	FrameTimer m_ftUseRouteTime;
+
 	bool m_bAvoidRight;
-	float m_fAvoidSideSwitch;
-	float m_fHealClickTime;
+	FrameTimer m_ftAvoidSideSwitch;
+
+	FrameTimer m_ftAvoidTime;
+
+	FrameTimer m_ftHealClickTime;
 
 	unsigned int m_iSpecialVisibleId;
+
 	float m_fCurrentDanger;
 	float m_fLastHurtTime;
 
-	float m_fUtilTimes[BOT_UTIL_MAX];
-
-	float m_fWaypointTouchDistance;
-
+	FrameTimer m_ftUtilTimes[BOT_UTIL_MAX];
 	eBotAction m_CurrentUtil;
-	//CBotNeuralNet *stucknet;
-	//CTrainingSet *stucknet_tset;
 
-	queue<int> m_nextVoicecmd;
-	float m_fNextVoiceCommand;
-	float m_fLastVoiceCommand[MAX_VOICE_CMDS];
+	std::queue<int> m_nextVoicecmd;
+	FrameTimer m_ftNextVoiceCommand;
+	FrameTimer m_ftLastVoiceCommand[MAX_VOICE_CMDS];
 
 	float m_fTotalAimFactor;
 	Vector m_vAimOffset;
 	MyEHandle m_pLastCoverFrom;
 
 	bot_statistics_t m_Stats; // this updates progressively
-	bot_statistics_t m_StatsCanUse; // this updates fully every 5 seconds max
-	bool m_bStatsCanUse;
-	float m_fStatsTime;
+	FrameTimer m_ftStatsTime;
 	short int m_iStatsIndex;
 
 	CBotSquad *m_pSquad;
 	float m_fSquadIdleTime;
 	squad_u m_uSquadDetail;
-	CBotWeapon *m_pPrimaryWeapon;
-	float m_fLastSeeEnemyPlayer;
+
 	// if bot's profile sensitivity is too small it may not complete tasks
 	// this is true during tasks that need high sensitivity e.g. rocket jumping
 	bool m_bIncreaseSensitivity;
-	float m_fSpawnTime;
+
 	bool m_bWantToInvestigateSound;
+	bool m_bWantToListen;
+	float m_fListenFactor; // the current weight of bots listening vector (higher = better)
+	Vector m_vListenPosition; // listening player position, heard someone shoot
+	bool m_bListenPositionValid;
+	FrameTimer m_ftListenTime;
+	MyEHandle m_PlayerListeningTo;
+	FrameTimer m_ftWantToListenTime;
+
+	float m_fWaypointTouchDistance;
 };
 
 class CBots
@@ -1024,12 +937,6 @@ public:
 
 	static void Init();
 
-	static int NumBots();
-
-	static bool HandlePlayerJoin(edict_t *pEdict, const char *name);
-
-	static int SlotOfEdict(edict_t *pEdict);
-
 	static void RoundStart();
 
 	//static void KickRandomBot();
@@ -1038,7 +945,7 @@ public:
 
 	static void MapInit();
 
-	static void BotFunction(IBotFunction *function);
+	static void BotFunction(IBotFunction &function);
 
 	static void RunPlayerMoveAll();
 
@@ -1050,16 +957,7 @@ public:
 
 private:
 	static CBot **m_Bots;
-	static queue<edict_t*> m_ControlQueue;
-
 };
-
-inline bool FStrEq(const char *sz1, const char *sz2)
-{
-	return (sz1 == sz2 || _stricmp(sz1, sz2) == 0);
-}
-
-bool FNullEnt(const edict_t* pent);
 
 
 #endif // __RCBOT2_H__

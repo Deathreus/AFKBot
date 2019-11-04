@@ -37,30 +37,26 @@
 #include "bot_utility.h"
 
 #define TF2_ROCKETSPEED   1100
-#define TF2_GRENADESPEED  1216 // TF2 wiki
-#define TF2_MAX_SENTRYGUN_RANGE 1024
+#define TF2_GRENADESPEED  1216
+#define TF2_SENTRYGUN_RANGE 1024
 #define TF2_STICKYGRENADE_MAX_DISTANCE 1600
 
-class CBotWeapon;
-class CWaypoint;
-class CBotUtility;
-
-#define TF2_SLOT_PRMRY 0 // primary
-#define TF2_SLOT_SCNDR 1 // secondary
-#define TF2_SLOT_MELEE 2
-#define TF2_SLOT_PDA 3
-#define TF2_SLOT_PDA2 4
-#define TF2_SLOT_HAT 5
-#define TF2_SLOT_MISC 6
+#define TF2_SLOT_PRMRY  0
+#define TF2_SLOT_SCNDR  1
+#define TF2_SLOT_MELEE  2
+#define TF2_SLOT_PDA    3
+#define TF2_SLOT_PDA2   4
+#define TF2_SLOT_HAT    5
+#define TF2_SLOT_MISC   6
 #define TF2_SLOT_ACTION 7
-#define TF2_SLOT_MAX 8
+#define TF2_SLOT_MAX    8
 
 #define TF2_TEAM_BLUE 3
-#define TF2_TEAM_RED 2
+#define TF2_TEAM_RED  2
 
-#define RESIST_BULLETS 0
-#define RESIST_EXPLO 1
-#define RESIST_FIRE 2
+#define RESIST_BULLET 0
+#define RESIST_EXPLO  1
+#define RESIST_FIRE   2
 
 #define TF2_SENTRY_LEVEL1_HEALTH 150
 #define TF2_SENTRY_LEVEL2_HEALTH 180
@@ -71,18 +67,20 @@ class CBotUtility;
 #define TF2_DISPENSER_LEVEL3_HEALTH 216
 
 #define TF2_PLAYER_SLOWED       (1 << 0)
-#define TF2_PLAYER_ZOOMED       (1 << 1)
 #define TF2_PLAYER_DISGUISING   (1 << 2)
 #define TF2_PLAYER_DISGUISED	(1 << 3)
 #define TF2_PLAYER_CLOAKED      (1 << 4)
 #define TF2_PLAYER_INVULN       (1 << 5)
-#define TF2_PLAYER_TELEGLOW     (1 << 6)
 #define TF2_PLAYER_TAUNTING	    (1 << 7)
-#define TF2_PLAYER_TELEPORTING	(1 << 10)
 #define TF2_PLAYER_KRITS		(1 << 11)
 #define TF2_PLAYER_BONKED		(1 << 14)
-#define TF2_PLAYER_HEALING	    (1 << 21)
 #define TF2_PLAYER_ONFIRE	    (1 << 22)
+
+#define FLAGEVENT_PICKUP    0
+#define FLAGEVENT_CAPPED    1
+#define FLAGEVENT_DEFENDED  2
+#define FLAGEVENT_DROPPED   3
+#define FLAGEVENT_RETURNED  4
 
 typedef enum
 {
@@ -95,11 +93,11 @@ typedef enum
 	TFCond_TeleportedGlow,
 	TFCond_Taunting,
 	TFCond_UberchargeFading,
-	TFCond_Unknown1, //9
+	TFCond_Unknown1,
 	TFCond_CloakFlicker = 9,
 	TFCond_Teleporting,
 	TFCond_Kritzkrieged,
-	TFCond_Unknown2, //12
+	TFCond_Unknown2,
 	TFCond_TmpDamageBonus = 12,
 	TFCond_DeadRingered,
 	TFCond_Bonked,
@@ -120,7 +118,7 @@ typedef enum
 	TFCond_RegenBuffed,
 	TFCond_MarkedForDeath,
 	TFCond_NoHealingDamageBuff,
-	TFCond_SpeedBuffAlly, // 32
+	TFCond_SpeedBuffAlly,
 	TFCond_HalloweenCritCandy,
 	TFCond_CritCanteen,
 	TFCond_CritDemoCharge,
@@ -152,7 +150,7 @@ typedef enum
 	TFCond_SmallBulletResist,
 	TFCond_SmallBlastResist,
 	TFCond_SmallFireResist,
-	TFCond_Stealthed, // 64
+	TFCond_Stealthed,
 	TFCond_MedigunDebuff,
 	TFCond_StealthedUserBuffFade,
 	TFCond_BulletImmune,
@@ -167,7 +165,7 @@ typedef enum
 	TFCond_HalloweenInHell,
 	TFCond_HalloweenGhostMode,
 	TFCond_MiniCritOnKill,
-	TFCond_DodgeChance, //79
+	TFCond_DodgeChance,
 	TFCond_ObscuredSmoke = 79,
 	TFCond_Parachute,
 	TFCond_BlastJumping,
@@ -176,7 +174,7 @@ typedef enum
 	TFCond_BalloonHead,
 	TFCond_MeleeOnly,
 	TFCond_SwimmingCurse,
-	TFCond_HalloweenKartNoTurn, //87
+	TFCond_HalloweenKartNoTurn,
 	TFCond_FreezeInput = 87,
 	TFCond_HalloweenKartCage,
 	TFCond_HasRune,
@@ -186,7 +184,7 @@ typedef enum
 	TFCond_RuneResist,
 	TFCond_RuneVampire,
 	TFCond_RuneWarlock,
-	TFCond_RunePrecision, // 96
+	TFCond_RunePrecision,
 	TFCond_RuneAgility,
 	TFCond_GrapplingHook,
 	TFCond_GrapplingHookSafeFall,
@@ -204,11 +202,21 @@ typedef enum
 	TFCond_SupernovaRune,
 	TFCond_Plague,
 	TFCond_KingAura,
-	TFCond_SpawnOutline, //114
+	TFCond_SpawnOutline,
 	TFCond_KnockedIntoAir,
 	TFCond_CompetitiveWinner,
 	TFCond_CompetitiveLoser,
-	TFCond_NoTaunting,
+	TFCond_NoTaunting_DEPRECATED,
+	TFCond_HealingDebuff = 118,
+	TFCond_PasstimePenaltyDebuff,
+	TFCond_GrappledToPlayer,
+	TFCond_GrappledByPlayer,
+	TFCond_ParachuteDeployed,
+	TFCond_Gas,
+	TFCond_BurningPyro,
+	TFCond_RocketPack,
+	TFCond_LostFooting,
+	TFCond_AirCurrent,
 }TFCond;
 
 typedef enum
@@ -240,7 +248,6 @@ typedef enum
 	TF_VC_INVALID = 31
 }eTFVoiceCMD;
 
-
 typedef enum
 {
 	TF_TRAP_TYPE_NONE = -1,
@@ -265,15 +272,16 @@ typedef enum
 	TF_CLASS_ENGINEER,
 	TF_CLASS_MAX
 }TFClass;
+DEFINE_ENUM_INCREMENT_OPERATORS(TFClass)
 
 typedef enum
 {
 	TF_TEAM_UNASSIGNED = 0,
-	TF_TEAM_SPEC = 1,
-	TF_TEAM_RED = 2,
-	TF_TEAM_BLUE = 3,
-	TF_TEAM_YELLOW = 4,
-	TF_TEAM_GREEN = 5
+	TF_TEAM_SPEC,
+	TF_TEAM_RED,
+	TF_TEAM_BLUE,
+	TF_TEAM_GREEN,
+	TF_TEAM_YELLOW,
 }TFTeam;
 
 typedef enum
@@ -282,8 +290,8 @@ typedef enum
 	OBJ_TELE,
 	OBJ_SENTRY,
 	OBJ_SAPPER,
-	OBJ_EXIT,
 	OBJ_ENTRANCE,
+	OBJ_EXIT,
 }eObjectType;
 
 typedef enum
@@ -295,7 +303,8 @@ typedef enum
 class CBotTF2FunctionEnemyAtIntel : public IBotFunction
 {
 public:
-	CBotTF2FunctionEnemyAtIntel(int iTeam, Vector vPos, int type, edict_t *pPlayer = NULL, int capindex = -1){ m_iTeam = iTeam; m_vPos = vPos; m_iType = type; m_pPlayer = pPlayer; m_iCapIndex = capindex; }
+	CBotTF2FunctionEnemyAtIntel(int iTeam, Vector vPos, int type, edict_t *pPlayer = NULL, int capindex = -1)
+		: m_iTeam(iTeam), m_vPos(vPos), m_iType(type), m_pPlayer(pPlayer), m_iCapIndex(capindex) {}
 
 	void Execute(CBot *pBot);
 private:
@@ -309,7 +318,7 @@ private:
 class CBroadcastSpySap : public IBotFunction
 {
 public:
-	CBroadcastSpySap(edict_t *pSpy) { m_pSpy = pSpy; }
+	CBroadcastSpySap(edict_t *pSpy) : m_pSpy(pSpy) {}
 
 	void Execute(CBot *pBot);
 private:
@@ -319,7 +328,7 @@ private:
 class CBroadcastOvertime : public IBotFunction
 {
 public:
-	CBroadcastOvertime() {};
+	CBroadcastOvertime() {}
 
 	void Execute(CBot *pBot);
 };
@@ -327,7 +336,7 @@ public:
 class CBroadcastFlagReturned : public IBotFunction
 {
 public:
-	CBroadcastFlagReturned(int iTeam) { m_iTeam = iTeam; }
+	CBroadcastFlagReturned(int iTeam) : m_iTeam(iTeam) {}
 
 	void Execute(CBot *pBot);
 private:
@@ -337,7 +346,8 @@ private:
 class CBroadcastFlagDropped : public IBotFunction
 {
 public:
-	CBroadcastFlagDropped(int iTeam, Vector origin) { m_iTeam = iTeam; m_vOrigin = origin; }
+	CBroadcastFlagDropped(int iTeam, Vector origin)
+		: m_iTeam(iTeam), m_vOrigin(origin) {}
 
 	void Execute(CBot *pBot);
 private:
@@ -348,7 +358,7 @@ private:
 class CBroadcastFlagCaptured : public IBotFunction
 {
 public:
-	CBroadcastFlagCaptured(int iTeam) { m_iTeam = iTeam; }
+	CBroadcastFlagCaptured(int iTeam) : m_iTeam(iTeam) {}
 
 	void Execute(CBot *pBot);
 private:
@@ -358,7 +368,7 @@ private:
 class CBroadcastRoundStart : public IBotFunction
 {
 public:
-	CBroadcastRoundStart(bool bFullReset) { m_bFullReset = bFullReset; }
+	CBroadcastRoundStart(bool bFullReset) : m_bFullReset(bFullReset) {}
 
 	void Execute(CBot *pBot);
 private:
@@ -368,7 +378,8 @@ private:
 class CBroadcastCapturedPoint : public IBotFunction
 {
 public:
-	CBroadcastCapturedPoint(int iPoint, int iTeam, const char *szName);
+	CBroadcastCapturedPoint(int iPoint, int iTeam, const char *szName)
+		: m_iPoint(iPoint), m_iTeam(iTeam), m_szName(szName) {}
 
 	void Execute(CBot *pBot);
 private:
@@ -377,23 +388,15 @@ private:
 	const char *m_szName;
 };
 
-class CBasePlayer;
-
-#define FLAGEVENT_PICKUP    0
-#define FLAGEVENT_CAPPED    1
-#define FLAGEVENT_DEFENDED  2
-#define FLAGEVENT_DROPPED   3
-#define FLAGEVENT_RETURNED  4
+class CWeapon;
+class CBotWeapon;
+class CWaypoint;
+class CBotUtility;
 
 class CBotFortress : public CBot
 {
 public:
-
 	CBotFortress();
-
-	//virtual bool wantToZoom () { return m_bWantToZoom; }
-
-	//virtual void wantToZoom ( bool bSet ) { m_bWantToZoom = bSet; }
 
 	virtual void EnemyLost(edict_t *pEnemy);
 
@@ -409,20 +412,19 @@ public:
 
 	int GetMetal();
 
-	//virtual Vector getAimVector ( edict_t *pEntity ) { return CBot::getAimVector(pEntity); }
+	virtual void ModAim(edict_t *pEntity, Vector &v_origin, Vector *v_desired_offset, Vector &v_size, float fDist, float fDist2D) { CBot::ModAim(pEntity, v_origin, v_desired_offset, v_size, fDist, fDist2D); }
 
-	virtual void ModAim(edict_t *pEntity, Vector &v_origin, Vector *v_desired_offset, Vector &v_size, float fDist, float fDist2D)
-	{
-		CBot::ModAim(pEntity, v_origin, v_desired_offset, v_size, fDist, fDist2D);
-	}
-
-	virtual void TouchedWpt(CWaypoint *pWaypoint, int iNextWaypoint = -1, int iPrevWaypoint = -1) { CBot::TouchedWpt(pWaypoint); }
+#if defined USE_NAVMESH
+	virtual void TouchedWpt(INavMeshArea *pWaypoint, int iNextWaypoint = -1, int iPrevWaypoint = -1) { CBot::TouchedWpt(pWaypoint, iNextWaypoint, iPrevWaypoint); }
+#else
+	virtual void TouchedWpt(CWaypoint *pWaypoint, int iNextWaypoint = -1, int iPrevWaypoint = -1) { CBot::TouchedWpt(pWaypoint, iNextWaypoint, iPrevWaypoint); }
+#endif
 
 	inline edict_t *GetHealingEntity() { return m_pHeal; }
 
-	inline void ClearHealingEntity() { m_pHeal = NULL; }
+	inline void ClearHealingEntity() { m_pHeal = MyEHandle(); }
 
-	virtual unsigned int MaxEntityIndex() { return gpGlobals->maxEntities; }
+	virtual short int MaxEntityIndex() { return gpGlobals->maxEntities; }
 
 	virtual void Init(bool bVarInit = false);
 
@@ -446,7 +448,6 @@ public:
 
 	virtual void CheckHealingValid();
 
-	// linux fix 2
 	virtual edict_t *FindEngineerBuiltObject(eObjectType iBuilding, int index) { return NULL; }
 
 	virtual void EngineerBuild(eObjectType iBuilding, eEngiCmd iEngiCmd) {};
@@ -455,7 +456,7 @@ public:
 
 	virtual bool LookAfterBuildings(float *fTime) { return false; }
 
-	inline void NextLookAfterSentryTime(float fTime) { m_fLookAfterSentryTime = fTime; }
+	inline void NextLookAfterSentryTime(float fTime) { m_ftLookAfterSentryTime.Start(fTime); }
 
 	inline edict_t *GetSentry() { return m_pSentryGun; }
 
@@ -469,20 +470,17 @@ public:
 	virtual bool IsCloaked() { return false; }
 	virtual bool IsDisguised() { return false; }
 
-	virtual CBotWeapon *GetCurrentWeapon()
-	{
-		return CBot::GetCurrentWeapon();
-	}
+	virtual CBotWeapon *GetCurrentWeapon() { return CBot::GetCurrentWeapon(); }
 
 	virtual bool HandleAttack(CBotWeapon *pWeapon, edict_t *pEnemy) { return CBot::HandleAttack(pWeapon, pEnemy); }
 
-	void ResetAttackingEnemy() { m_pAttackingEnemy = NULL; }
+	void ResetAttackingEnemy() { m_pAttackingEnemy = MyEHandle(); }
 
 	virtual bool SetVisible(edict_t *pEntity, bool bVisible);
 
 	virtual void SetClass(TFClass _class);
 
-	inline edict_t *SeeFlag(bool reset = false) { if (reset) { m_pFlag = NULL; } return m_pFlag; }
+	inline edict_t *SeeFlag(bool reset = false) { if (reset) { m_pFlag = MyEHandle(); } return m_pFlag; }
 
 	virtual bool CanAvoid(edict_t *pEntity);
 
@@ -496,10 +494,7 @@ public:
 
 	virtual bool IsTF2() { return false; }
 
-	virtual bool Hurt(edict_t *pAttacker, int iHealthNow, bool bDontHide = false)
-	{
-		return CBot::Hurt(pAttacker, iHealthNow, bDontHide);
-	}
+	virtual bool Hurt(edict_t *pAttacker, int iHealthNow, bool bDontHide = false) { return CBot::Hurt(pAttacker, iHealthNow, bDontHide); }
 
 	void ChooseClass();
 
@@ -525,8 +520,8 @@ public:
 
 		if (pEnemy == m_pPrevSpy)
 		{
-			m_pPrevSpy = NULL;
-			m_fSeeSpyTime = 0.0f;
+			m_pPrevSpy = MyEHandle();
+			m_ftSeeSpyTime.Invalidate();
 		}
 	}
 
@@ -545,10 +540,11 @@ public:
 	inline void FlagReset() { m_fLastKnownFlagTime = 0.0f; }
 	inline void TeamFlagReset() { m_fLastKnownTeamFlagTime = 0.0f; }
 
-	virtual bool CanGotoWaypoint(Vector vPrevWaypoint, CWaypoint *pWaypoint, CWaypoint *pPrev = NULL)
-	{
-		return CBot::CanGotoWaypoint(vPrevWaypoint, pWaypoint, pPrev);
-	}
+#if defined USE_NAVMESH
+	virtual bool CanGotoWaypoint(Vector vPrevWaypoint, INavMeshArea *pWaypoint, INavMeshArea *pPrev = NULL) { return CBot::CanGotoWaypoint(vPrevWaypoint, pWaypoint, pPrev); }
+#else
+	virtual bool CanGotoWaypoint(Vector vPrevWaypoint, CWaypoint *pWaypoint, CWaypoint *pPrev = NULL) { return CBot::CanGotoWaypoint(vPrevWaypoint, pWaypoint, pPrev); }
+#endif
 
 	virtual void Setup();
 
@@ -592,13 +588,14 @@ public:
 	virtual void SeeFriendlyDie(edict_t *pDied, edict_t *pKiller, CWeapon *pWeapon) { CBot::SeeFriendlyDie(pDied, pKiller, pWeapon); }
 	virtual void SeeFriendlyKill(edict_t *pTeamMate, edict_t *pDied, CWeapon *pWeapon) { CBot::SeeFriendlyKill(pTeamMate, pDied, pWeapon); }
 
-	virtual void CoiceCommand(int cmd) { };
+	virtual void VoiceCommand(int cmd) { };
 
 	virtual void SeeFriendlyHurtEnemy(edict_t *pTeammate, edict_t *pEnemy, CWeapon *pWeapon);
 
 	bool IncomingRocket(float fRange);
 
 	virtual void HearPlayerAttack(edict_t *pAttacker, int iWeaponID) { CBot::HearPlayerAttack(pAttacker, iWeaponID); }
+
 protected:
 	virtual void SelectTeam();
 
@@ -614,10 +611,16 @@ protected:
 
 	virtual bool CheckStuck(void) { return CBot::CheckStuck(); }
 
-	float m_fCallMedic;
-	float m_fTauntTime;
-	float m_fTaunting;
-	float m_fDefendTime;
+	float m_fLastSeeSpyTime;
+	FrameTimer m_ftLastSaySpy;
+
+	// medic voice command throttle
+	FrameTimer m_ftCallMedic;
+	FrameTimer m_ftTauntTime;
+	FrameTimer m_ftTaunting;
+
+	// how long should I hang around?
+	FrameTimer m_ftDefendTime;
 
 	float m_fHealFactor;
 
@@ -643,15 +646,22 @@ protected:
 	MyEHandle m_pFlag;
 	MyEHandle m_pPrevSpy;
 
-	float m_fFrenzyTime;
-	float m_fSpyCloakTime;
-	float m_fSpyUncloakTime;
-	float m_fSeeSpyTime;
-	float m_fLastSeeSpyTime;
-	float m_fSpyDisguiseTime;
-	float m_fLastSaySpy;
-	float m_fPickupTime;
-	float m_fLookAfterSentryTime;
+	// panic at the disco
+	FrameTimer m_ftFrenzyTime;
+	FrameTimer m_ftSpyCloakTime;
+	FrameTimer m_ftSpyUncloakTime;
+	// time until we aren't paranoid
+	FrameTimer m_ftSeeSpyTime;
+	FrameTimer m_ftSpyDisguiseTime;
+	FrameTimer m_ftPickupTime;
+	FrameTimer m_ftLookAfterSentryTime;
+	// wait for the back
+	FrameTimer m_ftBackstabTime;
+	FrameTimer m_ftUpdateClass;
+	FrameTimer m_ftUseTeleporterTime;
+	// time left before the bot decides if it wants to change class
+	FrameTimer m_ftChangeClassTime;
+	FrameTimer m_ftSnipeAttackTime;
 
 	TFClass m_iPrevSpyDisguise;
 
@@ -674,20 +684,13 @@ protected:
 	float m_fLastKnownFlagTime;
 	float m_fLastKnownTeamFlagTime;
 
-	float m_fBackstabTime;
-
 	TFClass m_iClass;
 
-	float m_fUpdateClass;
-	float m_fUseTeleporterTime;
-
 	bool m_bHasFlag;
-	float m_fSnipeAttackTime;
 
-	// time left before the bot decides if it wants to change class
-	float m_fChangeClassTime;
 	// bot should check if he can change class now
 	bool m_bCheckClass;
+
 	MyEHandle m_pLastCalledMedic;
 	CBotLastSee m_pLastSeeMedic;
 	/*MyEHandle m_pLastSeeMedic;
@@ -695,11 +698,10 @@ protected:
 	float m_fLastSeeMedicTime;*/
 	float m_fLastCalledMedicTime;
 	bool m_bIsBeingHealed;
-	float m_fMedicUpdatePosTime;
+	FrameTimer m_ftMedicUpdatePosTime;
 	Vector m_vMedicPosition;
-
 	bool m_bCanBeUbered;
-	float m_fCheckHealTime;
+	FrameTimer m_ftCheckHealTime;
 
 	float m_fClassDisguiseFitness[10]; // classes disguised as fitness
 	float m_fClassDisguiseTime[10];
@@ -715,9 +717,10 @@ protected:
 	// for use with spy checking
 	float m_fSpyList[MAX_PLAYERS];
 
-	int m_iTeam;
+	TFTeam m_iTeam;
 
-	float m_fWaitTurnSentry;			// amount of time to wait before engineer turns their sentry before building
+	// amount of time to wait before engineer turns their sentry before building
+	float m_fWaitTurnSentry;
 
 	// currently unused
 	float m_fCallMedicTime[MAX_PLAYERS]; // for every player ID is kept the last time they called medic
@@ -730,16 +733,13 @@ protected:
 	float m_fHealingMoveTime;
 
 	MyEHandle m_pLastEnemySentry;
-	MyEHandle m_NearestEnemyRocket;
+	MyEHandle m_pNearestEnemyRocket;
 	MyEHandle m_NearestEnemyGrenade;
 
 	float m_fLastSentryEnemyTime;
 	//bool m_bWantToZoom;
 };
-//
-//
-//
-//
+
 class CTF2Loadout;
 
 class CTF2LoadoutAdded
@@ -753,17 +753,14 @@ public:
 
 	CBaseEntity *m_pEnt;
 	CTF2Loadout *m_loadout;
-
 };
 
 class CBotTF2 : public CBotFortress
 {
 public:
-
-	// 
 	CBotTF2();
 
-	virtual CBotWeapon *getCurrentWeapon();
+	virtual CBotWeapon *GetCurrentWeapon();
 
 	void MannVsMachineWaveComplete();
 	void MannVsMachineAlarmTriggered(Vector vLoc);
@@ -783,7 +780,6 @@ public:
 	void EnemyFound(edict_t *pEnemy);
 
 	void EnemyAtIntel(Vector vPos, int type = FLAGEVENT_PICKUP, int iArea = -1);
-	//
 
 	bool IsTF2() { return true; }
 
@@ -794,9 +790,9 @@ public:
 
 	bool WantToInvestigateSound();
 
-	void GetDefendArea(vector<int> *m_iAreas);
+	void GetDefendArea(std::vector<int> *m_iAreas);
 
-	void GetAttackArea(vector <int> *m_iAreas);
+	void GetAttackArea(std::vector <int> *m_iAreas);
 
 	int GetCurrentAttackArea() { return m_iCurrentAttackArea; }
 	int GetCurrentDefendArea() { return m_iCurrentDefendArea; }
@@ -807,13 +803,17 @@ public:
 
 	virtual bool WantToFollowEnemy();
 
-	void ResetCloakTime() { m_fSpyCloakTime = 0.0f; }
+	void ResetCloakTime() { m_ftSpyCloakTime.Invalidate(); }
 
 	float GetEnemyFactor(edict_t *pEnemy);
 
 	void FoundSpy(edict_t *pEdict, TFClass iDisguise);
 
+#if defined USE_NAVMESH
+	void TouchedWpt(INavMeshArea *pWaypoint, int iNextWaypoint = -1, int iPrevWaypoint = -1);
+#else
 	void TouchedWpt(CWaypoint *pWaypoint, int iNextWaypoint = -1, int iPrevWaypoint = -1);
+#endif
 
 	bool HandleAttack(CBotWeapon *pWeapon, edict_t *pEnemy);
 
@@ -825,16 +825,13 @@ public:
 
 	bool SetVisible(edict_t *pEntity, bool bVisible);
 
-	//Vector getAimVector ( edict_t *pEntity );
-	virtual void ModAim(edict_t *pEntity, Vector &v_origin,
-		Vector *v_desired_offset, Vector &v_size,
-		float fDist, float fDist2D);
+	virtual void ModAim(edict_t *pEntity, Vector &v_origin, Vector *v_desired_offset, Vector &v_size, float fDist, float fDist2D);
 
 	void ModThink();
 
 	bool IsCloaked();
 
-	bool ExecuteAction(CBotUtility *util);//eBotAction id, CWaypoint *pWaypointResupply, CWaypoint *pWaypointHealth, CWaypoint *pWaypointAmmo );
+	bool ExecuteAction(CBotUtility *util);
 
 	void SetClass(TFClass _class);
 
@@ -896,7 +893,11 @@ public:
 
 	void SapperDestroyed(edict_t *pSapper);
 
+#if defined USE_NAVMESH
+	bool CanGotoWaypoint(Vector vPrevWaypoint, INavMeshArea *pWaypoint, INavMeshArea *pPrev = NULL);
+#else
 	bool CanGotoWaypoint(Vector vPrevWaypoint, CWaypoint *pWaypoint, CWaypoint *pPrev = NULL);
+#endif
 
 	bool DeployStickies(eDemoTrapType type, Vector vStand, Vector vLocation, Vector vSpread, Vector *vPoint, int *iState, int *iStickyNum, bool *bFail, float *fTime, int wptindex);
 
@@ -940,55 +941,51 @@ public:
 
 	void TeleportedPlayer(void);
 
-	void UpgradeWeapon(int iSlot);
-
 	inline bool IsCarrying() { return m_bIsCarryingObj; }
 
 	void UpdateCarrying();
 
-	inline void ResetCarryTime() { m_fCarryTime = engine->Time(); }
+	inline void ResetCarryTime() { m_fCarryTime = 0.0f; }
 
-	void MvM_Upgrade();
+	KeyValues *SelectNextUpgrade(bool bReset = false);
+	void UpgradeWeapon();
+	bool CanUpgradeWeapon();
 
 	bool DidReadyUp() { return !!m_bMvMReady; }
 	void ReadyUp(bool bReady);
 
-	//void addLoadoutWeapon ( CTF2Loadout *weap );
 private:
-	// time for next jump
-	float m_fDoubleJumpTime;
-	// time bot has taken to sap something
-	float m_fSpySapTime;
-	// 
+	
+	FrameTimer m_ftDoubleJumpTime;
+	
+	FrameTimer m_ftSpySapTime;
+	FrameTimer m_ftRemoveSapTime;
+	 
 	int m_iCurrentDefendArea;
 	int m_iCurrentAttackArea;
-	//
+	
 	//bool m_bBlockPushing;
 	//float m_fBlockPushTime;
-	//
+	
 	MyEHandle m_pDefendPayloadBomb;
 	MyEHandle m_pPushPayloadBomb;
 	MyEHandle m_pRedPayloadBomb;
 	MyEHandle m_pBluePayloadBomb;
-	//
-	// if demoman has already deployed stickies this is true
-	// once the demoman explodes them then this becomes false
-	// and it can deploy stickies again
+	
 	//bool m_bDeployedStickies;
 	eDemoTrapType m_iTrapType;
 	int m_iTrapCPIndex;
 	Vector m_vStickyLocation;
-	float m_fRemoveSapTime;
+	
 	float m_fRevMiniGunTime;
 	float m_fNextRevMiniGunTime;
 
 	float m_fRevMiniGunBelief;
 	float m_fCloakBelief;
 
-	//
 	MyEHandle m_pCloakedSpy;
 
-	float m_fAttackPointTime; // used in cart maps
+	FrameTimer m_ftAttackPointTime;
 
 	float m_prevSentryHealth;
 	float m_prevDispHealth;
@@ -1012,12 +1009,9 @@ private:
 	bool m_bIsCarryingObj;
 
 	float m_fCarryTime;
+	FrameTimer m_ftCheckNextCarrying;
 
-	float m_fCheckNextCarrying;
-
-	//stack<CTF2LoadoutAdded*> m_toApply;
-
-	float m_fUseBuffItemTime;
+	FrameTimer m_ftUseBuffItemTime;
 
 	CTF2Loadout *m_pMelee;
 	CTF2Loadout *m_pPrimary;
@@ -1026,20 +1020,23 @@ private:
 	int m_iDesiredResistType;
 	
 	bool m_bMvMReady;
+
+	int m_iMvMCurrUpgrade;
+	int m_iMvMNextUpgrade;
+	
+	int m_nMvMTotalUpgrades;
 };
 
 class CBotFF : public CBotFortress
 {
 public:
-
-	CBotFF() { CBotFortress(); }
+	CBotFF() : CBotFortress() { }
 
 	void ModThink();
 
 	bool IsEnemy(edict_t *pEdict, bool bCheckWeapons = true);
 
 	bool IsTF() { return true; }
-
 };
 
 #endif

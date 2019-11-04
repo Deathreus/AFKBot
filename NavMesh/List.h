@@ -7,26 +7,24 @@
 
 /*
  * CUtlVector wrapper that has some helper functions
- * and automatically frees itself and the contained data
  */
-template <class T> class CList : public CCopyableUtlVector<T>
+template <class T> class CList : public CUtlVector<T>
 {
-	typedef CCopyableUtlVector<T> BaseClass;
+	typedef CUtlVector<T> BaseClass;
 public:
 	CList() : BaseClass() {}
 	CList(int count) : BaseClass() { EnsureCapacity(count); SetCount(count); }
-	~CList() { Purge(); }
 
-	bool Push(T item) { return !!AddToTail(item); }
+	bool Push(T const &item) { return !!AddToTail(item); }
 
-	T Pop()
+	T &Pop()
 	{
 		T item = Tail();
-		FindAndRemove(item);
+		FastRemove(m_Size);
 		return item;
 	}
 
-	const bool Resize(int newSize)
+	bool Resize(int newSize)
 	{
 		SetCount(newSize);
 		Assert(IsValidIndex(newSize));
@@ -42,7 +40,7 @@ public:
 		Purge();
 	}
 
-	const bool Empty() const { return Count() == 0; }
+	bool Empty() const { return Count() == 0; }
 
 	const bool operator!() const
 	{
@@ -51,10 +49,11 @@ public:
 
 	// stdlib support and C++ 11 range looping
 	typedef T* iterator;
+	typedef T const* const_iterator;
 	iterator begin() { return Base(); }
-	const iterator begin() const { return Base(); }
+	const_iterator begin() const { return Base(); }
 	iterator end() { return Base() + Count(); }
-	const iterator end() const { return Base() + Count(); }
+	const_iterator end() const { return Base() + Count(); }
 };
 
 #endif

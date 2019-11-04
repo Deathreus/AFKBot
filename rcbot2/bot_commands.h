@@ -31,11 +31,6 @@
 #ifndef __BOT_COMMANDS_H__
 #define __BOT_COMMANDS_H__
 
-#include <vector>
-using namespace std;
-
-class CClient;
-
 typedef enum
 {
 	COMMAND_NOT_FOUND,     // command not found
@@ -44,12 +39,12 @@ typedef enum
 	COMMAND_REQUIRE_ACCESS // dont have access to command
 }eBotCommandResult;
 
-#define NEED_ARG(x) if ( !x || !*x ) return COMMAND_ERROR;
+#define NEED_ARG(x) if ( !x || !*x ) return COMMAND_ERROR
 
 
 #define CMD_ACCESS_NONE				0
-#define CMD_ACCESS_WAYPOINT			ADMFLAG_RCON
-#define CMD_ACCESS_BOT				ADMFLAG_CHEATS
+#define CMD_ACCESS_WAYPOINT			ADMFLAG_CHEATS
+#define CMD_ACCESS_BOT				ADMFLAG_RCON
 
 #define CMD_ACCESS_ALL (CMD_ACCESS_WAYPOINT|CMD_ACCESS_BOT)
 
@@ -118,7 +113,7 @@ public:
 
 	virtual bool CanbeUsedDedicated() { return true; }
 private:
-	vector<CBotCommand*> m_theCommands;
+	std::vector<CBotCommand*> m_theCommands;
 };
 
 /////////////////////////////////////////////////
@@ -128,28 +123,154 @@ public:
 	CRCBotCommand();
 };
 
+class CWaypointCommand : public CBotCommandContainer
+{
+public:
+	CWaypointCommand();
+};
+
+class CWaypointLoadCommand : public CBotCommand
+{
+public:
+	CWaypointLoadCommand()
+	{
+		SetName("load");
+		SetHelp("Load waypoints for this map.");
+	}
+
+	eBotCommandResult Execute(edict_t *pClient, const char *cmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5);
+
+	virtual bool CanbeUsedDedicated() { return true; }
+};
+
+class CWaypointSaveCommand : public CBotCommand
+{
+public:
+	CWaypointSaveCommand()
+	{
+		SetName("save");
+		SetHelp("Save waypoints for this map.");
+	}
+
+	eBotCommandResult Execute(edict_t *pClient, const char *cmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5);
+
+	virtual bool CanbeUsedDedicated() { return true; }
+};
+
+class CWaypointResetCommand : public CBotCommand
+{
+public:
+	CWaypointResetCommand()
+	{
+		SetName("reset");
+		SetHelp("Remove all waypoint data for this map.");
+	}
+
+	eBotCommandResult Execute(edict_t *pClient, const char *cmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5);
+
+	virtual bool CanbeUsedDedicated() { return true; }
+};
+
+class CWaypointAddCommand : public CBotCommand
+{
+public:
+	CWaypointAddCommand()
+	{
+		SetName("add");
+		SetHelp("Add a waypoint at your location.");
+	}
+
+	eBotCommandResult Execute(edict_t *pClient, const char *cmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5);
+
+	virtual bool CanbeUsedDedicated() { return true; }
+};
+
+class CWaypointRemoveCommand : public CBotCommand
+{
+public:
+	CWaypointRemoveCommand()
+	{
+		SetName("remove");
+		SetHelp("Delete the waypoint at your location.");
+	}
+
+	eBotCommandResult Execute(edict_t *pClient, const char *cmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5);
+
+	virtual bool CanbeUsedDedicated() { return true; }
+};
+
+class CWaypointGiveTypeCommand : public CBotCommand
+{
+public:
+	CWaypointGiveTypeCommand()
+	{
+		SetName("give_type");
+		SetHelp("Add to the waypoint at your location the given type(s).");
+	}
+
+	eBotCommandResult Execute(edict_t *pClient, const char *cmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5);
+
+	virtual bool CanbeUsedDedicated() { return true; }
+};
+
+class CWaypointSetYawCommand : public CBotCommand
+{
+public:
+	CWaypointSetYawCommand()
+	{
+		SetName("update_yaw");
+		SetHelp("Change the yaw of the waypoint at your location to the angle you are facing or a given one.");
+	}
+
+	eBotCommandResult Execute(edict_t *pClient, const char *cmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5);
+
+	virtual bool CanbeUsedDedicated() { return true; }
+};
+
+class CWaypointSetRadiusCommand : public CBotCommand
+{
+public:
+	CWaypointSetRadiusCommand()
+	{
+		SetName("set_radius");
+		SetHelp("Set or remove the size of the waypoint at your location.");
+	}
+
+	eBotCommandResult Execute(edict_t *pClient, const char *cmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5);
+
+	virtual bool CanbeUsedDedicated() { return true; }
+};
+
 class CNavMeshCommand : public CBotCommandContainer
 {
 public:
 	CNavMeshCommand();
 };
 
-class CNavMeshAddAttributeCommand : public CBotCommand
+class CNavMeshAddHintCommand : public CBotCommand
 {
 public:
-	CNavMeshAddAttributeCommand();
+	CNavMeshAddHintCommand()
+	{
+		SetName("add_hint");
+		SetHelp("Add a hint to the location under you to help the bots know where to defend and set up.");
+	}
 
-	eBotCommandResult Execute(edict_t *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5);
+	eBotCommandResult Execute(edict_t *pClient, const char *cmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5);
 
 	virtual bool CanbeUsedDedicated() { return true; }
 };
 
-class CNavMeshRemoveAttributeCommand : public CBotCommand
+class CNavMeshRemoveHintCommand : public CBotCommand
 {
 public:
-	CNavMeshRemoveAttributeCommand();
+	CNavMeshRemoveHintCommand()
+	{
+		SetName("remove_hint");
+		SetHelp("Remove the closest hint to you from the area.");
+	}
 
-	eBotCommandResult Execute(edict_t *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5);
+	eBotCommandResult Execute(edict_t *pClient, const char *cmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5);
 
 	virtual bool CanbeUsedDedicated() { return true; }
 };
@@ -157,9 +278,13 @@ public:
 class CNavMeshLoadCommand : public CBotCommand
 {
 public:
-	CNavMeshLoadCommand();
+	CNavMeshLoadCommand()
+	{
+		SetName("load");
+		SetHelp("Load the navmesh into memory for editing.");
+	}
 
-	eBotCommandResult Execute(edict_t *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5);
+	eBotCommandResult Execute(edict_t *pClient, const char *cmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5);
 
 	virtual bool CanbeUsedDedicated() { return true; }
 };
@@ -167,11 +292,43 @@ public:
 class CNavMeshSaveCommand : public CBotCommand
 {
 public:
-	CNavMeshSaveCommand();
+	CNavMeshSaveCommand()
+	{
+		SetName("save");
+		SetHelp("Save changes to the mesh.");
+	}
 
-	eBotCommandResult Execute(edict_t *pClient, const char *pcmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5);
+	eBotCommandResult Execute(edict_t *pClient, const char *cmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5);
 
 	virtual bool CanbeUsedDedicated() { return true; }
+};
+
+class CNavMeshHintListCommand : public CBotCommand
+{
+public:
+	CNavMeshHintListCommand()
+	{
+		SetName("hints_list");
+		SetHelp("List the type of hints possible for the argument of add_hint");
+	}
+
+	eBotCommandResult Execute(edict_t *pClient, const char *cmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5);
+
+	virtual bool CanBeUsedDedicated() { return true; }
+};
+
+class CNavMeshGenWaypointsCommand : public CBotCommand
+{
+public:
+	CNavMeshGenWaypointsCommand()
+	{
+		SetName("gen_waypoints");
+		SetHelp("Use an existing Nav Mesh to dynamically create waypoints");
+	}
+
+	eBotCommandResult Execute(edict_t *pClient, const char *cmd, const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5);
+
+	virtual bool CanBeUsedDedicated() { return true; }
 };
 
 class CPrintCommands : public CBotCommand

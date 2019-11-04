@@ -31,18 +31,15 @@
 #ifndef __RCBOT_TASK_H__
 #define __RCBOT_TASK_H__
 
-class CBot;
-class CBotSquad;
-class CBotSchedule;
-struct edict_t;
-
 #include "bot_base.h"
 #include "bot_const.h"
 #include "bot_fortress.h"
 
+class CBotSquad;
+class CBotSchedule;
 class CWaypointVisibilityTable;
 
-class IBotTaskInterrupt
+abstract_class IBotTaskInterrupt
 {
 public:
 	virtual bool IsInterrupted(CBot *pBot, bool *bFailed, bool *bCompleted) = 0;
@@ -57,7 +54,6 @@ public:
 private:
 	float m_fPrevSentryHealth;
 	MyEHandle m_pSentryGun;
-	CBotWeapon *pWrench;
 };
 
 class CBotTF2CoverInterrupt : public IBotTaskInterrupt
@@ -88,18 +84,12 @@ public:
 			m_pInterruptFunc = NULL;
 		}
 	}
-	void _Init();
-	virtual void Init();
-	virtual void Execute(CBot *pBot, CBotSchedule *pSchedule);
 
-	//void setTimeout ();
-
+	virtual void Init() { } // optional
+	virtual void Execute(CBot *pBot, CBotSchedule *pSchedule) = 0; // required
 	bool HasFailed();
 	bool IsComplete();
-	//void setVector ( Vector vOrigin );
-	//void setFloat ( float fFloat );
 	bool TimedOut();
-	//void setEdict ( edict_t *pEdict );
 	void SetFailInterrupt(int iInterruptHave, int iInterruptDontHave = 0);
 	void SetCompleteInterrupt(int iInterruptHave, int iInterruptDontHave = 0);
 	void SetInterruptFunction(IBotTaskInterrupt *func) { m_pInterruptFunc = func; }
@@ -108,15 +98,11 @@ public:
 	void Complete();
 	inline bool HasFlag(int iFlag) { return (m_iFlags & iFlag) == iFlag; }
 	inline void SetFlag(int iFlag) { m_iFlags |= iFlag; }
-	void ClearFailInterrupts() { m_iFailInterruptConditionsHave = m_iFailInterruptConditionsDontHave = 0; }
-	virtual void DebugString(char *string) { string[0] = 0; return; }
-
-	//bool isID ( eTaskID eTaskId ) { };
+	virtual void ClearFailInterrupts() { m_iFailInterruptConditionsHave = m_iFailInterruptConditionsDontHave = 0; }
+	virtual const char *DebugString(void);
 
 protected:
-
 	IBotTaskInterrupt *m_pInterruptFunc;
-	//void setID();
 	// flags
 	int m_iFlags;
 	// conditions that may happen to fail task
@@ -128,20 +114,14 @@ protected:
 	eTaskState m_iState;
 	// time out
 	float m_fTimeOut;
-	// vars
-	//edict_t *m_pEdict;
-	//float m_fFloat;
-	//int m_iInt;
-	//Vector m_vVector;
 };
-///////////////////////////////////
 
 class CFindPathTask : public CBotTask
 {
 public:
 	CFindPathTask()
 	{
-		m_pEdict = NULL;
+		m_pEdict = MyEHandle();
 		m_LookTask = LOOK_WAYPOINT;
 		m_iWaypointId = -1;
 		m_flags.m_data = 0;
@@ -153,7 +133,7 @@ public:
 	CFindPathTask(Vector vOrigin, eLookTask looktask = LOOK_WAYPOINT)
 	{
 		m_vVector = vOrigin;
-		m_pEdict = NULL; // no edict
+		m_pEdict = MyEHandle(); // no edict
 		m_LookTask = looktask;
 		m_iWaypointId = -1;
 		m_flags.m_data = 0;
@@ -195,9 +175,8 @@ public:
 	void Init();
 
 	void SetLookTask(eLookTask task) { m_LookTask = task; }
+
 private:
-
-
 	Vector m_vVector;
 	MyEHandle m_pEdict;
 	eLookTask m_LookTask;
@@ -230,7 +209,11 @@ private:
 class CBotTF2AttackSentryGunTask : public CBotTask
 {
 public:
-	CBotTF2AttackSentryGunTask(edict_t *pSentryGun, CBotWeapon *pWeapon);
+	CBotTF2AttackSentryGunTask(edict_t *pSentryGun, CBotWeapon *pWeapon)
+	{
+		m_pSentryGun = pSentryGun;
+		m_pWeapon = pWeapon;
+	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 
@@ -239,7 +222,6 @@ public:
 		m_fTime = 0.0f;
 	}
 private:
-
 	MyEHandle m_pSentryGun;
 	CBotWeapon *m_pWeapon;
 	int m_iStartingWaypoint;
@@ -264,7 +246,6 @@ public:
 
 	float GetDistance();
 private:
-
 	Vector m_vTarget;
 	Vector m_vStart;
 	CBotWeapon *m_pWeapon;
@@ -283,11 +264,10 @@ public:
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
-
 	Vector m_vStart;
 	Vector m_vPipe;
 	Vector m_vEnd;
-	edict_t *m_pPipeBomb;
+	MyEHandle m_pPipeBomb;
 	bool m_bFired;
 	float m_fTime;
 	int m_iState;
@@ -301,8 +281,16 @@ private:
 class CBotTF2DemomanPipeEnemy : public CBotTask
 {
 public:
-	//CBotTF2DemomanPipeEnemy (Vector vStand, Vector vBlastPoint, CBotWeapon *pPipeLauncher, Vector vEnemy, edict_t *pEnemy);
-	CBotTF2DemomanPipeEnemy(CBotWeapon *pPipeLauncher, Vector vEnemy, edict_t *pEnemy);
+	CBotTF2DemomanPipeEnemy(CBotWeapon *pPipeLauncher, Vector vEnemy, edict_t *pEnemy)
+	{
+		m_vEnemy = vEnemy;
+		m_pEnemy = pEnemy;
+		m_fTime = 0.0f;
+		m_vAim = vEnemy;
+		m_pPipeLauncher = pPipeLauncher;
+		m_fHoldAttackTime = 0.0f;
+		m_fHeldAttackTime = 0.0f;
+	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
@@ -322,7 +310,19 @@ public:
 	// Set up a pipe trap or fire pipe bombs -- 
 	// if autodetonate, detonate them when I've shot them rather than wait for an enemy
 	// such as when attacking a sentry
-	CBotTF2DemomanPipeTrap(eDemoTrapType type, Vector vStand, Vector vLoc, Vector vSpread, bool bAutoDetonate = false, int m_iWptArea = -1);
+	CBotTF2DemomanPipeTrap(eDemoTrapType type, Vector vStand, Vector vLoc, Vector vSpread, bool bAutoDetonate = false, int wptarea = -1)
+	{
+		m_vPoint = vLoc;
+		m_vLocation = vLoc;
+		m_vSpread = vSpread;
+		m_iState = 0;
+		m_iStickies = 6;
+		m_iTrapType = type;
+		m_vStand = vStand;
+		m_fTime = 0.0f;
+		m_bAutoDetonate = bAutoDetonate;
+		m_iWptArea = wptarea;
+	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
@@ -338,7 +338,6 @@ private:
 	int m_iWptArea;
 
 };
-
 
 class CBotTF2FindPipeWaypoint : public CBotTask
 {
@@ -360,28 +359,26 @@ private:
 
 	CWaypointVisibilityTable *m_pTable;
 	CWaypoint *m_pTarget;
-	vector<int> m_WaypointsI;
-	vector<int> m_WaypointsJ;
+	std::vector<int> m_WaypointsI;
+	std::vector<int> m_WaypointsJ;
 };
-
-
-/*class CBotGravGunPickup : public CBotTask
+/*
+class CBotGravGunPickup : public CBotTask
 {
 public:
-	CBotGravGunPickup ( edict_t *pWeapon, edict_t *pProp )
+	CBotGravGunPickup(edict_t *pWeapon, edict_t *pProp)
 	{
 		m_Weapon = pWeapon;
 		m_Prop = pProp;
 		m_fTime = 0;
 	}
 
-	void Execute (CBot *pBot,CBotSchedule *pSchedule);
+	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
 	MyEHandle m_Weapon;
 	MyEHandle m_Prop;
 	float m_fTime;
 	float m_fSecAttTime;
-
 };
 
 #define CHARGER_HEALTH 0
@@ -390,40 +387,43 @@ private:
 class CBotHL2DMUseCharger : public CBotTask
 {
 public:
-	CBotHL2DMUseCharger ( edict_t *pCharger, int type )
+	CBotHL2DMUseCharger(edict_t *pCharger, int type)
 	{
 		m_pCharger = pCharger;
 		m_fTime = 0;
 		m_iType = type;
 	}
 
-	void Execute (CBot *pBot,CBotSchedule *pSchedule);
+	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
 	MyEHandle m_pCharger;
 	float m_fTime;
 	int m_iType;
-
 };
 
 class CBotHL2DMUseButton : public CBotTask
 {
 public:
-	CBotHL2DMUseButton ( edict_t *pButton )
+	CBotHL2DMUseButton(edict_t *pButton)
 	{
 		m_pButton = pButton;
 		m_fTime = 0.0f;
 	}
 
-	void Execute (CBot *pBot,CBotSchedule *pSchedule);
+	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
 	MyEHandle m_pButton;
 	float m_fTime;
-};*/
-
+};
+*/
 class CBotTF2MedicHeal : public CBotTask
 {
 public:
-	CBotTF2MedicHeal();
+	CBotTF2MedicHeal()
+	{
+		m_pHeal = MyEHandle();
+		m_bHealerJumped = false;
+	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
@@ -436,7 +436,13 @@ private:
 class CBotRemoveSapper : public CBotTask
 {
 public:
-	CBotRemoveSapper(edict_t *pBuilding, eObjectType id);
+	CBotRemoveSapper(edict_t *pBuilding, eObjectType id)
+	{
+		m_fTime = 0.0f;
+		m_pBuilding = pBuilding;
+		m_id = id;
+		m_fHealTime = 0.0f;
+	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
@@ -449,7 +455,10 @@ private:
 class CBotUseLunchBoxDrink : public CBotTask
 {
 public:
-	CBotUseLunchBoxDrink();
+	CBotUseLunchBoxDrink()
+	{
+		m_fTime = 0.0f;
+	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
@@ -459,7 +468,10 @@ private:
 class CBotUseBuffItem : public CBotTask
 {
 public:
-	CBotUseBuffItem();
+	CBotUseBuffItem()
+	{
+		m_fTime = 0.0f;
+	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
@@ -469,18 +481,21 @@ private:
 class CBotBackstab : public CBotTask
 {
 public:
-	CBotBackstab(edict_t *_pEnemy);
+	CBotBackstab(edict_t *pEnemy)
+	{
+		m_fTime = 0.0f;
+		m_pEnemy = pEnemy;
+	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
 	float m_fTime;
-	MyEHandle pEnemy;
+	MyEHandle m_pEnemy;
 };
 
 class CBotJoinSquad : public CBotTask
 {
 public:
-
 	CBotJoinSquad(edict_t *pPlayerToJoin)
 	{
 		m_pPlayer = pPlayerToJoin;
@@ -494,7 +509,6 @@ private:
 class CBotFollowSquadLeader : public CBotTask
 {
 public:
-
 	CBotFollowSquadLeader(CBotSquad *pSquad)
 	{
 		m_fLeaderSpeed = 0.0f;
@@ -519,7 +533,11 @@ private:
 class CBotNest : public CBotTask
 {
 public:
-	CBotNest();
+	CBotNest()
+	{
+		m_fTime = 0.0f;
+		m_pEnemy = MyEHandle();
+	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
@@ -530,7 +548,7 @@ private:
 class CBotDefendTask : public CBotTask
 {
 public:
-	CBotDefendTask(Vector vOrigin, float fMaxTime = 0, int iInterrupt = CONDITION_SEE_CUR_ENEMY, bool bDefendOrigin = false, Vector vDefendOrigin = Vector(0, 0, 0), eLookTask looktask = LOOK_SNIPE, int iWaypointType = 0)
+	CBotDefendTask(Vector vOrigin, float fMaxTime = 0, int iInterrupt = CONDITION_SEE_CUR_ENEMY, bool bDefendOrigin = false, Vector vDefendOrigin = Vector(0.0f), eLookTask looktask = LOOK_SNIPE, int iWaypointType = 0)
 	{
 		m_fMaxTime = fMaxTime;
 		m_vOrigin = vOrigin;
@@ -578,13 +596,18 @@ private:
 	int m_iCurPath;
 	bool m_bHasPOV;
 	Vector m_vPOV;
-	vector<Vector> m_InvPoints; // investigation points (waypoint paths)
+	std::vector<Vector> m_InvPoints; // investigation points (waypoint paths)
 };
 
 class CBotTF2EngiLookAfter : public CBotTask
 {
 public:
-	CBotTF2EngiLookAfter(edict_t *pSentry) { m_pSentry = pSentry; m_fTime = 0; m_fHitSentry = 0; }
+	CBotTF2EngiLookAfter(edict_t *pSentry)
+	{
+		m_pSentry = pSentry;
+		m_fTime = 0;
+		m_fHitSentry = 0;
+	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
@@ -616,7 +639,6 @@ private:
 	float m_fOriginDistance;
 };
 
-
 class CBotTF2Snipe : public CBotTask
 {
 public:
@@ -640,13 +662,12 @@ private:
 	float m_fOriginDistance;
 };
 
-
 /*class CBotDODSnipe : public CBotTask
 {
 public:
-CBotDODSnipe ( CBotWeapon *pWeaponToUse, Vector vOrigin, float fYaw, bool bUseZ = false, float z = 0, int iWaypointType = 0 );
+	CBotDODSnipe( CBotWeapon *pWeaponToUse, Vector vOrigin, float fYaw, bool bUseZ = false, float z = 0, int iWaypointType = 0 );
 
-void execute (CBot *pBot,CBotSchedule *pSchedule);
+	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
 	float m_fTime;
 	float m_fEnemyTime;
@@ -664,19 +685,19 @@ private:
 class CBotHL2DMSnipe : public CBotTask
 {
 public:
-CBotHL2DMSnipe ( CBotWeapon *pWeaponToUse, Vector vOrigin, float fYaw, bool bUseZ = false, float z = 0, int iWaypointType = 0 );
+	CBotHL2DMSnipe( CBotWeapon *pWeaponToUse, Vector vOrigin, float fYaw, bool bUseZ = false, float z = 0, int iWaypointType = 0 );
 
-void execute (CBot *pBot,CBotSchedule *pSchedule);
+	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
-float m_fTime;
-float m_fEnemyTime;
-float m_fScopeTime;
-Vector m_vAim;
-Vector m_vOrigin;
-CBotWeapon *m_pWeaponToUse;
-bool m_bUseZ;
-float m_z; // z = ground level
-int m_iWaypointType;
+	float m_fTime;
+	float m_fEnemyTime;
+	float m_fScopeTime;
+	Vector m_vAim;
+	Vector m_vOrigin;
+	CBotWeapon *m_pWeaponToUse;
+	bool m_bUseZ;
+	float m_z; // z = ground level
+	int m_iWaypointType;
 };*/
 
 class CBotTF2SpyDisguise : public CBotTask
@@ -690,7 +711,11 @@ public:
 class CBotTFEngiBuildTask : public CBotTask
 {
 public:
+#if defined USE_NAVMESH
+	CBotTFEngiBuildTask(eObjectType iObject, Vector vSpot);
+#else
 	CBotTFEngiBuildTask(eObjectType iObject, CWaypoint *pWaypoint);
+#endif
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 
@@ -707,92 +732,97 @@ private:
 	Vector m_vBaseOrigin;
 	float m_fRadius;
 };
-
-
-/*class CDODDropAmmoTask : public CBotTask
+/*
+class CDODDropAmmoTask : public CBotTask
 {
 public:
-CDODDropAmmoTask ( edict_t *pPlayer )
-{
-m_fTime = 0.0f;
-m_pPlayer = pPlayer;
-}
+	CDODDropAmmoTask(edict_t *pPlayer)
+	{
+		m_fTime = 0.0f;
+		m_pPlayer = pPlayer;
+	}
 
-void execute (CBot *pBot,CBotSchedule *pSchedule);
-
+	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
-MyEHandle m_pPlayer;
-float m_fTime;
+	MyEHandle m_pPlayer;
+	float m_fTime;
 };
 
 class CDODWaitForGrenadeTask : public CBotTask
 {
 public:
-CDODWaitForGrenadeTask ( edict_t *pGrenade )
-{
-m_pGrenade = pGrenade;
-m_fTime = 0.0f;
-}
+	CDODWaitForGrenadeTask(edict_t *pGrenade)
+	{
+		m_pGrenade = pGrenade;
+		m_fTime = 0.0f;
+	}
 
-void execute (CBot *pBot,CBotSchedule *pSchedule);
-
+	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
-MyEHandle m_pGrenade;
-float m_fTime;
+	MyEHandle m_pGrenade;
+	float m_fTime;
 };
 
 class CDODWaitForBombTask : public CBotTask
 {
 public:
-CDODWaitForBombTask ( edict_t *pBombTarget, CWaypoint *pBlocking )
-{
-m_pBombTarget = pBombTarget;
-m_fTime = 0.0f;
-m_pBlocking = pBlocking;
-}
-void execute (CBot *pBot,CBotSchedule *pSchedule);
+	CDODWaitForBombTask(edict_t *pBombTarget, CWaypoint *pBlocking)
+	{
+		m_pBombTarget = pBombTarget;
+		m_fTime = 0.0f;
+		m_pBlocking = pBlocking;
+	}
 
+	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
-MyEHandle m_pBombTarget;
-float m_fTime;
-CWaypoint *m_pRunTo;
-CWaypoint *m_pBlocking;
+	MyEHandle m_pBombTarget;
+	float m_fTime;
+	CWaypoint *m_pRunTo;
+	CWaypoint *m_pBlocking;
 };
 
 class CBotDODBomb : public CBotTask
 {
 public:
-CBotDODBomb ( int iBombType, int iBombID, edict_t *m_pBombTarget, Vector vPosition, int iPrevOwner );
-void execute (CBot *pBot,CBotSchedule *pSchedule);
+	CBotDODBomb(int iBombType, int iBombID, edict_t *m_pBombTarget, Vector vPosition, int iPrevOwner);
+
+	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
-Vector m_vOrigin;
-float m_fTime;
-int m_iBombID;
-int m_iPrevTeam; // prev owner
-edict_t *m_pBombTarget;
-int m_iType;
+	Vector m_vOrigin;
+	float m_fTime;
+	int m_iBombID;
+	int m_iPrevTeam; // prev owner
+	edict_t *m_pBombTarget;
+	int m_iType;
 };
 
 class CBotDODAttackPoint : public CBotTask
 {
 public:
-CBotDODAttackPoint ( int iFlagID, Vector vOrigin, float fRadius );
-void execute (CBot *pBot,CBotSchedule *pSchedule);
+	CBotDODAttackPoint(int iFlagID, Vector vOrigin, float fRadius);
+
+	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
-Vector m_vOrigin;
-Vector m_vMoveTo;
-float m_fAttackTime;
-float m_fTime;
-int m_iFlagID;
-float m_fRadius;
-bool m_bProne;
-};*/
-
-
+	Vector m_vOrigin;
+	Vector m_vMoveTo;
+	float m_fAttackTime;
+	float m_fTime;
+	int m_iFlagID;
+	float m_fRadius;
+	bool m_bProne;
+};
+*/
 class CBotTF2AttackPoint : public CBotTask
 {
 public:
-	CBotTF2AttackPoint(int iArea, Vector vOrigin, int iRadius);
+	CBotTF2AttackPoint(int iArea, Vector vOrigin, int iRadius)
+	{
+		m_vOrigin = vOrigin;
+		m_fAttackTime = 0.0f;
+		m_fTime = 0.0f;
+		m_iArea = iArea;
+		m_iRadius = iRadius;
+	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
@@ -803,7 +833,6 @@ private:
 	int m_iArea;
 	int m_iRadius;
 };
-
 
 class CBotTF2ShootLastEnemyPosition : public CBotTask
 {
@@ -817,11 +846,17 @@ private:
 	float m_fTime;
 };
 
-
 class CBotTF2DefendPoint : public CBotTask
 {
 public:
-	CBotTF2DefendPoint(int iArea, Vector vOrigin, int iRadius);
+	CBotTF2DefendPoint(int iArea, Vector vOrigin, int iRadius)
+	{
+		m_vOrigin = vOrigin;
+		m_fDefendTime = 0.0f;
+		m_fTime = 0.0f;
+		m_iArea = iArea;
+		m_iRadius = iRadius;
+	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
@@ -844,7 +879,7 @@ public:
 private:
 	Vector m_vOrigin;
 	Vector m_vMoveTo;
-	vector<Vector> m_CheckPoints;
+	std::vector<Vector> m_CheckPoints;
 	unsigned int m_iCurrentCheckPoint;
 	float m_fInvestigateTime;
 	float m_fTime;
@@ -854,7 +889,13 @@ private:
 class CBotTF2PushPayloadBombTask : public CBotTask
 {
 public:
-	CBotTF2PushPayloadBombTask(edict_t * pPayloadBomb);
+	CBotTF2PushPayloadBombTask(edict_t *pPayloadBomb)
+	{
+		m_pPayloadBomb = pPayloadBomb;
+		m_fPushTime = 0.0f;
+		m_fTime = 0.0f;
+		m_vRandomOffset = Vector(0.0f);
+	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
@@ -869,7 +910,13 @@ private:
 class CBotTF2DefendPayloadBombTask : public CBotTask
 {
 public:
-	CBotTF2DefendPayloadBombTask(edict_t * pPayloadBomb);
+	CBotTF2DefendPayloadBombTask(edict_t *pPayloadBomb)
+	{
+		m_pPayloadBomb = pPayloadBomb;
+		m_fDefendTime = 0.0f;
+		m_fTime = 0.0f;
+		m_vRandomOffset = Vector(0.0f);
+	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
@@ -884,7 +931,11 @@ private:
 class CBotTF2UpgradeBuilding : public CBotTask
 {
 public:
-	CBotTF2UpgradeBuilding(edict_t *pBuilding);
+	CBotTF2UpgradeBuilding(edict_t *pBuilding)
+	{
+		m_pBuilding = pBuilding;
+		m_fTime = 0.0f;
+	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
@@ -892,10 +943,27 @@ private:
 	float m_fTime;
 };
 
+class CBotTF2UpgradeWeapon : public CBotTask
+{
+public:
+	CBotTF2UpgradeWeapon(TFClass iClass)
+	{
+		m_iClass = iClass;
+	}
+
+	void Execute(CBot *pBot, CBotSchedule *pSchedule);
+private:
+	TFClass m_iClass;
+};
+
 class CBotTF2WaitAmmoTask : public CBotTask
 {
 public:
-	CBotTF2WaitAmmoTask(Vector vOrigin);
+	CBotTF2WaitAmmoTask(Vector vOrigin)
+	{
+		m_vOrigin = vOrigin;
+		m_fWaitTime = 0.0f;
+	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
@@ -906,7 +974,11 @@ private:
 class CBotTF2WaitHealthTask : public CBotTask
 {
 public:
-	CBotTF2WaitHealthTask(Vector vOrigin);
+	CBotTF2WaitHealthTask(Vector vOrigin)
+	{
+		m_vOrigin = vOrigin;
+		m_fWaitTime = 0.0f;
+	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
@@ -917,18 +989,25 @@ private:
 class CBotTFDoubleJump : public CBotTask
 {
 public:
-	CBotTFDoubleJump(); // going here
+	CBotTFDoubleJump()
+	{
+		m_fTime = 0.0f;
+	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
 	float m_fTime;
 };
 
-
 class CBotTFRocketJump : public CBotTask
 {
 public:
-	CBotTFRocketJump(); // going here
+	CBotTFRocketJump()
+	{
+		m_fTime = 0.0f;
+		m_fJumpTime = 0.0f;
+		m_iState = 0;
+	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
@@ -940,7 +1019,12 @@ private:
 class CBotTF2SpySap : public CBotTask
 {
 public:
-	CBotTF2SpySap(edict_t *pBuilding, eObjectType id); // going to use this 
+	CBotTF2SpySap(edict_t *pBuilding, eObjectType id)
+	{
+		m_pBuilding = pBuilding;
+		m_fTime = 0.0f;
+		m_id = id;
+	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
@@ -952,7 +1036,11 @@ private:
 class CBotTFUseTeleporter : public CBotTask
 {
 public:
-	CBotTFUseTeleporter(edict_t *pTele); // going to use this 
+	CBotTFUseTeleporter(edict_t *pTele)
+	{
+		m_pTele = pTele;
+		m_fTime = 0.0;
+	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
@@ -964,7 +1052,11 @@ private:
 class CBotTaskEngiPickupBuilding : public CBotTask
 {
 public:
-	CBotTaskEngiPickupBuilding(edict_t *pBuilding); // going to use this 
+	CBotTaskEngiPickupBuilding(edict_t *pBuilding)
+	{
+		m_fTime = 0.0f;
+		m_pBuilding = pBuilding;
+	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
@@ -975,7 +1067,14 @@ private:
 class CBotTaskEngiPlaceBuilding : public CBotTask
 {
 public:
-	CBotTaskEngiPlaceBuilding(eObjectType iObject, Vector vOrigin); // going to use this 
+	CBotTaskEngiPlaceBuilding(eObjectType iObject, Vector vOrigin)
+	{
+		m_vOrigin = vOrigin;
+		m_fTime = 0.0f;
+		m_iState = 1; // BEGIN HERE , otherwIse bot will try to destroy the Building
+		m_iObject = iObject;
+		m_iTries = 0;
+	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
@@ -989,7 +1088,12 @@ private:
 class CBotTF2WaitFlagTask : public CBotTask
 {
 public:
-	CBotTF2WaitFlagTask(Vector vOrigin, bool bFind = false);
+	CBotTF2WaitFlagTask(Vector vOrigin, bool bFind = false)
+	{
+		m_vOrigin = vOrigin;
+		m_fWaitTime = 0.0f;
+		m_bFind = bFind;
+	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
@@ -997,25 +1101,30 @@ private:
 	float m_fWaitTime;
 	bool m_bFind;
 };
-
-/*class CThrowGrenadeTask : public CBotTask
+/*
+class CThrowGrenadeTask : public CBotTask
 {
 public:
-CThrowGrenadeTask ( CBotWeapon *pWeapon, int ammo, Vector vLoc );
-void init ();
-void execute (CBot *pBot,CBotSchedule *pSchedule);
-private:
-Vector m_vLoc;
-CBotWeapon *m_pWeapon;
-float m_fTime;
-float m_fHoldAttackTime;
-int m_iAmmo;
-};*/
+	CThrowGrenadeTask(CBotWeapon *pWeapon, int ammo, Vector vLoc);
 
+	void Init();
+
+	void Execute(CBot *pBot, CBotSchedule *pSchedule);
+private:
+	Vector m_vLoc;
+	CBotWeapon *m_pWeapon;
+	float m_fTime;
+	float m_fHoldAttackTime;
+	int m_iAmmo;
+};
+*/
 class CAttackEntityTask : public CBotTask
 {
 public:
-	CAttackEntityTask(edict_t *pEdict);
+	CAttackEntityTask(edict_t *pEdict)
+	{
+		m_pEdict = pEdict;
+	}
 
 	void Init();
 
@@ -1023,24 +1132,23 @@ public:
 private:
 	MyEHandle m_pEdict;
 };
-
-////////////////////
-/*class CAutoBuy : public CBotTask
+/*
+class CAutoBuy : public CBotTask
 {
 public:
-void init ();
+	void Init();
 
-void execute (CBot *pBot,CBotSchedule *pSchedule);
+	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 
 private:
-float m_fTime;
-bool m_bTimeset;
-};*/
-//////////////////////
-class CTF2_TauntTask : public CBotTask
+	float m_fTime;
+	bool m_bTimeset;
+};
+*/
+class CBotTF2TauntTask : public CBotTask
 {
 public:
-	CTF2_TauntTask(Vector vPlayer, Vector vOrigin, float fDist)
+	CBotTF2TauntTask(Vector vPlayer, Vector vOrigin, float fDist)
 	{
 		m_vPlayer = vPlayer;
 		m_vOrigin = vOrigin;
@@ -1057,17 +1165,10 @@ private:
 	float m_fTime;
 };
 
-/////////////////////
 class CMoveToTask : public CBotTask
 {
 public:
-	CMoveToTask(Vector vOrigin)
-	{
-		m_vVector = vOrigin;
-		m_pEdict = NULL;
-
-		SetFailInterrupt(CONDITION_SEE_CUR_ENEMY);
-	}
+	CMoveToTask(Vector vOrigin);
 
 	CMoveToTask(edict_t *pEdict);
 
@@ -1075,7 +1176,7 @@ public:
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
-	float fPrevDist;
+	float m_fPrevDist;
 	Vector m_vVector;
 	MyEHandle m_pEdict;
 };
@@ -1083,7 +1184,13 @@ private:
 class CMessAround : public CBotTask
 {
 public:
-	CMessAround(edict_t *pFriendly, int iMaxVoiceCmd);
+	CMessAround(edict_t *pFriendly, int iMaxVoiceCmd)
+	{
+		m_fTime = 0.0f;
+		m_pFriendly = pFriendly;
+		m_iType = RandomInt(0, 3);
+		m_iMaxVoiceCmd = iMaxVoiceCmd;
+	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
@@ -1093,11 +1200,15 @@ private:
 	int m_iType; // 0 = attack friendly , 1 = taunt, 2 = random voice command
 };
 
-
 class CFindLastEnemy : public CBotTask
 {
 public:
-	CFindLastEnemy(Vector vLast, Vector vVelocity);
+	CFindLastEnemy(Vector vLast, Vector vVelocity)
+	{
+		SetCompleteInterrupt(CONDITION_SEE_CUR_ENEMY);
+		m_vLast = vLast + (vVelocity * 10);
+		m_fTime = 0;
+	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
@@ -1122,7 +1233,10 @@ private:
 class CHideTask : public CBotTask
 {
 public:
-	CHideTask(Vector vHideFrom);
+	CHideTask(Vector vHideFrom)
+	{
+		m_vHideFrom = vHideFrom;
+	}
 
 	void Init();
 
@@ -1137,8 +1251,6 @@ class CFollowTask : public CBotTask
 public:
 	CFollowTask(edict_t *pFollow);
 
-	void Init();
-
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
 	MyEHandle m_pFollow;
@@ -1146,7 +1258,6 @@ private:
 	Vector m_vLastSeeVector;
 	Vector m_vLastSeeVelocity;
 };
-
 
 class CCrouchHideTask : public CBotTask
 {
@@ -1167,11 +1278,16 @@ private:
 class CSpyCheckAir : public CBotTask
 {
 public:
-	CSpyCheckAir() { m_fTime = 0.0f; m_pUnseenBefore = NULL; m_bHitPlayer = false; }
+	CSpyCheckAir()
+	{
+		m_fTime = 0.0f;
+		m_pUnseenBefore = MyEHandle();
+		m_bHitPlayer = false;
+	}
 
 	void Execute(CBot *pBot, CBotSchedule *pSchedule);
 private:
-	edict_t *m_pUnseenBefore;
+	MyEHandle m_pUnseenBefore;
 	int seenlist;
 	float m_fNextCheckUnseen;
 	float m_fTime;
@@ -1207,46 +1323,47 @@ public:
 class CAttackTask : public CBotTask
 {
 public:
-CAttackTask ( Vector vToAttack )
-{
-SetVector(vToAttack);
-}
+	CAttackTask ( Vector vToAttack )
+	{
+		SetVector(vToAttack);
+	}
 
-CAttackTask ( edict_t *pToAttack )
-{
-SetEdict(pToAttack);
-}
+	CAttackTask ( edict_t *pToAttack )
+	{
+		SetEdict(pToAttack);
+	}
 
-void Init ()
-{
-SetInterrupt(CONDITION_OUT_OF_AMMO|CONDITION_NO_WEAPON);
-}
+	void Init ()
+	{
+		SetInterrupt(CONDITION_OUT_OF_AMMO|CONDITION_NO_WEAPON);
+	}
 
-virtual void Execute ( CBot *pBot )
-{
+	virtual void Execute ( CBot *pBot )
+	{
 
-}
+	}
 };
 
 class CFindRunPath : public CBotTask
 {
 public:
-CFindRunPath ( Vector pGoto )
-{
-SetVector(pGoto);
-}
+	CFindRunPath(Vector pGoto)
+	{
+		SetVector(pGoto);
+	}
 
-CFindRunPath ( edict_t *pGoto )
-{
-SetEdict(pGoto);
-//SetVector(pGoto->v.origin); ??
-}
+	CFindRunPath(edict_t *pGoto)
+	{
+		SetEdict(pGoto);
+		//SetVector(pGoto->v.origin); ??
+	}
 
-void Init ()
-{
-SetInterrupt(0);
-}
+	void Init()
+	{
+		SetInterrupt(0);
+	}
 
-virtual void Execute ( CBot *pBot );
-};*/
+	virtual void Execute(CBot *pBot);
+};
+*/
 #endif

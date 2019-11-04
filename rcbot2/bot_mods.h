@@ -37,11 +37,10 @@
 #include "bot_strings.h"
 #include "bot_fortress.h"
 //#include "bot_dod_bot.h"
-#include "bot_waypoint.h"
 #include "bot_tf2_points.h"
 
 #ifdef CreateFile
-#undef CreateFile
+ #undef CreateFile
 #endif
 
 #define MAX_CAP_POINTS 32
@@ -55,9 +54,6 @@
 #define BOT_ADD_PUPPET_COMMAND "bot"
 
 class CBotNeuralNet;
-
-#include <vector>
-using namespace std;
 
 
 /*
@@ -94,7 +90,6 @@ public:
 		m_szWeaponListName = NULL;
 		m_iModId = MOD_UNSUPPORTED;
 		m_iBotType = BOTTYPE_GENERIC;
-		m_bPlayerHasSpawned = false;
 		m_bBotCommand_ResetCheatFlag = false;
 		m_bBotCommand_NeedCheatsHack = false;
 	}
@@ -164,7 +159,6 @@ private:
 	eBotType m_iBotType;
 protected:
 	char *m_szWeaponListName;
-	bool m_bPlayerHasSpawned;
 	bool m_bBotCommand_ResetCheatFlag;
 	bool m_bBotCommand_NeedCheatsHack;
 };
@@ -754,13 +748,12 @@ setup("synergy","synergy",MOD_SYNERGY,BOTTYPE_COOP,"SYNERGY");
 //void mapInit ();
 
 //void entitySpawn ( edict_t *pEntity );
-}; */
-
-#define NEWENUM typedef enum {
+};*/
 
 typedef enum
 {
 	TF_MAP_DM = 0,
+	TF_MAP_TR,
 	TF_MAP_CTF,
 	TF_MAP_CP,
 	TF_MAP_TC,
@@ -768,8 +761,8 @@ typedef enum
 	TF_MAP_CARTRACE,
 	TF_MAP_ARENA,
 	TF_MAP_KOTH,
+	TF_MAP_5CP,
 	TF_MAP_SD,
-	TF_MAP_TR,
 	TF_MAP_MVM,
 	TF_MAP_RD,
 	TF_MAP_BUMPERCARS,
@@ -784,21 +777,18 @@ typedef struct
 	MyEHandle sapper;
 	float m_fLastTeleported;
 	int m_iWaypoint;
-	//	short builder;
 }tf_tele_t;
 
 typedef struct
 {
 	MyEHandle sentry;
 	MyEHandle sapper;
-	//	short builder;
 }tf_sentry_t;
 
 typedef struct
 {
 	MyEHandle disp;
 	MyEHandle sapper;
-	//	short builder;
 }tf_disp_t;
 
 
@@ -807,31 +797,60 @@ class CTeamControlPointMaster;
 class CTeamControlPoint;
 class CTeamRoundTimer;
 
+// game/shared/igamesystem.h
+class CAutoGameSystem //: public IGameSystem
+{
+public:
+	CAutoGameSystem() {}
+	CAutoGameSystem *m_pNext;
+
+	virtual char const *Name() { return m_pszName; }
+
+protected:
+	CAutoGameSystem(CAutoGameSystem const& );
+
+private:
+	char const *m_pszName;
+};
+
+// https://github.com/sigsegv-mvm/mvm-reversed/blob/master/shared/tf/tf_upgrades_shared.h
+struct CMannVsMachineUpgrades
+{
+	char m_szAttribute[128];
+	char m_szIcon[MAX_PATH];
+	float m_flIncrement;
+	float m_flCap;
+	int m_nCost;
+	int m_iUIGroup;
+	int m_iQuality;
+	int m_iTier;
+};
+
+class CMannVsMachineUpgradeManager : public CAutoGameSystem
+{
+public:
+	
+	CUtlVector<CMannVsMachineUpgrades> m_Upgrades;
+	CUtlMap<const char *, int> m_UpgradeMap;
+
+protected:
+	CMannVsMachineUpgradeManager() { Assert( !"Construction attempted." ); }
+	CMannVsMachineUpgradeManager(CMannVsMachineUpgradeManager const& );
+};
+static_assert(sizeof(CMannVsMachineUpgradeManager) == 0x3c, "Bad size");
+
+#define MAX_UPGRADES 60
+
 class CAttribute
 {
 public:
-	CAttribute(const char *name, float fval);
+	CAttribute(const char *szName, float fVal)
+		: m_name(szName), m_val(fVal) { }
 
 	void ApplyAttribute(edict_t *pEdict);
 
 	const char *m_name;
-	float m_fval;
-};
-
-class CTF2Loadout
-{
-public:
-	CTF2Loadout(const char *pszClassname, int iIndex, int iQuality, int iMinLevel, int iMaxLevel);
-
-	void FreeMemory();
-
-	int m_iIndex;
-	int m_iSlot;
-	int m_iQuality;
-	bool m_bCanBeUsedInMedieval;
-	int m_iMinLevel;
-	int m_iMaxLevel;
-	const char *m_pszClassname;
+	float m_val;
 };
 
 class CTeamFortress2Mod : public CBotMod
@@ -842,7 +861,6 @@ public:
 		const char *steamfolder = smutils->GetGamePath();
 		Setup("tf", steamfolder, MOD_TF2, BOTTYPE_TF2, "TF2");
 
-		m_pResourceEntity = NULL;
 		m_bBotCommand_NeedCheatsHack = true;
 	}
 
@@ -869,7 +887,8 @@ public:
 
 	void FreeMemory();
 
-	static int GetTeam(edict_t *pEntity);
+	static TFTeam GetTeam(edict_t *pEntity);
+	static TFClass GetClass(edict_t *pPlayer);
 
 	static TFClass GetSpyDisguise(edict_t *pPlayer);
 
@@ -881,8 +900,6 @@ public:
 	static bool IsPayloadBomb(edict_t *pEntity, int iTeam);
 
 	static int GetTeleporterWaypoint(edict_t *pTele);
-
-	bool IsWaypointAreaValid(int iWptArea, int iWptFlags);
 
 	static bool IsSuddenDeath(void);
 
@@ -905,7 +922,7 @@ public:
 
 	static bool IsTeleporterExit(edict_t *pEntity, int iTeam, bool checkcarrying = false);
 
-	static inline bool IsMapType(eTFMapType iMapType) { return iMapType == m_MapType; }
+	static bool IsMapType(eTFMapType iMapType) { return iMapType == m_MapType; }
 
 	static bool IsFlag(edict_t *pEntity, int iTeam);
 
@@ -919,29 +936,21 @@ public:
 
 	static int GetEnemyTeam(int iTeam);
 
-	static bool BuildingNearby(int iTeam, Vector vOrigin);
+	static bool BuildingNearby(TFTeam iTeam, Vector vOrigin);
 
-	// Naris @ AlliedModders .net
+	// SourceMod
 
-	static bool TF2_IsPlayerZoomed(edict_t *pPlayer);
+	static bool IsPlayerZoomed(edict_t *pPlayer);
+	static bool IsPlayerSlowed(edict_t *pPlayer);
+	static bool IsPlayerDisguised(edict_t *pPlayer);
+	static bool IsPlayerCloaked(edict_t *pPlayer);
+	static bool IsPlayerInvuln(edict_t *pPlayer);
+	static bool IsPlayerKrits(edict_t *pPlayer);
+	static bool IsPlayerOnFire(edict_t *pPlayer);
+	static bool IsPlayerTaunting(edict_t *pPlayer);
+	static bool IsPlayerInCondition(edict_t *pPlayer, TFCond iCond);
 
-	static bool TF2_IsPlayerSlowed(edict_t *pPlayer);
-
-	static bool TF2_IsPlayerDisguised(edict_t *pPlayer);
-
-	static bool TF2_IsPlayerCloaked(edict_t *pPlayer);
-
-	static bool TF2_IsPlayerInvuln(edict_t *pPlayer);
-
-	static bool TF2_IsPlayerKrits(edict_t *pPlayer);
-
-	static bool TF2_IsPlayerOnFire(edict_t *pPlayer);
-
-	static bool TF2_IsPlayerTaunting(edict_t *pPlayer);
-
-	static float TF2_GetPlayerSpeed(edict_t *pPlayer, TFClass iClass);
-
-	static void TeleporterBuilt(edict_t *pOwner, eEngiBuild type, edict_t *pBuilding);
+	static float GetPlayerSpeed(edict_t *pPlayer, TFClass iClass);
 
 	static edict_t *GetTeleporterExit(edict_t *pTele);
 
@@ -957,13 +966,12 @@ public:
 
 	static int GetHighestScore();
 
-	static edict_t *NearestDispenser(Vector vOrigin, int team);
+	static edict_t *NearestDispenser(Vector vOrigin, TFTeam team);
 
 	static void FlagPickedUp(int iTeam, edict_t *pPlayer);
 	static void FlagReturned(int iTeam);
 
-	static void SetAttackDefendMap(bool bSet) { m_bAttackDefendMap = bSet; }
-	static bool IsAttackDefendMap() { return m_bAttackDefendMap; }
+	static bool IsAttackDefendMap() { return IsMapType(TF_MAP_CP); }
 
 	void AddWaypointFlags(edict_t *pPlayer, edict_t *pEdict, int *iFlags, int *iArea, float *fMaxDistance);
 
@@ -991,13 +999,13 @@ public:
 	{
 		if (iTeam == TF2_TEAM_BLUE)
 		{
-			m_pFlagCarrierBlue = NULL;
+			m_pFlagCarrierBlue = MyEHandle();
 			m_vFlagLocationBlue = vLoc;
 			m_bFlagLocationValidBlue = true;
 		}
 		else if (iTeam == TF2_TEAM_RED)
 		{
-			m_pFlagCarrierRed = NULL;
+			m_pFlagCarrierRed = MyEHandle();
 			m_vFlagLocationRed = vLoc;
 			m_bFlagLocationValidRed = true;
 		}
@@ -1019,19 +1027,19 @@ public:
 		m_iWinningTeam = iWinningTeam;
 	}
 
-	static inline bool IsLosingTeam(int iTeam)
+	static bool IsLosingTeam(int iTeam)
 	{
 		return !m_bHasRoundStarted && m_bRoundOver && m_iWinningTeam && (m_iWinningTeam != iTeam);
 	}
 
 	static void RoundReset();
 
-	static inline bool IsFlagCarrier(edict_t *pPlayer)
+	static bool IsFlagCarrier(edict_t *pPlayer)
 	{
 		return (m_pFlagCarrierBlue == pPlayer) || (m_pFlagCarrierRed == pPlayer);
 	}
 
-	static inline edict_t *GetFlagCarrier(int iTeam)
+	static edict_t *GetFlagCarrier(int iTeam)
 	{
 		if (iTeam == TF2_TEAM_BLUE)
 			return m_pFlagCarrierBlue;
@@ -1051,12 +1059,17 @@ public:
 		return false;
 	}
 
-	static void SapperPlaced(edict_t *pOwner, eEngiBuild type, edict_t *pSapper);
-	static void SapperDestroyed(edict_t *pOwner, eEngiBuild type, edict_t *pSapper);
-	static void SentryBuilt(edict_t *pOwner, eEngiBuild type, edict_t *pBuilding);
-	static void DispenserBuilt(edict_t *pOwner, eEngiBuild type, edict_t *pBuilding);
+	static void SapperPlaced(edict_t *pOwner, eObjectType type, edict_t *pSapper);
+	static void SapperDestroyed(edict_t *pOwner, eObjectType type, edict_t *pSapper);
+	static void SentryBuilt(edict_t *pOwner, eObjectType type, edict_t *pBuilding);
+	static void DispenserBuilt(edict_t *pOwner, eObjectType type, edict_t *pBuilding);
+	static void TeleporterBuilt(edict_t *pOwner, eObjectType type, edict_t *pBuilding);
 
+#if defined USE_NAVMESH
+	static INavMeshArea *GetBestWaypointMVM(CBot *pBot, int iFlags);
+#else
 	static CWaypoint *GetBestWaypointMVM(CBot *pBot, int iFlags);
+#endif
 
 	static edict_t *GetMySentryGun(edict_t *pOwner)
 	{
@@ -1072,9 +1085,9 @@ public:
 
 	static edict_t *GetSentryOwner(edict_t *pSentry)
 	{
-		for (short int i = 1; i < MAX_PLAYERS; i++)
+		for (short int i = 0; i < MAX_PLAYERS; i++)
 		{
-			if (m_SentryGuns[i].sentry.Get() == pSentry)
+			if (m_SentryGuns[i].sentry == pSentry)
 				return INDEXENT(i);
 		}
 
@@ -1178,11 +1191,6 @@ public:
 		m_iCapDefenders[iCapIndex] &= ~(1 << (ENTINDEX(pPlayer) - 1));
 	}
 
-	static void ResetDefenders()
-	{
-		memset(m_iCapDefenders, 0, sizeof(int)*MAX_CONTROL_POINTS);
-	}
-
 	static bool IsDefending(edict_t *pPlayer);//, int iCapIndex = -1 );
 
 	static bool IsCapping(edict_t *pPlayer);//, int iCapIndex = -1 );
@@ -1198,23 +1206,18 @@ public:
 		m_Cappers[cp] = 0;
 	}
 
-	static void ResetCappers()
-	{
-		memset(m_Cappers, 0, sizeof(int)*MAX_CONTROL_POINTS);
-	}
-
 	static int NumPlayersOnTeam(int iTeam, bool bAliveOnly = false);
-	static int NumClassOnTeam(int iTeam, int iClass);
+	static int NumClassOnTeam(int iTeam, TFClass iClass);
 
 	static int GetFlagCarrierTeam() { return m_iFlagCarrierTeam; }
 	static bool CanTeamPickupFlag_SD(int iTeam, bool bGetUnknown);
 
-	static edict_t *GetBuildingOwner(eEngiBuild object, short index);
-	static edict_t *GetBuilding(eEngiBuild object, edict_t *pOwner);
+	static edict_t *GetBuildingOwner(eObjectType object, int index);
+	static edict_t *GetBuilding(eObjectType object, edict_t *pOwner);
 
 	static bool IsBoss(edict_t *pEntity, float *fFactor = NULL);
 
-	static void InitBoss(bool bSummoned) { m_bBossSummoned = bSummoned; m_pBoss = NULL; }
+	static void InitBoss(bool bSummoned) { m_bBossSummoned = bSummoned; m_pBoss = MyEHandle(); }
 
 	static bool IsBossSummoned() { return m_bBossSummoned; }
 
@@ -1224,17 +1227,14 @@ public:
 
 	static void FindMediGun(edict_t *pPlayer);
 
-	bool CheckWaypointForTeam(CWaypoint *pWpt, int iTeam);
-
-	static bool IsFlagAtDefaultState() { return bFlagStateDefault; }
-	static void ResetFlagStateToDefault() { bFlagStateDefault = true; }
+	static bool IsFlagAtDefaultState() { return m_bFlagStateDefault; }
+	static void ResetFlagStateToDefault() { m_bFlagStateDefault = true; }
 	static void SetDontClearPoints(bool bClear) { m_bDontClearPoints = bClear; }
 	static bool DontClearPoints() { return m_bDontClearPoints; }
-	static CTFObjectiveResource m_ObjectiveResource;
 
 	static CTeamControlPointRound *GetCurrentRound() { return m_pCurrentRound; }
 
-	static CTeamControlPointMaster *GetPointMaster() { return m_PointMaster; }
+	static CTeamControlPointMaster *GetPointMaster() { return m_pPointMaster; }
 
 	static void UpdateRedPayloadBomb(edict_t *pent);
 	static void UpdateBluePayloadBomb(edict_t *pent);
@@ -1260,13 +1260,42 @@ public:
 
 	static bool IsMedievalMode();
 
-private:
-	static float TF2_GetClassSpeed(int iClass);
+	static CMannVsMachineUpgrades *GetUpgradeByIndex(int iIndex);
+	static int GetAttributeIndexByName(const char *pszName);
+	static bool CanUpgradeWithAttribute(edict_t *pPlayer, int iWeapSlot, int iAttrIndex, CMannVsMachineUpgrades *upgrade);
+	static bool IsUpgradeTierEnabled(edict_t *pPlayer, int iWeapSlot, int iUpgTier);
 
-	static CTeamControlPointMaster *m_PointMaster;
+	static CTFObjectiveResource m_ObjectiveResource;
+	static CMannVsMachineUpgradeManager *m_UpgradeManager;
+
+private:
+#if defined USE_NAVMESH
+	// Returns true if team can go to waypoint
+	static bool CheckWaypointForTeam( INavMeshArea *pWpt, int iTeam );
+#else
+	// Returns true if team can go to waypoint
+	static bool CheckWaypointForTeam( CWaypoint *pWpt, int iTeam );
+#endif
+
+	static bool IsWaypointAreaValid(int iWptArea, int iWptFlags);
+
+	static void ResetDefenders()
+	{
+		memset( m_iCapDefenders, 0, sizeof( int )*MAX_CONTROL_POINTS );
+	}
+
+	static void ResetCappers()
+	{
+		memset( m_Cappers, 0, sizeof( int )*MAX_CONTROL_POINTS );
+	}
+
+	static float GetClassSpeed(TFClass TFClass);
+
+	static CTeamControlPointMaster *m_pPointMaster;
 	static CTeamControlPointRound *m_pCurrentRound;
 	static MyEHandle m_PointMasterResource;
 	static CTeamRoundTimer m_Timer;
+	static MyEHandle m_PlayerResource;
 
 	static eTFMapType m_MapType;
 
@@ -1289,8 +1318,6 @@ private:
 	static float m_fPointTime;
 	static float m_fArenaPointOpenTime;
 
-	static MyEHandle m_pResourceEntity;
-	static MyEHandle m_pGameRules;
 	static bool m_bAttackDefendMap;
 
 	static int m_Cappers[MAX_CONTROL_POINTS];
@@ -1301,9 +1328,9 @@ private:
 	static int m_iFlagCarrierTeam;
 	static MyEHandle m_pBoss;
 	static bool m_bBossSummoned;
-	static bool bFlagStateDefault;
+	static bool m_bFlagStateDefault;
 
-	static MyEHandle pMediGuns[MAX_PLAYERS];
+	static MyEHandle m_pMediGuns[MAX_PLAYERS];
 	static bool m_bDontClearPoints;
 
 	static bool m_bRoundOver;
@@ -1314,7 +1341,6 @@ private:
 	static Vector m_vFlagLocationRed;
 	static bool m_bFlagLocationValidRed;
 
-
 	static bool m_bMVMFlagStartValid;
 	static Vector m_vMVMFlagStart;
 	static bool m_bMVMCapturePointValid;
@@ -1323,14 +1349,6 @@ private:
 	static float m_fMVMCapturePointRadius;
 	static int m_iCapturePointWptID;
 	static int m_iFlagPointWptID;
-
-	static void SetupLoadOutWeapons(void);
-
-	// slots X nine classes
-	static vector<CTF2Loadout*> m_pLoadoutWeapons[TF2_SLOT_MAX][9];
-	//static vector<CTF2Loadout*> m_pHats;
-	//static CTF2Loadout *m_StockWeapons[3][9]; //stock weapons
-
 };
 
 class CTeamFortress2ModDedicated : public CTeamFortress2Mod
@@ -1338,11 +1356,8 @@ class CTeamFortress2ModDedicated : public CTeamFortress2Mod
 public:
 	CTeamFortress2ModDedicated()
 	{
-#ifdef __linux__
-		Setup("tf", "orangebox", MOD_TF2, BOTTYPE_TF2, "TF2");    //bir3yk
-#else
-		Setup("tf", "source dedicated server", MOD_TF2, BOTTYPE_TF2, "TF2");
-#endif
+		const char *steamfolder = smutils->GetGamePath();
+		Setup("tf", steamfolder, MOD_TF2, BOTTYPE_TF2, "TF2");
 	}
 
 private:
@@ -1452,7 +1467,7 @@ public:
 	static CBotMod *GetMod(char *szModFolder, char *szSteamFolder);
 
 private:
-	static vector<CBotMod*> m_Mods;
+	static std::vector<CBotMod*> m_Mods;
 };
 
-#endif
+#endif // __BOT_MODS_H__
