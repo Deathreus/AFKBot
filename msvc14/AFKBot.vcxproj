@@ -30,7 +30,7 @@
     <SccProvider>
     </SccProvider>
     <ProjectName>AFKBot</ProjectName>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -125,7 +125,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..;..\sdk;..\NavMesh;$(SOURCEMOD)\core;$(SOURCEMOD)\public;$(SOURCEMOD)\public\amtl;$(SOURCEMOD)\public\extensions;$(SOURCEMOD)\public\CDetour;$(SOURCEMOD)\sourcepawn\include;$(HL2SDKTF2)\public;$(HL2SDKTF2)\public\mathlib;$(HL2SDKTF2)\public\engine;$(HL2SDKTF2)\public\tier0;$(HL2SDKTF2)\public\tier1;$(HL2SDKTF2)\public\toolframework;$(HL2SDKTF2)\public\SoundEmitterSystem;$(HL2SDKTF2)\game\shared;$(HL2SDKTF2)\game\server;$(HL2SDKTF2)\public\game\server;$(MMSOURCE)\core;$(MMSOURCE)\core\sourcehook;$(MMSOURCE)\public;%(AdditionIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..;..\sdk;..\NavMesh;$(SOURCEMOD)\core;$(SOURCEMOD)\public;$(SOURCEMOD)\public\amtl;$(SOURCEMOD)\public\amtl\amtl;$(SOURCEMOD)\public\extensions;$(SOURCEMOD)\public\CDetour;$(SOURCEMOD)\sourcepawn\include;$(HL2SDKTF2)\public;$(HL2SDKTF2)\public\mathlib;$(HL2SDKTF2)\public\engine;$(HL2SDKTF2)\public\tier0;$(HL2SDKTF2)\public\tier1;$(HL2SDKTF2)\public\toolframework;$(HL2SDKTF2)\public\SoundEmitterSystem;$(HL2SDKTF2)\game\shared;$(HL2SDKTF2)\game\server;$(HL2SDKTF2)\public\game\server;$(MMSOURCE)\core;$(MMSOURCE)\core\sourcehook;$(MMSOURCE)\public;%(AdditionIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>SOURCE_ENGINE=11;WIN32;_DEBUG;_WINDOWS;_USRDLL;SDK_EXPORTS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_CRT_NO_VA_START_VALIDATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -191,7 +191,7 @@ copy "$(TargetPath)" "D:\Program Files\Steam\steamapps\common\Team Fortress 2\tf
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..;..\sdk;..\NavMesh;$(SOURCEMOD)\core;$(SOURCEMOD)\public;$(SOURCEMOD)\public\amtl;$(SOURCEMOD)\public\extensions;$(SOURCEMOD)\public\CDetour;$(SOURCEMOD)\sourcepawn\include;$(HL2SDKTF2)\public;$(HL2SDKTF2)\public\mathlib;$(HL2SDKTF2)\public\engine;$(HL2SDKTF2)\public\tier0;$(HL2SDKTF2)\public\tier1;$(HL2SDKTF2)\public\toolframework;$(HL2SDKTF2)\public\SoundEmitterSystem;$(HL2SDKTF2)\game\shared;$(HL2SDKTF2)\game\server;$(HL2SDKTF2)\public\game\server;$(MMSOURCE)\core;$(MMSOURCE)\core\sourcehook;$(MMSOURCE)\public;%(AdditionIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..;..\sdk;..\NavMesh;$(SOURCEMOD)\core;$(SOURCEMOD)\public;$(SOURCEMOD)\public\amtl;$(SOURCEMOD)\public\amtl\amtl;$(SOURCEMOD)\public\extensions;$(SOURCEMOD)\public\CDetour;$(SOURCEMOD)\sourcepawn\include;$(HL2SDKTF2)\public;$(HL2SDKTF2)\public\mathlib;$(HL2SDKTF2)\public\engine;$(HL2SDKTF2)\public\tier0;$(HL2SDKTF2)\public\tier1;$(HL2SDKTF2)\public\toolframework;$(HL2SDKTF2)\public\SoundEmitterSystem;$(HL2SDKTF2)\game\shared;$(HL2SDKTF2)\game\server;$(HL2SDKTF2)\public\game\server;$(MMSOURCE)\core;$(MMSOURCE)\core\sourcehook;$(MMSOURCE)\public;%(AdditionIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>USE_NAVMESH;SOURCE_ENGINE=11;WIN32;_DEBUG;_WINDOWS;_USRDLL;SDK_EXPORTS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_CRT_NO_VA_START_VALIDATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -257,7 +257,7 @@ copy "$(TargetPath)" "D:\Program Files\Steam\steamapps\common\Team Fortress 2\tf
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..;..\sdk;..\NavMesh;$(SOURCEMOD)\core;$(SOURCEMOD)\public;$(SOURCEMOD)\public\amtl;$(SOURCEMOD)\public\extensions;$(SOURCEMOD)\public\CDetour;$(SOURCEMOD)\sourcepawn\include;$(HL2SDKTF2)\public;$(HL2SDKTF2)\public\mathlib;$(HL2SDKTF2)\public\engine;$(HL2SDKTF2)\public\tier0;$(HL2SDKTF2)\public\tier1;$(HL2SDKTF2)\public\toolframework;$(HL2SDKTF2)\public\SoundEmitterSystem;$(HL2SDKTF2)\game\shared;$(HL2SDKTF2)\game\server;$(HL2SDKTF2)\public\game\server;$(MMSOURCE)\core;$(MMSOURCE)\core\sourcehook;$(MMSOURCE)\public;%(AdditionIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..;..\sdk;..\NavMesh;$(SOURCEMOD)\core;$(SOURCEMOD)\public;$(SOURCEMOD)\public\amtl;$(SOURCEMOD)\public\amtl\amtl;$(SOURCEMOD)\public\extensions;$(SOURCEMOD)\public\CDetour;$(SOURCEMOD)\sourcepawn\include;$(HL2SDKTF2)\public;$(HL2SDKTF2)\public\mathlib;$(HL2SDKTF2)\public\engine;$(HL2SDKTF2)\public\tier0;$(HL2SDKTF2)\public\tier1;$(HL2SDKTF2)\public\toolframework;$(HL2SDKTF2)\public\SoundEmitterSystem;$(HL2SDKTF2)\game\shared;$(HL2SDKTF2)\game\server;$(HL2SDKTF2)\public\game\server;$(MMSOURCE)\core;$(MMSOURCE)\core\sourcehook;$(MMSOURCE)\public;%(AdditionIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>USE_NAVMESH;SOURCE_ENGINE=11;WIN32;_DEBUG;_WINDOWS;_USRDLL;SDK_EXPORTS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_CRT_NO_VA_START_VALIDATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -325,7 +325,7 @@ copy "$(TargetPath)" "D:\Program Files\Steam\steamapps\common\Team Fortress 2\tf
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>..;..\sdk;..\NavMesh;$(SOURCEMOD)\core;$(SOURCEMOD)\public;$(SOURCEMOD)\public\extensions;$(SOURCEMOD)\public\CDetour;$(SOURCEMOD)\sourcepawn\include;$(HL2SDKTF2)\public;$(HL2SDKTF2)\public\mathlib;$(HL2SDKTF2)\public\engine;$(HL2SDKTF2)\public\tier0;$(HL2SDKTF2)\public\tier1;$(HL2SDKTF2)\public\toolframework;$(HL2SDKTF2)\public\SoundEmitterSystem;$(HL2SDKTF2)\game\shared;$(HL2SDKTF2)\game\server;$(HL2SDKTF2)\public\game\server;$(MMSOURCE)\core;$(MMSOURCE)\core\sourcehook;$(MMSOURCE)\public;%(AdditionIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..;..\sdk;..\NavMesh;$(SOURCEMOD)\core;$(SOURCEMOD)\public;$(SOURCEMOD)\public\amtl;$(SOURCEMOD)\public\amtl\amtl;$(SOURCEMOD)\public\extensions;$(SOURCEMOD)\public\CDetour;$(SOURCEMOD)\sourcepawn\include;$(HL2SDKTF2)\public;$(HL2SDKTF2)\public\mathlib;$(HL2SDKTF2)\public\engine;$(HL2SDKTF2)\public\tier0;$(HL2SDKTF2)\public\tier1;$(HL2SDKTF2)\public\toolframework;$(HL2SDKTF2)\public\SoundEmitterSystem;$(HL2SDKTF2)\game\shared;$(HL2SDKTF2)\game\server;$(HL2SDKTF2)\public\game\server;$(MMSOURCE)\core;$(MMSOURCE)\core\sourcehook;$(MMSOURCE)\public;%(AdditionIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>SOURCE_ENGINE=11;WIN32;NDEBUG;_WINDOWS;_USRDLL;SDK_EXPORTS;_CRT_SECURE_NO_DEPRECATE;_CRT_NO_VA_START_VALIDATION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
