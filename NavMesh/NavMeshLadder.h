@@ -27,8 +27,8 @@ public:
 	float GetBottomY();
 	float GetBottomZ();
 
-	const Vector GetTop();
-	const Vector GetBottom();
+	const Vector &GetTop();
+	const Vector &GetBottom();
 
 	eNavDir GetDirection();
 

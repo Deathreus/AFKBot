@@ -19,7 +19,7 @@ public:
 	float GetY();
 	float GetZ();
 
-	const Vector GetOrigin();
+	const Vector &GetOrigin();
 
 	unsigned char GetFlags();
 

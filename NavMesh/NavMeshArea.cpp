@@ -11,9 +11,9 @@ CNavMeshArea::CNavMeshArea(unsigned int id, unsigned int flags, unsigned int pla
 	float nwExtentX, float nwExtentY, float nwExtentZ,
 	float seExtentX, float seExtentY, float seExtentZ,
 	float neCornerZ, float swCornerZ,
-	const CList<CList<INavMeshConnection*>> connections, const CList<INavMeshHidingSpot*> hidingSpots,
-	const CList<INavMeshEncounterPath*> encounterPaths, const CList<CList<INavMeshLadderConnection*>> ladderConnections,
-	const CList<INavMeshCornerLightIntensity*> cornerLightIntensities, const CList<INavMeshVisibleArea*> visibleAreas,
+	const CList<CList<INavMeshConnection*>> &connections, const CList<INavMeshHidingSpot*> &hidingSpots,
+	const CList<INavMeshEncounterPath*> &encounterPaths, const CList<CList<INavMeshLadderConnection*>> &ladderConnections,
+	const CList<INavMeshCornerLightIntensity*> &cornerLightIntensities, const CList<INavMeshVisibleArea*> &visibleAreas,
 	unsigned int inheritVisibilityFromAreaID, float earliestOccupyTimeFirstTeam, float earliestOccupyTimeSecondTeam)
 {
 	this->id = id;
@@ -95,17 +95,17 @@ float CNavMeshArea::GetNECornerZ() { return this->neCornerZ; }
 
 float CNavMeshArea::GetSWCornerZ() { return this->swCornerZ; }
 
-CList<INavMeshConnection*> *CNavMeshArea::GetConnections(eNavDir dir) { return &this->connections[dir]; }
+const CList<INavMeshConnection*> *CNavMeshArea::GetConnections(eNavDir dir) { return &this->connections[dir]; }
 
-CList<INavMeshHidingSpot*> *CNavMeshArea::GetHidingSpots() { return &this->hidingSpots; }
+const CList<INavMeshHidingSpot*> *CNavMeshArea::GetHidingSpots() { return &this->hidingSpots; }
 
-CList<INavMeshEncounterPath*> *CNavMeshArea::GetEncounterPaths() { return &this->encounterPaths; }
+const CList<INavMeshEncounterPath*> *CNavMeshArea::GetEncounterPaths() { return &this->encounterPaths; }
 
-CList<INavMeshLadderConnection*> *CNavMeshArea::GetLadderConnections(eNavLadderDir dir) { return &this->ladderConnections[dir]; }
+const CList<INavMeshLadderConnection*> *CNavMeshArea::GetLadderConnections(eNavLadderDir dir) { return &this->ladderConnections[dir]; }
 
-CList<INavMeshCornerLightIntensity*> *CNavMeshArea::GetCornerLightIntensities() { return &this->cornerLightIntensities; }
+const CList<INavMeshCornerLightIntensity*> *CNavMeshArea::GetCornerLightIntensities() { return &this->cornerLightIntensities; }
 
-CList<INavMeshVisibleArea*> *CNavMeshArea::GetVisibleAreas() { return &this->visibleAreas; }
+const CList<INavMeshVisibleArea*> *CNavMeshArea::GetVisibleAreas() { return &this->visibleAreas; }
 
 unsigned int CNavMeshArea::GetInheritVisibilityFromAreaID() { return this->inheritVisibilityFromAreaID; }
 
@@ -117,17 +117,17 @@ void CNavMeshArea::AddFlags(const unsigned int flags) { this->flags |= flags; }
 
 void CNavMeshArea::RemoveFlags(const unsigned int flags) { this->flags &= ~flags; }
 
-const Vector CNavMeshArea::GetExtentLow()
+const Vector &CNavMeshArea::GetExtentLow()
 {
 	return this->nwExtent;
 }
 
-const Vector CNavMeshArea::GetExtentHigh()
+const Vector &CNavMeshArea::GetExtentHigh()
 {
 	return this->seExtent;
 }
 
-const Vector CNavMeshArea::GetCenter()
+const Vector &CNavMeshArea::GetCenter()
 {
 	return this->center;
 }

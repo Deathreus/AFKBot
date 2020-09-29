@@ -37,12 +37,12 @@ public:
 	virtual float GetNECornerZ() = 0;
 	virtual float GetSWCornerZ() = 0;
 
-	virtual CList<INavMeshConnection*> *GetConnections(eNavDir) = 0;
-	virtual CList<INavMeshHidingSpot*> *GetHidingSpots() = 0;
-	virtual CList<INavMeshEncounterPath*> *GetEncounterPaths() = 0;
-	virtual CList<INavMeshLadderConnection*> *GetLadderConnections(eNavLadderDir) = 0;
-	virtual CList<INavMeshCornerLightIntensity*> *GetCornerLightIntensities() = 0;
-	virtual CList<INavMeshVisibleArea*> *GetVisibleAreas() = 0;
+	virtual const CList<INavMeshConnection*> *GetConnections(eNavDir) = 0;
+	virtual const CList<INavMeshHidingSpot*> *GetHidingSpots() = 0;
+	virtual const CList<INavMeshEncounterPath*> *GetEncounterPaths() = 0;
+	virtual const CList<INavMeshLadderConnection*> *GetLadderConnections(eNavLadderDir) = 0;
+	virtual const CList<INavMeshCornerLightIntensity*> *GetCornerLightIntensities() = 0;
+	virtual const CList<INavMeshVisibleArea*> *GetVisibleAreas() = 0;
 
 	virtual unsigned int GetInheritVisibilityFromAreaID() = 0;
 
@@ -52,9 +52,9 @@ public:
 	virtual void AddFlags(const unsigned int) = 0;
 	virtual void RemoveFlags(const unsigned int) = 0;
 
-	virtual const Vector GetExtentLow() = 0;
-	virtual const Vector GetExtentHigh() = 0;
-	virtual const Vector GetCenter() = 0;
+	virtual const Vector &GetExtentLow() = 0;
+	virtual const Vector &GetExtentHigh() = 0;
+	virtual const Vector &GetCenter() = 0;
 
 	virtual float GetZ(const Vector &) = 0;
 	virtual float GetZ(const float, const float) = 0;

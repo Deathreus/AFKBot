@@ -16,7 +16,7 @@ class CNavMesh : public INavMesh
 {
 public:
 	CNavMesh(unsigned int magicNumber, unsigned int version, unsigned int subVersion, unsigned int saveBSPSize, bool isMeshAnalyzed, bool hasUnnamedAreas,
-		const CList<INavMeshPlace*> places, const CList<INavMeshArea*> areas, const CList<INavMeshHint*> hints, const CList<INavMeshLadder*> ladders, INavMeshGrid *grid);
+		const CList<INavMeshPlace*> &places, const CList<INavMeshArea*> &areas, const CList<INavMeshHint*> &hints, const CList<INavMeshLadder*> &ladders, INavMeshGrid *grid);
 	~CNavMesh();
 
 	unsigned int GetMagicNumber();
@@ -30,21 +30,21 @@ public:
 
 	bool HasUnnamedAreas();
 
-	CList<INavMeshPlace*> *GetPlaces();
-	CList<INavMeshArea*> *GetAreas();
-	CList<INavMeshLadder*> *GetLadders();
+	const CList<INavMeshPlace*> *GetPlaces();
+	const CList<INavMeshArea*> *GetAreas();
+	const CList<INavMeshLadder*> *GetLadders();
 
 	void AddHint(INavMeshHint *hint);
 	void AddHint(const Vector pos, const float yaw, const unsigned char flags);
 	bool RemoveHint(const Vector &vPos);
-	CList<INavMeshHint*> *GetHints();
+	const CList<INavMeshHint*> *GetHints();
 
 	INavMeshGrid *GetGrid();
 	int WorldToGridX(float fWX);
 	int WorldToGridY(float fWY);
 	Vector GridToWorld(int gridX, int gridY);
 
-	CList<INavMeshArea*> *GetAreasOnGrid(int x, int y);
+	const CList<INavMeshArea*> *GetAreasOnGrid(int x, int y);
 
 	INavMeshArea *GetArea(const Vector &vPos, float fBeneathLimit = 120.0f);
 	INavMeshArea *GetNearestArea(const Vector &vPos, bool bAnyZ = false, float fMaxDist = 10000.0f, bool bCheckLOS = false, bool bCheckGround = true, int iTeam = -2);

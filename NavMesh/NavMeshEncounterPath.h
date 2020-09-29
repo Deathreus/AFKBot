@@ -9,7 +9,7 @@
 class CNavMeshEncounterPath : public INavMeshEncounterPath 
 {
 public:
-	CNavMeshEncounterPath(unsigned int fromAreaID, eNavDir fromDirection, unsigned int toAreaID, eNavDir toDirection, const CList<INavMeshEncounterSpot*> encounterSpots);
+	CNavMeshEncounterPath(unsigned int fromAreaID, eNavDir fromDirection, unsigned int toAreaID, eNavDir toDirection, const CList<INavMeshEncounterSpot*> &encounterSpots);
 
 	void Destroy();
 
@@ -17,7 +17,7 @@ public:
 	eNavDir GetFromDirection();
 	unsigned int GetToAreaID();
 	eNavDir GetToDirection();
-	CList<INavMeshEncounterSpot*> *GetEncounterSpots();
+	const CList<INavMeshEncounterSpot*> *GetEncounterSpots();
 
 protected:
 	~CNavMeshEncounterPath() { }

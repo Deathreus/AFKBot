@@ -22,8 +22,8 @@ public:
 	virtual float GetBottomY() = 0;
 	virtual float GetBottomZ() = 0;
 
-	virtual const Vector GetTop() = 0;
-	virtual const Vector GetBottom() = 0;
+	virtual const Vector &GetTop() = 0;
+	virtual const Vector &GetBottom() = 0;
 
 	virtual eNavDir GetDirection() = 0;
 	

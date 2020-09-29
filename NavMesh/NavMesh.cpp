@@ -14,7 +14,7 @@ constexpr float HalfHumanHeight = 36.0f;
 int CNavMesh::m_iHintCount = 0;
 
 CNavMesh::CNavMesh(unsigned int magicNumber, unsigned int version, unsigned int subVersion, unsigned int saveBSPSize, bool isMeshAnalyzed, bool hasUnnamedAreas,
-	const CList<INavMeshPlace*> places, const CList<INavMeshArea*> areas, const CList<INavMeshHint*> hints, const CList<INavMeshLadder*> ladders, INavMeshGrid *grid)
+	const CList<INavMeshPlace*> &places, const CList<INavMeshArea*> &areas, const CList<INavMeshHint*> &hints, const CList<INavMeshLadder*> &ladders, INavMeshGrid *grid)
 {
 	this->magicNumber = magicNumber;
 	this->version = version;
@@ -62,11 +62,11 @@ bool CNavMesh::IsMeshAnalyzed() { return this->isMeshAnalyzed; }
 
 bool CNavMesh::HasUnnamedAreas() { return this->hasUnnamedAreas; }
 
-CList<INavMeshPlace*> *CNavMesh::GetPlaces() { return &this->places; }
+const CList<INavMeshPlace*> *CNavMesh::GetPlaces() { return &this->places; }
 
-CList<INavMeshArea*> *CNavMesh::GetAreas() { return &this->areas; }
+const CList<INavMeshArea*> *CNavMesh::GetAreas() { return &this->areas; }
 
-CList<INavMeshLadder*> *CNavMesh::GetLadders() { return &this->ladders; }
+const CList<INavMeshLadder*> *CNavMesh::GetLadders() { return &this->ladders; }
 
 void CNavMesh::AddHint(INavMeshHint *hint)
 {
@@ -83,7 +83,7 @@ void CNavMesh::AddHint(const Vector pos, const float yaw, const unsigned char fl
 bool CNavMesh::RemoveHint(const Vector &vPos)
 {
 	size_t size = this->hints.Size();
-	if (!this->hints || size <= 0)
+	if (size <= 0)
 		return false;
 
 	for (unsigned int i = 0; i < size; i++)
@@ -102,7 +102,7 @@ bool CNavMesh::RemoveHint(const Vector &vPos)
 	return false;
 }
 
-CList<INavMeshHint*> *CNavMesh::GetHints() { return &this->hints; }
+const CList<INavMeshHint*> *CNavMesh::GetHints() { return &this->hints; }
 
 INavMeshGrid *CNavMesh::GetGrid() { return this->grid; }
 
@@ -127,7 +127,7 @@ Vector CNavMesh::GridToWorld(int gridX, int gridY)
 	return Vector(posX, posY, 0.0f);
 }
 
-CList<INavMeshArea*> *CNavMesh::GetAreasOnGrid(int x, int y)
+const CList<INavMeshArea*> *CNavMesh::GetAreasOnGrid(int x, int y)
 {
 	if (!this->grid)
 	{
@@ -136,7 +136,7 @@ CList<INavMeshArea*> *CNavMesh::GetAreasOnGrid(int x, int y)
 	}
 
 	int index = x + y * this->grid->GetGridSizeX();
-	CList<INavMeshArea*> *areas = this->grid->GetGridAreas(index);
+	CList<INavMeshArea*> const *areas = this->grid->GetGridAreas(index);
 	if (!areas || areas->Count() <= 0)
 		return nullptr;
 
@@ -154,16 +154,14 @@ INavMeshArea *CNavMesh::GetArea(const Vector &vPos, float fBeneathLimit)
 	int x = this->WorldToGridX(vPos.x);
 	int y = this->WorldToGridY(vPos.y);
 
-	CList<INavMeshArea*> areas = *this->GetAreasOnGrid(x, y);
+	const CList<INavMeshArea *> *areas = this->GetAreasOnGrid(x, y);
 
 	INavMeshArea *useArea = nullptr;
 	float fUseZ = -99999999.9f;
 	Vector vTestPos = vPos + Vector(0.0f, 0.0f, 5.0f);
 
-	while (!areas.Empty())
+	for( INavMeshArea *area : *areas )
 	{
-		INavMeshArea *area = areas.Pop();
-
 		if (area->IsOverlapping(vPos))
 		{
 			float z = area->GetZ(vTestPos);
@@ -243,12 +241,10 @@ INavMeshArea *CNavMesh::GetNearestArea(const Vector &vPos, bool bAnyZ, float fMa
 					continue;
 				}
 
-				CList<INavMeshArea*> areas = *this->GetAreasOnGrid(x, y);
+				const CList<INavMeshArea *> *areas = this->GetAreasOnGrid(x, y);
 
-				while(!areas.Empty())
+				for( INavMeshArea *area : *areas )
 				{
-					INavMeshArea *area = areas.Pop();
-
 					if(collected.Find(area) != collected.InvalidIndex())
 						continue;	// we've already visited this area
 
@@ -302,7 +298,7 @@ INavMeshArea *CNavMesh::GetNearestArea(const Vector &vPos, bool bAnyZ, float fMa
 
 INavMeshArea *CNavMesh::GetAreaByID(const unsigned int iAreaIndex)
 {
-	if (!this->areas || this->areas.Count() <= 0)
+	if (this->areas.Count() <= 0)
 	{
 		smutils->LogError(myself, "Can't retrieve area because there are none!");
 		return nullptr;

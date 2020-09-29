@@ -622,7 +622,7 @@ bool CNavMeshLoader::Save(INavMesh *pNavMesh)
 	unsigned short placeCount = pNavMesh->GetPlaces()->Count();
 	fileBuffer.PutUnsignedShort(placeCount);
 
-	CList<INavMeshPlace*> *places = pNavMesh->GetPlaces();
+	const CList<INavMeshPlace*> *places = pNavMesh->GetPlaces();
 	for (unsigned short i = 0; i < placeCount; i++)
 	{
 		INavMeshPlace *place = places->Element(i);
@@ -643,7 +643,7 @@ bool CNavMeshLoader::Save(INavMesh *pNavMesh)
 	unsigned int areaCount = pNavMesh->GetAreas()->Count();
 	fileBuffer.PutUnsignedInt(areaCount);
 
-	CList<INavMeshArea*> *areas = pNavMesh->GetAreas();
+	const CList<INavMeshArea*> *areas = pNavMesh->GetAreas();
 	for (unsigned int i = 0; i < areaCount; i++)
 	{
 		INavMeshArea *area = areas->Element(i);
@@ -674,7 +674,7 @@ bool CNavMeshLoader::Save(INavMesh *pNavMesh)
 				unsigned int connectionCount = area->GetConnections((eNavDir)dir)->Count();
 				fileBuffer.PutUnsignedInt(connectionCount);
 
-				CList<INavMeshConnection*> *connections = area->GetConnections((eNavDir)dir);
+				const CList<INavMeshConnection*> *connections = area->GetConnections((eNavDir)dir);
 				for (unsigned int j = 0; j < connectionCount; j++)
 				{
 					INavMeshConnection *connection = connections->Element(j);
@@ -688,7 +688,7 @@ bool CNavMeshLoader::Save(INavMesh *pNavMesh)
 			unsigned char hidingSpotCount = area->GetHidingSpots()->Count();
 			fileBuffer.PutUnsignedChar(hidingSpotCount);
 
-			CList<INavMeshHidingSpot*> *hidingspots = area->GetHidingSpots();
+			const CList<INavMeshHidingSpot*> *hidingspots = area->GetHidingSpots();
 			for (unsigned int j = 0; j < hidingSpotCount; j++)
 			{
 				INavMeshHidingSpot *hidingspot = hidingspots->Element(j);
@@ -722,7 +722,7 @@ bool CNavMeshLoader::Save(INavMesh *pNavMesh)
 			unsigned int encounterPathCount = area->GetEncounterPaths()->Count();
 			fileBuffer.PutUnsignedInt(encounterPathCount);
 
-			CList<INavMeshEncounterPath*> *encounterpaths = area->GetEncounterPaths();
+			const CList<INavMeshEncounterPath*> *encounterpaths = area->GetEncounterPaths();
 			for (unsigned int j = 0; j < encounterPathCount; j++)
 			{
 				INavMeshEncounterPath *encounterpath = encounterpaths->Element(j);
@@ -737,7 +737,7 @@ bool CNavMeshLoader::Save(INavMesh *pNavMesh)
 					unsigned char encounterSpotCount = encounterpath->GetEncounterSpots()->Count();
 					fileBuffer.PutUnsignedChar(encounterSpotCount);
 
-					CList<INavMeshEncounterSpot*> *encounterspots = encounterpath->GetEncounterSpots();
+					const CList<INavMeshEncounterSpot*> *encounterspots = encounterpath->GetEncounterSpots();
 					for (int k = 0; k < encounterSpotCount; k++)
 					{
 						INavMeshEncounterSpot *encounterspot = encounterspots->Element(k);
@@ -759,7 +759,7 @@ bool CNavMeshLoader::Save(INavMesh *pNavMesh)
 				unsigned int ladderConnectionCount = area->GetLadderConnections((eNavLadderDir)dir)->Count();
 				fileBuffer.PutUnsignedInt(ladderConnectionCount);
 
-				CList<INavMeshLadderConnection*> *ladderconnections = area->GetLadderConnections((eNavLadderDir)dir);
+				const CList<INavMeshLadderConnection*> *ladderconnections = area->GetLadderConnections((eNavLadderDir)dir);
 				for (unsigned int j = 0; j < ladderConnectionCount; j++)
 				{
 					INavMeshLadderConnection *ladderconnection = ladderconnections->Element(j);
@@ -775,7 +775,7 @@ bool CNavMeshLoader::Save(INavMesh *pNavMesh)
 
 			if (version >= 11)
 			{
-				CList<INavMeshCornerLightIntensity*> *cornerlightintensities = area->GetCornerLightIntensities();
+				const CList<INavMeshCornerLightIntensity*> *cornerlightintensities = area->GetCornerLightIntensities();
 				for (int corner = 0; corner < NAV_CORNER_COUNT; corner++)
 				{
 					for (int j = 0; j < cornerlightintensities->Count(); j++)
@@ -796,7 +796,7 @@ bool CNavMeshLoader::Save(INavMesh *pNavMesh)
 					unsigned int visibleAreaCount = area->GetVisibleAreas()->Count();
 					fileBuffer.PutUnsignedInt(visibleAreaCount);
 
-					CList<INavMeshVisibleArea*> *visibleareas = area->GetVisibleAreas();
+					const CList<INavMeshVisibleArea*> *visibleareas = area->GetVisibleAreas();
 					for (unsigned int j = 0; j < visibleAreaCount; j++)
 					{
 						INavMeshVisibleArea *visiblearea = visibleareas->Element(j);
@@ -821,7 +821,7 @@ bool CNavMeshLoader::Save(INavMesh *pNavMesh)
 	unsigned int ladderCount = pNavMesh->GetLadders()->Count();
 	fileBuffer.PutUnsignedInt(ladderCount);
 
-	CList<INavMeshLadder*> *ladders = pNavMesh->GetLadders();
+	const CList<INavMeshLadder*> *ladders = pNavMesh->GetLadders();
 	for (unsigned int i = 0; i < ladderCount; i++)
 	{
 		INavMeshLadder *ladder = ladders->Element(i);
@@ -854,7 +854,7 @@ bool CNavMeshLoader::Save(INavMesh *pNavMesh)
 	unsigned int hintCount = pNavMesh->GetHints()->Count();
 	fileBuffer.PutUnsignedInt(hintCount);
 
-	CList<INavMeshHint*> *hints = pNavMesh->GetHints();
+	const CList<INavMeshHint*> *hints = pNavMesh->GetHints();
 	for (unsigned int i = 0; i < hintCount; i++)
 	{
 		INavMeshHint *hint = hints->Element(i);

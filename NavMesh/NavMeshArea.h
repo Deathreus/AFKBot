@@ -17,9 +17,9 @@ public:
 		float nwExtentX, float nwExtentY, float nwExtentZ,
 		float seExtentX, float seExtentY, float seExtentZ,
 		float neCornerZ, float swCornerZ,
-		const CList<CList<INavMeshConnection*>> connections, const CList<INavMeshHidingSpot*> hidingSpots,
-		const CList<INavMeshEncounterPath*> encounterPaths, const CList<CList<INavMeshLadderConnection*>> ladderConnections,
-		const CList<INavMeshCornerLightIntensity*> cornerLightIntensities, const CList<INavMeshVisibleArea*> visibleAreas,
+		const CList<CList<INavMeshConnection*>> &connections, const CList<INavMeshHidingSpot*> &hidingSpots,
+		const CList<INavMeshEncounterPath*> &encounterPaths, const CList<CList<INavMeshLadderConnection*>> &ladderConnections,
+		const CList<INavMeshCornerLightIntensity*> &cornerLightIntensities, const CList<INavMeshVisibleArea*> &visibleAreas,
 		unsigned int inheritVisibilityFromAreaID,
 		float earliestOccupyTimeFirstTeam, float earliestOccupyTimeSecondTeam);
 
@@ -43,12 +43,12 @@ public:
 	float GetNECornerZ();
 	float GetSWCornerZ();
 
-	CList<INavMeshConnection*> *GetConnections(eNavDir dir);
-	CList<INavMeshHidingSpot*> *GetHidingSpots();
-	CList<INavMeshEncounterPath*> *GetEncounterPaths();
-	CList<INavMeshLadderConnection*> *GetLadderConnections(eNavLadderDir dir);
-	CList<INavMeshCornerLightIntensity*> *GetCornerLightIntensities();
-	CList<INavMeshVisibleArea*> *GetVisibleAreas();
+	const CList<INavMeshConnection*> *GetConnections(eNavDir dir);
+	const CList<INavMeshHidingSpot*> *GetHidingSpots();
+	const CList<INavMeshEncounterPath*> *GetEncounterPaths();
+	const CList<INavMeshLadderConnection*> *GetLadderConnections(eNavLadderDir dir);
+	const CList<INavMeshCornerLightIntensity*> *GetCornerLightIntensities();
+	const CList<INavMeshVisibleArea*> *GetVisibleAreas();
 
 	unsigned int GetInheritVisibilityFromAreaID();
 	
@@ -60,9 +60,9 @@ public:
 	bool IsBlocked(void) const;
 	void SetBlocked(const bool blocked);
 
-	const Vector GetExtentLow();
-	const Vector GetExtentHigh();
-	const Vector GetCenter();
+	const Vector &GetExtentLow();
+	const Vector &GetExtentHigh();
+	const Vector &GetCenter();
 
 	float GetZ(const Vector &vPos);
 	float GetZ(const float fX, const float fY);

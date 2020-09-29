@@ -150,7 +150,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>mathlib.lib;vstdlib.lib;tier0.lib;tier1.lib;tier2.lib;winmm.lib;ws2_32.lib;legacy_stdio_definitions.lib;$(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>mathlib.lib;vstdlib.lib;tier0.lib;tier1.lib;tier2.lib;winmm.lib;ws2_32.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>$(HL2SDKTF2)\lib\public;$(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>

@@ -16,7 +16,7 @@ float CNavMeshHint::GetY() { return this->pos.y; }
 
 float CNavMeshHint::GetZ() { return this->pos.z; }
 
-const Vector CNavMeshHint::GetOrigin() { return this->pos; }
+const Vector &CNavMeshHint::GetOrigin() { return this->pos; }
 
 float CNavMeshHint::GetYaw() { return this->yaw; }
 

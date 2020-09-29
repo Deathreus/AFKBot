@@ -14,18 +14,18 @@ const float GridCellSize = 300.0f; /*< defines the extent for a single grid bloc
 class CNavMeshGrid : public INavMeshGrid
 {
 public:
-	CNavMeshGrid(Vector2D low, Vector2D high, int x, int y, const CList<CList<INavMeshArea*>> list);
+	CNavMeshGrid(const Vector2D &low, const Vector2D &high, int x, int y, const CList<CList<INavMeshArea*>> &list);
 
 	void Destroy();
 
-	Vector2D GetExtentLow();
-	Vector2D GetExtentHigh();
+	const Vector2D &GetExtentLow();
+	const Vector2D &GetExtentHigh();
 
 	int GetGridSizeX();
 	int GetGridSizeY();
 
-	CList<CList<INavMeshArea*>> *GetGridLists();
-	CList<INavMeshArea*> *GetGridAreas(int index);
+	const CList<CList<INavMeshArea*>> *GetGridLists();
+	const CList<INavMeshArea*> *GetGridAreas(int index);
 
 protected:
 	~CNavMeshGrid() { }
