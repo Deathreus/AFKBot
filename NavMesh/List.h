@@ -15,13 +15,11 @@ public:
 	CList() : BaseClass() {}
 	CList(int count) : BaseClass() { EnsureCapacity(count); SetCount(count); }
 
-	bool Push(T const &item) { return !!AddToTail(item); }
-
-	T &Pop()
+	bool Push(T const &item)
 	{
-		T item = Tail();
-		FastRemove(m_Size);
-		return item;
+		int elem = AddToTail(item);
+		Assert(IsValidIndex(elem));
+		return IsValidIndex(elem);
 	}
 
 	bool Resize(int newSize)
@@ -34,18 +32,13 @@ public:
 	// Shorthand for PurgeAndDeleteElements()
 	void Clear()
 	{
-		Assert(Element(0));
+		Assert(std::is_pointer<T>::value);
 		for(int i = 0; i < Count(); i++)
 			delete Element(i);
 		Purge();
 	}
 
-	bool Empty() const { return Count() == 0; }
-
-	const bool operator!() const
-	{
-		return !Base();
-	}
+	bool IsEmpty() const { return Count() == 0; }
 
 	// stdlib support and C++ 11 range looping
 	typedef T* iterator;
