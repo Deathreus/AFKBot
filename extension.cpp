@@ -119,7 +119,7 @@ void DebugValueChanged(IConVar *var, const char *pOldValue, float flOldValue)
 {
 	if(bot_debug.GetBool())
 		AFKBot::BeginLogging(bot_log_resets.GetBool());
-	else
+	else if( (int)flOldValue == 1 )
 		AFKBot::EndLogging();
 }
 
@@ -129,15 +129,15 @@ void DebugValueChanged(IConVar *var, const char *pOldValue, float flOldValue)
 #define HELPER_ARGS edict_t *pClient
 #endif
 
-static float s_fNextClientCommand[MAX_PLAYERS];
+static float s_fNextClientCommand[MAX_PLAYERS+1];
 void RateLimitedClientCommand(HELPER_ARGS)
 {
 	if(bot_enabled.GetBool())
 	{
-		if(s_fNextClientCommand[SlotOfEdict(pClient)] > gpGlobals->curtime)
+		if(s_fNextClientCommand[ SlotOfEdict(pClient) ] > gpGlobals->curtime)
 			RETURN_META(MRES_SUPERCEDE);
 
-		s_fNextClientCommand[SlotOfEdict(pClient)] = gpGlobals->curtime + 0.33;
+		s_fNextClientCommand[ SlotOfEdict(pClient) ] = gpGlobals->curtime + 0.33;
 	}
 
 	RETURN_META(MRES_IGNORED);
@@ -201,15 +201,9 @@ void PlayerRunCmd(CUserCmd *pCmd, IMoveHelper *pMoveHelper)
 		RETURN_META(MRES_IGNORED);
 	}
 
-	static CUserCmd *cmd;
-	static CPlayerState *pls;
-	static CBaseEntity *pEntity;
-	static edict_t *pEdict;
-	static CBot *pBot;
-
-	pEntity = META_IFACEPTR(CBaseEntity);
-	pEdict = gameents->BaseEntityToEdict(pEntity);
-	pBot = CBots::GetBotPointer(pEdict);
+	CBaseEntity *pEntity = META_IFACEPTR(CBaseEntity);
+	edict_t *pEdict = gameents->BaseEntityToEdict(pEntity);
+	CBot *pBot = CBots::GetBotPointer(pEdict);
 
 	if (pBot && pBot->InUse() && pBot->IsAlive())
 	{
@@ -219,8 +213,8 @@ void PlayerRunCmd(CUserCmd *pCmd, IMoveHelper *pMoveHelper)
 			RETURN_META(MRES_IGNORED);
 		}
 
-		cmd = pBot->GetUserCMD();
-		pls = gameclients->GetPlayerState(pEdict);
+		CUserCmd *cmd = pBot->GetUserCMD();
+		CPlayerState *pls = gameclients->GetPlayerState(pEdict);
 
 		// put the bot's commands into this move frame
 		pCmd->buttons = cmd->buttons;
@@ -231,7 +225,7 @@ void PlayerRunCmd(CUserCmd *pCmd, IMoveHelper *pMoveHelper)
 		pCmd->impulse = cmd->impulse;
 
 		pls->v_angle = cmd->viewangles;
-		pls->fixangle = FIXANGLE_ABSOLUTE;
+		pls->fixangle = FIXANGLE_NONE;
 	}
 
 	RETURN_META(MRES_IGNORED);
@@ -263,9 +257,7 @@ void AFKBot::GameFrame(bool simulating)
 			CWaypoints::ProcessGeneration();
 		}
 
-		static CWaypointVisibilityTable *pTable;
-		pTable = CWaypoints::GetVisiblity();
-
+		CWaypointVisibilityTable *pTable = CWaypoints::GetVisiblity();
 		if(pTable->NeedToWorkVisibility())
 		{
 			pTable->WorkVisibility();
@@ -288,7 +280,7 @@ void AFKBot::OnCoreMapStart(edict_t *pEdictList, int edictCount, int clientMax)
 {
 	if(bot_debug.GetBool())
 	{
-		BeginLogging(bot_log_resets.GetBool());
+		AFKBot::BeginLogging(bot_log_resets.GetBool());
 	}
 
 	// Must set this
@@ -345,7 +337,7 @@ void AFKBot::OnCoreMapEnd()
 
 	if (bot_debug.GetBool())
 	{
-		EndLogging();
+		AFKBot::EndLogging();
 	}
 }
 
@@ -484,12 +476,6 @@ void AFKBot::SDK_OnAllLoaded()
 
 bool AFKBot::QueryRunning(char *error, size_t maxlength)
 {
-	if (!bot_enabled.GetBool())
-	{
-		ke::SafeStrcpy(error, maxlength, "AFK Bot is not enabled.");
-		return false;
-	}
-
 	SM_CHECK_IFACE(SDKTOOLS, g_pSDKTools);
 
 	return true;
@@ -560,7 +546,7 @@ bool AFKBot::ProcessCommandTarget(cmd_target_info_t *info)
 	if (!strcmp(info->pattern, "@afk"))
 	{
 		info->num_targets = 0;
-		for (short int i = gpGlobals->maxClients; i; --i)
+		for (int i = gpGlobals->maxClients; i; --i)
 		{
 			IGamePlayer *pPlayer = playerhelpers->GetGamePlayer(i);
 			if (pPlayer == NULL || !pPlayer->IsInGame())
@@ -618,46 +604,28 @@ void AFKBot::DebugMessage(const char *fmt, ...)
 
 void AFKBot::VerboseDebugMessage(const char *fmt, ...)
 {
-	if (bot_debug.GetBool() && bot_debug_verbose.GetBool() && !ferror(m_pLogFile))
+	if (bot_debug_verbose.GetBool())
 	{
 		va_list argptr; char message[256];
-
 		va_start(argptr, fmt);
 		ke::SafeVsprintf(message, 255, fmt, argptr);
 		va_end(argptr);
 
-		char buffer[32];
-		time_t dt = smutils->GetAdjustedTime();
-		tm *curTime = localtime(&dt);
-		strftime(buffer, sizeof(buffer), "%m/%d/%Y - %H:%M:%S", curTime);
-
-		fprintf(m_pLogFile, "L %s: %s\n", buffer, message);
-		fflush(m_pLogFile);
+		DebugMessage(message);
 	}
 }
 
 void AFKBot::BeginLogging(bool bReset)
 {
 	static char sPath[MAX_PATH];
-	if (!sPath[0]) smutils->BuildPath(Path_SM, sPath, sizeof(sPath), "logs\\afkbot.log");
+	if (sPath[0] == '\0') smutils->BuildPath(Path_SM, sPath, sizeof(sPath), "logs\\afkbot.log");
 
-	if (bReset)
+	const char *pMode = bReset ? "w+" : "at";
+	FILE *pLogFile = fopen(sPath, pMode);
+	if (pLogFile)
 	{
-		FILE *pLogFile = fopen(sPath, "w+");
-		if (pLogFile)
-		{
-			smutils->LogMessage(myself, "Begin logging in '%s'", sPath);
-			m_pLogFile = pLogFile;
-		}
-	}
-	else
-	{
-		FILE *pLogFile = fopen(sPath, "at");
-		if (pLogFile)
-		{
-			smutils->LogMessage(myself, "Begin logging in '%s'", sPath);
-			m_pLogFile = pLogFile;
-		}
+		smutils->LogMessage(myself, "Begin logging in '%s'", sPath);
+		m_pLogFile = pLogFile;
 	}
 }
 
