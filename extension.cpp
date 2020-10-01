@@ -225,7 +225,7 @@ void PlayerRunCmd(CUserCmd *pCmd, IMoveHelper *pMoveHelper)
 		pCmd->impulse = cmd->impulse;
 
 		pls->v_angle = cmd->viewangles;
-		pls->fixangle = FIXANGLE_NONE;
+		pls->fixangle = FIXANGLE_ABSOLUTE;
 	}
 
 	RETURN_META(MRES_IGNORED);
